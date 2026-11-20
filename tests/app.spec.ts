@@ -20,6 +20,7 @@ test('impede quantidade inválida e permite restaurar', async ({ page }) => {
 test('atualiza custo ao alterar preço e desperdício da cor', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByTestId('unitCost')).toContainText('2,52');
+  await page.getByRole('button', { name: /Dourado/ }).click();
   await page.getByTestId('material-gold-pricePerKg').fill('200');
   await expect(page.getByTestId('unitCost')).toContainText('2,62');
   await page.getByTestId('material-gold-wasteGrams').fill('10');
@@ -33,5 +34,20 @@ test('adiciona e remove material e valida entrada', async ({ page }) => {
   await expect(page.getByRole('alert')).toBeVisible();
   await page.getByTestId('material-extra-1-grams').fill('0');
   await page.getByRole('button', { name: 'Remover material 4' }).click();
-  await expect(page.getByTestId('material-extra-1-grams')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Nova cor/ })).toHaveCount(0);
+});
+
+test('edita uma cor de cada vez, resume as demais e preserva seus valores', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /Azul/ })).toHaveAttribute('aria-expanded', 'true');
+  await page.getByTestId('material-blue-grams').fill('84');
+  await page.getByRole('button', { name: /Branco/ }).click();
+  await expect(page.getByRole('button', { name: /Azul/ })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByTestId('material-blue-grams')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Branco/ })).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('button', { name: /Azul/ }).click();
+  await expect(page.getByTestId('material-blue-grams')).toHaveValue('84');
+  await page.getByRole('button', { name: /Adicionar cor/ }).click();
+  await expect(page.getByTestId('material-extra-1-grams')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Azul/ })).toHaveAttribute('aria-expanded', 'false');
 });

@@ -24,6 +24,7 @@ const materialFields: { key: 'grams' | 'wasteGrams' | 'pricePerKg'; label: strin
 export default function App() {
   const [form, setForm] = useState<CostInput>(referenceCase);
   const [nextId, setNextId] = useState(1);
+  const [activeMaterialId, setActiveMaterialId] = useState<string | null>('blue');
   const update = (key: NumericKey, value: string) =>
     setForm(previous => ({ ...previous, [key]: numeric(value) }));
   const updateMaterial = (id: string, key: keyof MaterialLine, value: string) =>
@@ -35,16 +36,20 @@ export default function App() {
   const addMaterial = () => {
     const id = 'extra-' + nextId;
     setNextId(value => value + 1);
+    setActiveMaterialId(id);
     setForm(previous => ({
       ...previous,
       materials: [...(previous.materials ?? []),
         { id, name: 'Nova cor', grams: 0, wasteGrams: 0, pricePerKg: 100 }]
     }));
   };
-  const removeMaterial = (id: string) =>
+  const removeMaterial = (id: string) => {
     setForm(previous => ({
       ...previous, materials: (previous.materials ?? []).filter(item => item.id !== id)
     }));
+    setActiveMaterialId(previous => previous === id ? null : previous);
+  };
+  const restoreExample = () => { setForm(referenceCase); setActiveMaterialId('blue'); setNextId(1); };
   let result: ReturnType<typeof calculateCost> | undefined;
   let error = '';
   try { result = calculateCost(form); } catch (e) { error = (e as Error).message; }
@@ -66,30 +71,43 @@ export default function App() {
           <div className="panel-heading"><div>
             <h2>Dados de produção</h2>
             <p>Exemplo: chaveiro Nossa Senhora, 20 unidades, 3 cores.</p>
-          </div><button type="button" onClick={() => setForm(referenceCase)}>Restaurar exemplo</button></div>
+          </div><button type="button" onClick={restoreExample}>Restaurar exemplo</button></div>
           <section aria-labelledby="materials-title" className="materials">
             <div className="materials-heading">
               <h3 id="materials-title">Materiais por cor</h3>
               <button type="button" onClick={addMaterial}>+ Adicionar cor</button>
             </div>
-            {(form.materials ?? []).map((item, index) => <fieldset className="material-row" key={item.id}>
-              <legend>Material {index + 1}</legend>
-              <label>Cor / material
-                <input aria-label={`Nome do material ${index + 1}`} value={item.name}
-                  onChange={e => updateMaterial(item.id, 'name', e.target.value)} />
-              </label>
-              <div className="material-numbers">
-                {materialFields.map(field => <label key={field.key}>
-                  {field.label}
-                  <input type="number" min="0" step="0.01"
-                    data-testid={`material-${item.id}-${field.key}`}
-                    value={Number.isNaN(item[field.key]) ? '' : item[field.key]}
-                    onChange={e => updateMaterial(item.id, field.key, e.target.value)} />
-                </label>)}
-              </div>
-              <button type="button" className="remove-material" disabled={form.materials?.length === 1}
-                onClick={() => removeMaterial(item.id)} aria-label={`Remover material ${index + 1}`}>Remover cor</button>
-            </fieldset>)}
+            {(form.materials ?? []).map((item, index) => {
+              const expanded = activeMaterialId === item.id;
+              const valid = [item.grams, item.wasteGrams, item.pricePerKg].every(value => Number.isFinite(value) && value >= 0) && item.name.trim() !== '';
+              const weight = item.grams + item.wasteGrams;
+              return <div className="material-row" key={item.id}>
+                <button type="button" className="material-toggle" aria-expanded={expanded}
+                  aria-controls={`material-fields-${item.id}`}
+                  onClick={() => setActiveMaterialId(expanded ? null : item.id)}>
+                  <span><strong>{item.name.trim() || `Material ${index + 1}`}</strong>
+                    <small>{valid ? `${weight.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} g · ${money(item.pricePerKg)}/kg · ${money(weight * item.pricePerKg / 1000)}` : 'Preenchimento pendente'}</small>
+                  </span><span aria-hidden="true">{expanded ? '▴' : '▾'}</span>
+                </button>
+                {expanded && <div id={`material-fields-${item.id}`} className="material-fields">
+                  <label>Cor / material
+                    <input aria-label={`Nome do material ${index + 1}`} value={item.name}
+                      onChange={e => updateMaterial(item.id, 'name', e.target.value)} />
+                  </label>
+                  <div className="material-numbers">
+                    {materialFields.map(field => <label key={field.key}>
+                      {field.label}
+                      <input type="number" min="0" step="0.01"
+                        data-testid={`material-${item.id}-${field.key}`}
+                        value={Number.isNaN(item[field.key]) ? '' : item[field.key]}
+                        onChange={e => updateMaterial(item.id, field.key, e.target.value)} />
+                    </label>)}
+                  </div>
+                  <button type="button" className="remove-material" disabled={form.materials?.length === 1}
+                    onClick={() => removeMaterial(item.id)} aria-label={`Remover material ${index + 1}`}>Remover cor</button>
+                </div>}
+              </div>;
+            })}
             <p className="footnote">Peso do modelo e purga são valores separados. Coloque na purga apenas o material adicional não incluído no peso do fatiador. Se o relatório já incluir desperdícios, use 0 para não duplicar.</p>
           </section>
           <div className="fields">{fields.map(field => <label key={field.key}>

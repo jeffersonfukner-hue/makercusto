@@ -11,7 +11,9 @@
 - [x] Materiais por cor com preços individuais
 - [x] Purga/perdas separadas por material, sem dupla contagem
 - [x] Detalhamento dos custos e testes de regressão
-- [ ] CI da extensão e homologação visual
+- [x] CI da extensão aprovado (#44798323962, commit 77412e98)
+- [ ] Homologação visual da extensão
+- [x] Uma cor expandida por vez; demais resumidas com peso e custo (CI novo pendente)
 
 ## Etapa 2 — Perfil do maker
 - [ ] Impressoras, filamentos, materiais e tarifa configuráveis
@@ -34,3 +36,16 @@
 - [ ] Contas, sincronização e custo estimado vs. realizado
 
 Não ampliar escopo sem homologação.
+
+## Prioridades novas registradas em 20/11/2026 — sem ampliar MVP agora
+- [ ] **Planejar integração Supabase**, sem criar banco ou conectar ambiente antes da aprovação da arquitetura e custos.
+- [ ] **Salvar cada impressão/cálculo** em conta do usuário com histórico de custos e versões dos parâmetros.
+- [ ] **Cadastro simples de materiais**: tipo (PLA, PETG ou outro), quantidade em kg/g, preço informado e unidade de consumo. Também permitir acessórios, cola, embalagem e outros insumos de processo.
+- [ ] **Histórico de compras por material**: registrar compras sucessivas sem sobrescrever preços históricos (exemplo: PLA azul R$68 e, uma semana depois, R$73).
+- [ ] **Definir política de custo por compra/lote**: custo real do rolo selecionado versus último preço ou média ponderada; registrar origem da decisão no cálculo salvo.
+- [ ] **Modo completo / Pro futuro**: fabricante, cor, data e valor de compra, lote opcional, bobinas individuais e etiqueta imprimível com data, preço, identificação e referência ao lote.
+- [ ] **Outros insumos do processo**: catálogo genérico com unidade, custo, consumo por projeto e histórico de aquisição, sem limitar a filamentos.
+- [ ] **UX multicor**: mostrar uma linha-resumo por material preenchido; abrir/fechar apenas um formulário de edição por vez, preservando seus valores.
+- [ ] **Privacidade e autenticação**: escopo por usuário, políticas RLS e proteção do histórico antes de qualquer banco real.
+
+**Decisão de escopo:** manter o aplicativo simples por enquanto. Supabase e modo Pro são planejamento; não implementar cadastros extensos ou conexão agora.
