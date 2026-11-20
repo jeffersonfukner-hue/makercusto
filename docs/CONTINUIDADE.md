@@ -28,3 +28,10 @@
 - Ao clicar Adicionar cor, a nova entrada deve aparecer imediatamente no **topo** da lista e seu formulário deve abrir; demais materiais permanecem resumidos.
 - Evitar a sensação de que o botão falhou e múltiplas adições por falta de visibilidade. Preservar as entradas anteriores e testar dois cliques consecutivos.
 - Entrega depende do CI do HEAD e homologação visual; deploy continua exclusivamente manual pelo proprietário.
+
+## Método de recebimento de ideias — 20/11/2026
+- Proprietário enviará ideias em sequência durante a fase inicial. Organizar sem inflar a entrega ativa, evitando reabrir decisões e homologações.
+- Regra: ideia simples e isolada → implementar com testes no PR atual quando coerente; dependente de banco, contas ou cadastros extensos → documentar para etapa própria.
+- Sugestões conhecidas em campos catalogáveis, entrada personalizada e prevenção de duplicações. Primeiro piloto: cores com catálogo local. PLA/PETG, marcas e impressoras ficam no backlog.
+- Alterações locais de sugestões NÃO constituem salvamento do custo de impressão; Supabase continua sem integração.
+- CI da alteração e homologação visual ainda precisam ser verificados; deploy manual exclusivo do proprietário.

@@ -3,6 +3,24 @@ import { calculateCost, referenceCase, type CostInput, type MaterialLine } from 
 
 const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 const numeric = (value: string) => value === '' ? NaN : Number(value);
+const standardColors = ['Branco','Preto','Cinza','Prata','Azul','Azul-claro','Azul-marinho','Vermelho','Verde','Verde-claro','Amarelo','Laranja','Rosa','Roxo','Lilás','Marrom','Bege','Dourado','Cobre','Transparente','Natural'];
+const colorKey = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]+/g, '');
+const uniqueColors = (values: string[]) => {
+  const keys = new Set<string>();
+  return values.map(value => value.trim()).filter(value => {
+    const key = colorKey(value);
+    if (!key || keys.has(key)) return false;
+    keys.add(key);
+    return true;
+  });
+};
+const catalogKey = 'makercusto:cores-personalizadas:v1';
+function readSavedColors(): string[] {
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(catalogKey) || '[]');
+    return Array.isArray(parsed) ? uniqueColors(parsed.filter((v): v is string => typeof v === 'string').slice(0, 100)) : [];
+  } catch { return []; }
+}
 type NumericKey = Exclude<keyof CostInput, 'materials'>;
 const fields: { key: NumericKey; label: string; step: string }[] = [
   { key: 'hours', label: 'Tempo de impressão (horas)', step: '0.01' },
@@ -24,6 +42,7 @@ const materialFields: { key: 'grams' | 'wasteGrams' | 'pricePerKg'; label: strin
 export default function App() {
   const [form, setForm] = useState<CostInput>(referenceCase);
   const [nextId, setNextId] = useState(1);
+  const [savedColors, setSavedColors] = useState<string[]>(readSavedColors);
   const [activeMaterialId, setActiveMaterialId] = useState<string | null>('blue');
   const update = (key: NumericKey, value: string) =>
     setForm(previous => ({ ...previous, [key]: numeric(value) }));
@@ -33,6 +52,14 @@ export default function App() {
       materials: (previous.materials ?? []).map(item =>
         item.id === id ? { ...item, [key]: key === 'name' ? value : numeric(value) } : item)
     }));
+  const rememberColor = (name: string) => {
+    const clean = name.trim();
+    if (!clean || colorKey(clean) === colorKey('Nova cor')) return;
+    const next = uniqueColors([...standardColors, ...savedColors, clean]);
+    const customs = next.slice(standardColors.length);
+    setSavedColors(customs);
+    try { window.localStorage.setItem(catalogKey, JSON.stringify(customs)); } catch { /* Sem armazenamento disponível: uso apenas nesta sessão. */ }
+  };
   const addMaterial = () => {
     const id = 'extra-' + nextId;
     setNextId(value => value + 1);
@@ -77,6 +104,7 @@ export default function App() {
               <h3 id="materials-title">Materiais por cor</h3>
               <button type="button" onClick={addMaterial}>+ Adicionar cor</button>
             </div>
+            <datalist id="makercusto-cores">{uniqueColors([...standardColors, ...savedColors]).map(color => <option key={colorKey(color)} value={color} />)}</datalist>
             {(form.materials ?? []).map((item, index) => {
               const expanded = activeMaterialId === item.id;
               const valid = [item.grams, item.wasteGrams, item.pricePerKg].every(value => Number.isFinite(value) && value >= 0) && item.name.trim() !== '';
@@ -91,7 +119,7 @@ export default function App() {
                 </button>
                 {expanded && <div id={`material-fields-${item.id}`} className="material-fields">
                   <label>Cor / material
-                    <input aria-label={`Nome do material ${index + 1}`} value={item.name}
+                    <input list="makercusto-cores" onBlur={e => rememberColor(e.target.value)} aria-label={`Nome do material ${index + 1}`} value={item.name}
                       onChange={e => updateMaterial(item.id, 'name', e.target.value)} />
                   </label>
                   <div className="material-numbers">

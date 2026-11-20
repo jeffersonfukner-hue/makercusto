@@ -51,3 +51,11 @@ Não ampliar escopo sem homologação.
 **Decisão de escopo:** manter o aplicativo simples por enquanto. Supabase e modo Pro são planejamento; não implementar cadastros extensos ou conexão agora.
 
 - [x] Inserir nova cor no topo e expandir automaticamente (evitar cliques repetidos por falta de feedback). CI/homologação da revisão pendentes.
+
+## Ideias recebidas — cadastros assistidos (20/11/2026)
+- [x] Piloto de campo Cor: sugestões de cores comuns, digitação livre e memorização local sem duplicar nomes equivalentes (CI/homologação pendentes).
+- [ ] Estender o mesmo padrão para tipo de material (PLA, PLA+, PETG etc.), fabricante, marca e modelos de impressora, quando esses cadastros existirem.
+- [ ] Sincronizar preferências por conta no Supabase, após definição de autenticação e RLS.
+- [ ] Preservar distinção entre **catálogo de nomes** e **registro de compra por lote/preço**, sem sobrescrever o custo histórico.
+
+**Método para novas ideias:** registrar na continuidade e backlog, identificar escopo e dependências, aplicar apenas incrementos pequenos e testáveis; recursos Pro e infraestrutura não entram automaticamente na entrega atual.

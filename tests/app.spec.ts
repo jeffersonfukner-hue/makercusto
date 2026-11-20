@@ -65,3 +65,20 @@ test('insere nova cor no topo e a expande imediatamente, inclusive em cliques su
   await expect(page.getByTestId('material-extra-1-grams')).toHaveCount(0);
   await expect(rows).toHaveCount(5);
 });
+
+test('sugere cores conhecidas e memoriza personalizadas sem duplicar', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Adicionar cor/ }).click();
+  const input = page.getByRole('textbox', { name: 'Nome do material 1' });
+  await expect(page.locator('#makercusto-cores option[value="Azul"]')).toHaveCount(1);
+  await input.fill('Turquesa Especial');
+  await input.blur();
+  await expect(page.locator('#makercusto-cores option[value="Turquesa Especial"]')).toHaveCount(1);
+  await page.reload();
+  await expect(page.locator('#makercusto-cores option[value="Turquesa Especial"]')).toHaveCount(1);
+  await page.getByRole('button', { name: /Adicionar cor/ }).click();
+  const added = page.getByRole('textbox', { name: 'Nome do material 1' });
+  await added.fill('aZuL');
+  await added.blur();
+  await expect(page.locator('#makercusto-cores option').filter({ hasText: /^Azul$/ })).toHaveCount(1);
+});
