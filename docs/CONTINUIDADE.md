@@ -68,3 +68,13 @@
 - **Full (pago, futuro):** itens particulares do usuário, inacessíveis aos demais, além de acesso opcional ao catálogo compartilhado. Nunca tornar item privado público por padrão.
 - Definir Supabase/Auth/RLS, limites de acesso, consentimento para compartilhamento, custos, modelo de assinatura e histórico imutável antes da implementação real.
 - Prioridade atual: seletor de impressoras **somente em memória na sessão** + edição de seus parâmetros e cálculo automático; sem banco nem cobrança. Não alegar persistência da impressora entre sessões.
+
+## Decisões recebidas — lote de requisitos antes do próximo deploy (20/11/2026)
+- Proprietário pediu para **não fazer deploy de cada commit**: acumular alterações coerentes em branch, executar testes e só então solicitar homologação/publicação manual.
+- **Tipos, cores e marcas:** botão "+" pequeno adjacente ao próprio nome do campo, abrindo modal de cadastro; catálogos conhecidos disponíveis globalmente em todos os planos; permitir termos novos sem duplicatas. Definir governança de contribuições globais.
+- **Impressora:** primeira seleção de um produto; ao iniciar outro, usar última selecionada. Botão "+" junto ao rótulo abre modal; modelos comuns pré-cadastrados. Edição particular não altera cadastro global. Visitantes persistem alterações e preferência em localStorage; autenticados persistem em seus dados quando banco for implementado.
+- **Modais Normal/Avançado:** normal enxuto e avançado rico em detalhes, aplicáveis aos cadastros, independentes de plano gratuito/Compartilhado/Full e do modo de cálculo.
+- Separar **ferramentas reutilizáveis**, **insumos extras comprados** e **produtos/componentes fabricados**; planejar estoque e movimentações; criar telas de listagem dedicadas.
+- **Arquitetura de banco desde já:** contratos de dados, autoria, visibilidade, versões de preços e autorização. Não provisionar Supabase nem implementar cobrança sem nova autorização.
+- Trabalho desta rodada: apenas planejamento e documentação, sem afirmar que funcionalidades já estão prontas.
+- Restrições preservadas: sem merge, deploy, produção ou gasto de créditos; PR #1 continua draft.

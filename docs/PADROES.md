@@ -23,3 +23,10 @@
 
 - Impressora deve preceder filamento. Seleção de equipamento preenche potência, custo do equipamento, vida útil e tarifa; usuário pode editar. Não chamar exemplos de especificações oficiais.
 - Modo de cálculo Simples/Avançado não se confunde com modelo comercial gratuito/Compartilhado/Full. Compartilhamento deve ser opt-in, perfis Full privados por padrão.
+
+## Cadastros e acesso — requisitos documentados, implementação pendente
+- Botões "+" de cadastro junto aos rótulos Tipo, Cor, Marca e Impressora; modais Normal e Avançado. Evitar formulários excessivos no fluxo rápido.
+- Catálogo global é referência reutilizável, não propriedade editável indiscriminadamente por todos. Itens pessoais são cópias/sobreposições isoladas, preservando o original global.
+- Última impressora selecionada por usuário/dispositivo. Visitante: localStorage sujeito à limpeza do navegador; autenticado: dado da conta quando a persistência for autorizada.
+- Estoque de insumos comprados não confundir com ferramentas reutilizáveis ou itens produzidos; exigir movimentações rastreáveis.
+- Planejar proteção de dados Full privados antes de expor API. Jamais inferir permissão apenas de estar autenticado; revisão de RLS é obrigatória.

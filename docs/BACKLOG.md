@@ -78,3 +78,32 @@ Não ampliar escopo sem homologação.
 - [ ] Plano Compartilhado pago: catálogo comunitário de equipamentos/filamentos/itens consultável por Compartilhado e Full, com direitos de edição, moderação e privacidade definidos.
 - [ ] Plano Full pago: cadastros exclusivamente privados e acesso de leitura opcional ao catálogo compartilhado.
 - [ ] Modelo Supabase Auth + RLS por proprietário/visibilidade, cobrança, custos e regras de consentimento. Nenhum deploy nem criação de infraestrutura nesta etapa.
+
+## Lote de requisitos — pré-homologação (20/11/2026, sem deploy a cada commit)
+
+### Prioridade 1 — Fundação do cadastro
+- [ ] Selecionar impressora como primeira entrada do produto; trazer automaticamente a última impressora usada quando iniciar um novo produto; permitir substituição.
+- [ ] Botão "+" discreto ao lado do rótulo Impressora abre modal de cadastro; selecionar cadastro global existente, adicionar nova impressora e editar sem alterar modelos globais.
+- [ ] Catálogo inicial de modelos populares de impressoras com identificação/marca e parâmetros **de exemplo identificados como estimativas**; potência/consumo, preço de compra e vida útil não podem ser apresentados como fatos oficiais sem fonte.
+- [ ] Persistir última seleção e ajustes pessoais: localStorage para visitante; conta individual para autenticado quando banco disponível. Não prometer persistência entre dispositivos para visitantes.
+
+### Prioridade 2 — Catálogos de filamento
+- [ ] Pequeno botão "+" ao lado de cada rótulo Tipo de filamento, Cor e Marca, com modal próprio e sugestões já carregadas.
+- [ ] Catálogos globais acessíveis a todos os planos, inclusive gratuito; termos novos normalizados (acentuação, caixa, espaços) e sem duplicatas.
+- [ ] Especificar como novas entradas personalizadas são aprovadas/compartilhadas globalmente: não publicar entrada não moderada de um usuário para todos automaticamente.
+- [ ] Cada modal tem **Normal** (mínimo de campos) e **Avançado** (informações opcionais); o modo de modal não altera o plano contratado.
+
+### Prioridade 3 — Insumos, ferramentas e estoque
+- [ ] Catálogo separado de **ferramentas reutilizáveis** (depreciação/manutenção, não consumir uma ferramenta por peça).
+- [ ] Catálogo de **itens extras comprados**, não produzidos (argolas, ímãs, parafusos, embalagem etc.) com unidade, custo de compra, quantidade usada por produto e rateio.
+- [ ] Controle de estoque com movimentações de entrada/saída/ajuste, saldo por unidade e rastreabilidade ao produto e lote; desenhar regras antes de construir.
+- [ ] Histórico de preços e lotes de filamentos/insumos preserva preços antigos dos custos já salvos.
+- [ ] Telas dedicadas de listagem, pesquisa, edição e cadastro para Impressoras, Filamentos, Tipos, Cores, Marcas, Ferramentas, Insumos e Estoque; manter calculadora de acesso rápido sem telas obrigatórias adicionais.
+
+### Prioridade 4 — Banco (arquitetura primeiro, sem provisionar)
+- [ ] Definir contratos de dados, identificadores estáveis, isolamento entre catálogo global, alterações por usuário, itens compartilhados e itens Full privados.
+- [ ] Planejar Supabase: autenticação, RLS, visibilidade, assinaturas, preços históricos, saldos e registros de custo imutáveis; sem chaves secretas no navegador.
+- [ ] Implementação futura via camadas de armazenamento intercambiáveis (memória/localStorage e serviço remoto) sem duplicar motor de cálculo.
+- [ ] Testes automatizados de permissões: visitante, gratuito autenticado, Compartilhado e Full; leitura global, edição própria e bloqueio de dados privados.
+
+**Ordem de entrega proposta:** fechar regras e telas principais → persistência local da última impressora → componentes reutilizáveis de modal/catálogos → listagens → desenho e testes da base Supabase → estoque/assinaturas. Sem publicar em cada commit; homologar o lote.
