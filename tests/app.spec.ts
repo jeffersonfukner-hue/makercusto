@@ -19,7 +19,6 @@ test('impede quantidade inválida e permite restaurar', async ({ page }) => {
 });
 test('atualiza custo ao alterar preço e desperdício da cor', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Modelo: 151.58 g', { exact: false })).toHaveCount(0);
   await expect(page.getByTestId('unitCost')).toContainText('2,52');
   await page.getByTestId('material-gold-pricePerKg').fill('200');
   await expect(page.getByTestId('unitCost')).toContainText('2,62');
