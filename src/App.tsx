@@ -1,19 +1,145 @@
-import {useState} from 'react';
-import {calculateCost,referenceCase,type CostInput} from './domain/cost';
-const money=(x:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(x);
-const fields:{key:keyof CostInput;label:string;step:string}[]=[
-{key:'grams',label:'Filamento utilizado (g)',step:'0.01'}, {key:'pricePerKg',label:'Preço do filamento (R$/kg)',step:'0.01'},
-{key:'hours',label:'Tempo de impressão (horas)',step:'0.01'}, {key:'quantity',label:'Unidades finalizadas no lote',step:'1'},
-{key:'averageWatts',label:'Consumo médio (W)',step:'1'},{key:'pricePerKwh',label:'Tarifa elétrica (R$/kWh)',step:'0.01'},
-{key:'printerPrice',label:'Valor da impressora (R$)',step:'1'},{key:'lifetimeHours',label:'Vida útil estimada (horas)',step:'1'},
-{key:'accessoryPerUnit',label:'Acessórios por unidade (R$)',step:'0.01'}, {key:'assemblyMinutesPerUnit',label:'Montagem por unidade (min)',step:'0.1'},
-{key:'laborPerHour',label:'Mão de obra (R$/h)',step:'0.01'},{key:'salePrice',label:'Preço de venda por unidade (R$)',step:'0.01'}];
-export default function App(){
- const [form,setForm]=useState<CostInput>(referenceCase);
- const update=(key:keyof CostInput,value:string)=>setForm(previous=>({...previous,[key]:value===''?NaN:Number(value)}));
- let result:ReturnType<typeof calculateCost>|undefined,error='';try{result=calculateCost(form)}catch(e){error=(e as Error).message}
- return <><header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Protótipo · v0.1.0</span></div></header>
- <main className="shell"><section className="intro"><p className="eyebrow">CÁLCULO DE IMPRESSÃO 3D</p><h1>Quanto custa produzir? Quanto sobra na venda?</h1><p>Simule um lote completo — filamento, energia, máquina, acessórios e montagem. Todos os parâmetros são editáveis e calculados no seu navegador.</p></section>
- <div className="workspace"><section className="panel"><div className="panel-heading"><div><h2>Dados de produção</h2><p>Exemplo inicial: chaveiro Nossa Senhora, 20 unidades.</p></div><button type="button" onClick={()=>setForm(referenceCase)}>Restaurar exemplo</button></div><div className="fields">{fields.map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={Number.isNaN(form[field.key])?'':form[field.key]} onChange={e=>update(field.key,e.target.value)}/></label>)}</div><p className="footnote">Valores de energia, máquina, tempo e materiais são apenas hipóteses editáveis do exemplo. Não constituem tarifa oficial ou medição elétrica.</p></section>
- <section className="panel result-panel" aria-live="polite"><h2>Resultado da simulação</h2>{error?<p className="error" role="alert">{error}</p>:result&&<><div className="hero-amount"><span>Custo de produção por unidade</span><strong data-testid="unitCost">{money(result.unitCost)}</strong><small>Total do lote: {money(result.lotCost)}</small></div><h3>Composição do lote</h3><dl className="cost-list">{([['Filamento',result.material],['Energia',result.energy],['Depreciação',result.depreciation],['Acessórios',result.accessories],['Montagem',result.assembly]] as const).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}</dl><div className="summary"><div><span>Faturamento do lote</span><strong>{money(result.lotRevenue)}</strong></div><div><span>Lucro bruto estimado</span><strong data-testid="grossProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.grossProfit)}</strong></div><div><span>Margem bruta</span><strong data-testid="margin">{result.marginPercent.toFixed(1).replace('.',',')}%</strong></div><div><span>Markup sobre custo</span><strong>{result.markupPercent.toFixed(1).replace('.',',')}%</strong></div></div><p className="footnote">Não inclui embalagem, frete, taxas de marketplace, tributos ou despesas administrativas. Lucro bruto não é lucro líquido. Valores apresentados com arredondamento visual.</p></>}</section></div></main><footer className="shell footer">MakerCusto · Fundação técnica em avaliação · Sem conta e sem envio de dados</footer></>;
+import { useState } from 'react';
+import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
+
+const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+const numeric = (value: string) => value === '' ? NaN : Number(value);
+type NumericKey = Exclude<keyof CostInput, 'materials'>;
+const fields: { key: NumericKey; label: string; step: string }[] = [
+  { key: 'hours', label: 'Tempo de impressão (horas)', step: '0.01' },
+  { key: 'quantity', label: 'Unidades finalizadas no lote', step: '1' },
+  { key: 'averageWatts', label: 'Consumo médio (W)', step: '1' },
+  { key: 'pricePerKwh', label: 'Tarifa elétrica (R$/kWh)', step: '0.01' },
+  { key: 'printerPrice', label: 'Valor da impressora (R$)', step: '1' },
+  { key: 'lifetimeHours', label: 'Vida útil estimada (horas)', step: '1' },
+  { key: 'accessoryPerUnit', label: 'Acessórios por unidade (R$)', step: '0.01' },
+  { key: 'assemblyMinutesPerUnit', label: 'Montagem por unidade (min)', step: '0.1' },
+  { key: 'laborPerHour', label: 'Mão de obra (R$/h)', step: '0.01' },
+  { key: 'salePrice', label: 'Preço de venda por unidade (R$)', step: '0.01' }
+];
+const materialFields: { key: 'grams' | 'wasteGrams' | 'pricePerKg'; label: string }[] = [
+  { key: 'grams', label: 'Modelo (g)' },
+  { key: 'wasteGrams', label: 'Purga e perdas (g)' },
+  { key: 'pricePerKg', label: 'R$/kg' }
+];
+export default function App() {
+  const [form, setForm] = useState<CostInput>(referenceCase);
+  const [nextId, setNextId] = useState(1);
+  const update = (key: NumericKey, value: string) =>
+    setForm(previous => ({ ...previous, [key]: numeric(value) }));
+  const updateMaterial = (id: string, key: keyof MaterialLine, value: string) =>
+    setForm(previous => ({
+      ...previous,
+      materials: (previous.materials ?? []).map(item =>
+        item.id === id ? { ...item, [key]: key === 'name' ? value : numeric(value) } : item)
+    }));
+  const addMaterial = () => {
+    const id = 'extra-' + nextId;
+    setNextId(value => value + 1);
+    setForm(previous => ({
+      ...previous,
+      materials: [...(previous.materials ?? []),
+        { id, name: 'Nova cor', grams: 0, wasteGrams: 0, pricePerKg: 100 }]
+    }));
+  };
+  const removeMaterial = (id: string) =>
+    setForm(previous => ({
+      ...previous, materials: (previous.materials ?? []).filter(item => item.id !== id)
+    }));
+  let result: ReturnType<typeof calculateCost> | undefined;
+  let error = '';
+  try { result = calculateCost(form); } catch (e) { error = (e as Error).message; }
+
+  return <>
+    <header className="site-header"><div className="shell brand">
+      <span className="brand-mark" aria-hidden="true">M</span>
+      <div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div>
+      <span className="phase">Protótipo · v0.1.0</span>
+    </div></header>
+    <main className="shell">
+      <section className="intro">
+        <p className="eyebrow">CÁLCULO DE IMPRESSÃO 3D</p>
+        <h1>Quanto custa produzir? Quanto sobra na venda?</h1>
+        <p>Simule um lote completo com materiais de cores e preços diferentes, desperdício, energia, máquina, acessórios e montagem. Tudo é calculado no navegador.</p>
+      </section>
+      <div className="workspace">
+        <section className="panel">
+          <div className="panel-heading"><div>
+            <h2>Dados de produção</h2>
+            <p>Exemplo: chaveiro Nossa Senhora, 20 unidades, 3 cores.</p>
+          </div><button type="button" onClick={() => setForm(referenceCase)}>Restaurar exemplo</button></div>
+          <section aria-labelledby="materials-title" className="materials">
+            <div className="materials-heading">
+              <h3 id="materials-title">Materiais por cor</h3>
+              <button type="button" onClick={addMaterial}>+ Adicionar cor</button>
+            </div>
+            {(form.materials ?? []).map((item, index) => <fieldset className="material-row" key={item.id}>
+              <legend>Material {index + 1}</legend>
+              <label>Cor / material
+                <input aria-label={`Nome do material ${index + 1}`} value={item.name}
+                  onChange={e => updateMaterial(item.id, 'name', e.target.value)} />
+              </label>
+              <div className="material-numbers">
+                {materialFields.map(field => <label key={field.key}>
+                  {field.label}
+                  <input type="number" min="0" step="0.01"
+                    data-testid={`material-${item.id}-${field.key}`}
+                    value={Number.isNaN(item[field.key]) ? '' : item[field.key]}
+                    onChange={e => updateMaterial(item.id, field.key, e.target.value)} />
+                </label>)}
+              </div>
+              <button type="button" className="remove-material" disabled={form.materials?.length === 1}
+                onClick={() => removeMaterial(item.id)} aria-label={`Remover material ${index + 1}`}>Remover cor</button>
+            </fieldset>)}
+            <p className="footnote">Peso do modelo e purga são valores separados. Coloque na purga apenas o material adicional não incluído no peso do fatiador. Se o relatório já incluir desperdícios, use 0 para não duplicar.</p>
+          </section>
+          <div className="fields">{fields.map(field => <label key={field.key}>
+            {field.label}
+            <input data-testid={field.key} type="number"
+              min={field.key === 'quantity' || field.key === 'lifetimeHours' ? '1' : '0'}
+              step={field.step} value={Number.isNaN(form[field.key]) ? '' : form[field.key]}
+              onChange={e => update(field.key, e.target.value)} />
+          </label>)}</div>
+          <p className="footnote">Consumo elétrico, tarifa, preço da máquina, vida útil e montagem são hipóteses editáveis deste exemplo; não são medições ou tarifas oficiais.</p>
+        </section>
+        <section className="panel result-panel" aria-live="polite">
+          <h2>Resultado da simulação</h2>
+          {error ? <p className="error" role="alert">{error}</p> : result && <>
+            <div className="hero-amount">
+              <span>Custo de produção por unidade</span>
+              <strong data-testid="unitCost">{money(result.unitCost)}</strong>
+              <small>Total do lote: {money(result.lotCost)}</small>
+            </div>
+            <h3>Composição do lote</h3>
+            <dl className="cost-list">
+              {([
+                ['Filamento (todas as cores)', result.material],
+                ['Energia', result.energy],
+                ['Depreciação', result.depreciation],
+                ['Acessórios', result.accessories],
+                ['Montagem', result.assembly]
+              ] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}
+            </dl>
+            <details className="breakdown" open>
+              <summary>Detalhamento dos materiais</summary>
+              <p className="footnote">Modelo: {result.modelGrams.toFixed(2)} g · Purga/perdas: {result.wasteGrams.toFixed(2)} g</p>
+              <dl className="cost-list">
+                {result.materialBreakdown.map(material => <div key={material.id}>
+                  <dt>{material.name} ({material.totalGrams.toFixed(2)} g)</dt>
+                  <dd>{money(material.cost)}</dd>
+                </div>)}
+              </dl>
+            </details>
+            <div className="summary">
+              <div><span>Faturamento do lote</span><strong>{money(result.lotRevenue)}</strong></div>
+              <div><span>Lucro bruto estimado</span><strong data-testid="grossProfit" className={result.grossProfit < 0 ? 'negative' : 'positive'}>{money(result.grossProfit)}</strong></div>
+              <div><span>Margem bruta</span><strong data-testid="margin">{result.marginPercent.toFixed(1).replace('.', ',')}%</strong></div>
+              <div><span>Markup sobre custo</span><strong>{result.markupPercent.toFixed(1).replace('.', ',')}%</strong></div>
+            </div>
+            <p className="footnote">Não inclui embalagem, frete, taxas de marketplace, tributos ou despesas administrativas. Lucro bruto não é lucro líquido. Valores arredondados somente na apresentação.</p>
+          </>}
+        </section>
+      </div>
+    </main>
+    <footer className="shell footer">MakerCusto · Fundação técnica em avaliação · Sem conta e sem envio de dados</footer>
+  </>;
 }

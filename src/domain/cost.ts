@@ -1,17 +1,107 @@
-export interface CostInput { grams:number; pricePerKg:number; hours:number; averageWatts:number; pricePerKwh:number; printerPrice:number; lifetimeHours:number; quantity:number; accessoryPerUnit:number; assemblyMinutesPerUnit:number; laborPerHour:number; salePrice:number; }
-export interface CostResult {material:number;energy:number;depreciation:number;accessories:number;assembly:number;lotCost:number;unitCost:number;lotRevenue:number;grossProfit:number;marginPercent:number;markupPercent:number;}
-export function calculateCost(input: CostInput): CostResult {
-  const fields = Object.values(input);
-  if (fields.some(v=>!Number.isFinite(v)||v<0)||!Number.isInteger(input.quantity)||input.quantity<1||input.lifetimeHours<=0) throw new Error('Confira os parâmetros: valores não negativos, quantidade inteira e vida útil maior que zero.');
-  const material=input.grams*input.pricePerKg/1000;
-  const energy=input.averageWatts/1000*input.hours*input.pricePerKwh;
-  const depreciation=input.printerPrice/input.lifetimeHours*input.hours;
-  const accessories=input.accessoryPerUnit*input.quantity;
-  const assembly=input.assemblyMinutesPerUnit/60*input.laborPerHour*input.quantity;
-  const lotCost=material+energy+depreciation+accessories+assembly;
-  const unitCost=lotCost/input.quantity;
-  const lotRevenue=input.salePrice*input.quantity;
-  const grossProfit=lotRevenue-lotCost;
-  return {material,energy,depreciation,accessories,assembly,lotCost,unitCost,lotRevenue,grossProfit,marginPercent:lotRevenue?grossProfit/lotRevenue*100:0,markupPercent:lotCost?grossProfit/lotCost*100:0};
+export interface MaterialLine {
+  id: string;
+  name: string;
+  grams: number;
+  wasteGrams: number;
+  pricePerKg: number;
 }
-export const referenceCase:CostInput={grams:151.58,pricePerKg:100,hours:11+14/60,averageWatts:150,pricePerKwh:1.03,printerPrice:3500,lifetimeHours:3000,quantity:20,accessoryPerUnit:.35,assemblyMinutesPerUnit:2,laborPerHour:20,salePrice:7.9};
+export interface CostInput {
+  grams: number;
+  pricePerKg: number;
+  materials?: MaterialLine[];
+  hours: number;
+  averageWatts: number;
+  pricePerKwh: number;
+  printerPrice: number;
+  lifetimeHours: number;
+  quantity: number;
+  accessoryPerUnit: number;
+  assemblyMinutesPerUnit: number;
+  laborPerHour: number;
+  salePrice: number;
+}
+export interface MaterialResult {
+  id: string;
+  name: string;
+  modelGrams: number;
+  wasteGrams: number;
+  totalGrams: number;
+  cost: number;
+}
+export interface CostResult {
+  material: number;
+  materialBreakdown: MaterialResult[];
+  modelGrams: number;
+  wasteGrams: number;
+  energy: number;
+  depreciation: number;
+  accessories: number;
+  assembly: number;
+  lotCost: number;
+  unitCost: number;
+  lotRevenue: number;
+  grossProfit: number;
+  marginPercent: number;
+  markupPercent: number;
+}
+const validNonNegative = (value: number): boolean => Number.isFinite(value) && value >= 0;
+export function calculateCost(input: CostInput): CostResult {
+  const baseNumbers = [
+    input.hours, input.averageWatts, input.pricePerKwh, input.printerPrice,
+    input.lifetimeHours, input.quantity, input.accessoryPerUnit,
+    input.assemblyMinutesPerUnit, input.laborPerHour, input.salePrice
+  ];
+  if (baseNumbers.some(value => !validNonNegative(value)) ||
+      !Number.isSafeInteger(input.quantity) || input.quantity < 1 ||
+      input.lifetimeHours <= 0) {
+    throw new Error('Confira os parâmetros: valores não negativos, quantidade inteira e vida útil maior que zero.');
+  }
+  // A lista de materiais substitui o campo legado de filamento único.
+  // Nunca somar ambos: evita custo de filamento contabilizado duas vezes.
+  const materials: MaterialLine[] = input.materials === undefined
+    ? [{ id: 'single', name: 'Filamento', grams: input.grams, wasteGrams: 0, pricePerKg: input.pricePerKg }]
+    : input.materials;
+  if (!materials.length || new Set(materials.map(item => item.id)).size !== materials.length ||
+      materials.some(item =>
+        !item.id.trim() || !item.name.trim() ||
+        !validNonNegative(item.grams) || !validNonNegative(item.wasteGrams) ||
+        !validNonNegative(item.pricePerKg))) {
+    throw new Error('Verifique os materiais: nome, peso e preço válidos; ao menos uma cor e IDs únicos.');
+  }
+  const materialBreakdown = materials.map(item => ({
+    id: item.id,
+    name: item.name,
+    modelGrams: item.grams,
+    wasteGrams: item.wasteGrams,
+    totalGrams: item.grams + item.wasteGrams,
+    cost: (item.grams + item.wasteGrams) * item.pricePerKg / 1000
+  }));
+  const material = materialBreakdown.reduce((sum, item) => sum + item.cost, 0);
+  const modelGrams = materialBreakdown.reduce((sum, item) => sum + item.modelGrams, 0);
+  const wasteGrams = materialBreakdown.reduce((sum, item) => sum + item.wasteGrams, 0);
+  const energy = input.averageWatts / 1000 * input.hours * input.pricePerKwh;
+  const depreciation = input.printerPrice / input.lifetimeHours * input.hours;
+  const accessories = input.accessoryPerUnit * input.quantity;
+  const assembly = input.assemblyMinutesPerUnit / 60 * input.laborPerHour * input.quantity;
+  const lotCost = material + energy + depreciation + accessories + assembly;
+  const unitCost = lotCost / input.quantity;
+  const lotRevenue = input.salePrice * input.quantity;
+  const grossProfit = lotRevenue - lotCost;
+  return {
+    material, materialBreakdown, modelGrams, wasteGrams, energy, depreciation,
+    accessories, assembly, lotCost, unitCost, lotRevenue, grossProfit,
+    marginPercent: lotRevenue ? grossProfit / lotRevenue * 100 : 0,
+    markupPercent: lotCost ? grossProfit / lotCost * 100 : 0
+  };
+}
+export const referenceCase: CostInput = {
+  grams: 151.58, pricePerKg: 100,
+  materials: [
+    { id: 'blue', name: 'Azul', grams: 83.26, wasteGrams: 0, pricePerKg: 100 },
+    { id: 'white', name: 'Branco', grams: 47.76, wasteGrams: 0, pricePerKg: 100 },
+    { id: 'gold', name: 'Dourado', grams: 20.56, wasteGrams: 0, pricePerKg: 100 }
+  ],
+  hours: 11 + 14 / 60, averageWatts: 150, pricePerKwh: 1.03,
+  printerPrice: 3500, lifetimeHours: 3000, quantity: 20,
+  accessoryPerUnit: .35, assemblyMinutesPerUnit: 2, laborPerHour: 20, salePrice: 7.9
+};

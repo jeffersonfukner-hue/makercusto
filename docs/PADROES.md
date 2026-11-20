@@ -1,11 +1,15 @@
 # Padrões e qualidade
 
-- Idioma inicial pt-BR; unidade monetária R$; unidades explícitas (g, W, kWh, h).
-- Campos numéricos não negativos, quantidades inteiras >= 1; erros visíveis em vez de resultados fictícios.
-- Valores de referência devem ser identificados como hipóteses editáveis, não tarifa confirmada.
-- Mostrar separadamente: material, energia, máquina, acessórios, montagem, custo unitário, lucro bruto, margem bruta.
-- Margem bruta = (preço - custo) / preço; markup = (preço - custo) / custo. Valores não incluem tributos, taxas e frete salvo cadastrados explicitamente.
-- Produção em lote compartilha custo da impressão; montagem e acessórios multiplicam por unidades.
-- Componentes acessíveis e layout mobile 320px/390px.
-- Regra de versão: não alterar versão por cada commit; CI verde não implica publicação.
-- Testes e inspeção visual precedem homologação.
+- Idioma inicial pt-BR; moeda R$; unidades explícitas (g, W, kWh, h).
+- Campos não negativos, quantidades inteiras >= 1; erros visíveis.
+- Tarifas, consumo e vida útil são hipóteses editáveis, nunca valores oficiais sem fonte.
+- Materiais multicor: o peso do modelo é por material. Purga/perdas entra adicionalmente apenas se não estiver incluída no peso informado.
+- Não somar entrada de filamento único e entrada de filamentos múltiplos simultaneamente.
+- Mostrar material, energia, máquina, acessórios, montagem, custo/lote e unidade, lucro bruto, margem e markup.
+- Margem = (preço - custo) / preço; markup = (preço - custo) / custo.
+- Impressão compartilhada é rateada por lote, acessórios/montagem multiplicam por unidades acabadas.
+- Não considerar frete, impostos, embalagens e taxas de marketplace sem parametrização explícita.
+- Interface acessível e responsiva, incluindo mobile 320px/390px; foco visível e entradas com legenda.
+- Cálculo usa números JS e arredonda somente na apresentação. Antes de persistência financeira, definir precisão decimal/centavos e rateio.
+- Não incrementar versão por commit; CI não equivale a publicação ou homologação.
+- Deploy de Preview exclusivamente manual pelo proprietário, após CI verde.

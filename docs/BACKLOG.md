@@ -1,31 +1,36 @@
 # Backlog priorizado
 
-## Etapa 1 — Fundação (esta PR)
-- [x] Documentação, arquitetura e regras de trabalho
-- [x] SPA inicial responsiva
-- [x] Motor isolado de custo e margem
-- [x] Testes unitários e E2E + CI sem deploy
-- [ ] CI remoto verde e homologação visual do proprietário
+## Etapa 1 — Fundação e cálculo inicial (PR #1)
+- [x] Documentação, arquitetura, contrato e regras de trabalho
+- [x] SPA estática responsiva e motor de custos
+- [x] Testes unitários/E2E + CI sem deploy
+- [x] CI fundação aprovado (#44795814820)
+- [ ] Homologação visual do proprietário
+
+## Extensão incremental — Multicor na mesma PR, antes da homologação
+- [x] Materiais por cor com preços individuais
+- [x] Purga/perdas separadas por material, sem dupla contagem
+- [x] Detalhamento dos custos e testes de regressão
+- [ ] CI da extensão e homologação visual
 
 ## Etapa 2 — Perfil do maker
 - [ ] Impressoras, filamentos, materiais e tarifa configuráveis
-- [ ] Persistência local IndexedDB, exportação/importação
+- [ ] IndexedDB e exportação/importação de configurações
 - [ ] PWA/offline
 
-## Etapa 3 — Lotes reais
-- [ ] Múltiplos materiais e mesas
-- [ ] Componentes por produto, kits e rateios auditáveis
-- [ ] Purga, falhas e retrabalho sem contagem duplicada
+## Etapa 3 — Composição de lotes
+- [ ] Múltiplas mesas e rateio entre produtos diferentes
+- [ ] Quantidade de componentes por produto, montagem e kits
+- [ ] Falhas/retrabalho e purga real sem somas duplicadas
 
 ## Etapa 4 — Entrada de fatiador
-- [ ] Pesquisar G-code/3MF de slicers específicos com amostras reais
-- [ ] Auditoria das origens e das incertezas dos valores
+- [ ] G-code/3MF com amostras reais e proveniência dos valores
 
 ## Etapa 5 — Comercial
-- [ ] Canais, taxas, impostos configuráveis e preço mínimo
+- [ ] Canais, taxas/impostos e preço mínimo
 - [ ] Orçamento compartilhável/PDF
 
 ## Etapa 6 — Nuvem (sob decisão futura)
-- [ ] Contas, sincronização e custos realizados
+- [ ] Contas, sincronização e custo estimado vs. realizado
 
-Não expandir escopo sem homologação.
+Não ampliar escopo sem homologação.
