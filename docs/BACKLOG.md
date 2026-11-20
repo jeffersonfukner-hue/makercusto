@@ -49,3 +49,5 @@ Não ampliar escopo sem homologação.
 - [ ] **Privacidade e autenticação**: escopo por usuário, políticas RLS e proteção do histórico antes de qualquer banco real.
 
 **Decisão de escopo:** manter o aplicativo simples por enquanto. Supabase e modo Pro são planejamento; não implementar cadastros extensos ou conexão agora.
+
+- [x] Inserir nova cor no topo e expandir automaticamente (evitar cliques repetidos por falta de feedback). CI/homologação da revisão pendentes.

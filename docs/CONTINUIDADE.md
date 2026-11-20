@@ -23,3 +23,8 @@
 - Foco imediato aprovado: simplicidade e edição multicor em acordeão: uma linha-resumo por material e apenas um formulário aberto por vez; trocar de cor preserva entradas.
 - Respostas técnicas ao proprietário: somente Resultado, Pendências e Próxima ação; objetivas em pt-BR. Deploy manual exclusivo do proprietário; não fazer merge.
 - CI e homologação da alteração no acordeão precisam ser consultados para o HEAD atual antes de indicar deploy.
+
+## Ajuste UX solicitado — inclusão de cor no topo (20/11/2026)
+- Ao clicar Adicionar cor, a nova entrada deve aparecer imediatamente no **topo** da lista e seu formulário deve abrir; demais materiais permanecem resumidos.
+- Evitar a sensação de que o botão falhou e múltiplas adições por falta de visibilidade. Preservar as entradas anteriores e testar dois cliques consecutivos.
+- Entrega depende do CI do HEAD e homologação visual; deploy continua exclusivamente manual pelo proprietário.

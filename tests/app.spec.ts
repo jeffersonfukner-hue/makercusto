@@ -33,7 +33,7 @@ test('adiciona e remove material e valida entrada', async ({ page }) => {
   await page.getByTestId('material-extra-1-grams').fill('-1');
   await expect(page.getByRole('alert')).toBeVisible();
   await page.getByTestId('material-extra-1-grams').fill('0');
-  await page.getByRole('button', { name: 'Remover material 4' }).click();
+  await page.getByRole('button', { name: 'Remover material 1' }).click();
   await expect(page.getByRole('button', { name: /Nova cor/ })).toHaveCount(0);
 });
 
@@ -50,4 +50,18 @@ test('edita uma cor de cada vez, resume as demais e preserva seus valores', asyn
   await page.getByRole('button', { name: /Adicionar cor/ }).click();
   await expect(page.getByTestId('material-extra-1-grams')).toBeVisible();
   await expect(page.getByRole('button', { name: /Azul/ })).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('insere nova cor no topo e a expande imediatamente, inclusive em cliques sucessivos', async ({ page }) => {
+  await page.goto('/');
+  const rows = page.locator('.material-row');
+  await page.getByRole('button', { name: /Adicionar cor/ }).click();
+  await expect(rows.first()).toContainText('Nova cor');
+  await expect(page.getByTestId('material-extra-1-grams')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Azul/ })).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('button', { name: /Adicionar cor/ }).click();
+  await expect(rows.first()).toContainText('Nova cor');
+  await expect(page.getByTestId('material-extra-2-grams')).toBeVisible();
+  await expect(page.getByTestId('material-extra-1-grams')).toHaveCount(0);
+  await expect(rows).toHaveCount(5);
 });

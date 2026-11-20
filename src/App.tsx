@@ -39,8 +39,8 @@ export default function App() {
     setActiveMaterialId(id);
     setForm(previous => ({
       ...previous,
-      materials: [...(previous.materials ?? []),
-        { id, name: 'Nova cor', grams: 0, wasteGrams: 0, pricePerKg: 100 }]
+      materials: [{ id, name: 'Nova cor', grams: 0, wasteGrams: 0, pricePerKg: 100 },
+        ...(previous.materials ?? [])]
     }));
   };
   const removeMaterial = (id: string) => {
