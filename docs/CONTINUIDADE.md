@@ -59,3 +59,12 @@
 - Alternativa **Detalhar por cor** abre o formulário e tabela compacta já planejados; ao voltar a "Usar total de filamento", restaurar os valores simples sem somar ambos.
 - Cada modo conserva seus dados em memória enquanto a página está aberta; o motor de custo considera apenas o modo ativo.
 - Não criar banco, não fazer deploy/merge. Verificação do CI e homologação visual precedem deploy manual.
+
+## Nova decisão de produto — impressora primeiro; modos separados (20/11/2026)
+- Apresentar **Impressora antes de Filamentos**. Usuário seleciona equipamento previamente configurado e pode editar valor de aquisição, potência média, vida útil e tarifa elétrica; os cálculos da impressão usam o selecionado.
+- **Modo de cálculo** (Simples/Avançado) é dimensão diferente de **plano de dados** (gratuito, Compartilhado, Full). Não bloquear modo avançado apenas por não pagar sem nova decisão.
+- **Gratuito:** cálculo rápido com dados manuais, sem conta nem histórico remoto garantido.
+- **Compartilhado (pago, futuro):** cadastrar/salvar impressoras, filamentos e itens num catálogo de acesso comum; dados compartilhados podem ser consultados também por assinantes Full. Proprietário original e regras de alteração/exclusão/curadoria ainda serão especificados.
+- **Full (pago, futuro):** itens particulares do usuário, inacessíveis aos demais, além de acesso opcional ao catálogo compartilhado. Nunca tornar item privado público por padrão.
+- Definir Supabase/Auth/RLS, limites de acesso, consentimento para compartilhamento, custos, modelo de assinatura e histórico imutável antes da implementação real.
+- Prioridade atual: seletor de impressoras **somente em memória na sessão** + edição de seus parâmetros e cálculo automático; sem banco nem cobrança. Não alegar persistência da impressora entre sessões.

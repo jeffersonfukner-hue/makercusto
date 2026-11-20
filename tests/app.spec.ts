@@ -104,3 +104,19 @@ test('valor inválido do modo simples mostra erro sem resultado fictício',async
  await page.getByTestId('simpleQuantity').fill('100');
  await expect(page.getByRole('alert')).toHaveCount(0);
 });
+
+test('seleciona, edita e reutiliza impressora na sessão sem alterar filamento',async({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('heading',{name:'Impressora'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Filamentos'})).toBeVisible();
+ await page.getByRole('button',{name:'+ Nova impressora'}).click();
+ await page.getByRole('textbox',{name:'Nome da impressora'}).fill('Kobra X bancada');
+ await page.getByTestId('printerPrice').fill('5000');
+ await page.getByTestId('averageWatts').fill('100');
+ await page.getByRole('button',{name:'Fechar edição'}).click();
+ await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toContainText('Kobra X bancada');
+ await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption('example');
+ await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption('printer-2');
+ await expect(page.locator('.printer-summary')).toContainText('100 W');
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
+});

@@ -70,3 +70,11 @@ Não ampliar escopo sem homologação.
 - [ ] CI verde e homologação mobile/desktop para este incremento.
 
 - [x] Corrigir modo simples para editar peso total e preço (g/kg e R$/g ou R$/kg), deixando Detalhar por cor como opção alternativa; preservar valores sem dupla contagem (CI/homologação pendentes).
+
+## 20/11/2026 — Novo fluxo e monetização
+- [x] Seletor/edição local de impressora acima do filamento, preenchendo energia e depreciação; configuração em memória para validar fluxo (CI/homologação pendentes).
+- [ ] Modo Simples global e Avançado global de cálculo (independentes da assinatura).
+- [ ] Plano gratuito: cálculo manual sem histórico em nuvem.
+- [ ] Plano Compartilhado pago: catálogo comunitário de equipamentos/filamentos/itens consultável por Compartilhado e Full, com direitos de edição, moderação e privacidade definidos.
+- [ ] Plano Full pago: cadastros exclusivamente privados e acesso de leitura opcional ao catálogo compartilhado.
+- [ ] Modelo Supabase Auth + RLS por proprietário/visibilidade, cobrança, custos e regras de consentimento. Nenhum deploy nem criação de infraestrutura nesta etapa.

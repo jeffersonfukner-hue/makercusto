@@ -16,14 +16,12 @@ const unique = (values:string[]) => { const used=new Set<string>(); return value
 function readCatalog(catalog:Catalog):string[] {
  try { const value:unknown=JSON.parse(localStorage.getItem(key(catalog))||'[]');return Array.isArray(value)?unique(value.filter((v):v is string=>typeof v==='string').slice(0,100)):[]; }catch { return []; }
 }
+type PrinterProfile = {id:string;name:string;printerPrice:number;averageWatts:number;lifetimeHours:number;pricePerKwh:number};
+const initialPrinter:PrinterProfile = {id:'example',name:'Exemplo — ajustar valores',printerPrice:3500,averageWatts:150,lifetimeHours:3000,pricePerKwh:1.03};
 type NumericKey = Exclude<keyof CostInput,'materials'>;
 const fields:{key:NumericKey;label:string;step:string}[] = [
  {key:'hours',label:'Tempo de impressão (horas)',step:'0.01'},
  {key:'quantity',label:'Unidades finalizadas no lote',step:'1'},
- {key:'averageWatts',label:'Consumo médio (W)',step:'1'},
- {key:'pricePerKwh',label:'Tarifa elétrica (R$/kWh)',step:'0.01'},
- {key:'printerPrice',label:'Valor da impressora (R$)',step:'1'},
- {key:'lifetimeHours',label:'Vida útil estimada (horas)',step:'1'},
  {key:'accessoryPerUnit',label:'Acessórios por unidade (R$)',step:'0.01'},
  {key:'assemblyMinutesPerUnit',label:'Montagem por unidade (min)',step:'0.1'},
  {key:'laborPerHour',label:'Mão de obra (R$/h)',step:'0.01'},
@@ -39,6 +37,18 @@ const seeded = () => referenceCase.materials!.map(m=>({...m,type:'PETG',brand:''
 const calculatedPackagePrice = (item:MaterialLine):number => item.packagePrice ?? item.pricePerKg*(item.packageQuantity??1)*(item.packageUnit==='g'?.001:1);
 export default function App(){
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
+ const [printers,setPrinters]=useState<PrinterProfile[]>([initialPrinter]);
+ const [printerId,setPrinterId]=useState('example');
+ const [printerEditing,setPrinterEditing]=useState(false);
+ const activePrinter=printers.find(p=>p.id===printerId)??printers[0];
+ const updatePrinter=(key:'name'|'printerPrice'|'averageWatts'|'lifetimeHours'|'pricePerKwh',value:string)=>{
+   setPrinters(prev=>prev.map(p=>p.id===printerId?{...p,[key]:key==='name'?value:numeric(value)}:p));
+ };
+ const addPrinter=()=>{
+   const id='printer-'+String(printers.length+1);
+   setPrinters(prev=>[...prev,{...initialPrinter,id,name:'Impressora personalizada'}]);
+   setPrinterId(id);setPrinterEditing(true);
+ };
  const [details,setDetails]=useState(false);
  const [simple,setSimple]=useState<SimpleFilament>(initialSimple);
  const [detailedMaterials,setDetailedMaterials]=useState<MaterialLine[]>(seeded);
@@ -75,6 +85,7 @@ export default function App(){
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
  const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
  const reset=()=>{
+   setPrinters([initialPrinter]);setPrinterId('example');setPrinterEditing(false);
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
    setDetailedMaterials(seeded());
@@ -83,6 +94,10 @@ export default function App(){
  };
  const activeInput:CostInput={
    ...form,
+   printerPrice:activePrinter.printerPrice,
+   averageWatts:activePrinter.averageWatts,
+   lifetimeHours:activePrinter.lifetimeHours,
+   pricePerKwh:activePrinter.pricePerKwh,
    grams:asGrams(simple.quantity,simple.quantityUnit),
    pricePerKg:perKg(simple.price,simple.priceUnit),
    materials:details?detailedMaterials:undefined
@@ -98,6 +113,26 @@ export default function App(){
   <div className="workspace">
    <section className="panel">
     <div className="panel-heading"><div><h2>Dados de produção</h2><p>Exemplo: chaveiro Nossa Senhora, lote de 20 unidades.</p></div><button type="button" onClick={reset}>Restaurar exemplo</button></div>
+    <section className="printer-section" aria-labelledby="printer-title">
+     <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterEditing(v=>!v)}>{printerEditing?'Fechar edição':'Editar dados'}</button></div>
+     <div className="printer-selector">
+      <label>Selecionar impressora
+       <select aria-label="Selecionar impressora" value={printerId} onChange={e=>{setPrinterId(e.target.value);setPrinterEditing(false);}}>
+        {printers.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+       </select>
+      </label>
+      <button type="button" onClick={addPrinter}>+ Nova impressora</button>
+     </div>
+     <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>
+     {printerEditing&&<div className="printer-edit-fields">
+       <label>Identificação<input aria-label="Nome da impressora" value={activePrinter.name} onChange={e=>updatePrinter('name',e.target.value)}/></label>
+       <label>Valor da impressora (R$)<input type="number" min="0" step="any" data-testid="printerPrice" value={display(activePrinter.printerPrice)} onChange={e=>updatePrinter('printerPrice',e.target.value)}/></label>
+       <label>Potência média (W)<input type="number" min="0" step="any" data-testid="averageWatts" value={display(activePrinter.averageWatts)} onChange={e=>updatePrinter('averageWatts',e.target.value)}/></label>
+       <label>Vida útil (h)<input type="number" min="0.01" step="any" data-testid="lifetimeHours" value={display(activePrinter.lifetimeHours)} onChange={e=>updatePrinter('lifetimeHours',e.target.value)}/></label>
+       <label>Tarifa elétrica (R$/kWh)<input type="number" min="0" step="any" data-testid="pricePerKwh" value={display(activePrinter.pricePerKwh)} onChange={e=>updatePrinter('pricePerKwh',e.target.value)}/></label>
+     </div>}
+     <p className="footnote">Valores do exemplo são hipóteses. Cadastros ficam somente nesta sessão; salvamento em conta será definido para os planos pagos.</p>
+    </section>
     <section className="materials" aria-labelledby="materials-title">
      <div className="materials-heading"><h3 id="materials-title">Filamentos</h3><button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button></div>
      {!details&&<div className="simple-material-fields">

@@ -16,3 +16,6 @@
 - UI de compra é um formulário único em estado de rascunho: linhas são persistidas apenas em memória após Adicionar à tabela/Salvar alteração. Por padrão, só resumo agregado é mostrado; tabela é expandida explicitamente.
 
 - Dois modos de filamento mutuamente exclusivos na UI: simples usa grams/pricePerKg legados, normalizados de g/kg e R$/g ou R$/kg, com materials=undefined; detalhado usa materials da tabela. Ambos preservam estado ao alternar e jamais são somados.
+
+- O cadastro de impressoras proposto diferencia perfis locais de sessão e cadastros persistentes dos planos futuros. Equipamento selecionado alimenta printerPrice, averageWatts, lifetimeHours e pricePerKwh; não modifica dados de filamento.
+- Planos futuros: compartilhado com visibilidade para assinantes Compartilhado/Full; privado com isolamento por usuário. Exigir autorização baseada em proprietário e visibilidade, não somente no papel authenticated; compartilhamento opt-in e proteção de itens privados.

@@ -20,3 +20,6 @@
 
 - **Modo padrão editável:** entrada de filamento total em g ou kg e preço em R$/kg ou R$/g; resumo é saída calculada, não substitui os campos.
 - **Modo detalhado:** botão Detalhar por cor alterna para formulário e tabela; ao voltar, conservar dados de ambos os modos em memória sem somar custos. Somente modo ativo alimenta o motor de cálculos.
+
+- Impressora deve preceder filamento. Seleção de equipamento preenche potência, custo do equipamento, vida útil e tarifa; usuário pode editar. Não chamar exemplos de especificações oficiais.
+- Modo de cálculo Simples/Avançado não se confunde com modelo comercial gratuito/Compartilhado/Full. Compartilhamento deve ser opt-in, perfis Full privados por padrão.
