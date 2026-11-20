@@ -61,12 +61,24 @@ export default function App() {
     try { window.localStorage.setItem(catalogKey, JSON.stringify(customs)); } catch { /* Sem armazenamento disponível: uso apenas nesta sessão. */ }
   };
   const addMaterial = () => {
+    // Um cadastro incompleto deve ser retomado, nunca multiplicado.
+    const pending = (form.materials ?? []).find(item =>
+      item.id.startsWith('extra-') &&
+      (!item.name.trim() || colorKey(item.name) === colorKey('Nova cor') ||
+        !Number.isFinite(item.grams) || item.grams <= 0 ||
+        !Number.isFinite(item.pricePerKg) || item.pricePerKg <= 0 ||
+        !Number.isFinite(item.wasteGrams) || item.wasteGrams < 0)
+    );
+    if (pending) {
+      setActiveMaterialId(pending.id);
+      return;
+    }
     const id = 'extra-' + nextId;
     setNextId(value => value + 1);
     setActiveMaterialId(id);
     setForm(previous => ({
       ...previous,
-      materials: [{ id, name: 'Nova cor', grams: 0, wasteGrams: 0, pricePerKg: 100 },
+      materials: [{ id, name: '', grams: 0, wasteGrams: 0, pricePerKg: 100 },
         ...(previous.materials ?? [])]
     }));
   };

@@ -52,18 +52,25 @@ test('edita uma cor de cada vez, resume as demais e preserva seus valores', asyn
   await expect(page.getByRole('button', { name: /Azul/ })).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('insere nova cor no topo e a expande imediatamente, inclusive em cliques sucessivos', async ({ page }) => {
+test('reaproveita cadastro pendente no topo e só cria outra cor após preencher', async ({ page }) => {
   await page.goto('/');
   const rows = page.locator('.material-row');
   await page.getByRole('button', { name: /Adicionar cor/ }).click();
-  await expect(rows.first()).toContainText('Nova cor');
+  await expect(rows.first()).toContainText('Material 1');
   await expect(page.getByTestId('material-extra-1-grams')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Azul/ })).toHaveAttribute('aria-expanded', 'false');
   await page.getByRole('button', { name: /Adicionar cor/ }).click();
-  await expect(rows.first()).toContainText('Nova cor');
-  await expect(page.getByTestId('material-extra-2-grams')).toBeVisible();
-  await expect(page.getByTestId('material-extra-1-grams')).toHaveCount(0);
+  await expect(rows).toHaveCount(4);
+  await expect(page.getByTestId('material-extra-1-grams')).toBeVisible();
+  const name = page.getByRole('textbox', { name: 'Nome do material 1' });
+  await name.fill('Turquesa');
+  await page.getByRole('button', { name: /Adicionar cor/ }).click();
+  await expect(rows).toHaveCount(4);
+  await page.getByTestId('material-extra-1-grams').fill('10');
+  await page.getByRole('button', { name: /Adicionar cor/ }).click();
   await expect(rows).toHaveCount(5);
+  await expect(page.getByTestId('material-extra-2-grams')).toBeVisible();
+  await expect(rows.first()).toContainText('Material 1');
+  await expect(rows.nth(1)).toContainText('Turquesa');
 });
 
 test('sugere cores conhecidas e memoriza personalizadas sem duplicar', async ({ page }) => {

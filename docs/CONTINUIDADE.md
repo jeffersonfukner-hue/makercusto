@@ -35,3 +35,9 @@
 - Sugestões conhecidas em campos catalogáveis, entrada personalizada e prevenção de duplicações. Primeiro piloto: cores com catálogo local. PLA/PETG, marcas e impressoras ficam no backlog.
 - Alterações locais de sugestões NÃO constituem salvamento do custo de impressão; Supabase continua sem integração.
 - CI da alteração e homologação visual ainda precisam ser verificados; deploy manual exclusivo do proprietário.
+
+## Regra de cadastro pendente (20/11/2026)
+- "Adicionar cor" só cria nova linha quando os cadastros adicionados anteriormente têm nome real, peso do modelo maior que zero e preço/kg positivo; purga deve ser não negativa.
+- Havendo cadastro incompleto, abre esse cadastro existente, sem multiplicar formulários.
+- Nova cor nasce com nome vazio; rótulo visual temporário "Material 1", sem cadastrar "Nova cor" como cor real.
+- Teste E2E deve demonstrar cliques repetidos sem novas linhas, depois preenchimento e adição legítima.
