@@ -48,3 +48,8 @@
 - Embalagens de diferentes pesos, com unidade g ou kg e preço TOTAL da embalagem, calculadas proporcionalmente. Marca opcional, tipo e cor sugeridos; valores livres sem duplicar sugestões.
 - Somente ações Salvar/Adicionar à tabela criam ou alteram linhas; não criar registros vazios. Sem persistência de impressões e sem Supabase.
 - PR #1 permanece draft. CI atualizado e homologação visual pendentes. O proprietário é o único responsável por deploy manual; nenhum merge autorizado.
+
+## Testes do primeiro redesenho e correções — 20/11/2026
+- CI #44817487995: tipagem, unitários e build verdes; E2E falhou (6 de 14 casos) por seletores que presumiam textbox em inputs com datalist e interação mobile de controles em área estreita.
+- Corrigido E2E para localizar inputs por label; movidas ações Editar/Remover para a primeira coluna junto à cor e ampliada área de toque do botão Detalhar/Ocultar em mobile.
+- Aguardando CI da revisão para liberar deploy manual; não fazer deploy antes de CI verde.

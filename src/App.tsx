@@ -105,13 +105,13 @@ export default function App(){
        <div className="form-actions"><button type="button" className="primary-action" onClick={save}>{editId?'Salvar alteração':'Adicionar à tabela'}</button>{editId&&<button type="button" onClick={()=>{setEditId(null);setDraft(newDraft());setErrorDraft('');}}>Cancelar edição</button>}</div>
        {errorDraft&&<p className="error" role="alert">{errorDraft}</p>}
       </div>
-      <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Usado</th><th>Custo</th><th>Ações</th></tr></thead><tbody>
+      <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento / ações</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Usado</th><th>Custo</th></tr></thead><tbody>
         {(form.materials??[]).map(item=>{
          const pkgQty=item.packageQuantity??1,pkgUnit=item.packageUnit??'kg';
          const spent=(item.grams+item.wasteGrams)*((item.packagePrice??item.pricePerKg*pkgQty*(pkgUnit==='kg'?1:.001))/(pkgQty*(pkgUnit==='kg'?1000:1)));
-         return <tr key={item.id} data-testid={'row-'+item.id}><td><strong>{item.name}</strong><small>{item.type||'Filamento'}</small></td><td>{item.brand||'—'}</td><td>{count(pkgQty)} {pkgUnit}</td><td>{money(calculatedPackagePrice(item))}</td><td>{count(item.grams+item.wasteGrams)} g</td><td className="numeric-cell">{money(spent)}</td><td><div className="row-actions"><button type="button" aria-label={'Editar '+item.name} onClick={()=>edit(item)}>Editar</button><button type="button" aria-label={'Remover '+item.name} onClick={()=>remove(item.id)}>×</button></div></td></tr>;
+         return <tr key={item.id} data-testid={'row-'+item.id}><td><strong>{item.name}</strong><small>{item.type||'Filamento'}</small><div className="row-actions"><button type="button" aria-label={'Editar '+item.name} onClick={()=>edit(item)}>Editar</button><button type="button" aria-label={'Remover '+item.name} onClick={()=>remove(item.id)}>×</button></div></td><td>{item.brand||'—'}</td><td>{count(pkgQty)} {pkgUnit}</td><td>{money(calculatedPackagePrice(item))}</td><td>{count(item.grams+item.wasteGrams)} g</td><td className="numeric-cell">{money(spent)}</td></tr>;
         })}
-      </tbody><tfoot><tr><th colSpan={4}>Total</th><th>{result?count(used)+' g':'—'}</th><th>{result?money(result.material):'—'}</th><th/></tr></tfoot></table></div>
+      </tbody><tfoot><tr><th colSpan={4}>Total</th><th>{result?count(used)+' g':'—'}</th><th>{result?money(result.material):'—'}</th></tr></tfoot></table></div>
       <p className="footnote">A tabela usa quantidade adquirida e preço da embalagem para calcular o preço por grama. Informe purga apenas se ela não estiver incluída no peso usado.</p>
      </div>}
     </section>

@@ -15,14 +15,15 @@ test('detalhar por cor exibe tabela alinhada e total',async({page})=>{
  await expect(page.getByTestId('row-blue')).toContainText('Azul');
  await expect(page.getByTestId('row-gold')).toContainText('Dourado');
  await expect(page.getByRole('row').last()).toContainText('151,58 g');
+ await page.getByRole('button',{name:/Ocultar cores/}).scrollIntoViewIfNeeded();
  await page.getByRole('button',{name:/Ocultar cores/}).click();
  await expect(page.getByRole('table')).toHaveCount(0);
 });
 test('inclui rolo de 250g com preço total e consumo proporcional',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
- await page.getByRole('textbox',{name:'Cor do filamento'}).fill('Turquesa');
- await page.getByRole('textbox',{name:'Marca do filamento'}).fill('Masterprint');
+ await page.getByLabel('Cor do filamento').fill('Turquesa');
+ await page.getByLabel('Marca do filamento').fill('Masterprint');
  await page.getByTestId('packageQuantity').fill('250');
  await page.getByRole('combobox',{name:'Unidade da embalagem'}).selectOption('g');
  await page.getByTestId('packagePrice').fill('25');
@@ -57,12 +58,12 @@ test('valida o formulário sem criar linhas pendentes',async({page})=>{
 test('memoriza cor personalizada sem duplicar opção padrão',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
- const c=page.getByRole('textbox',{name:'Cor do filamento'});
+ const c=page.getByLabel('Cor do filamento');
  await c.fill('Turquesa Especial');await c.blur();
  await expect(page.locator('#catalog-cor option[value="Turquesa Especial"]')).toHaveCount(1);
  await page.reload();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await expect(page.locator('#catalog-cor option[value="Turquesa Especial"]')).toHaveCount(1);
- const c2=page.getByRole('textbox',{name:'Cor do filamento'});await c2.fill('aZuL');await c2.blur();
+ const c2=page.getByLabel('Cor do filamento');await c2.fill('aZuL');await c2.blur();
  await expect(page.locator('#catalog-cor option[value="Azul"]')).toHaveCount(1);
 });
 test('alterações de preço afetam lucro e restauração preserva cenário inicial',async({page})=>{
