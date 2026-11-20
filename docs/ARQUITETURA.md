@@ -11,3 +11,6 @@
 - IndexedDB, PWA, G-code/3MF, multi-mesas e composição de kits ficam no backlog.
 - Sem backend, autenticação ou transmissão de parâmetros de custos.
 - Valores monetários ainda são cálculos em Number; em versão de produção persistente, adotar precisão decimal e regra explícita de arredondamento.
+
+- MaterialLine pode incluir tipo, marca, packageQuantity, packageUnit e packagePrice; o motor calcula preço/kg derivado quando esses campos existem. Campos legados seguem compatíveis para regressão.
+- UI de compra é um formulário único em estado de rascunho: linhas são persistidas apenas em memória após Adicionar à tabela/Salvar alteração. Por padrão, só resumo agregado é mostrado; tabela é expandida explicitamente.

@@ -61,3 +61,10 @@ Não ampliar escopo sem homologação.
 **Método para novas ideias:** registrar na continuidade e backlog, identificar escopo e dependências, aplicar apenas incrementos pequenos e testáveis; recursos Pro e infraestrutura não entram automaticamente na entrega atual.
 
 - [x] Evitar duplicação de cadastros vazios ao clicar repetidamente em Adicionar cor; reabrir o pendente e adicionar somente após nome, peso e preço válidos (CI pendente).
+
+## UX — resumo padrão e tabela compacta (20/11/2026)
+- [x] Visão padrão: total de filamento usado, preço médio ponderado por kg e custo total.
+- [x] Botão discreto Detalhar por cor: formulário compacto acima, tabela alinhada com preço/quantidade de embalagem, quantidade usada, custo por linha e total.
+- [x] Aceitar 250g, 300g, 1kg e 1,3kg com preço da embalagem; converter internamente para preço por grama.
+- [x] Salvar somente ao clicar Adicionar à tabela, nunca gerar linhas vazias após cliques repetidos.
+- [ ] CI verde e homologação mobile/desktop para este incremento.

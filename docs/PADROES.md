@@ -13,3 +13,7 @@
 - Cálculo usa números JS e arredonda somente na apresentação. Antes de persistência financeira, definir precisão decimal/centavos e rateio.
 - Não incrementar versão por commit; CI não equivale a publicação ou homologação.
 - Deploy de Preview exclusivamente manual pelo proprietário, após CI verde.
+
+- Resumo padrão dos filamentos: soma de gramas consumidas, preço médio ponderado por kg (custo total dividido pelo peso total), custo total; tabela avançada apenas após Detalhar por cor.
+- Entrada de compra: quantidade e unidade (g/kg) + preço total da embalagem. Custo consumido = (gramas usadas + perdas adicionais) × preço total / gramas da embalagem; nunca confundir preço de compra com preço/kg.
+- Salvar item explicitamente; não gerar linhas em branco. Visão mobile tem rolagem horizontal apenas para a tabela, não para o aplicativo inteiro.

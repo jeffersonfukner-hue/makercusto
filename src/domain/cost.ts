@@ -4,6 +4,11 @@ export interface MaterialLine {
   grams: number;
   wasteGrams: number;
   pricePerKg: number;
+  type?: string;
+  brand?: string;
+  packageQuantity?: number;
+  packageUnit?: 'g' | 'kg';
+  packagePrice?: number;
 }
 export interface CostInput {
   grams: number;
@@ -27,6 +32,7 @@ export interface MaterialResult {
   wasteGrams: number;
   totalGrams: number;
   cost: number;
+  pricePerKg: number;
 }
 export interface CostResult {
   material: number;
@@ -65,17 +71,26 @@ export function calculateCost(input: CostInput): CostResult {
       materials.some(item =>
         !item.id.trim() || !item.name.trim() ||
         !validNonNegative(item.grams) || !validNonNegative(item.wasteGrams) ||
-        !validNonNegative(item.pricePerKg))) {
+        !validNonNegative(item.pricePerKg) ||
+        ((item.packageQuantity !== undefined || item.packageUnit !== undefined || item.packagePrice !== undefined) &&
+          (!Number.isFinite(item.packageQuantity) || (item.packageQuantity ?? 0) <= 0 ||
+           !validNonNegative(item.packagePrice ?? NaN) ||
+           (item.packageUnit !== 'g' && item.packageUnit !== 'kg'))))) {
     throw new Error('Verifique os materiais: nome, peso e preço válidos; ao menos uma cor e IDs únicos.');
   }
-  const materialBreakdown = materials.map(item => ({
+  const materialBreakdown = materials.map(item => {
+    const pricePerKg = item.packageQuantity !== undefined && item.packagePrice !== undefined
+      ? item.packagePrice / (item.packageQuantity * (item.packageUnit === 'kg' ? 1000 : 1)) * 1000
+      : item.pricePerKg;
+    return {
     id: item.id,
     name: item.name,
     modelGrams: item.grams,
     wasteGrams: item.wasteGrams,
     totalGrams: item.grams + item.wasteGrams,
-    cost: (item.grams + item.wasteGrams) * item.pricePerKg / 1000
-  }));
+    cost: (item.grams + item.wasteGrams) * pricePerKg / 1000,
+    pricePerKg
+  }; });
   const material = materialBreakdown.reduce((sum, item) => sum + item.cost, 0);
   const modelGrams = materialBreakdown.reduce((sum, item) => sum + item.modelGrams, 0);
   const wasteGrams = materialBreakdown.reduce((sum, item) => sum + item.wasteGrams, 0);

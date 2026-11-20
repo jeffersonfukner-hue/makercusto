@@ -56,6 +56,21 @@ describe('motor de custos e materiais', () => {
     expect(() => calculateCost({ ...referenceCase, materials: [] })).toThrow();
     expect(() => calculateCost({ ...referenceCase, materials: [{ id: 'x', name: 'Azul', grams: NaN, wasteGrams: 0, pricePerKg: 100 }] })).toThrow();
   });
+  it('calcula custo proporcional com embalagens de 250g e 1,3kg', () => {
+    const materials = [
+      { id: 'one', name: 'Azul', grams: 50, wasteGrams: 0, pricePerKg: 0, packageQuantity: 250, packageUnit: 'g' as const, packagePrice: 25 },
+      { id: 'two', name: 'Branco', grams: 130, wasteGrams: 0, pricePerKg: 0, packageQuantity: 1.3, packageUnit: 'kg' as const, packagePrice: 130 }
+    ];
+    const result = calculateCost({ ...referenceCase, materials });
+    expect(result.material).toBeCloseTo(18, 6);
+    expect(result.materialBreakdown[0].pricePerKg).toBeCloseTo(100, 6);
+    expect(result.materialBreakdown[1].pricePerKg).toBeCloseTo(100, 6);
+  });
+  it('rejeita preço e peso de embalagem inválidos', () => {
+    const m = { id: 'x', name: 'Azul', grams: 10, wasteGrams: 0, pricePerKg: 0, packageQuantity: 0, packageUnit: 'g' as const, packagePrice: 20 };
+    expect(() => calculateCost({ ...referenceCase, materials: [m] })).toThrow();
+    expect(() => calculateCost({ ...referenceCase, materials: [{ ...m, packageQuantity: 250, packagePrice: -1 }] })).toThrow();
+  });
   it('permite venda abaixo do custo', () => {
     expect(calculateCost({ ...referenceCase, salePrice: 1 }).grossProfit).toBeLessThan(0);
   });

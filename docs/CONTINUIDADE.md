@@ -41,3 +41,10 @@
 - Havendo cadastro incompleto, abre esse cadastro existente, sem multiplicar formulários.
 - Nova cor nasce com nome vazio; rótulo visual temporário "Material 1", sem cadastrar "Nova cor" como cor real.
 - Teste E2E deve demonstrar cliques repetidos sem novas linhas, depois preenchimento e adição legítima.
+
+## Redesenho aprovado como direção — 20/11/2026
+- Substituir cards enormes por resumo padrão com três números: peso total consumido (modelo + perdas declaradas), preço médio ponderado de aquisição por kg, custo total de filamento.
+- Botão discreto Detalhar por cor expõe formulário horizontal de aquisição/uso acima da tabela de linhas, em espaço único; tabela totaliza pesos e custos.
+- Embalagens de diferentes pesos, com unidade g ou kg e preço TOTAL da embalagem, calculadas proporcionalmente. Marca opcional, tipo e cor sugeridos; valores livres sem duplicar sugestões.
+- Somente ações Salvar/Adicionar à tabela criam ou alteram linhas; não criar registros vazios. Sem persistência de impressões e sem Supabase.
+- PR #1 permanece draft. CI atualizado e homologação visual pendentes. O proprietário é o único responsável por deploy manual; nenhum merge autorizado.
