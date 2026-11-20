@@ -14,3 +14,5 @@
 
 - MaterialLine pode incluir tipo, marca, packageQuantity, packageUnit e packagePrice; o motor calcula preço/kg derivado quando esses campos existem. Campos legados seguem compatíveis para regressão.
 - UI de compra é um formulário único em estado de rascunho: linhas são persistidas apenas em memória após Adicionar à tabela/Salvar alteração. Por padrão, só resumo agregado é mostrado; tabela é expandida explicitamente.
+
+- Dois modos de filamento mutuamente exclusivos na UI: simples usa grams/pricePerKg legados, normalizados de g/kg e R$/g ou R$/kg, com materials=undefined; detalhado usa materials da tabela. Ambos preservam estado ao alternar e jamais são somados.

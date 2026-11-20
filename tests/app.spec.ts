@@ -6,7 +6,9 @@ test('resumo padrão compacto e valores do exemplo',async({page})=>{
  await expect(page.getByTestId('materialCost')).toContainText('15,16');
  await expect(page.getByTestId('unitCost')).toContainText('2,52');
  await expect(page.getByRole('button',{name:/Detalhar por cor/})).toHaveAttribute('aria-expanded','false');
- await expect(page.getByRole('table')).toHaveCount(0);
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
+ await expect(page.getByTestId('simplePrice')).toHaveValue('100');
+ await expect(page.getByRole('table')).toBeHidden();
 });
 test('detalhar por cor exibe tabela alinhada e total',async({page})=>{
  await page.goto('/');
@@ -15,9 +17,8 @@ test('detalhar por cor exibe tabela alinhada e total',async({page})=>{
  await expect(page.getByTestId('row-blue')).toContainText('Azul');
  await expect(page.getByTestId('row-gold')).toContainText('Dourado');
  await expect(page.getByRole('row').last()).toContainText('151,58 g');
- await page.getByRole('button',{name:/Ocultar cores/}).scrollIntoViewIfNeeded();
- await page.getByRole('button',{name:/Ocultar cores/}).click();
- await expect(page.getByRole('table')).toHaveCount(0);
+ await page.getByRole('button',{name:/Usar total de filamento/}).click();
+ await expect(page.getByRole('table')).toBeHidden();
 });
 test('inclui rolo de 250g com preço total e consumo proporcional',async({page})=>{
  await page.goto('/');
@@ -72,4 +73,34 @@ test('alterações de preço afetam lucro e restauração preserva cenário inic
  await expect(page.getByTestId('grossProfit')).toHaveClass(/negative/);
  await page.getByRole('button',{name:'Restaurar exemplo'}).click();
  await expect(page.getByTestId('salePrice')).toHaveValue('7.9');
+});
+
+test('modo simples permite informar total e preço por kg sem somar cores',async({page})=>{
+ await page.goto('/');
+ await page.getByTestId('simpleQuantity').fill('200');
+ await page.getByTestId('simplePrice').fill('68');
+ await expect(page.getByTestId('materialCost')).toContainText('13,60');
+ await expect(page.getByTestId('totalUsed')).toContainText('200 g');
+ await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await expect(page.getByTestId('materialCost')).toContainText('15,16');
+ await page.getByRole('button',{name:/Usar total de filamento/}).click();
+ await expect(page.getByTestId('materialCost')).toContainText('13,60');
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('200');
+});
+test('modo simples aceita gramas ou quilos tanto no total quanto no preço',async({page})=>{
+ await page.goto('/');
+ await page.getByTestId('simpleQuantity').fill('0.3');
+ await page.getByRole('combobox',{name:'Unidade do total utilizado'}).selectOption('kg');
+ await page.getByTestId('simplePrice').fill('0.073');
+ await page.getByRole('combobox',{name:'Unidade do preço do filamento'}).selectOption('g');
+ await expect(page.getByTestId('totalUsed')).toContainText('300 g');
+ await expect(page.getByTestId('materialCost')).toContainText('21,90');
+ await expect(page.getByTestId('averagePrice')).toContainText('73,00');
+});
+test('valor inválido do modo simples mostra erro sem resultado fictício',async({page})=>{
+ await page.goto('/');
+ await page.getByTestId('simpleQuantity').fill('-1');
+ await expect(page.getByRole('alert')).toBeVisible();
+ await page.getByTestId('simpleQuantity').fill('100');
+ await expect(page.getByRole('alert')).toHaveCount(0);
 });

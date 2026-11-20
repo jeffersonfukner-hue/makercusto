@@ -29,12 +29,19 @@ const fields:{key:NumericKey;label:string;step:string}[] = [
  {key:'laborPerHour',label:'Mão de obra (R$/h)',step:'0.01'},
  {key:'salePrice',label:'Preço de venda por unidade (R$)',step:'0.01'}
 ];
+type Unit = 'g' | 'kg';
+type SimpleFilament = { quantity:number; quantityUnit:Unit; price:number; priceUnit:Unit };
+const initialSimple:SimpleFilament = {quantity:151.58,quantityUnit:'g',price:100,priceUnit:'kg'};
+const asGrams = (quantity:number,unit:Unit) => quantity * (unit==='kg'?1000:1);
+const perKg = (price:number,unit:Unit) => price * (unit==='g'?1000:1);
 const newDraft = ():MaterialLine => ({id:'',name:'',type:'PLA',brand:'',grams:NaN,wasteGrams:0,pricePerKg:0,packageQuantity:1,packageUnit:'kg',packagePrice:NaN});
 const seeded = () => referenceCase.materials!.map(m=>({...m,type:'PETG',brand:'',packageQuantity:1,packageUnit:'kg' as const,packagePrice:100}));
 const calculatedPackagePrice = (item:MaterialLine):number => item.packagePrice ?? item.pricePerKg*(item.packageQuantity??1)*(item.packageUnit==='g'?.001:1);
 export default function App(){
- const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:seeded()}));
+ const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
  const [details,setDetails]=useState(false);
+ const [simple,setSimple]=useState<SimpleFilament>(initialSimple);
+ const [detailedMaterials,setDetailedMaterials]=useState<MaterialLine[]>(seeded);
  const [draft,setDraft]=useState<MaterialLine>(newDraft);
  const [editId,setEditId]=useState<string|null>(null);
  const [nextId,setNextId]=useState(1);
@@ -60,33 +67,53 @@ export default function App(){
   }
   const gramsPurchased=draft.packageQuantity!*(draft.packageUnit==='kg'?1000:1);
   const row:MaterialLine={...draft,id:editId??'extra-'+nextId,pricePerKg:draft.packagePrice!/gramsPurchased*1000};
-  setForm(prev=>({...prev,materials:editId?(prev.materials??[]).map(m=>m.id===editId?row:m):[...(prev.materials??[]),row]}));
+  setDetailedMaterials(prev=>editId?prev.map(m=>m.id===editId?row:m):[...prev,row]);
   if(!editId)setNextId(v=>v+1);
   remember('cor',row.name);remember('tipo',row.type||'');remember('marca',row.brand||'');
   setDraft(newDraft());setEditId(null);setErrorDraft('');
  };
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
- const remove=(id:string)=>{setForm(prev=>({...prev,materials:(prev.materials??[]).filter(m=>m.id!==id)}));if(editId===id){setDraft(newDraft());setEditId(null);}};
- const reset=()=>{setForm({...referenceCase,materials:seeded()});setDraft(newDraft());setEditId(null);setNextId(1);setErrorDraft('');};
+ const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
+ const reset=()=>{
+   setForm({...referenceCase,materials:undefined});
+   setSimple(initialSimple);
+   setDetailedMaterials(seeded());
+   setDetails(false);
+   setDraft(newDraft());setEditId(null);setNextId(1);setErrorDraft('');
+ };
+ const activeInput:CostInput={
+   ...form,
+   grams:asGrams(simple.quantity,simple.quantityUnit),
+   pricePerKg:perKg(simple.price,simple.priceUnit),
+   materials:details?detailedMaterials:undefined
+ };
  let result:ReturnType<typeof calculateCost>|undefined, error='';
- try{result=calculateCost(form)}catch(e){error=(e as Error).message;}
+ try{result=calculateCost(activeInput)}catch(e){error=(e as Error).message;}
  const used = result ? result.modelGrams+result.wasteGrams : 0;
  const average = result&&used>0?result.material/used*1000:0;
  return <>
  <header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Protótipo · v0.1.0</span></div></header>
  <main className="shell">
-  <section className="intro"><p className="eyebrow">CÁLCULO DE IMPRESSÃO 3D</p><h1>Quanto custa produzir? Quanto sobra na venda?</h1><p>Simule filamentos, energia, máquina, acessórios e montagem. O custo de cada cor é proporcional à quantidade consumida.</p></section>
+  <section className="intro"><p className="eyebrow">CÁLCULO DE IMPRESSÃO 3D</p><h1>Quanto custa produzir? Quanto sobra na venda?</h1><p>Informe o total de filamento ou detalhe o consumo por cor. Os demais custos são calculados automaticamente.</p></section>
   <div className="workspace">
    <section className="panel">
     <div className="panel-heading"><div><h2>Dados de produção</h2><p>Exemplo: chaveiro Nossa Senhora, lote de 20 unidades.</p></div><button type="button" onClick={reset}>Restaurar exemplo</button></div>
     <section className="materials" aria-labelledby="materials-title">
-     <div className="materials-heading"><h3 id="materials-title">Filamentos</h3><button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Ocultar cores':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button></div>
+     <div className="materials-heading"><h3 id="materials-title">Filamentos</h3><button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button></div>
+     {!details&&<div className="simple-material-fields">
+       <label>Filamento utilizado
+         <div className="simple-field-combo"><input data-testid="simpleQuantity" type="number" min="0" step="any" value={display(simple.quantity)} onChange={e=>setSimple(prev=>({...prev,quantity:numeric(e.target.value)}))}/><select aria-label="Unidade do total utilizado" value={simple.quantityUnit} onChange={e=>setSimple(prev=>({...prev,quantityUnit:e.target.value as Unit}))}><option value="g">g</option><option value="kg">kg</option></select></div>
+       </label>
+       <label>Preço do filamento
+         <div className="simple-field-combo"><input data-testid="simplePrice" type="number" min="0" step="any" value={display(simple.price)} onChange={e=>setSimple(prev=>({...prev,price:numeric(e.target.value)}))}/><select aria-label="Unidade do preço do filamento" value={simple.priceUnit} onChange={e=>setSimple(prev=>({...prev,priceUnit:e.target.value as Unit}))}><option value="kg">R$/kg</option><option value="g">R$/g</option></select></div>
+       </label>
+     </div>}
      <div className="material-summary">
        <div><small>Total utilizado</small><strong data-testid="totalUsed">{result?count(used)+' g':'—'}</strong></div>
        <div><small>Preço médio ponderado</small><strong data-testid="averagePrice">{result?money(average)+'/kg':'—'}</strong></div>
        <div><small>Custo do filamento</small><strong data-testid="materialCost">{result?money(result.material):'—'}</strong></div>
      </div>
-     {details&&<div id="material-details">
+     <div id="material-details" hidden={!details}>
       <datalist id="catalog-cor">{list('cor').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
       <datalist id="catalog-tipo">{list('tipo').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
       <datalist id="catalog-marca">{list('marca').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
@@ -106,14 +133,14 @@ export default function App(){
        {errorDraft&&<p className="error" role="alert">{errorDraft}</p>}
       </div>
       <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento / ações</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Usado</th><th>Custo</th></tr></thead><tbody>
-        {(form.materials??[]).map(item=>{
+        {detailedMaterials.map(item=>{
          const pkgQty=item.packageQuantity??1,pkgUnit=item.packageUnit??'kg';
          const spent=(item.grams+item.wasteGrams)*((item.packagePrice??item.pricePerKg*pkgQty*(pkgUnit==='kg'?1:.001))/(pkgQty*(pkgUnit==='kg'?1000:1)));
          return <tr key={item.id} data-testid={'row-'+item.id}><td><strong>{item.name}</strong><small>{item.type||'Filamento'}</small><div className="row-actions"><button type="button" aria-label={'Editar '+item.name} onClick={()=>edit(item)}>Editar</button><button type="button" aria-label={'Remover '+item.name} onClick={()=>remove(item.id)}>×</button></div></td><td>{item.brand||'—'}</td><td>{count(pkgQty)} {pkgUnit}</td><td>{money(calculatedPackagePrice(item))}</td><td>{count(item.grams+item.wasteGrams)} g</td><td className="numeric-cell">{money(spent)}</td></tr>;
         })}
       </tbody><tfoot><tr><th colSpan={4}>Total</th><th>{result?count(used)+' g':'—'}</th><th>{result?money(result.material):'—'}</th></tr></tfoot></table></div>
       <p className="footnote">A tabela usa quantidade adquirida e preço da embalagem para calcular o preço por grama. Informe purga apenas se ela não estiver incluída no peso usado.</p>
-     </div>}
+     </div>
     </section>
     <div className="fields">{fields.map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/></label>)}</div>
     <p className="footnote">Tarifa, potência e vida útil são hipóteses editáveis, não medições oficiais.</p>

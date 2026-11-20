@@ -17,3 +17,6 @@
 - Resumo padrão dos filamentos: soma de gramas consumidas, preço médio ponderado por kg (custo total dividido pelo peso total), custo total; tabela avançada apenas após Detalhar por cor.
 - Entrada de compra: quantidade e unidade (g/kg) + preço total da embalagem. Custo consumido = (gramas usadas + perdas adicionais) × preço total / gramas da embalagem; nunca confundir preço de compra com preço/kg.
 - Salvar item explicitamente; não gerar linhas em branco. Visão mobile tem rolagem horizontal apenas para a tabela, não para o aplicativo inteiro.
+
+- **Modo padrão editável:** entrada de filamento total em g ou kg e preço em R$/kg ou R$/g; resumo é saída calculada, não substitui os campos.
+- **Modo detalhado:** botão Detalhar por cor alterna para formulário e tabela; ao voltar, conservar dados de ambos os modos em memória sem somar custos. Somente modo ativo alimenta o motor de cálculos.

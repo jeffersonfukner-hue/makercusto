@@ -53,3 +53,9 @@
 - CI #44817487995: tipagem, unitários e build verdes; E2E falhou (6 de 14 casos) por seletores que presumiam textbox em inputs com datalist e interação mobile de controles em área estreita.
 - Corrigido E2E para localizar inputs por label; movidas ações Editar/Remover para a primeira coluna junto à cor e ampliada área de toque do botão Detalhar/Ocultar em mobile.
 - Aguardando CI da revisão para liberar deploy manual; não fazer deploy antes de CI verde.
+
+## Correção solicitada — modo total editável versus detalhamento por cor (20/11/2026)
+- Padrão deve ser **Total de filamento** com dois campos realmente editáveis: consumo em g/kg e preço em R$/kg ou R$/g. O custo é recalculado imediatamente; resumo não substitui os campos.
+- Alternativa **Detalhar por cor** abre o formulário e tabela compacta já planejados; ao voltar a "Usar total de filamento", restaurar os valores simples sem somar ambos.
+- Cada modo conserva seus dados em memória enquanto a página está aberta; o motor de custo considera apenas o modo ativo.
+- Não criar banco, não fazer deploy/merge. Verificação do CI e homologação visual precedem deploy manual.
