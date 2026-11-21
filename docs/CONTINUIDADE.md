@@ -245,3 +245,11 @@
 - **Verificado por SQL somente leitura:** 33 tabelas de domínio `mc_*` com RLS habilitado; 34 objetos do tipo tabela/visão com prefixo `mc_`; 68 políticas, 89 chaves estrangeiras, 19 entradas de catálogo global, 1 modelo Anycubic Kobra X, zero oficinas e zero movimentações. Migração registrada (1 entrada).
 - **Limite efetivo:** banco é estrutura e catálogos, **não é aplicativo integrado**. Cadastro automático de oficina requer usuário autenticado e chamada `mc_create_workspace`; confirmação de produção, estorno, rateio final e estoque precisam de RPC transacional e testes antes de uso financeiro. Não prometer que 39 políticas estão integralmente operacionalizadas apenas por criar tabelas.
 - **Próxima entrega:** conectar frontend, login, seleção/instanciação de impressoras, botão + e modais completos para cadastros reais, com testes. Sem merge e sem deploy.
+
+
+## Integração inicial Supabase no frontend — 21/11/2026
+- O código na branch foi integrado ao projeto Supabase MakerCusto `bxtbfdddcxbyaomydgxn` via API pública e chave publishable. Sem chave de serviço no frontend.
+- Fluxos implementados: autenticação e-mail/senha (login, cadastro, encerramento de sessão e refresh); criação de oficina pelo RPC já instalado; leitura do catálogo de modelos (incluindo Kobra X), impressoras da oficina, cadastro/edição via modal Normal/Avançado; botões + para tipo/cor/marca com cadastro particular via `mc_catalog`. Cálculo Simples permanece aberto sem login.
+- Cadastros como visitante permanecem explicitamente locais e transitórios; após login, novas impressoras/catálogos privados usam o Supabase com RLS. Valores de equipamento/energia ausentes são estimativas de UI e não são inventados no banco.
+- Arquivos: `src/data/supabase.ts`, `src/components/Modals.tsx`, `src/App.tsx`, `src/styles.css`, `tests/app.spec.ts`. Evidências: PR #1 em draft, commits desta branch posteriores a `f9929ce4`.
+- Limites: ainda falta testar fluxo real com conta autenticada e homologar visual; cenários Playwright usam simulação de API (não confirmam operação de usuário real). Serviços de estoque/produção continuam sem integração operacional. Nenhum deploy nem merge.
