@@ -360,3 +360,9 @@
 - Escopo testado: clone de impressora local preservado após atualizar página, seleção anterior restaurada, referência global intacta, restaurar exemplo sem apagar cadastros pessoais.
 - Os dois CI anteriores falharam por testes com seletores CSS imprecisos/inválidos, não por perda de cadastros; correções de testes versionadas. A persistência segue **exclusivamente local** sem login, e a última seleção por conta é uma preferência deste dispositivo, não sincronização Supabase.
 - Nenhum merge, deploy ou alteração de dados/banco. Evidência https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44927634558
+
+## 21/11/2026 — Produto com persistência transacional no Supabase
+- Autorização expressa para ativar o uso do banco e código, sem deploy (exclusivo do proprietário), sem merge.
+- Banco MakerCusto: função `mc_save_calculated_product` criada para salvar produto, revisão inicial e snapshot do cálculo na mesma transação, com validação de usuário, oficina e parâmetros. A migração também removeu EXECUTE de anon em `mc_create_workspace`, `mc_finance`, `mc_member`, `mc_role`. Permissões verificadas por SQL em leitura.
+- Frontend: painel Meus produtos com cadastro, lista e feedback visual; visitante precisa autenticar; snapshot estimado captura entrada e resultado, não movimenta estoque e não equivale a confirmação de produção. Teste automatizado com Supabase REST simulado adicionado; CI pendente.
+- Segurança: teste end-to-end contra conta real/RLS e relatório de advisors seguem pendentes. Produto salvo tem apenas revisão inicial; editar produto/kit multicomponente e gerir estoque são frentes posteriores, não alegar concluídas.
