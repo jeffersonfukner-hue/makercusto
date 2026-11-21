@@ -130,3 +130,9 @@
 - Exemplos documentais de 1 kg com reserva 300 g, confirmação de 50 + 20 g, falha com 80 g consumidos, retrabalho de 15 min e mesa com corpos/suportes. Nenhum exemplo é valor observado ou fórmula automática aprovada.
 - Permanecem pendentes expiração/sobra de reservas, UX das parciais, precificação de falhas/retrabalhos, rateios específicos por material/energia, pausas, arredondamento e esquema físico.
 - Somente documentação em branch; sem código, banco, SQL, merge nem deploy.
+
+## Cinco decisões RES/PAR/FAL/RET/RAT HOMOLOGADAS — 20/11/2026
+- Aprovadas expressamente a partir do commit `6e6e3e3b`; registradas em `docs/HOMOLOGACAO_PRODUCAO_2026-11-20.md`. **28 decisões acumuladas** (5+8+4+6+5).
+- Reserva opcional e não física; confirmações incrementais idempotentes; falha confirmada com consumo e zero peças boas; retrabalho separado com custos próprios; rateio por categoria com medição direta preferencial, base explícita e conciliação integral.
+- **Pendências não homologadas:** expiração e sobras de reservas, detalhes de confirmação parcial, precificação de perda/retrabalho, fórmula de rateio por categoria, pausas e arredondamento, esquema SQL físico e permissões.
+- Próxima conversa deve continuar pela revisão destas pendências e arquitetura documental, sem código, banco, merge ou deploy.
