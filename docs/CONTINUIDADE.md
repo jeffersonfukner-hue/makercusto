@@ -136,3 +136,10 @@
 - Reserva opcional e não física; confirmações incrementais idempotentes; falha confirmada com consumo e zero peças boas; retrabalho separado com custos próprios; rateio por categoria com medição direta preferencial, base explícita e conciliação integral.
 - **Pendências não homologadas:** expiração e sobras de reservas, detalhes de confirmação parcial, precificação de perda/retrabalho, fórmula de rateio por categoria, pausas e arredondamento, esquema SQL físico e permissões.
 - Próxima conversa deve continuar pela revisão destas pendências e arquitetura documental, sem código, banco, merge ou deploy.
+
+## P01 — reservas e sobras HOMOLOGADA — 20/11/2026
+- Proprietário aprovou expressamente P01-A a P01-F como **uma política consolidada**. Registro normativo: `docs/HOMOLOGACAO_RESERVAS_P01_2026-11-20.md`, primeira formalização no commit `af0edb9d`.
+- **29 homologações acumuladas:** 28 anteriores (5+8+4+6+5) + P01 (1). Nenhuma regra anterior foi revogada.
+- P01-A: liberar sobra reservada ao encerramento/cancelamento definitivo, não durante parcial aberta; P01-B: prazo opcional com revisão, sem expiração liberadora automática; P01-C: excedente só com saldo/origem e conciliação explícita de inconsistências; P01-D: troca de bobina com consumos/custos por lote; P01-E: cancelamento parcial libera só excedente; P01-F: validação concorrente e transacional no servidor.
+- **NÃO homologadas:** P02–P06; pausas/energia P07; consumo sem lote P08; estornos parciais P09; reservas de kits, locais, bobinas parciais e ordens abandonadas; permissões detalhadas; esquema físico/SQL.
+- Próxima etapa: apresentar P02 para revisão individual. Apenas documentação na branch e PR draft; sem código, banco, SQL, merge ou deploy.
