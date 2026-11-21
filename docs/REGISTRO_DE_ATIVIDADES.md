@@ -232,3 +232,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados comprovados:** migração aplicada, 33 tabelas RLS, 68 políticas, 89 FKs, 19 registros descritivos globais, modelo Kobra X cadastrado, sem oficinas e sem movimentos. Sem merge/deploy. Nenhuma alteração no Kit Casa Pré LAB.
 - **Pendências:** integração com autenticação e interface, modais de cadastros, funcionalidades operacionais transacionais, testes E2E por usuário, e homologação visual em Cloudflare Preview somente em etapa autorizada.
 - **Evidências:** projeto `bxtbfdddcxbyaomydgxn`, migração `makercusto_foundation_v1` confirmada via `supabase_migrations.schema_migrations`, SQL `supabase/migrations/20261121015442_makercusto_foundation_v1.sql` commit `13a7c897`, continuidade commit `02e920f9`.
+
+
+## 21/11/2026 — Integração front-end e cadastros Supabase
+- **Atividades executadas:** leitura das regras de arquitetura e SQL aplicado; consulta de chave publishable; implementação dos serviços Auth/Data API em `src/data/supabase.ts`, modais reutilizáveis de login/impressora/catálogo, integração à calculadora e estilos responsivos; adaptação dos testes Playwright incluindo cenário autenticado com API simulada.
+- **Resultado:** código versionado na branch `feat/fundacao-makercusto`, sem merge/deploy. Cadastros reais são enviados ao Supabase somente após login; visitantes continuam usando a calculadora sem conta. Esta integração ainda depende dos testes completos de CI e de validação real em navegador.
+- **Evidências:** commits `f9929ce4`, `655bd888`, `991dd531`, `c5c85351`, `402c4e8e`, `c977e59e`, `33a7ce3f`, `69487519`, `7e0bfa88`, `81f7fc2c`; PR #1 e verificações CI vinculadas.
+- **Horários e duração:** início/término não aferidos, duração efetiva não mensurada; não inferir tempo entre mensagens.
+- **Pendências:** verificar CI, corrigir falhas detectadas, testar conta real e confirmar permissões RLS; avançar integração de filamentos/estoque/produtos/produção em lote futuro, sem publicação sem autorização.
