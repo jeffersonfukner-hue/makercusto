@@ -174,3 +174,10 @@
 /* A grade de entradas não pode cobrir o painel de perfil no mobile. */
 .compact-inputs{position:relative;z-index:1;isolation:isolate}
 .filament-profile{position:relative;z-index:20}
+
+/* No mobile não há botão + dentro dos campos; remover camadas que capturavam toque sobre a ficha seguinte. */
+@media(max-width:600px){
+ .compact-inputs{position:static;z-index:auto;isolation:auto}
+ .compact-inputs .catalog-field{position:static;z-index:auto}
+ .filament-profile{position:relative;z-index:20;margin-top:22px}
+}
