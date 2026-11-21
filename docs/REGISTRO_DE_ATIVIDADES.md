@@ -315,3 +315,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** alteração versionada em branch, dependente da execução de CI correspondente.
 - **Pendências:** confirmar CI e validação visual móvel.
 - **Evidências:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 e commit associado.
+
+## 21/11/2026 — Correção de regressões do autocomplete
+- **Projeto:** MakerCusto (próprio). **Início/término e duração:** não aferidos.
+- **Atividades:** consulta do workflow #44918924933 e seus logs; identificação de quatro inconsistências de acessibilidade/testes repetidas em desktop e mobile; correção da lista de sugestões e seletores E2E.
+- **Resultado:** mudança em branch, CI ainda a verificar; sem banco, merge, deploy.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44918924933 e commit desta correção.

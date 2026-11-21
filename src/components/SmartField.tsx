@@ -36,7 +36,7 @@ export function SmartField({label,value,onChange,options,hint,onBlur,placeholder
     if(picks.length&&e.key==='Enter'&&active>=0&&active<picks.length){e.preventDefault();pick(picks[active]);}
     if(e.key==='Escape'){setFocused(false);setActive(-1);}
    }}/>
-  {picks.length>0&&<div className="smart-suggestions" role="listbox" id={listId} aria-label={'Sugestões para '+label}>
+  {picks.length>0&&<div className="smart-suggestions" role="listbox" id={listId} aria-label={'Sugestões disponíveis'}>
    {picks.map((s,i)=><button key={s} id={listId+'-'+i} role="option" aria-selected={i===active} type="button"
     onMouseDown={e=>e.preventDefault()} onClick={()=>pick(s)}>{s}</button>)}
   </div>}

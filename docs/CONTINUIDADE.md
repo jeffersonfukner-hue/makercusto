@@ -311,3 +311,7 @@
 ## 21/11/2026 — Acessibilidade do componente transversal de sugestões
 - Campos inteligentes passam a expor combobox/listbox com descrições ARIA, até três sugestões, navegação por setas, Enter para selecionar, Escape para fechar, feedback de foco/seleção e preservação do valor digitado ao fechar. Regra reaproveitada automaticamente onde SmartField já é utilizado.
 - Foram adicionados testes Playwright para teclado/limite de sugestões; verificar CI do HEAD antes de homologação. Sem banco, merge ou deploy.
+
+## 21/11/2026 — Diagnóstico e correção do CI do autocomplete
+- CI #44918924933 falhou com 8 casos (4 cenários nos dois projetos desktop/mobile), enquanto tipagem, motor e build passaram. Logs: colisão do nome acessível da listbox com entrada Cor do filamento; testes antigos ainda buscavam role=button para sugestões agora role=option; pesquisa de modelo é combobox, não textbox; seleção de opções sem restringir a listbox incluía elementos select do formulário.
+- Ajustados nomes ARIA e seletores Playwright para o contrato real do componente. Sem alteração de banco, merge ou deploy; exigir CI verde posterior.

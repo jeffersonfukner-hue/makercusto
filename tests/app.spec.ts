@@ -249,7 +249,7 @@ test('fabricante filtra modelos e cópia herda estimativas',async({page})=>{
 test('nome de cor é normalizado e sugestões são limitadas',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Cor do filamento').fill('verm');
- await expect(page.locator('.smart-suggestions').getByRole('button')).toHaveCount(2);
+ await expect(page.locator('.smart-suggestions').getByRole('option')).toHaveCount(2);
  await page.getByLabel('Cor do filamento').fill('vermelho fosco');
  await page.getByTestId('packagePrice').fill('100');await page.getByTestId('gramsUsed').fill('10');
  await page.getByRole('button',{name:'Adicionar à tabela'}).click();
@@ -278,7 +278,7 @@ test('busca de modelo escolhe referência e preenche o nome sem segunda seleçã
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Nova impressora/}).click();
  await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Anycubic');
- await page.getByRole('textbox',{name:'Pesquisar modelo'}).fill('Kobra X');
+ await page.getByRole('combobox',{name:'Pesquisar modelo'}).fill('Kobra X');
  await expect(page.getByRole('combobox',{name:'Modelo da impressora'})).toHaveValue('preset:anycubic-kobra-x');
  await expect(page.getByRole('textbox',{name:'Nome da minha impressora'})).toHaveValue('Anycubic Kobra X');
 });
@@ -310,19 +310,19 @@ test('autocomplete aceita teclado e mantém no máximo três sugestões',async({
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  const input=page.getByRole('combobox',{name:'Cor do filamento'});
  await input.fill('ver');
- await expect(page.getByRole('listbox',{name:'Sugestões para Cor do filamento'}).getByRole('option')).toHaveCount(3);
+ await expect(page.getByRole('listbox',{name:'Sugestões disponíveis'}).getByRole('option')).toHaveCount(3);
  await input.press('ArrowDown');
- await expect(page.getByRole('option',{selected:true})).toHaveCount(1);
+ await expect(page.getByRole('listbox',{name:'Sugestões disponíveis'}).getByRole('option',{selected:true})).toHaveCount(1);
  await input.press('Enter');
  await expect(input).toHaveValue(/Verde|Vermelho/);
- await expect(page.getByRole('listbox',{name:'Sugestões para Cor do filamento'})).toHaveCount(0);
+ await expect(page.getByRole('listbox',{name:'Sugestões disponíveis'})).toHaveCount(0);
 });
 test('Escape fecha sugestões sem substituir o que usuário digitou',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  const input=page.getByRole('combobox',{name:'Cor do filamento'});
  await input.fill('ver');
- await expect(page.getByRole('listbox',{name:'Sugestões para Cor do filamento'})).toBeVisible();
+ await expect(page.getByRole('listbox',{name:'Sugestões disponíveis'})).toBeVisible();
  await input.press('Escape');
  await expect(input).toHaveValue('ver');
- await expect(page.getByRole('listbox',{name:'Sugestões para Cor do filamento'})).toHaveCount(0);
+ await expect(page.getByRole('listbox',{name:'Sugestões disponíveis'})).toHaveCount(0);
 });
