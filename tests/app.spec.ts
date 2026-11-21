@@ -169,7 +169,7 @@ test('retorno ao exemplo recupera a entrada simples',async({page})=>{
 test('botões mais abrem modal de cadastro reutilizável',async({page})=>{
  console.log('modal-etapa-2'); await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
  console.log('modal-etapa-3'); await page.getByRole('button',{name:/Detalhar por cor/}).click();
- console.log('modal-etapa-4'); await page.getByRole('button',{name:'Cadastrar cor'}).click();
+ console.log('modal-etapa-4'); await page.getByRole('button',{name:'Cadastrar cor'}).click({timeout:5000});
  console.log('modal-etapa-5'); await expect(page.getByRole('dialog',{name:'Cadastrar cor'})).toBeVisible();
  console.log('modal-etapa-6'); await page.getByRole('textbox',{name:'Nome de cor'}).fill('Turquesa Única');
  console.log('modal-etapa-7'); await page.getByRole('button',{name:'Salvar cadastro'}).click();
