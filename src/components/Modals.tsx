@@ -33,7 +33,7 @@ export function PrinterModal({models,initial,onClose,onSave}:{models:CatalogEntr
  const matchedModel=models.find(m=>m.id===initial?.model_id);
  const [manufacturer,setManufacturer]=useState(inferredPreset?.brand??matchedModel?.manufacturer??'');
  const [modelSearch,setModelSearch]=useState('');
- const [advanced,setAdvanced]=useState(false),[name,setName]=useState(initial?.name??''),[modelId,setModelId]=useState(initial?.model_id??(inferredPreset?'preset:'+inferredPreset.id:'')),[price,setPrice]=useState(initial?.purchase_price?.toString()??''),[watts,setWatts]=useState(initial?.average_watts?.toString()??''),[life,setLife]=useState(initial?.lifetime_hours?.toString()??''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [advanced,setAdvanced]=useState(false),[name,setName]=useState(initial?.name??''),[modelId,setModelId]=useState(initial?.model_id??(inferredPreset?'preset:'+inferredPreset.id:'')),[price,setPrice]=useState(initial?.purchase_price?.toString()??String(printerEstimatedCosts.purchasePrice)),[watts,setWatts]=useState(initial?.average_watts?.toString()??String(printerEstimatedCosts.averageWatts)),[life,setLife]=useState(initial?.lifetime_hours?.toString()??String(printerEstimatedCosts.lifetimeHours)),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const pool=[...printerPresets.filter(p=>p.brand===manufacturer).map(p=>({id:'preset:'+p.id,label:p.model,preset:p})),
  ...models.filter(m=>m.manufacturer===manufacturer&&!printerPresets.some(p=>matchKey(p.model)===matchKey(m.name)&&p.brand===manufacturer)).map(m=>({id:m.id,label:m.name,preset:undefined}))];
  const filtered=pool.filter(p=>matchKey(p.label).includes(matchKey(modelSearch)));

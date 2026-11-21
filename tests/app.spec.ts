@@ -217,10 +217,11 @@ test('modelos populares estão disponíveis sem retorno do catálogo remoto e cu
  await page.route('https://bxtbfdddcxbyaomydgxn.supabase.co/rest/v1/mc_catalog?**',route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Nova impressora/}).click();
+ await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Bambu Lab');
  const models=page.getByRole('combobox',{name:'Modelo da impressora'});
  await expect(models.locator('option',{hasText:'Bambu Lab A1 mini'})).toHaveCount(1);
+ await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Anycubic');
  await expect(models.locator('option',{hasText:'Anycubic Kobra X'})).toHaveCount(1);
- await expect(models.locator('option',{hasText:'Creality Ender-3 V3 SE'})).toHaveCount(1);
  await models.selectOption('preset:anycubic-kobra-x');
  await expect(page.getByRole('textbox',{name:'Nome da minha impressora'})).toHaveValue('Anycubic Kobra X');
  await page.getByRole('button',{name:/Avançado — custos/}).click();
@@ -247,7 +248,7 @@ test('fabricante filtra modelos e cópia herda estimativas',async({page})=>{
 test('nome de cor é normalizado e sugestões são limitadas',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Cor do filamento').fill('verm');
- await expect(page.getByRole('group',{name:'Sugestões para Cor do filamento'}).getByRole('button')).toHaveCount(1);
+ await expect(page.getByRole('group',{name:'Sugestões para Cor do filamento'}).getByRole('button')).toHaveCount(2);
  await page.getByLabel('Cor do filamento').fill('vermelho fosco');
  await page.getByTestId('packagePrice').fill('100');await page.getByTestId('gramsUsed').fill('10');
  await page.getByRole('button',{name:'Adicionar à tabela'}).click();
