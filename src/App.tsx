@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import {AuthModal,PrinterModal} from './components/Modals';
+import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
 
 const money = (value:number) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value);
@@ -40,15 +42,52 @@ export default function App(){
  const [printers,setPrinters]=useState<PrinterProfile[]>([initialPrinter]);
  const [printerId,setPrinterId]=useState('example');
  const [printerEditing,setPrinterEditing]=useState(false);
+ const [session,setSession]=useState<Session|null>(()=>sessionStore.get());
+ const [authOpen,setAuthOpen]=useState(false);
+ const [printerModal,setPrinterModal]=useState<'new'|'edit'|null>(null);
+ const [models,setModels]=useState<CatalogEntry[]>([]);
+ const [stored,setStored]=useState<StoredPrinter[]>([]);
+ const [workspaceId,setWorkspaceId]=useState<string|null>(null);
+ const [accountError,setAccountError]=useState('');
+ const [cloudBusy,setCloudBusy]=useState(false);
+ const profileFromDb=(p:StoredPrinter):PrinterProfile=>({
+  id:p.id,name:p.name,printerPrice:p.purchase_price??initialPrinter.printerPrice,
+  averageWatts:p.average_watts??initialPrinter.averageWatts,
+  lifetimeHours:p.lifetime_hours??initialPrinter.lifetimeHours,
+  pricePerKwh:initialPrinter.pricePerKwh
+ });
+ const loadAccount=async()=>{
+  const current=sessionStore.get();setSession(current);
+  if(!current){setWorkspaceId(null);setStored([]);setPrinters([initialPrinter]);setPrinterId('example');return;}
+  setCloudBusy(true);setAccountError('');
+  try{
+   let ws=await listWorkspaces();
+   if(!ws.length){const id=await createWorkspace('Minha oficina');ws=[{id,name:'Minha oficina',owner_id:current.user.id}];}
+   const id=ws[0].id;setWorkspaceId(id);
+   const items=await listPrinters(id);setStored(items);
+   setPrinters([initialPrinter,...items.map(profileFromDb)]);
+   if(items.length)setPrinterId(items[0].id);
+  }catch(e){setAccountError('Não foi possível carregar sua oficina: '+(e as Error).message);}
+  finally{setCloudBusy(false);}
+ };
+ useEffect(()=>{void loadPrinterModels().then(setModels).catch(()=>setAccountError('Catálogo de impressoras indisponível. Tente novamente mais tarde.'));if(sessionStore.get())void loadAccount();},[]);
+ const savePrinter=async(data:PrinterDraft)=>{
+  if(!sessionStore.get()||!workspaceId){
+   const id='local-'+String(Date.now());const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??initialPrinter.printerPrice,averageWatts:data.average_watts??initialPrinter.averageWatts,lifetimeHours:data.lifetime_hours??initialPrinter.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
+   setPrinters(prev=>[...prev,local]);setPrinterId(id);return;
+  }
+  const old=stored.find(p=>p.id===printerId);
+  const saved=(printerModal==='edit'&&old?await updateStoredPrinter(old.id,workspaceId,data):await insertPrinter(workspaceId,data))[0];
+  if(!saved)throw new Error('O banco não confirmou o cadastro.');
+  setStored(prev=>[...prev.filter(p=>p.id!==saved.id),saved]);
+  setPrinters(prev=>[...prev.filter(p=>p.id!==saved.id),profileFromDb(saved)]);setPrinterId(saved.id);
+ };
+ const logout=async()=>{await signOut();setSession(null);setWorkspaceId(null);setStored([]);setPrinters([initialPrinter]);setPrinterId('example');};
  const activePrinter=printers.find(p=>p.id===printerId)??printers[0];
  const updatePrinter=(key:'name'|'printerPrice'|'averageWatts'|'lifetimeHours'|'pricePerKwh',value:string)=>{
    setPrinters(prev=>prev.map(p=>p.id===printerId?{...p,[key]:key==='name'?value:numeric(value)}:p));
  };
- const addPrinter=()=>{
-   const id='printer-'+String(printers.length+1);
-   setPrinters(prev=>[...prev,{...initialPrinter,id,name:'Impressora personalizada'}]);
-   setPrinterId(id);setPrinterEditing(true);
- };
+ const addPrinter=()=>setPrinterModal('new');
  const [advanced,setAdvanced]=useState(false);
  const [details,setDetails]=useState(false);
  const [simple,setSimple]=useState<SimpleFilament>(initialSimple);
@@ -86,7 +125,7 @@ export default function App(){
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
  const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
  const reset=()=>{
-   setPrinters([initialPrinter]);setPrinterId('example');setPrinterEditing(false);
+   if(!sessionStore.get()){setPrinters([initialPrinter]);setPrinterId('example');}setPrinterEditing(false);
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
    setDetailedMaterials(seeded());
@@ -108,7 +147,7 @@ export default function App(){
  const used = result ? result.modelGrams+result.wasteGrams : 0;
  const average = result&&used>0?result.material/used*1000:0;
  return <>
- <header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span></div></header>
+ <header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>session?void logout():setAuthOpen(true)}>{session?"Sair · "+(session.user.email??"Minha conta"):"Entrar / Salvar"}</button></div></header>
  <main className="shell">
   <section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>
   <nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples <small>Direto ao resultado</small></button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado <small>Cores, impressora e custos extras</small></button></nav>
@@ -116,7 +155,7 @@ export default function App(){
    <section className="panel">
     <div className="panel-heading"><div><h2>{advanced?"Personalize seu cálculo":"Seu cálculo"}</h2><p>{advanced?"Ajuste os detalhes sem perder os valores informados.":"Preencha os dados e veja o resultado na hora."}</p></div><button type="button" onClick={reset}>Restaurar exemplo</button></div>
     {advanced&&<section className="printer-section" aria-labelledby="printer-title">
-     <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterEditing(v=>!v)}>{printerEditing?'Fechar edição':'Editar dados'}</button></div>
+     <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterEditing(v=>!v)}>{printerEditing?'Fechar edição':'Editar dados'}</button><button type="button" className="details-button" onClick={()=>setPrinterModal("edit")}>Editar cadastro</button></div>
      <div className="printer-selector">
       <label>Selecionar impressora
        <select aria-label="Selecionar impressora" value={printerId} onChange={e=>{setPrinterId(e.target.value);setPrinterEditing(false);}}>
@@ -125,7 +164,7 @@ export default function App(){
       </label>
       <button type="button" onClick={addPrinter}>+ Nova impressora</button>
      </div>
-     <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>
+     <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa quando não informado) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>{!session&&<p className="footnote">Sem login: novas impressoras ficam apenas nesta sessão. Entre para salvar no banco.</p>}{session&&<p className="footnote">{cloudBusy?"Carregando sua oficina...":workspaceId?"Oficina conectada ao Supabase.":"Conectando oficina..."}</p>}{accountError&&<p role="alert" className="error">{accountError}</p>}
      {printerEditing&&<div className="printer-edit-fields">
        <label>Identificação<input aria-label="Nome da impressora" value={activePrinter.name} onChange={e=>updatePrinter('name',e.target.value)}/></label>
        <label>Valor da impressora (R$)<input type="number" min="0" step="any" data-testid="printerPrice" value={display(activePrinter.printerPrice)} onChange={e=>updatePrinter('printerPrice',e.target.value)}/></label>
@@ -190,5 +229,8 @@ export default function App(){
     <p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p></div></details>
    </>}</section>
   </div>
- </main><footer className="shell footer">MakerCusto · Preview em homologação · Sem envio de dados</footer></>;
+ </main><footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>
+ {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
+ {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?stored.find(p=>p.id===printerId):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
+ </>;
 }
