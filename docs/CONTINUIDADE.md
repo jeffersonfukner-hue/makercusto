@@ -354,3 +354,9 @@
 
 ## 21/11/2026 — Correção de seletor CSS no teste de seleção lembrada
 - CI #44927374533 terminou com 62/64 testes Playwright aprovados; duas falhas no mesmo cenário desktop/mobile por expressão inválida de teste `option:selected` (CSS usa `option:checked`). Ajustado o seletor sem alterar código funcional. Reexecutar CI completo antes de considerar entrega validada.
+
+## 21/11/2026 — CI verde para persistência local de impressoras
+- **Aprovado:** GitHub Actions #44927634558, commit `b112c4619f3a3e2f10dcb0cc6d44758b61962b06`; tipagem, testes unitários, build e testes E2E desktop/mobile passaram.
+- Escopo testado: clone de impressora local preservado após atualizar página, seleção anterior restaurada, referência global intacta, restaurar exemplo sem apagar cadastros pessoais.
+- Os dois CI anteriores falharam por testes com seletores CSS imprecisos/inválidos, não por perda de cadastros; correções de testes versionadas. A persistência segue **exclusivamente local** sem login, e a última seleção por conta é uma preferência deste dispositivo, não sincronização Supabase.
+- Nenhum merge, deploy ou alteração de dados/banco. Evidência https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44927634558

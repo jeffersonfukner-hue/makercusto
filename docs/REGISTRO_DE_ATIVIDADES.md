@@ -375,3 +375,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividade:** diagnóstico do CI #44927374533, leitura de logs e substituição de seletor CSS inválido no teste de persistência local.
 - **Resultado:** alteração em branch; nenhum deploy, merge ou banco; CI pendente.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44927374533.
+
+## 21/11/2026 — Conferência final do CI da persistência local
+- **Projeto/cliente:** MakerCusto, desenvolvimento próprio. **Início/término e duração comprovada (Brasília):** não aferidos; não inferir horas.
+- **Atividades efetivas:** acompanhamento de CI #44927634558; validação de resultado final e estados de tipagem, motor, build e interface desktop/mobile.
+- **Resultados comprovados:** execução `success` do commit `b112c461`; persistência de clones locais e seleção validada por automação. Nenhum banco, merge ou deploy.
+- **Pendências:** persistência integral de cópias técnicas e perfis no Supabase com RLS e homologação visual do proprietário.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44927634558
