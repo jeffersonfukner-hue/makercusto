@@ -119,3 +119,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** P02 homologada na documentação, 29 diretrizes anteriores mantidas e total **30**; P03–P06 ainda pendentes. Sem código, banco, SQL, migração, merge ou deploy.
 - **Pendências:** revisão de P03–P06, P07–P09 e limites operacionais detalhados, modelo físico e permissões/RLS; **testes de software não executados**, pois a atividade foi documental.
 - **Evidências verificáveis:** commit `e77bd4b9` (documento P02); `0385d053` (continuidade); branch `feat/fundacao-makercusto`; PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. O commit do próprio registro é verificável no histórico GitHub.
+
+
+## 20/11/2026 — Homologação documental P03 (falhas e perdas)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início/término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; não inferida pelo intervalo entre mensagens.
+- **Atividades efetivamente executadas:** leitura das homologações FAL, P01 e P02 e de `docs/CONTINUIDADE.md`, conferência do estado da branch, formalização da aprovação expressa de P03-A a P03-F como uma política única e atualização da continuidade/registro de atividades.
+- **Resultados:** `docs/HOMOLOGACAO_FALHAS_P03_2026-11-20.md` criado; total de **31 homologações**, preservando as 30 anteriores. Nenhum código, SQL, banco, merge ou deploy.
+- **Pendências:** P04 a P06 e P07 a P09, valorização de recuperáveis, regras fiscais, permissões, RLS e modelo SQL físico. Testes funcionais/RLS não executados nesta etapa documental.
+- **Evidências verificáveis:** commits `f7b530a9` (homologação P03) e `e48a1b8d` (continuidade); branch `feat/fundacao-makercusto`; PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. O commit da atualização deste próprio registro está disponível no histórico do GitHub.
