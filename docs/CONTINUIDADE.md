@@ -278,3 +278,9 @@
 - O mesmo princípio aplica-se a filamentos e perfis de slicer. Ex.: perfil de Masterprint PETG ou SUNLU PLA no próprio cadastro para consultar temperaturas, ventilação e demais configurações, diferenciando fonte oficial de sugestão validada. Dicas avançadas específicas permanecem como ideia de plano Plus futuro.
 - Normalizar nomes novos: entrada vermelho fosco vira Vermelho Fosco, sem prejudicar siglas e marcas; impedir duplicatas equivalentes. Exemplo textual vermelhor fosco contém provável erro ortográfico, não corrigido só com capitalização: oferecer sugestão, sem autocorreção silenciosa.
 - Alteração desta rodada exclusivamente documental. Código, banco, merge e deploy não alterados; implementar/testar posteriormente.
+
+## 21/11/2026 — Ajuda contextual e sugestões rápidas
+- Nova diretriz do proprietário: onde fizer sentido, inserir **letrinhas pequenas abaixo do campo** com explicação curta que muda conforme o contexto, inclusive ao preencher incorretamente.
+- Autocomplete de **até três opções clicáveis** para reduzir digitação, como ao digitar Kobra oferecer modelos do catálogo, respeitando fabricante e ordenação útil. A mesma regra vale transversalmente para demais entidades relevantes; decidir tecnicamente os campos com benefício real.
+- Princípio: facilitar sem poluição visual; não obrigar explicações extensas, não inventar opções; preservar acessibilidade, mobile e originais globais protegidos.
+- Escopo desta rodada: registro documental somente, sem implementação, alterações de banco, merge ou deploy.

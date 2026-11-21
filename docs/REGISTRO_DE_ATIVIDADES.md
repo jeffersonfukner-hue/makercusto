@@ -270,3 +270,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** documentação na branch/PR #1; nenhuma mudança funcional, migração, banco, merge ou deploy.
 - **Pendências:** desenvolver e testar componentes reutilizáveis, perfis e controles de imutabilidade.
 - **Evidência:** commit deste registro no histórico da PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+
+## 21/11/2026 — Requisito de ajuda contextual e autocomplete
+- **Projeto:** MakerCusto, desenvolvimento próprio.
+- **Início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; não contabilizar intervalos de conversa.
+- **Atividade realizada:** leitura do contrato/documentos e formalização transversal de microdicas reativas, sugestões clicáveis limitadas a três resultados e seleção criteriosa dos campos importantes.
+- **Resultado:** documentação atualizada na branch do PR #1; código da aplicação, banco e produção não alterados.
+- **Pendências:** desenvolver componente reutilizável, testes de teclado/mobile/acessibilidade e homologação visual.
+- **Evidência:** commit documental desta atualização e PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.

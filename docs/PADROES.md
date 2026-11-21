@@ -53,3 +53,11 @@
 - Consulta ao perfil básico deve estar disponível no cadastro; dicas avançadas/otimizações por impressão são ideia Plus futura e separada.
 - Nomes novos: remover espaços excedentes, capitalizar palavras comuns (exemplo: vermelho fosco → Vermelho Fosco), preservar siglas e grafias oficiais (PLA, PETG, TPU, eSUN etc.). Deduplicar comparando caixa, acentuação e espaços; para possível erro de digitação, sugerir uma correção e não alterar silenciosamente.
 - Prioridade de UX: padrão utilizável imediatamente; personalização opcional e progressiva. Não obrigar preenchimento de dezenas de campos.
+
+## Ajuda contextual nos campos — padrão universal (21/11/2026)
+- Campos onde ajuda agrega valor exibem microtexto discreto abaixo da entrada: uma explicação curta e concreta, relacionada ao campo e ao estado atual. Não encher todos os campos de textos repetitivos nem deslocar a interface desnecessariamente.
+- Durante a digitação, oferecer **no máximo três opções clicáveis** do catálogo pertinente, priorizadas por prefixo exato, popularidade e similaridade: ao digitar Kobra, mostrar sugestões como Kobra X, Kobra 2 e Kobra 3, conforme os registros existentes. Para fabricante selecionado, buscar somente modelos daquele fabricante.
+- Em valor inválido, duplicado ou atípico, substituir ou complementar o microtexto com orientação objetiva e proposta de correção. Não corrigir automaticamente nomes técnicos/erros ambíguos e não deixar criar duplicata silenciosamente.
+- Sugestões não devem sobrepor o teclado mobile ou impedir interação; suportar teclado, clique/toque, leitores de tela e foco visível. Evitar requisições a cada tecla: usar catálogo local/filtrado e debounce quando houver busca remota.
+- Aplicação prioritária: fabricante/modelo de impressora, marca/linha/tipo/cor de filamento, nomes próprios personalizados, temperatura de bico/mesa, velocidade/ventilação/retração, quantidade e unidade de compra, preço de embalagem, consumo e potência estimada, duração e margens. Explicações devem mostrar unidade, origem e efeito no cálculo quando relevante.
+- O componente é reutilizável e parametrizado por tipo de campo, não uma solução isolada para impressoras. Respeitar padrão pronto → consultar → clonar → personalizar.

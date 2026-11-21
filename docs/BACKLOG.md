@@ -186,3 +186,10 @@ Não ampliar escopo sem homologação.
 - [ ] Manter consulta básica de parâmetros no cadastro; reservar otimizações por aplicação/impressora/material para proposta comercial Plus futura.
 - [ ] Normalização global de nomes por tipo de dado: vermelho fosco → Vermelho Fosco, siglas técnicas preservadas, grafias oficiais, prevenção de duplicatas e sugestão de correção para erros.
 - [ ] Testes de original imutável, cópia integral, edição independente, histórico, formatação de nomes, deduplicação e responsividade.
+
+## Ajuda dinâmica e até três sugestões por campo (21/11/2026)
+- [ ] Componente reutilizável de dica abaixo de campos relevantes, variando conforme preenchimento, seleção, erro ou valor atípico, sem poluir a tela.
+- [ ] Autocomplete limitado a 3 sugestões clicáveis por entrada, priorizando prefixo/popularidade/similaridade e respeitando fabricante, tipo e catálogo; sem resultados inventados.
+- [ ] Aplicar progressivamente em impressoras, filamentos (marca/tipo/cor/linha), nomes próprios, parâmetros técnicos, compras e custo; avaliar campo por campo e não apresentar dica quando não ajuda.
+- [ ] Avisos claros para duplicata ou provável erro de grafia; ao escolher sugestão, preencher campo certo e conservar demais valores.
+- [ ] Testar teclado, toque mobile 320px, acessibilidade, reação durante digitação, falsos positivos, nomes oficiais imutáveis e ausência de requisições excessivas.
