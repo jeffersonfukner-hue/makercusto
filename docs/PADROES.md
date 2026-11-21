@@ -61,3 +61,8 @@
 - Sugestões não devem sobrepor o teclado mobile ou impedir interação; suportar teclado, clique/toque, leitores de tela e foco visível. Evitar requisições a cada tecla: usar catálogo local/filtrado e debounce quando houver busca remota.
 - Aplicação prioritária: fabricante/modelo de impressora, marca/linha/tipo/cor de filamento, nomes próprios personalizados, temperatura de bico/mesa, velocidade/ventilação/retração, quantidade e unidade de compra, preço de embalagem, consumo e potência estimada, duração e margens. Explicações devem mostrar unidade, origem e efeito no cálculo quando relevante.
 - O componente é reutilizável e parametrizado por tipo de campo, não uma solução isolada para impressoras. Respeitar padrão pronto → consultar → clonar → personalizar.
+
+
+## Continuidade local sem exigir login — 21/11/2026
+- A impressora pessoal criada pelo visitante sobrevive a recarga no mesmo navegador; dados locais ficam separados da oficina autenticada. O último equipamento selecionado também é lembrado por visitante ou conta (preferência local do dispositivo, não sincronização de preferências entre dispositivos).
+- Restaurar o exemplo nunca apaga cadastros pessoais persistidos, apenas restaura parâmetros do cálculo e seleção inicial. Usuário deve ser informado que limpar os dados do navegador pode apagar suas cópias locais; cópias não se transferem automaticamente para uma conta.

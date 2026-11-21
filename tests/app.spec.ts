@@ -388,3 +388,39 @@ test('preço da embalagem explica custo por quilo e preserva cálculo',async({pa
  await page.getByTestId('packageQuantity').fill('0.5');
  await expect(page.getByText(/Custo equivalente:/)).toContainText('R$ 240,00/kg');
 });
+
+test('visitante preserva impressora pessoal e seleção após recarregar',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ const dropdown=page.getByRole('combobox',{name:'Selecionar impressora'});
+ await dropdown.selectOption('reference:anycubic-kobra-x');
+ await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await page.getByRole('textbox',{name:'Nome da minha impressora'}).fill('Aninha');
+ await page.getByRole('button',{name:'Salvar personalização'}).click();
+ await expect(dropdown.locator('option',{hasText:'Aninha'})).toHaveCount(1);
+ await expect(dropdown.locator('option',{hasText:'Anycubic Kobra X'})).toHaveCount(1);
+ await page.reload();await page.getByRole('button',{name:/Avançado/}).click();
+ const restored=page.getByRole('combobox',{name:'Selecionar impressora'});
+ await expect(restored.locator('option',{hasText:'Aninha'})).toHaveCount(1);
+ await expect(restored.locator('option:selected')).toHaveText('Aninha');
+ await expect(page.locator('.printer-summary')).toContainText('150 W');
+});
+test('restaurar exemplo não exclui impressoras pessoais do visitante',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption('reference:bambu-a1');
+ await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await page.getByRole('textbox',{name:'Nome da minha impressora'}).fill('Minha Bambu');
+ await page.getByRole('button',{name:'Salvar personalização'}).click();
+ await page.getByRole('button',{name:'Restaurar exemplo'}).click();
+ await page.getByRole('button',{name:/Avançado/}).click();
+ const dropdown=page.getByRole('combobox',{name:'Selecionar impressora'});
+ await expect(dropdown).toHaveValue('example');
+ await expect(dropdown.locator('option',{hasText:'Minha Bambu'})).toHaveCount(1);
+ await page.reload();await page.getByRole('button',{name:/Avançado/}).click();
+ await expect(page.getByRole('combobox',{name:'Selecionar impressora'}).locator('option',{hasText:'Minha Bambu'})).toHaveCount(1);
+});
+test('visitante preserva última referência selecionada sem criar cópia',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption('reference:creality-k1c');
+ await page.reload();await page.getByRole('button',{name:/Avançado/}).click();
+ await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toHaveValue('reference:creality-k1c');
+});

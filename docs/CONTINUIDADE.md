@@ -341,3 +341,10 @@
 - **CI aprovado:** #44926757179 para commit `1034a2c421355f7680dc0b4ee1c775e17310cd98`. Job concluiu `success`: verificação de tipos, testes unitários, build e interface desktop/mobile.
 - Funcionalidades verificadas pelo CI: cópias de perfil de filamento editáveis sem alterar origem, retorno ao perfil padrão, reabertura após recarregar, catálogo genérico de PLA+, ABS, ASA, PA, PC e PVA, microdicas e conversão de embalagem para R$/kg.
 - **Limites:** perfis pessoais de slicer armazenados apenas no navegador; faixas genéricas são estimativas de partida, não configurações oficiais; integração real com conta/Supabase não validada. Sem merge, deploy nem alterações no banco. Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44926757179
+
+
+## 21/11/2026 — Continuidade das impressoras de visitantes, sem banco
+- Implementado armazenamento local de impressoras pessoais sem login com validação dos registros, limite de 100 e ID local isolado, sem misturar com referências imutáveis nem oficina autenticada.
+- Última impressora selecionada preservada por visitante ou conta neste dispositivo; a seleção só é restaurada se o modelo/instância realmente existe. As configurações pessoais do visitante continuam sendo dados deste navegador; não há migração/sincronização automática para Supabase.
+- Restaurar exemplo não exclui cópias pessoais; logout restaura dados locais do visitante, sem trazer impressoras do usuário autenticado. O banco, as tabelas e o motor financeiro não foram alterados.
+- Acrescentados três testes E2E (persistência após reload, preservar cópia ao restaurar, última referência selecionada). CI do commit ainda precisa ser conferido. Sem merge/deploy.

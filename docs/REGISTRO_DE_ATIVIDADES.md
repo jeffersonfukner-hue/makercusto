@@ -355,3 +355,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** todos os estágios `success` para commit `1034a2c4`. Nenhuma publicação/alteração de banco/merge.
 - **Pendências:** persistência remota dos perfis pessoais, referências por fabricante/linha e homologação visual.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44926757179
+
+
+## 21/11/2026 — Continuidade de impressoras pessoais no navegador
+- **Projeto:** MakerCusto, desenvolvimento próprio.
+- **Início/término (Brasília):** não aferidos; **duração efetiva:** não mensurada, não inferida de mensagens.
+- **Atividades efetivas:** análise dos padrões e do estado da branch; implementação de armazenamento local validado para impressoras de visitantes, preferência de seleção por conta/dispositivo, preservação de cadastros ao restaurar exemplo e três cenários Playwright.
+- **Resultados:** código e documentação preparados na PR #1; testes de CI a verificar. Sem SQL, dados de produção, merge ou deploy.
+- **Evidências:** commits e GitHub Actions associados à PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.

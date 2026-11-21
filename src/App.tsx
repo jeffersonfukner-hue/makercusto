@@ -26,6 +26,30 @@ const initialPrinter:PrinterProfile = {id:'example',name:'Anycubic Kobra X — c
 // Referências globais são selecionáveis sem cadastro e jamais alteradas pelo usuário.
 const referencePrinters:PrinterProfile[]=printerPresets.map(p=>({id:'reference:'+p.id,name:printerPresetLabel(p),printerPrice:printerEstimatedCosts.purchasePrice,averageWatts:printerEstimatedCosts.averageWatts,lifetimeHours:printerEstimatedCosts.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh}));
 const seedPrinters=():PrinterProfile[]=>[initialPrinter,...referencePrinters];
+const LOCAL_PRINTERS_KEY='makercusto:impressoras-locais:v1';
+const selectedPrinterKey=(account:string)=>'makercusto:impressora-selecionada:'+account+':v1';
+const personalLocal=(p:PrinterProfile)=>p.id.startsWith('local-');
+function readLocalPrinters():PrinterProfile[]{
+ try{
+  const raw:unknown=JSON.parse(localStorage.getItem(LOCAL_PRINTERS_KEY)||'[]');
+  if(!Array.isArray(raw))return [];
+  const ids=new Set<string>();
+  return raw.slice(0,100).filter((p):p is PrinterProfile=>{
+   if(!p||typeof p!=='object')return false;
+   const item=p as Partial<PrinterProfile>;
+   if(typeof item.id!=='string'||!item.id.startsWith('local-')||ids.has(item.id)||typeof item.name!=='string'||!item.name.trim()||item.name.length>150)return false;
+   if([item.printerPrice,item.averageWatts,item.lifetimeHours,item.pricePerKwh].some(n=>typeof n!=='number'||!Number.isFinite(n)||n<0)||item.lifetimeHours===0)return false;
+   ids.add(item.id);return true;
+  });
+ }catch{return [];}
+}
+function readSelectedPrinter(account:string,available:PrinterProfile[]):string{
+ try{const selected=localStorage.getItem(selectedPrinterKey(account));return available.some(p=>p.id===selected)?selected!:'example';}catch{return 'example';}
+}
+function writeLocalPrinters(printers:PrinterProfile[]):void{
+ try{localStorage.setItem(LOCAL_PRINTERS_KEY,JSON.stringify(printers.filter(personalLocal).slice(0,100)));}catch{/* armazenamento indisponível: cópias mantidas na sessão */}
+}
+
 type NumericKey = Exclude<keyof CostInput,'materials'>;
 const fields:{key:NumericKey;label:string;step:string}[] = [
  {key:'hours',label:'Tempo de impressão (horas)',step:'0.01'},
@@ -45,8 +69,8 @@ const seeded = () => referenceCase.materials!.map(m=>({...m,type:'PETG',brand:''
 const calculatedPackagePrice = (item:MaterialLine):number => item.packagePrice ?? item.pricePerKg*(item.packageQuantity??1)*(item.packageUnit==='g'?.001:1);
 export default function App(){
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
- const [printers,setPrinters]=useState<PrinterProfile[]>(seedPrinters);
- const [printerId,setPrinterId]=useState('example');
+ const [printers,setPrinters]=useState<PrinterProfile[]>(()=>sessionStore.get()?seedPrinters():[...seedPrinters(),...readLocalPrinters()]);
+ const [printerId,setPrinterId]=useState(()=>sessionStore.get()?'example':readSelectedPrinter('guest',[...seedPrinters(),...readLocalPrinters()]));
  const [session,setSession]=useState<Session|null>(()=>sessionStore.get());
  const [authOpen,setAuthOpen]=useState(false);
  const [printerModal,setPrinterModal]=useState<'new'|'edit'|null>(null);
@@ -64,23 +88,34 @@ export default function App(){
  });
  const loadAccount=async()=>{
   const current=sessionStore.get();setSession(current);
-  if(!current){setWorkspaceId(null);setStored([]);setPrinters(seedPrinters());setPrinterId('example');return;}
+  if(!current){setWorkspaceId(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));return;}
   setCloudBusy(true);setAccountError('');
   try{
    let ws=await listWorkspaces();
    if(!ws.length){const id=await createWorkspace('Minha oficina');ws=[{id,name:'Minha oficina',owner_id:current.user.id}];}
    const id=ws[0].id;setWorkspaceId(id);
    const items=await listPrinters(id);setStored(items);
-   setPrinters([...seedPrinters(),...items.map(profileFromDb)]);
-   if(items.length)setPrinterId(items[0].id);
+   const available=[...seedPrinters(),...items.map(profileFromDb)];
+   setPrinters(available);
+   const selected=readSelectedPrinter(current.user.id,available);
+   setPrinterId(selected==='example'&&items.length?items[0].id:selected);
   }catch(e){setAccountError('Não foi possível carregar sua oficina: '+(e as Error).message);}
   finally{setCloudBusy(false);}
  };
  useEffect(()=>{void loadPrinterModels().then(setModels).catch(()=>setAccountError('Catálogo de impressoras indisponível. Tente novamente mais tarde.'));if(sessionStore.get())void loadAccount();},[]);
+ // Visitantes preservam cópias só neste navegador. Contas usam os registros da oficina.
+ useEffect(()=>{if(!session)writeLocalPrinters(printers);},[printers,session]);
+ useEffect(()=>{
+  if(session&&!workspaceId)return;
+  const account=session?.user.id??'guest';
+  if(!printers.some(p=>p.id===printerId))return;
+  try{localStorage.setItem(selectedPrinterKey(account),printerId);}catch{/* fallback em memória */}
+ },[session?.user.id,workspaceId,printers,printerId]);
+
  const savePrinter=async(data:PrinterDraft)=>{
   if(!sessionStore.get()||!workspaceId){
    const oldId=printerModal==='edit'&&!isReferencePrinter?printerId:null;
-   const id=oldId??'local-'+String(Date.now());
+   const id=oldId??'local-'+String(Date.now())+'-'+Math.random().toString(36).slice(2,8);
    const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??printerEstimatedCosts.purchasePrice,averageWatts:data.average_watts??printerEstimatedCosts.averageWatts,lifetimeHours:data.lifetime_hours??printerEstimatedCosts.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
    setPrinters(prev=>[...prev.filter(p=>p.id!==id),local]);setPrinterId(id);return;
   }
@@ -90,7 +125,7 @@ export default function App(){
   setStored(prev=>[...prev.filter(p=>p.id!==saved.id),saved]);
   setPrinters(prev=>[...prev.filter(p=>p.id!==saved.id),profileFromDb(saved)]);setPrinterId(saved.id);
  };
- const logout=async()=>{await signOut();setSession(null);setWorkspaceId(null);setStored([]);setPrinters(seedPrinters());setPrinterId('example');};
+ const logout=async()=>{await signOut();setSession(null);setWorkspaceId(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));};
  const activePrinter=printers.find(p=>p.id===printerId)??printers[0];
  const addPrinter=()=>setPrinterModal('new');
  const isReferencePrinter=printerId==='example'||printerId.startsWith('reference:');
@@ -152,7 +187,7 @@ export default function App(){
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
  const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
  const reset=()=>{
-   if(!sessionStore.get()){setPrinters(seedPrinters());setPrinterId('example');}
+   if(!sessionStore.get()){setPrinters([...seedPrinters(),...readLocalPrinters()]);setPrinterId('example');}
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
    setDetailedMaterials(seeded());
@@ -192,9 +227,9 @@ export default function App(){
       </label>
       <button type="button" className="printer-add-action" onClick={addPrinter}><span className="action-plus" aria-hidden="true">+</span><span>Nova impressora</span></button>
      </div>
-     <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa quando não informado) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>{!session&&<p className="footnote">Sem login: novas impressoras ficam apenas nesta sessão. Entre para salvar no banco.</p>}{session&&<p className="footnote">{cloudBusy?"Carregando sua oficina...":workspaceId?"Oficina conectada ao Supabase.":"Conectando oficina..."}</p>}{accountError&&<p role="alert" className="error">{accountError}</p>}
+     <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa quando não informado) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>{!session&&<p className="footnote">Sem login: suas impressoras são guardadas neste navegador. Entre para salvar na nuvem.</p>}{session&&<p className="footnote">{cloudBusy?"Carregando sua oficina...":workspaceId?"Oficina conectada ao Supabase.":"Conectando oficina..."}</p>}{accountError&&<p role="alert" className="error">{accountError}</p>}
 
-     <p className="footnote">Valores de exemplo são estimativas. Cadastros pessoais são salvos no Supabase após login; sem login, ficam só nesta sessão.</p>
+     <p className="footnote">Valores de exemplo são estimativas. Cadastros pessoais são salvos no Supabase após login; sem login, ficam neste navegador.</p>
     </section>}
     <section className="materials" aria-labelledby="materials-title">
      <div className="materials-heading"><h3 id="materials-title">Filamento</h3>{advanced&&<button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button>}</div>
