@@ -366,3 +366,11 @@
 - Banco MakerCusto: função `mc_save_calculated_product` criada para salvar produto, revisão inicial e snapshot do cálculo na mesma transação, com validação de usuário, oficina e parâmetros. A migração também removeu EXECUTE de anon em `mc_create_workspace`, `mc_finance`, `mc_member`, `mc_role`. Permissões verificadas por SQL em leitura.
 - Frontend: painel Meus produtos com cadastro, lista e feedback visual; visitante precisa autenticar; snapshot estimado captura entrada e resultado, não movimenta estoque e não equivale a confirmação de produção. Teste automatizado com Supabase REST simulado adicionado; CI pendente.
 - Segurança: teste end-to-end contra conta real/RLS e relatório de advisors seguem pendentes. Produto salvo tem apenas revisão inicial; editar produto/kit multicomponente e gerir estoque são frentes posteriores, não alegar concluídas.
+
+
+## 21/11/2026 — Produto real composto por peças impressas
+- Usuário solicitou uso real imediato, usando brinquedo lançado hoje: lançador, haste de conexão e hélice. Ambiente em desenvolvimento: perda de dados de testes é aceitável, mas não apagar dados sem necessidade.
+- Implementado no Supabase: RPC autenticada `mc_create_assembly` para criar conjunto, revisão, três ou mais componentes fabricados, vínculo de composição e snapshots com custo `unknown` quando não calculado; RPC `mc_list_assemblies` consulta isolada por oficina. Permissões de execução somente para authenticated.
+- Implementado na branch: formulário de conjunto com peças personalizáveis, quantidade por kit, peso opcional e observações, preço opcional, listagem e consulta da composição, mensagens de progresso/erro. Sem inventar custos nem baixar estoque.
+- Teste SQL com transação `ROLLBACK` confirmou cadastro e retorno da consulta, seguido de zero dados de teste persistentes. E2E simulado adicionado e CI do HEAD pendente.
+- Escopo ainda pendente: edição/versionamento do kit já salvo, custo real por peça vinculado à impressão/filamento, estoque/produção, montagem e geração de preços por composição. Não afirmar que a composição completa de custos está pronta.
