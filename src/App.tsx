@@ -41,7 +41,6 @@ export default function App(){
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
  const [printers,setPrinters]=useState<PrinterProfile[]>([initialPrinter]);
  const [printerId,setPrinterId]=useState('example');
- const [printerEditing,setPrinterEditing]=useState(false);
  const [session,setSession]=useState<Session|null>(()=>sessionStore.get());
  const [authOpen,setAuthOpen]=useState(false);
  const [printerModal,setPrinterModal]=useState<'new'|'edit'|null>(null);
@@ -74,8 +73,10 @@ export default function App(){
  useEffect(()=>{void loadPrinterModels().then(setModels).catch(()=>setAccountError('Catálogo de impressoras indisponível. Tente novamente mais tarde.'));if(sessionStore.get())void loadAccount();},[]);
  const savePrinter=async(data:PrinterDraft)=>{
   if(!sessionStore.get()||!workspaceId){
-   const id='local-'+String(Date.now());const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??initialPrinter.printerPrice,averageWatts:data.average_watts??initialPrinter.averageWatts,lifetimeHours:data.lifetime_hours??initialPrinter.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
-   setPrinters(prev=>[...prev,local]);setPrinterId(id);return;
+   const oldId=printerModal==='edit'&&printerId!=='example'?printerId:null;
+   const id=oldId??'local-'+String(Date.now());
+   const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??initialPrinter.printerPrice,averageWatts:data.average_watts??initialPrinter.averageWatts,lifetimeHours:data.lifetime_hours??initialPrinter.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
+   setPrinters(prev=>[...prev.filter(p=>p.id!==id),local]);setPrinterId(id);return;
   }
   const old=stored.find(p=>p.id===printerId);
   const saved=(printerModal==='edit'&&old?await updateStoredPrinter(old.id,workspaceId,data):await insertPrinter(workspaceId,data))[0];
@@ -85,9 +86,6 @@ export default function App(){
  };
  const logout=async()=>{await signOut();setSession(null);setWorkspaceId(null);setStored([]);setPrinters([initialPrinter]);setPrinterId('example');};
  const activePrinter=printers.find(p=>p.id===printerId)??printers[0];
- const updatePrinter=(key:'name'|'printerPrice'|'averageWatts'|'lifetimeHours'|'pricePerKwh',value:string)=>{
-   setPrinters(prev=>prev.map(p=>p.id===printerId?{...p,[key]:key==='name'?value:numeric(value)}:p));
- };
  const addPrinter=()=>setPrinterModal('new');
  const [advanced,setAdvanced]=useState(false);
  const [details,setDetails]=useState(false);
@@ -147,7 +145,7 @@ export default function App(){
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
  const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
  const reset=()=>{
-   if(!sessionStore.get()){setPrinters([initialPrinter]);setPrinterId('example');}setPrinterEditing(false);
+   if(!sessionStore.get()){setPrinters([initialPrinter]);setPrinterId('example');}
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
    setDetailedMaterials(seeded());
@@ -177,23 +175,17 @@ export default function App(){
    <section className="panel">
     <div className="panel-heading"><div><h2>{advanced?"Personalize seu cálculo":"Seu cálculo"}</h2><p>{advanced?"Ajuste os detalhes sem perder os valores informados.":"Preencha os dados e veja o resultado na hora."}</p></div><button type="button" onClick={reset}>Restaurar exemplo</button></div>
     {advanced&&<section className="printer-section" aria-labelledby="printer-title">
-     <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterEditing(v=>!v)}>{printerEditing?'Fechar edição':'Editar dados'}</button><button type="button" className="details-button" onClick={()=>setPrinterModal("edit")}>Editar cadastro</button></div>
+     <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterModal('edit')}>Editar cadastro</button></div>
      <div className="printer-selector">
       <label>Selecionar impressora
-       <select aria-label="Selecionar impressora" value={printerId} onChange={e=>{setPrinterId(e.target.value);setPrinterEditing(false);}}>
+       <select aria-label="Selecionar impressora" value={printerId} onChange={e=>setPrinterId(e.target.value)}>
         {printers.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
        </select>
       </label>
       <button type="button" onClick={addPrinter}>+ Nova impressora</button>
      </div>
      <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa quando não informado) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>{!session&&<p className="footnote">Sem login: novas impressoras ficam apenas nesta sessão. Entre para salvar no banco.</p>}{session&&<p className="footnote">{cloudBusy?"Carregando sua oficina...":workspaceId?"Oficina conectada ao Supabase.":"Conectando oficina..."}</p>}{accountError&&<p role="alert" className="error">{accountError}</p>}
-     {printerEditing&&<div className="printer-edit-fields">
-       <label>Identificação<input aria-label="Nome da impressora" value={activePrinter.name} onChange={e=>updatePrinter('name',e.target.value)}/></label>
-       <label>Valor da impressora (R$)<input type="number" min="0" step="any" data-testid="printerPrice" value={display(activePrinter.printerPrice)} onChange={e=>updatePrinter('printerPrice',e.target.value)}/></label>
-       <label>Potência média (W)<input type="number" min="0" step="any" data-testid="averageWatts" value={display(activePrinter.averageWatts)} onChange={e=>updatePrinter('averageWatts',e.target.value)}/></label>
-       <label>Vida útil (h)<input type="number" min="0.01" step="any" data-testid="lifetimeHours" value={display(activePrinter.lifetimeHours)} onChange={e=>updatePrinter('lifetimeHours',e.target.value)}/></label>
-       <label>Tarifa elétrica (R$/kWh)<input type="number" min="0" step="any" data-testid="pricePerKwh" value={display(activePrinter.pricePerKwh)} onChange={e=>updatePrinter('pricePerKwh',e.target.value)}/></label>
-     </div>}
+
      <p className="footnote">Valores do exemplo são hipóteses. Cadastros ficam somente nesta sessão; salvamento em conta será definido para os planos pagos.</p>
     </section>}
     <section className="materials" aria-labelledby="materials-title">
@@ -253,7 +245,7 @@ export default function App(){
   </div>
  </main><footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
- {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?stored.find(p=>p.id===printerId):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
+ {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?(stored.find(p=>p.id===printerId)??{id:activePrinter.id,workspace_id:workspaceId??'',model_id:models.find(m=>activePrinter.name.includes(m.name))?.id??null,name:activePrinter.name,purchase_price:activePrinter.printerPrice,average_watts:activePrinter.averageWatts,lifetime_hours:activePrinter.lifetimeHours,active:true}):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
  {catalogModal&&<CatalogModal title={catalogTitles[catalogModal]} onClose={()=>setCatalogModal(null)} onSave={saveCatalog}/>}
  </>;
 }
