@@ -141,3 +141,10 @@ Não ampliar escopo sem homologação.
 - [ ] Homologar modelo de item estocável/FKs, saldo negativo/lote, reserva, baixa, estorno e transações.
 - [ ] Homologar rateio de mesa com múltiplos produtos, revisões de kits, precisão financeira e custos adicionais antes de SQL.
 - [ ] Preparar testes SQL/RLS somente depois de aprovação específica, sem provisionar projeto nesta rodada.
+
+## Seis regras homologadas — estoque, produtos e produção (20/11/2026)
+- [x] Homologar seis princípios no `docs/HOMOLOGACAO_ESTOQUE_2026-11-20.md`, preservando 17 anteriores.
+- [x] Modelar proposta adicional de eventos de estoque, FKs por oficina, transações, composição por revisão, rateio, estornos e cenários de teste em `docs/REFINAMENTO_ESTOQUE_PRODUCAO.md`.
+- [ ] Decidir política de reserva, lote indefinido, baixa parcial/falha e estorno parcial.
+- [ ] Aprovar fórmula(s) de rateio e conciliação de energia/tempo/purga para mesas mistas.
+- [ ] Aprovar schema físico, chaves estrangeiras, precisão monetária e controle de concorrência antes de SQL e RLS.

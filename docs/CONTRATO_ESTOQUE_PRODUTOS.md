@@ -86,3 +86,9 @@
 ## 7. Pendências de arquitetura antes de SQL
 
 Aprovar: identidade `inventory_items` com FK/subtipos, política de saldo/lote/reserva; gatilho de baixa, BOM por revisão e rateio entre produtos; movimentações atômicas e política de estorno; custos complementares; direitos de oficinas e assinaturas. As **17 regras já homologadas** permanecem preservadas. Nenhuma implementação é autorizada por este documento.
+
+## 8. Atualização de homologação — 20/11/2026
+
+O proprietário HOMOLOGOU seis recomendações operacionais oriundas deste contrato: identidade estocável por oficina, bloqueio de saldo negativo por padrão, baixa somente ao confirmar produção, kits versionados, rateio explícito em mesas mistas e estornos auditáveis. Fonte formal `HOMOLOGACAO_ESTOQUE_2026-11-20.md`. O total passa a **23 decisões** (5+8+4+6).
+
+As menções anteriores à ausência de decisão sobre *se* bloquear saldo negativo, *se* versionar BOM ou *se* exigir rateio/estorno estão superadas **nesses princípios**. Continuam pendentes seus detalhes de implementação, exceções, fórmulas e esquema físico. Ver propostas separadas em `REFINAMENTO_ESTOQUE_PRODUCAO.md`.

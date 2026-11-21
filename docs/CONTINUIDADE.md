@@ -111,3 +111,9 @@
 - Proprietário homologou expressamente quatro propostas do contrato `4bab9d0c`: tabelas específicas, impressora física diferente de modelo global, tarifa vinculada à oficina e separação de definição/compra/bobina. Registro oficial em `docs/HOMOLOGACAO_CADASTROS_2026-11-20.md`. **17 decisões/diretrizes homologadas no total (5+8+4)**.
 - `docs/CONTRATO_ESTOQUE_PRODUTOS.md` apresenta **proposta não homologada** de inventário, compras, lotes, movimentos, ferramentas, serviços, produtos e revisões de kits, produção e snapshots. Preserva histórico, autoria da oficina, lote real e estoque auditável.
 - Pendências críticas: esquema físico e FKs, saldo negativo, consumo sem lote, reserva, gatilho da baixa, rateio de mesa mista, regras de composição e precisão financeira. Sem código, SQL, banco, merge, deploy ou produção.
+
+## Seis regras de estoque e produtos HOMOLOGADAS — 20/11/2026
+- Proprietário aprovou expressamente seis propostas de `docs/CONTRATO_ESTOQUE_PRODUTOS.md` do commit `7d7507cc2cc79e623908e40b79e0bee8165726d1`.
+- Registro normativo: `docs/HOMOLOGACAO_ESTOQUE_2026-11-20.md`: identidade estocável por oficina, bloqueio de saldo negativo por padrão, baixa somente na confirmação de produção, kits com composição versionada, rateio explícito em mesas mistas e estornos auditáveis. Total acumulado: **23 homologações (5+8+4+6)**.
+- A `docs/REFINAMENTO_ESTOQUE_PRODUCAO.md` detalha PROPOSTAS de entidades, transações, conciliação, auditoria, RLS e testes não executados. Não impor fórmulas de rateio, exceções negativas, reservas, política de falhas ou SQL por inferência.
+- Seguimos somente com documentação na branch; sem código, SQL, banco, merge ou deploy.

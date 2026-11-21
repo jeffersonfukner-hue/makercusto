@@ -72,3 +72,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** `docs/HOMOLOGACAO_CADASTROS_2026-11-20.md` e `docs/CONTRATO_ESTOQUE_PRODUTOS.md` criados na branch de trabalho; atualizados continuidade e backlog. **Nenhum código, banco, merge ou deploy**.
 - **Pendências:** homologação de contratos específicos do estoque e produção, modelo SQL físico e testes funcionais/RLS não executados.
 - **Evidências:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; commits verificáveis na branch `feat/fundacao-makercusto`.
+
+## 20/11/2026 — Homologação de estoque e refinamento lógico de produção
+- **Projeto:** MakerCusto (desenvolvimento próprio).
+- **Referência de horário:** 21:32 de Brasília (relógio consultado durante a execução); **início/término efetivos e duração trabalhada:** não aferidos.
+- **Atividades efetivamente executadas:** releitura dos documentos do commit `7d7507cc`; registro das seis regras expressamente homologadas; especificação proposta de eventos e movimentos de estoque, máquina de estados de produção, validação de saldo, composição de kits, rateio explícito e estornos auditáveis; atualização de continuidade/backlog.
+- **Resultados:** arquivos documentais versionados no PR #1 da branch `feat/fundacao-makercusto`. Nenhuma alteração funcional de aplicação, banco, SQL, merge ou deploy.
+- **Pendências:** homologação de detalhes operacionais e critérios de rateio, esquema físico e futuros testes de RLS/regressão (não realizados nesta tarefa).
+- **Evidência:** `docs/HOMOLOGACAO_ESTOQUE_2026-11-20.md`; `docs/REFINAMENTO_ESTOQUE_PRODUCAO.md`; https://github.com/jeffersonfukner-hue/makercusto/pull/1 .

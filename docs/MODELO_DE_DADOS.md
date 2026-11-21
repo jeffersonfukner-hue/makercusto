@@ -185,3 +185,9 @@ A mudança de plano **não** altera automaticamente `owner_id` nem `scope` de re
 - Homologação formal: `docs/HOMOLOGACAO_CADASTROS_2026-11-20.md` (tabelas específicas, impressora física distinta de modelo, tarifa por oficina, definição/compra/bobina separadas).
 - Continuação lógica proposta: `docs/CONTRATO_ESTOQUE_PRODUTOS.md` (item estocável, compras, lotes, movimentos como ledger, ferramentas/serviços, revisões de produtos/kits, produção e snapshots).
 - Garantir FK real entre oficina e dados operacionais, idempotência de movimentos, estorno não destrutivo, histórico financeiro e BOM sem ciclos. O novo contrato NÃO é aprovação de SQL.
+
+## 11. Seis regras operacionais homologadas e modelo lógico refinado — 20/11/2026
+
+A homologação expressa do proprietário está em `HOMOLOGACAO_ESTOQUE_2026-11-20.md`. São **23 regras/diretrizes acumuladas** (5 estruturais, 8 de permissões, 4 técnicas e 6 operacionais): item estocável por oficina; saldo negativo bloqueado por padrão; baixa na confirmação da produção; produto/kit versionado; rateio explícito de mesa mista; estorno auditável.
+
+`REFINAMENTO_ESTOQUE_PRODUCAO.md` propõe `stock_events` para representar operação idempotente de múltiplos movimentos, vínculos por oficina, revisões BOM, alocações de custo e tratamento de estornos. **Não são migrações ou regras SQL homologadas.** Uma proposta antiga que apresente saldo negativo, gatilho de baixa, versões ou estornos como totalmente indefinidos deve ser lida à luz das seis novas homologações; os detalhes permanecem abertos.
