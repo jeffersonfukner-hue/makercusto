@@ -465,3 +465,68 @@ test('salva produto, custo e lista na oficina com feedback sem recarregar',async
  expect(Number(posted?.p_total_cost)).toBeGreaterThan(0);
  expect((posted?.p_parameters as Record<string,unknown>)?.saved_input).toBeTruthy();
 });
+
+test('visitante vê fluxo de montagem e pode abrir login',async({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('heading',{name:'Produtos com várias peças'})).toBeVisible();
+ await page.getByRole('button',{name:'Entrar para montar produto'}).click();
+ await expect(page.getByRole('dialog')).toBeVisible();
+});
+test('conjunto de três peças é salvo e consultado na mesma oficina',async({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111';
+ const user='22222222-2222-4222-8222-222222222222';
+ type Assembly={id:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:{id:string;name:string;quantity:number;grams:string|null;notes:string|null}[]};
+ const kits:Assembly[]=[];
+ let payload:Record<string,unknown>|undefined;
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,
+  user:{id:user,email:'teste@example.test'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=route.request().url();
+  if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Minha oficina',owner_id:user}])});
+  if(url.includes('/mc_printers?')||url.includes('/mc_catalog?')||url.includes('/mc_products?'))
+   return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+  if(url.includes('/rpc/mc_list_assemblies'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(kits)});
+  if(url.includes('/rpc/mc_create_assembly')){
+   payload=route.request().postDataJSON() as Record<string,unknown>;
+   const parts=payload.p_parts as {name:string;quantity:number;grams:number|null;notes:string}[];
+   kits.push({id:'33333333-3333-4333-8333-333333333333',name:String(payload.p_name),sku:String(payload.p_sku)||null,
+    description:String(payload.p_description)||null,sale_price:payload.p_sale_price===null?null:Number(payload.p_sale_price),
+    created_at:new Date().toISOString(),
+    parts:parts.map((p,i)=>({id:String(i+1),name:p.name,quantity:p.quantity,grams:p.grams===null?null:String(p.grams),notes:p.notes}))});
+   return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(kits[0].id)});
+  }
+  return route.fulfill({status:404,contentType:'application/json',body:'{}'});
+ });
+ await page.goto('/');
+ const kit=page.locator('.assembly-panel');
+ await kit.getByRole('textbox',{name:'Nome do conjunto'}).fill('Brinquedo lançador de hélices');
+ await kit.getByRole('spinbutton',{name:'Peso da peça 1'}).fill('35.5');
+ await kit.getByRole('spinbutton',{name:'Peso da peça 3'}).fill('12.5');
+ await kit.getByRole('button',{name:'Salvar conjunto e peças'}).click();
+ await expect(kit.getByRole('status')).toContainText('Conjunto e 3 peças salvos');
+ await expect(kit.locator('.product-list')).toContainText('Brinquedo lançador de hélices');
+ await kit.getByRole('button',{name:/Brinquedo lançador de hélices/}).click();
+ await expect(kit.locator('.assembly-details')).toContainText('Lançador');
+ await expect(kit.locator('.assembly-details')).toContainText('Haste');
+ await expect(kit.locator('.assembly-details')).toContainText('Hélice');
+ expect((payload?.p_parts as unknown[])).toHaveLength(3);
+ expect(payload?.p_workspace_id).toBe(workspace);
+});
+test('validação impede cadastro incompleto e exige duas peças',async({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',workspace='11111111-1111-4111-8111-111111111111';
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=route.request().url();
+  if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Oficina',owner_id:user}])});
+  return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+ });
+ await page.goto('/');
+ const kit=page.locator('.assembly-panel');
+ await kit.getByRole('textbox',{name:'Nome da peça 1'}).fill('');
+ await kit.getByRole('button',{name:'Salvar conjunto e peças'}).click();
+ await expect(kit.getByRole('alert')).toContainText('Informe pelo menos duas peças válidas');
+});
