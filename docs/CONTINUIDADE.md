@@ -351,3 +351,6 @@
 
 ## 21/11/2026 — Correção de teste da persistência visitante
 - CI #44927149461: 62/64 E2E aprovados, duas falhas (mesmo cenário desktop/mobile) por teste que esperava somente um rótulo contendo "Anycubic Kobra X" embora a lista inclua corretamente o exemplo ilustrativo e o modelo global. Alterado teste para validar por ID inequívoco de referência; nenhum comportamento de produção alterado. Necessário reconfirmar CI do HEAD.
+
+## 21/11/2026 — Correção de seletor CSS no teste de seleção lembrada
+- CI #44927374533 terminou com 62/64 testes Playwright aprovados; duas falhas no mesmo cenário desktop/mobile por expressão inválida de teste `option:selected` (CSS usa `option:checked`). Ajustado o seletor sem alterar código funcional. Reexecutar CI completo antes de considerar entrega validada.

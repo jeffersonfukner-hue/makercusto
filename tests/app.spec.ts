@@ -401,7 +401,7 @@ test('visitante preserva impressora pessoal e seleção após recarregar',async(
  await page.reload();await page.getByRole('button',{name:/Avançado/}).click();
  const restored=page.getByRole('combobox',{name:'Selecionar impressora'});
  await expect(restored.locator('option',{hasText:'Aninha'})).toHaveCount(1);
- await expect(restored.locator('option:selected')).toHaveText('Aninha');
+ await expect(restored.locator('option:checked')).toHaveText('Aninha');
  await expect(page.locator('.printer-summary')).toContainText('150 W');
 });
 test('restaurar exemplo não exclui impressoras pessoais do visitante',async({page})=>{

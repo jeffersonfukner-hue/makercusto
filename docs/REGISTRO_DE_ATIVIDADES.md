@@ -369,3 +369,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividade:** verificação dos logs de #44927149461 (62 sucessos, 2 falhas), identificação de seletor E2E não exclusivo e ajuste para ID real do modelo global.
 - **Resultado:** testes versionados na branch; CI seguinte pendente. Sem banco, deploy ou merge.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44927149461.
+
+## 21/11/2026 — Ajuste de seletor Playwright para option selecionada
+- **Projeto:** MakerCusto; **início, término e duração efetiva:** não aferidos.
+- **Atividade:** diagnóstico do CI #44927374533, leitura de logs e substituição de seletor CSS inválido no teste de persistência local.
+- **Resultado:** alteração em branch; nenhum deploy, merge ou banco; CI pendente.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44927374533.
