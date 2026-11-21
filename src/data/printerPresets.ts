@@ -28,3 +28,9 @@ export const printerPresets:PrinterPreset[] = [
  {id:'qidi-q1-pro',brand:'QIDI Tech',model:'Q1 Pro',technology:'FDM'},
 ];
 export const printerPresetLabel=(preset:PrinterPreset)=>preset.brand+' '+preset.model;
+
+export type PrinterReference={buildVolume?:string;nozzleDiameter?:number;maxNozzleTemp?:number;maxBedTemp?:number;source?:string;sourceKind:'fabricante'|'não verificado';};
+export const printerReferences:Record<string,PrinterReference>={
+ 'anycubic-kobra-x':{buildVolume:'260 × 260 × 260 mm',nozzleDiameter:0.4,maxNozzleTemp:300,maxBedTemp:100,source:'https://wiki.anycubic.com/fr/fdm-3d-printer/anycubic-kobra-x/faq',sourceKind:'fabricante'}
+};
+export const printerEstimatedCosts={purchasePrice:3500,averageWatts:150,lifetimeHours:3000} as const;

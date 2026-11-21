@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
+import {SmartField,formatCatalogName} from './components/SmartField';
+import {printerEstimatedCosts} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
 
@@ -8,13 +10,13 @@ const count = (value:number) => value.toLocaleString('pt-BR',{maximumFractionDig
 const numeric = (value:string) => value.trim() === '' ? NaN : Number(value);
 const display = (value:number | undefined) => value !== undefined && Number.isFinite(value) ? value : '';
 const normalize = (value:string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
-const colors = ['Branco','Preto','Cinza','Prata','Azul','Azul-claro','Azul-marinho','Vermelho','Verde','Verde-claro','Amarelo','Laranja','Rosa','Roxo','Lilás','Marrom','Bege','Dourado','Cobre','Transparente','Natural'];
+const colors = ['Branco','Preto','Cinza','Prata','Azul','Azul Claro','Azul Marinho','Vermelho','Vermelho Fosco','Verde','Verde Claro','Verde Escuro','Amarelo','Laranja','Rosa','Roxo','Lilás','Marrom','Bege','Dourado','Cobre','Transparente','Natural','Grafite','Preto Fosco','Branco Fosco','Rosa Bebê','Verde Militar','Azul Petróleo','Prata Metálico','Dourado Metálico'];
 const types = ['PLA','PLA+','PETG','ABS','ASA','TPU','PA','PC','PVA','Outro'];
-const brands = ['Anycubic','Bambu Lab','Creality','eSUN','Elegoo','Flashforge','Masterprint','Overture','Polymaker','Prusament','Sunlu','Voxelab'];
+const brands = ['Masterprint','SUNLU','eSUN','Bambu Lab','Creality','Anycubic','Elegoo','Polymaker','Prusament','Overture','Flashforge','Voxelab','3D Fila','3D Lab','3D Prime','Voolt3D','GTMax3D','Printalot','Sakata 3D','Cliever','Filacomp','3D Fuel','ColorFabb','Fillamentum','Fiberlogy','Hatchbox','Inland','Jayo','Kingroon','Geeetech','Eryone','Amolen','Sovol','QIDI Tech','FormFutura','AzureFilm','Extrudr','Nobufil','Spectrum Filaments','Recreus','Dremel','Raise3D','Ultimaker','MatterHackers','Proto-pasta','NinjaTek'];
 type Catalog = 'cor' | 'tipo' | 'marca';
 const defaults:Record<Catalog,string[]> = {cor:colors,tipo:types,marca:brands};
 const key = (catalog:Catalog) => 'makercusto:catalogo:'+catalog+':v1';
-const unique = (values:string[]) => { const used=new Set<string>(); return values.map(v=>v.trim()).filter(v=>{const k=normalize(v);if(!k||used.has(k))return false; used.add(k);return true;});};
+const unique = (values:string[]) => { const used=new Set<string>(); return values.map(v=>formatCatalogName(v,defaults?.cor??[])).filter(v=>{const k=normalize(v);if(!k||used.has(k))return false; used.add(k);return true;});};
 function readCatalog(catalog:Catalog):string[] {
  try { const value:unknown=JSON.parse(localStorage.getItem(key(catalog))||'[]');return Array.isArray(value)?unique(value.filter((v):v is string=>typeof v==='string').slice(0,100)):[]; }catch { return []; }
 }
@@ -75,7 +77,7 @@ export default function App(){
   if(!sessionStore.get()||!workspaceId){
    const oldId=printerModal==='edit'&&printerId!=='example'?printerId:null;
    const id=oldId??'local-'+String(Date.now());
-   const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??0,averageWatts:data.average_watts??initialPrinter.averageWatts,lifetimeHours:data.lifetime_hours??initialPrinter.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
+   const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??printerEstimatedCosts.purchasePrice,averageWatts:data.average_watts??printerEstimatedCosts.averageWatts,lifetimeHours:data.lifetime_hours??printerEstimatedCosts.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
    setPrinters(prev=>[...prev.filter(p=>p.id!==id),local]);setPrinterId(id);return;
   }
   const old=stored.find(p=>p.id===printerId);
@@ -106,9 +108,9 @@ export default function App(){
    if(!created[0])throw new Error('O cadastro não foi confirmado pelo banco.');
   }
   remember(field,value);
-  if(field==='cor')setDraft(prev=>({...prev,name:value}));
-  else if(field==='tipo')setDraft(prev=>({...prev,type:value}));
-  else setDraft(prev=>({...prev,brand:value}));
+  if(field==='cor')setDraft(prev=>({...prev,name:formatCatalogName(value,list('cor'))}));
+  else if(field==='tipo')setDraft(prev=>({...prev,type:formatCatalogName(value,list('tipo'))}));
+  else setDraft(prev=>({...prev,brand:formatCatalogName(value,list('marca'))}));
  };
  useEffect(()=>{const load=async()=>{
   const lists=await Promise.allSettled([listCatalog('color'),listCatalog('filament_type'),listCatalog('filament_brand')]);
@@ -136,7 +138,7 @@ export default function App(){
        return;
   }
   const gramsPurchased=draft.packageQuantity!*(draft.packageUnit==='kg'?1000:1);
-  const row:MaterialLine={...draft,id:editId??'extra-'+nextId,pricePerKg:draft.packagePrice!/gramsPurchased*1000};
+  const row:MaterialLine={...draft,name:formatCatalogName(draft.name,list('cor')),type:formatCatalogName(draft.type??'',list('tipo')),brand:formatCatalogName(draft.brand??'',list('marca')),id:editId??'extra-'+nextId,pricePerKg:draft.packagePrice!/gramsPurchased*1000};
   setDetailedMaterials(prev=>editId?prev.map(m=>m.id===editId?row:m):[...prev,row]);
   if(!editId)setNextId(v=>v+1);
   remember('cor',row.name);remember('tipo',row.type||'');remember('marca',row.brand||'');
@@ -211,9 +213,9 @@ export default function App(){
       <div className="material-form" role="group" aria-label="Cadastro compacto de filamento">
        <div className="material-form-title"><strong>{editId?'Editar filamento':'Adicionar filamento'}</strong><small>Preço da embalagem, não do quilo</small></div>
        <div className="compact-inputs">
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Tipo</span><button type="button" className="catalog-add" aria-label="Cadastrar tipo" title="Cadastrar outro tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><input list="catalog-tipo" aria-label="Tipo de filamento" value={draft.type||''} onBlur={e=>remember('tipo',e.target.value)} onChange={e=>setDraftText('type',e.target.value)}/></div>
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Cor</span><button type="button" className="catalog-add" aria-label="Cadastrar cor" title="Cadastrar outra cor" onClick={()=>setCatalogModal('cor')}>+</button></div><input list="catalog-cor" aria-label="Cor do filamento" value={draft.name} onBlur={e=>remember('cor',e.target.value)} onChange={e=>setDraftText('name',e.target.value)}/></div>
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Marca</span><button type="button" className="catalog-add" aria-label="Cadastrar marca" title="Cadastrar outra marca" onClick={()=>setCatalogModal('marca')}>+</button></div><input list="catalog-marca" aria-label="Marca do filamento" value={draft.brand||''} onBlur={e=>remember('marca',e.target.value)} onChange={e=>setDraftText('brand',e.target.value)}/></div>
+        <div className="catalog-field"><div className="catalog-field-heading"><span>Tipo</span><button type="button" className="catalog-add" aria-label="Cadastrar tipo" title="Cadastrar outro tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><SmartField label="Tipo de filamento" value={draft.type||''} options={list('tipo')} hint="PLA, PETG, TPU e outros tipos. Use o material indicado na bobina." onBlur={v=>remember('tipo',v)} onChange={v=>setDraftText('type',v)}/></div>
+        <div className="catalog-field"><div className="catalog-field-heading"><span>Cor</span><button type="button" className="catalog-add" aria-label="Cadastrar cor" title="Cadastrar outra cor" onClick={()=>setCatalogModal('cor')}>+</button></div><SmartField label="Cor do filamento" value={draft.name} options={list('cor')} hint="Ex.: Vermelho Fosco. Nomes novos serão padronizados." onBlur={v=>remember('cor',v)} onChange={v=>setDraftText('name',v)}/></div>
+        <div className="catalog-field"><div className="catalog-field-heading"><span>Marca</span><button type="button" className="catalog-add" aria-label="Cadastrar marca" title="Cadastrar outra marca" onClick={()=>setCatalogModal('marca')}>+</button></div><SmartField label="Marca do filamento" value={draft.brand||''} options={list('marca')} hint="Selecione a fabricante da bobina, como Masterprint ou SUNLU." onBlur={v=>remember('marca',v)} onChange={v=>setDraftText('brand',v)}/></div>
         <label>Embalagem<input type="number" min="0.001" step="any" data-testid="packageQuantity" value={display(draft.packageQuantity)} onChange={e=>setDraftNumber('packageQuantity',e.target.value)}/></label>
         <label>Unid. compra<select aria-label="Unidade da embalagem" value={draft.packageUnit||'kg'} onChange={e=>setDraft(prev=>({...prev,packageUnit:e.target.value as 'kg'|'g'}))}><option value="kg">kg</option><option value="g">g</option></select></label>
         <label>Preço total (R$)<input type="number" min="0" step="any" data-testid="packagePrice" value={display(draft.packagePrice)} onChange={e=>setDraftNumber('packagePrice',e.target.value)}/></label>

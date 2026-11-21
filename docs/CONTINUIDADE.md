@@ -284,3 +284,8 @@
 - Autocomplete de **até três opções clicáveis** para reduzir digitação, como ao digitar Kobra oferecer modelos do catálogo, respeitando fabricante e ordenação útil. A mesma regra vale transversalmente para demais entidades relevantes; decidir tecnicamente os campos com benefício real.
 - Princípio: facilitar sem poluição visual; não obrigar explicações extensas, não inventar opções; preservar acessibilidade, mobile e originais globais protegidos.
 - Escopo desta rodada: registro documental somente, sem implementação, alterações de banco, merge ou deploy.
+
+## 21/11/2026 — Lote de implementação: campos inteligentes e impressoras
+- Modais de impressora separam fabricante/modelo com filtro dependente; nome pessoal é editável e cadastros de referência têm ficha técnica somente quando fonte verificável, iniciando Kobra X (Anycubic). Custos pré-populados como hipóteses, sem igualá-los a ficha oficial.
+- Campos de cor, tipo e marca passam a utilizar sugestões locais limitadas a três resultados e mensagens curtas; catálogos de cores/marcas ampliados, preservando normalização e origem.
+- Regressões E2E propostas para filtro do fabricante, cópia com valores iniciais e formato Vermelho Fosco; exigir CI do HEAD antes do Preview. Sem alteração de Supabase, merge ou deploy.

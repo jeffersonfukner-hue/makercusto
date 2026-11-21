@@ -278,3 +278,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** documentação atualizada na branch do PR #1; código da aplicação, banco e produção não alterados.
 - **Pendências:** desenvolver componente reutilizável, testes de teclado/mobile/acessibilidade e homologação visual.
 - **Evidência:** commit documental desta atualização e PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+
+## 21/11/2026 — Lote de código de cadastros e sugestões
+- **Início/término e duração:** não aferidos; tempo comprovado não mensurado.
+- **Atividade:** leitura do código e padrões; implementação de componente de sugestões, seleção de fabricantes/modelos, ficha Kobra X e defaults ilustrativos; acréscimo de testes E2E e documentação.
+- **Resultado:** alterações versionadas na branch MakerCusto, sujeitas ao CI. Sem merge/deploy/banco.
+- **Evidência:** commit desta atualização no PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.

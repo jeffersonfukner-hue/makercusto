@@ -145,3 +145,15 @@
 .printer-estimates b{color:#d8fff6;text-align:right}
 .printer-estimates small{color:#99b7c7;line-height:1.5}
 @media(max-width:450px){.catalog-add{min-width:36px;min-height:36px}.printer-add-action{width:100%}}
+
+.smart-field{position:relative;min-width:0;display:grid;gap:5px}
+.smart-field input{width:100%;min-width:0;padding:9px 7px;color:#fff;background:#0c1727;border:1px solid #42506a;border-radius:8px;font-size:13px}
+.smart-hint{display:block;font-size:11px;color:#93aec4;line-height:1.4}
+.smart-suggestions{display:grid;gap:2px;border:1px solid #3a7181;background:#152c40;border-radius:10px;padding:4px;box-shadow:0 12px 22px #0005;z-index:4}
+.smart-suggestions button{display:block;min-height:34px;padding:7px 10px;text-align:left;background:transparent;border:0;border-radius:7px;color:#dcf5ff;font-size:12px}
+.smart-suggestions button:hover,.smart-suggestions button:focus-visible{background:#245268}
+.printer-reference{display:grid;gap:5px;background:#0d2735;border:1px solid #315c6a;border-radius:11px;padding:11px;font-size:12px;color:#b6d6e2}
+.printer-reference strong{color:#d7f4eb}.printer-reference a{color:#78dfd0}
+.printer-model-search .smart-field input{font-size:14px;padding:10px}
+.printer-model-search{margin-top:-8px}
+.modal-body select:disabled{opacity:.55}

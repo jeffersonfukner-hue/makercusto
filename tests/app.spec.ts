@@ -228,3 +228,28 @@ test('modelos populares estão disponíveis sem retorno do catálogo remoto e cu
  await page.getByRole('button',{name:'Salvar impressora'}).click();
  await expect(page.locator('.printer-summary')).toContainText('R$ 0,00');
 });
+
+test('fabricante filtra modelos e cópia herda estimativas',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Nova impressora/}).click();
+ await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Anycubic');
+ const m=page.getByRole('combobox',{name:'Modelo da impressora'});
+ await expect(m.locator('option',{hasText:'Bambu Lab A1'})).toHaveCount(0);
+ await m.selectOption('preset:anycubic-kobra-x');
+ await expect(page.getByText('260 × 260 × 260 mm')).toBeVisible();
+ await expect(page.getByRole('textbox',{name:'Nome da minha impressora'})).toHaveValue('Anycubic Kobra X');
+ await page.getByRole('textbox',{name:'Nome da minha impressora'}).fill('Aninha');
+ await page.getByRole('button',{name:/Avançado — custos/}).click();
+ await expect(page.getByRole('spinbutton',{name:'Valor pago (R$)'})).toHaveValue('3500');
+ await page.getByRole('button',{name:'Salvar impressora'}).click();
+ await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toContainText('Aninha');
+});
+test('nome de cor é normalizado e sugestões são limitadas',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByLabel('Cor do filamento').fill('verm');
+ await expect(page.getByRole('group',{name:'Sugestões para Cor do filamento'}).getByRole('button')).toHaveCount(1);
+ await page.getByLabel('Cor do filamento').fill('vermelho fosco');
+ await page.getByTestId('packagePrice').fill('100');await page.getByTestId('gramsUsed').fill('10');
+ await page.getByRole('button',{name:'Adicionar à tabela'}).click();
+ await expect(page.getByTestId('row-extra-1')).toContainText('Vermelho Fosco');
+});
