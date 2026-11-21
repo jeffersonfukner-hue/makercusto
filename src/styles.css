@@ -107,3 +107,9 @@
 @media(max-width:600px){.brand{flex-wrap:wrap;padding:12px 0}.phase{display:none}.account-button{margin-left:auto}.modal-window{max-height:94dvh}.modal-body{padding:15px}.modal-header{padding:15px}}
 
 .compact-inputs label{position:relative}.catalog-add{position:absolute;right:0;top:0;border:1px solid #3b7f80;border-radius:6px;background:#0a605e;color:#fff;font-weight:800;min-width:28px;min-height:25px;font-size:16px;line-height:1}.compact-inputs label input{margin-top:8px}
+
+
+.catalog-field{display:flex;flex-direction:column;gap:5px;min-width:0;color:#bbcbda;font-size:11px}
+.catalog-field-heading{display:flex;justify-content:space-between;align-items:center;min-height:30px}
+.catalog-field .catalog-add{position:static;min-width:40px;min-height:40px;border-radius:9px;touch-action:manipulation}
+.catalog-field input{width:100%;min-width:0;padding:9px 7px;color:#fff;background:#0c1727;border:1px solid #42506a;border-radius:8px;font-size:13px;margin-top:0}
