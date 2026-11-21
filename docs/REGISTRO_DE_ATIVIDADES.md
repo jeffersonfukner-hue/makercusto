@@ -333,3 +333,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividade:** análise dos logs da execução #44924935524; identificação de colisão em nome de botões de clonagem de cadastros diferentes; especificação de região nos quatro caminhos de teste afetados.
 - **Resultado:** teste ajustado em branch, aguardando confirmação CI. Sem merge, deploy ou banco.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44924935524.
+
+## 21/11/2026 — Verificação final do CI das referências globais
+- **Projeto:** MakerCusto. **Início/término/duração (Brasília):** não aferidos; tempo efetivo não quantificado.
+- **Atividade:** conferência do job CI #44925197270 e dos estágios tipagem, testes unitários, build e interface desktop/mobile.
+- **Resultado comprovado:** CI `success` para o commit `bf554134`; nenhuma publicação, migração ou merge.
+- **Pendências:** homologação visual e implementação posterior de perfis técnicos/persistência integral.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44925197270

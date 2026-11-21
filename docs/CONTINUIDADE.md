@@ -325,3 +325,8 @@
 ## 21/11/2026 — Correção da regressão de seleção de clonagem
 - CI #44924935524: tipagem, testes unitários e build aprovados; E2E 48 passaram e quatro falharam porque os testes procuravam botão Clonar e personalizar globalmente quando agora o fluxo de impressora e o de filamento oferecem legitimamente o mesmo rótulo. Ajustado o escopo dos seletores Playwright à região de perfil de filamento, sem mudar a interface.
 - Exigir novo CI completo. Não ocorreu alteração de banco, merge ou deploy.
+
+## 21/11/2026 — CI verde após seleção direta dos padrões
+- **Aprovado:** GitHub Actions #44925197270, código em `bf554134777a60e5a5ac8a8eff72e36cc0cfdb76`: tipagem, motor de custos, build e E2E desktop/mobile concluídos com sucesso. Corrigido apenas o escopo dos testes dos dois botões de clonagem; 25 referências de impressora selecionáveis imediatamente, cópia pessoal sem mutação do padrão, seis fichas técnicas parciais adicionais com fontes.
+- **Não comprova:** operação com conta real/Supabase, persistência de fichas técnicas avançadas nem homologação visual do proprietário. Nenhum merge/deploy/banco.
+- Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44925197270
