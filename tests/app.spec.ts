@@ -326,3 +326,30 @@ test('Escape fecha sugestões sem substituir o que usuário digitou',async({page
  await expect(input).toHaveValue('ver');
  await expect(page.getByRole('listbox',{name:'Sugestões disponíveis'})).toHaveCount(0);
 });
+
+test('modelos globais estão disponíveis na calculadora sem criar impressora',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ const dropdown=page.getByRole('combobox',{name:'Selecionar impressora'});
+ await expect(dropdown.locator('option[value="reference:bambu-a1-mini"]')).toHaveCount(1);
+ await dropdown.selectOption('reference:bambu-a1-mini');
+ await expect(dropdown).toHaveValue('reference:bambu-a1-mini');
+ await expect(page.locator('.printer-summary')).toContainText('150 W');
+ await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await expect(page.getByRole('textbox',{name:'Nome da minha impressora'})).toHaveValue('Bambu Lab A1 mini');
+ await page.getByRole('textbox',{name:'Nome da minha impressora'}).fill('Minha A1 Mini');
+ await page.getByRole('button',{name:'Salvar personalização'}).click();
+ await expect(dropdown).toContainText('Minha A1 Mini');
+ await dropdown.selectOption('reference:bambu-a1-mini');
+ await expect(dropdown).toHaveValue('reference:bambu-a1-mini');
+});
+test('troca entre padrões mantém fichas globais intactas',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ const dropdown=page.getByRole('combobox',{name:'Selecionar impressora'});
+ await dropdown.selectOption('reference:anycubic-kobra-3');
+ await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await expect(page.getByText('250 × 250 × 260 mm')).toBeVisible();
+ await page.getByRole('button',{name:'Cancelar'}).click();
+ await dropdown.selectOption('reference:creality-ender-3-v3-se');
+ await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await expect(page.getByText('220 × 220 × 250 mm')).toBeVisible();
+});

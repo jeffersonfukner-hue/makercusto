@@ -315,3 +315,9 @@
 ## 21/11/2026 — Diagnóstico e correção do CI do autocomplete
 - CI #44918924933 falhou com 8 casos (4 cenários nos dois projetos desktop/mobile), enquanto tipagem, motor e build passaram. Logs: colisão do nome acessível da listbox com entrada Cor do filamento; testes antigos ainda buscavam role=button para sugestões agora role=option; pesquisa de modelo é combobox, não textbox; seleção de opções sem restringir a listbox incluía elementos select do formulário.
 - Ajustados nomes ARIA e seletores Playwright para o contrato real do componente. Sem alteração de banco, merge ou deploy; exigir CI verde posterior.
+
+## 21/11/2026 — Referências globais diretamente selecionáveis na calculadora
+- 25 modelos do catálogo local passam a aparecer no seletor de impressora da calculadora sem que o usuário precise cadastrá-los primeiro; separados visualmente de impressoras pessoais.
+- Modelos globais usam **estimativas financeiras genéricas rotuladas**, não consumo/preço oficial específico. Botão em referência é Clonar e personalizar; edição de uma impressora pessoal continua ação distinta. Cópia preserva padrão na lista.
+- Acrescentadas 6 fichas técnicas parciais com referências de fabricantes: Bambu P1S, Anycubic Kobra 3, Creality Ender-3 V3 SE/V3/V3 KE, Elegoo Neptune 4 Pro. Ausência de campo não implica valor zero; sem inferir potência operacional de fonte com potência nominal.
+- Persistência do perfil pessoal de impressora permanece nas colunas já existentes; especificações estendidas e RLS de clones completos requerem modelagem futura. Sem alteração de SQL, banco, merge ou deploy.

@@ -34,6 +34,12 @@ export const printerReferences:Record<string,PrinterReference>={
  'anycubic-kobra-x':{buildVolume:'260 × 260 × 260 mm',nozzleDiameter:0.4,maxNozzleTemp:300,maxBedTemp:100,source:'https://wiki.anycubic.com/fr/fdm-3d-printer/anycubic-kobra-x/faq',sourceKind:'fabricante'},
  'bambu-a1-mini':{buildVolume:'180 × 180 × 180 mm',source:'https://blog.bambulab.com/best-3d-printer-for-beginners/',sourceKind:'fabricante'},
  'bambu-a1':{buildVolume:'256 × 256 × 256 mm',source:'https://blog.bambulab.com/best-3d-printer-for-beginners/',sourceKind:'fabricante'},
- 'prusa-mk4s':{buildVolume:'250 × 210 × 220 mm',nozzleDiameter:0.4,source:'https://www.prusa3d.com/product/original-prusa-mk4s-3d-printer/',sourceKind:'fabricante'}
+ 'prusa-mk4s':{buildVolume:'250 × 210 × 220 mm',nozzleDiameter:0.4,source:'https://www.prusa3d.com/product/original-prusa-mk4s-3d-printer/',sourceKind:'fabricante'},
+ 'bambu-p1s':{buildVolume:'256 × 256 × 256 mm',source:'https://cdn1.bambulab.com/documentation/quick-start-59b0cefdc0fc4/P1S/English%20version-Quick%20Start%20Guide%20for%20P1S.pdf',sourceKind:'fabricante'},
+ 'anycubic-kobra-3':{buildVolume:'250 × 250 × 260 mm',nozzleDiameter:0.4,maxNozzleTemp:300,maxBedTemp:110,source:'https://wiki.anycubic.com/k3/anycubic_kobra_3_user_manual-en-v1.3.pdf',sourceKind:'fabricante'},
+ 'creality-ender-3-v3-se':{buildVolume:'220 × 220 × 250 mm',maxNozzleTemp:260,source:'https://store.creality.com/blogs/all/ender-series-3d-printers-parameter-comparison',sourceKind:'fabricante'},
+ 'creality-ender-3-v3':{buildVolume:'220 × 220 × 250 mm',source:'https://store.creality.com/blogs/all/ender-3-v3-vs-v3-se-vs-v3-ke',sourceKind:'fabricante'},
+ 'creality-ender-3-v3-ke':{buildVolume:'220 × 220 × 240 mm',source:'https://store.creality.com/ca/blogs/all/creality-ender-3-pro-v2-s1-s1-pro-v3-ke-detailed-comparative-analysis',sourceKind:'fabricante'},
+ 'elegoo-neptune-4-pro':{buildVolume:'225 × 225 × 265 mm',source:'https://eu.elegoo.com/es-ax/products/elegoo-neptune-4-pro-fdm-3d-printer',sourceKind:'fabricante'}
 };
 export const printerEstimatedCosts={purchasePrice:3500,averageWatts:150,lifetimeHours:3000} as const;

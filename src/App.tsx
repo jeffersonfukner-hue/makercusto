@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
 import {SmartField,formatCatalogName} from './components/SmartField';
 import {FilamentProfilePanel} from './components/FilamentProfilePanel';
-import {printerEstimatedCosts} from './data/printerPresets';
+import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
 
@@ -23,6 +23,9 @@ function readCatalog(catalog:Catalog):string[] {
 }
 type PrinterProfile = {id:string;name:string;printerPrice:number;averageWatts:number;lifetimeHours:number;pricePerKwh:number};
 const initialPrinter:PrinterProfile = {id:'example',name:'Anycubic Kobra X — custos ilustrativos',printerPrice:3500,averageWatts:150,lifetimeHours:3000,pricePerKwh:1.03};
+// Referências globais são selecionáveis sem cadastro e jamais alteradas pelo usuário.
+const referencePrinters:PrinterProfile[]=printerPresets.map(p=>({id:'reference:'+p.id,name:printerPresetLabel(p),printerPrice:printerEstimatedCosts.purchasePrice,averageWatts:printerEstimatedCosts.averageWatts,lifetimeHours:printerEstimatedCosts.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh}));
+const seedPrinters=():PrinterProfile[]=>[initialPrinter,...referencePrinters];
 type NumericKey = Exclude<keyof CostInput,'materials'>;
 const fields:{key:NumericKey;label:string;step:string}[] = [
  {key:'hours',label:'Tempo de impressão (horas)',step:'0.01'},
@@ -42,7 +45,7 @@ const seeded = () => referenceCase.materials!.map(m=>({...m,type:'PETG',brand:''
 const calculatedPackagePrice = (item:MaterialLine):number => item.packagePrice ?? item.pricePerKg*(item.packageQuantity??1)*(item.packageUnit==='g'?.001:1);
 export default function App(){
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
- const [printers,setPrinters]=useState<PrinterProfile[]>([initialPrinter]);
+ const [printers,setPrinters]=useState<PrinterProfile[]>(seedPrinters);
  const [printerId,setPrinterId]=useState('example');
  const [session,setSession]=useState<Session|null>(()=>sessionStore.get());
  const [authOpen,setAuthOpen]=useState(false);
@@ -61,14 +64,14 @@ export default function App(){
  });
  const loadAccount=async()=>{
   const current=sessionStore.get();setSession(current);
-  if(!current){setWorkspaceId(null);setStored([]);setPrinters([initialPrinter]);setPrinterId('example');return;}
+  if(!current){setWorkspaceId(null);setStored([]);setPrinters(seedPrinters());setPrinterId('example');return;}
   setCloudBusy(true);setAccountError('');
   try{
    let ws=await listWorkspaces();
    if(!ws.length){const id=await createWorkspace('Minha oficina');ws=[{id,name:'Minha oficina',owner_id:current.user.id}];}
    const id=ws[0].id;setWorkspaceId(id);
    const items=await listPrinters(id);setStored(items);
-   setPrinters([initialPrinter,...items.map(profileFromDb)]);
+   setPrinters([...seedPrinters(),...items.map(profileFromDb)]);
    if(items.length)setPrinterId(items[0].id);
   }catch(e){setAccountError('Não foi possível carregar sua oficina: '+(e as Error).message);}
   finally{setCloudBusy(false);}
@@ -76,20 +79,21 @@ export default function App(){
  useEffect(()=>{void loadPrinterModels().then(setModels).catch(()=>setAccountError('Catálogo de impressoras indisponível. Tente novamente mais tarde.'));if(sessionStore.get())void loadAccount();},[]);
  const savePrinter=async(data:PrinterDraft)=>{
   if(!sessionStore.get()||!workspaceId){
-   const oldId=printerModal==='edit'&&printerId!=='example'?printerId:null;
+   const oldId=printerModal==='edit'&&!isReferencePrinter?printerId:null;
    const id=oldId??'local-'+String(Date.now());
    const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??printerEstimatedCosts.purchasePrice,averageWatts:data.average_watts??printerEstimatedCosts.averageWatts,lifetimeHours:data.lifetime_hours??printerEstimatedCosts.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
    setPrinters(prev=>[...prev.filter(p=>p.id!==id),local]);setPrinterId(id);return;
   }
-  const old=stored.find(p=>p.id===printerId);
+  const old=isReferencePrinter?undefined:stored.find(p=>p.id===printerId);
   const saved=(printerModal==='edit'&&old?await updateStoredPrinter(old.id,workspaceId,data):await insertPrinter(workspaceId,data))[0];
   if(!saved)throw new Error('O banco não confirmou o cadastro.');
   setStored(prev=>[...prev.filter(p=>p.id!==saved.id),saved]);
   setPrinters(prev=>[...prev.filter(p=>p.id!==saved.id),profileFromDb(saved)]);setPrinterId(saved.id);
  };
- const logout=async()=>{await signOut();setSession(null);setWorkspaceId(null);setStored([]);setPrinters([initialPrinter]);setPrinterId('example');};
+ const logout=async()=>{await signOut();setSession(null);setWorkspaceId(null);setStored([]);setPrinters(seedPrinters());setPrinterId('example');};
  const activePrinter=printers.find(p=>p.id===printerId)??printers[0];
  const addPrinter=()=>setPrinterModal('new');
+ const isReferencePrinter=printerId==='example'||printerId.startsWith('reference:');
  const [advanced,setAdvanced]=useState(false);
  const [details,setDetails]=useState(false);
  const [simple,setSimple]=useState<SimpleFilament>(initialSimple);
@@ -148,7 +152,7 @@ export default function App(){
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
  const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
  const reset=()=>{
-   if(!sessionStore.get()){setPrinters([initialPrinter]);setPrinterId('example');}
+   if(!sessionStore.get()){setPrinters(seedPrinters());setPrinterId('example');}
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
    setDetailedMaterials(seeded());
@@ -178,11 +182,12 @@ export default function App(){
    <section className="panel">
     <div className="panel-heading"><div><h2>{advanced?"Personalize seu cálculo":"Seu cálculo"}</h2><p>{advanced?"Ajuste os detalhes sem perder os valores informados.":"Preencha os dados e veja o resultado na hora."}</p></div><button type="button" onClick={reset}>Restaurar exemplo</button></div>
     {advanced&&<section className="printer-section" aria-labelledby="printer-title">
-     <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterModal('edit')}>Editar cadastro</button></div>
+     <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterModal('edit')}>{isReferencePrinter?'Clonar e personalizar':'Editar minha impressora'}</button></div>
      <div className="printer-selector">
       <label>Selecionar impressora
        <select aria-label="Selecionar impressora" value={printerId} onChange={e=>setPrinterId(e.target.value)}>
-        {printers.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+        <optgroup label="Padrões prontos — estimativas editáveis">{printers.filter(p=>p.id==='example'||p.id.startsWith('reference:')).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</optgroup>
+        {printers.some(p=>p.id!=='example'&&!p.id.startsWith('reference:'))&&<optgroup label="Minhas impressoras">{printers.filter(p=>p.id!=='example'&&!p.id.startsWith('reference:')).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</optgroup>}
        </select>
       </label>
       <button type="button" className="printer-add-action" onClick={addPrinter}><span className="action-plus" aria-hidden="true">+</span><span>Nova impressora</span></button>

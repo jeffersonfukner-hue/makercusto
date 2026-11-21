@@ -321,3 +321,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades:** consulta do workflow #44918924933 e seus logs; identificação de quatro inconsistências de acessibilidade/testes repetidas em desktop e mobile; correção da lista de sugestões e seletores E2E.
 - **Resultado:** mudança em branch, CI ainda a verificar; sem banco, merge, deploy.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44918924933 e commit desta correção.
+
+## 21/11/2026 — Modelos globais selecionáveis e fichas técnicas adicionais
+- **Projeto/cliente:** MakerCusto, próprio. **Horário inicial/final e duração efetiva:** não aferidos, sem inventar duração.
+- **Trabalho executado:** inspeção da seleção de impressoras, atualização de presets para escolha direta sem cadastro, separação de itens globais/pessoais, proteção da referência ao copiar; documentação de novas fichas técnicas de fabricantes e testes desktop/mobile.
+- **Resultados:** alterações versionadas na branch/PR #1; dependem da execução CI. Nenhum banco, merge ou deploy.
+- **Evidências:** commit correspondente, PR #1 e fontes de fabricante especificadas em src/data/printerPresets.ts.
