@@ -223,10 +223,11 @@ export default function App(){
         <label>Usado (g)<input type="number" min="0" step="any" data-testid="gramsUsed" value={display(draft.grams)} onChange={e=>setDraftNumber('grams',e.target.value)}/></label>
         <label>Purga (g)<input type="number" min="0" step="any" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/></label>
        </div>
-       <FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>
+       
        <div className="form-actions"><button type="button" className="primary-action" onClick={save}>{editId?'Salvar alteração':'Adicionar à tabela'}</button>{editId&&<button type="button" onClick={()=>{setEditId(null);setDraft(newDraft());setErrorDraft('');}}>Cancelar edição</button>}</div>
        {errorDraft&&<p className="error" role="alert">{errorDraft}</p>}
       </div>
+      <FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>
       <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento / ações</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Usado</th><th>Custo</th></tr></thead><tbody>
         {detailedMaterials.map(item=>{
          const pkgQty=item.packageQuantity??1,pkgUnit=item.packageUnit??'kg';
