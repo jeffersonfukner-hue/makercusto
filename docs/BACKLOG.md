@@ -107,3 +107,10 @@ Não ampliar escopo sem homologação.
 - [ ] Testes automatizados de permissões: visitante, gratuito autenticado, Compartilhado e Full; leitura global, edição própria e bloqueio de dados privados.
 
 **Ordem de entrega proposta:** fechar regras e telas principais → persistência local da última impressora → componentes reutilizáveis de modal/catálogos → listagens → desenho e testes da base Supabase → estoque/assinaturas. Sem publicar em cada commit; homologar o lote.
+
+## Arquitetura mestre — homologação de regras (20/11/2026)
+- [x] Registrar cinco regras estruturais HOMOLOGADAS de catálogo original protegido, cópia personalizada renomeável, plano Compartilhado, plano Full, estoque rastreável e composição de kits.
+- [x] Elaborar `docs/PLANO_MESTRE_MAKERCUSTO.md` com fluxos, estados atuais, roadmap e pendências não decididas.
+- [x] Elaborar `docs/MODELO_DE_DADOS.md` como projeto lógico, com entidades, relações, matriz de permissões, invariantes, segurança/RLS e migrações **não executadas**.
+- [ ] Homologar pendências sobre rascunhos no Compartilhado, downgrade, propriedade de estoque, método de custeio, múltiplas oficinas, curadoria e privacidade.
+- [ ] Revisar modelo lógico antes de escrever SQL/migrações; sem provisionar banco ou integrar assinaturas nesta etapa.

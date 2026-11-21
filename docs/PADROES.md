@@ -30,3 +30,10 @@
 - Última impressora selecionada por usuário/dispositivo. Visitante: localStorage sujeito à limpeza do navegador; autenticado: dado da conta quando a persistência for autorizada.
 - Estoque de insumos comprados não confundir com ferramentas reutilizáveis ou itens produzidos; exigir movimentações rastreáveis.
 - Planejar proteção de dados Full privados antes de expor API. Jamais inferir permissão apenas de estar autenticado; revisão de RLS é obrigatória.
+
+## Cinco regras homologadas — 20/11/2026
+- Cadastro oficial global é imutável para usuários, com cópia editável/renomeável como único caminho de personalização. Edição administrativa deve preservar versões e histórico.
+- Compartilhado: publicado consultável por Compartilhado e Full; edição apenas do autor ou administração com atribuição explícita; copiar para modificar registro de terceiro.
+- Full: itens próprios privados por padrão, publicação opcional **de cópia separada**; nunca expor o original privado.
+- Estoque de matérias-primas, acessórios e acabados exige histórico de entradas/saídas/ajustes/perdas.
+- Produto/kit pode conter várias peças impressas, insumos comprados, ferramentas e montagem. Criar snapshots de custo imutáveis antes do uso financeiro real.

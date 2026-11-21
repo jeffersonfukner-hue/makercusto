@@ -78,3 +78,9 @@
 - **Arquitetura de banco desde já:** contratos de dados, autoria, visibilidade, versões de preços e autorização. Não provisionar Supabase nem implementar cobrança sem nova autorização.
 - Trabalho desta rodada: apenas planejamento e documentação, sem afirmar que funcionalidades já estão prontas.
 - Restrições preservadas: sem merge, deploy, produção ou gasto de créditos; PR #1 continua draft.
+
+## Homologação estrutural e plano-mestre — 20/11/2026
+- **Cinco regras HOMOLOGADAS pelo proprietário:** (1) catálogos globais protegidos: usuário não altera original, personalização cria cópia independente renomeável; manutenção administrativa preserva versões, (2) plano Compartilhado publica registros legíveis para assinantes Compartilhado e Full, com edição pelo autor, (3) Full é privado por padrão e só publica voluntariamente **uma cópia**, (4) estoque cobre matérias-primas, itens comprados e produtos acabados com movimentações auditáveis, (5) produto/kit inclui múltiplas peças fabricadas, itens comprados, ferramentas e montagem.
+- A homologação não resolve política de privacidade de rascunhos do Compartilhado, cancelamentos, curadoria, custos por lote, múltiplas oficinas e autorizações administrativas detalhadas; manter como pendências explícitas.
+- Documento-mestre `docs/PLANO_MESTRE_MAKERCUSTO.md` e proposta técnica `docs/MODELO_DE_DADOS.md` consolidam requisitos, entidades, permissões e fases. **Propostas de modelagem não são homologação de banco físico**.
+- Nesta etapa: somente documentação na branch de trabalho e PR draft; sem alterar aplicação, criar Supabase, credenciais, migrações, merge ou deploy.

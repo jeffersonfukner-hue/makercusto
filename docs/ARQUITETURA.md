@@ -39,3 +39,9 @@ Separar modo de cálculo (Simples/Avançado), profundidade do modal (Normal/Avan
 **Implementação incremental:** interfaces de domínio independentes do backend; persistência do visitante por armazenamento local e do usuário autenticado por serviço Supabase futuro. Sincronização e migração do localStorage para conta precisam de política de conflitos e consentimento. Não gravar secrets/chave service_role no frontend.
 
 **Estado atual:** nenhuma tabela, autenticação, migração ou cobrança criada nesta etapa.
+
+## Baseline de arquitetura documental — 20/11/2026
+- As cinco regras estruturais foram homologadas e estão descritas em `docs/PLANO_MESTRE_MAKERCUSTO.md`.
+- Desenho lógico proposto (sem implementação): `docs/MODELO_DE_DADOS.md`. A matriz de visibilidade distingue `global`, `shared`, `private` e registros exclusivamente pessoais como preços/estoque.
+- Catálogos globais nunca são alterados pelo usuário. Personalização e publicação voluntária criam **novos IDs vinculados à origem**; originais, cópias e snapshots têm ciclo de vida independente.
+- A autorização de implementação Supabase, migrações e criação de infraestrutura permanece pendente.
