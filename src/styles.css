@@ -170,3 +170,7 @@
 /* O painel de perfil deve receber toques acima dos campos catalogáveis no mobile. */
 .filament-profile{position:relative;z-index:12;isolation:isolate}
 .filament-profile-head button{position:relative;z-index:2;min-height:40px;touch-action:manipulation}
+
+/* A grade de entradas não pode cobrir o painel de perfil no mobile. */
+.compact-inputs{position:relative;z-index:1;isolation:isolate}
+.filament-profile{position:relative;z-index:20}
