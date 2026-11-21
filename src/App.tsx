@@ -3,6 +3,7 @@ import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
 import {SmartField,formatCatalogName} from './components/SmartField';
 import {FilamentProfilePanel} from './components/FilamentProfilePanel';
 import {ProductSavePanel} from './components/ProductSavePanel';
+import {AssemblyPanel} from './components/AssemblyPanel';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
@@ -292,6 +293,7 @@ export default function App(){
    </>}</section>
   </div>
   <ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} onLogin={()=>setAuthOpen(true)}/>
+  <AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>
  </main><footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
  {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?(stored.find(p=>p.id===printerId)??{id:activePrinter.id,workspace_id:workspaceId??'',model_id:models.find(m=>activePrinter.name.includes(m.name))?.id??null,name:activePrinter.name,purchase_price:activePrinter.printerPrice,average_watts:activePrinter.averageWatts,lifetime_hours:activePrinter.lifetimeHours,active:true}):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
