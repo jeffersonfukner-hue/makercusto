@@ -155,3 +155,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** documento `docs/HOMOLOGACAO_PRECISAO_P06_2026-11-20.md` criado; **34 homologações** acumuladas, preservando 33 anteriores; P07–P09 e fiscal/SQL permaneceram em aberto. Somente arquivos documentais; sem código, banco, SQL, merge ou deploy.
 - **Pendências:** P07 pausas/energia, P08 consumo sem lote, P09 estorno parcial; fiscal/contábil, autorização de equipe/RLS, esquema físico SQL e testes futuros. **Testes funcionais/RLS não executados** nesta atividade.
 - **Evidências verificáveis:** commit `b8c779b8` (homologação P06), `5841d92e` (continuidade); branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. O commit deste registro pode ser conferido no histórico GitHub.
+
+
+## 20/11/2026 — Homologação documental P07 (pausas e energia)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; não inferir horas produtivas do intervalo entre mensagens.
+- **Atividades efetivamente realizadas:** verificação de continuidade, homologações P05/P06 e contratos de energia/impressoras; criação de documento normativo de P07-A a P07-F; atualização de continuidade e deste registro; verificação documental posterior.
+- **Resultado:** `docs/HOMOLOGACAO_ENERGIA_P07_2026-11-20.md` criado e P07 homologada como uma única política. **35 homologações acumuladas**, com 34 anteriores preservadas. P08/P09, depreciação em pausas, tarifas variáveis e temas fiscais/SQL não aprovados. Somente alterações em documentação, sem código, SQL, banco, merge ou deploy.
+- **Pendências:** P08 e P09; regras de depreciação/manutenção e tarifas horárias; fiscais/contábeis, permissões, RLS e esquema SQL. Testes funcionais/RLS não realizados nesta etapa exclusivamente documental.
+- **Evidências verificáveis:** commits `ccc543fa` (P07) e `e1cfd353` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit deste registro permanece verificável no histórico da branch.
