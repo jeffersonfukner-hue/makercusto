@@ -218,3 +218,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado comprovado:** GitHub Actions run **44858012063** (job **136704638275**) concluído **success** no commit de código/testes **ab67481cc259769d6acab47a8d38fd17cec16a52**: tipos, testes do motor de custos, build e **26 testes E2E desktop/mobile passaram**. Rodada anterior `44857763701` falhou com 25/26 E2E e foi corrigida.
 - **Pendências:** homologação visual pelo proprietário e deploy manual apenas com autorização; funções de banco/gestão continuam futuras. Não realizar merge ou deploy.
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44858012063 e commits `3aa98612`/`ab67481c`, PR #1 draft.
+
+## 21/11/2026 — Preparação da fundação Supabase MakerCusto
+- **Atividade executada:** verificação da conta Supabase (organização `Flipzie Desenvolvimento de Sistemas`, plano Free), leitura da arquitetura homologada, criação local do arquivo `001_fundacao.sql` com modelo inicial de 33 tabelas, RLS, catálogo com Kobra X e entidades de cadastro, estoque, produtos, produção, custos e auditoria.
+- **Resultado:** SQL gerado como artefato para instalação exclusiva em projeto MakerCusto novo. **Não executado no Supabase; banco ainda não criado**. Nenhum dado do Kit Casa Pré LAB foi alterado. Fluxos de confirmação/estorno e integração visual continuam pendentes de desenvolvimento e testes.
+- **Horário/duração:** início e término não aferidos, tempo efetivo não comprovado.
+- **Pendência:** criar projeto Supabase específico, confirmar custo zero, aplicar SQL, validar esquema e integrar frontend com modais. Sem merge/deploy.
