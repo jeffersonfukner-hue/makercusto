@@ -95,3 +95,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades comprovadas:** leitura do contrato `e479d08e` e homologações existentes; comparação das cinco decisões pendentes (reserva, confirmação parcial, falha, retrabalho e rateio); elaboração de recomendações com exemplos numéricos hipotéticos, condições de teste e limites ainda abertos.
 - **Resultado/evidência:** `docs/PROPOSTAS_HOMOLOGACAO_PRODUCAO_2026-11-20.md` na branch `feat/fundacao-makercusto`, commit `78867d47b74da6f5d4715066093b819a8b3ff63b`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 .
 - **Pendências:** homologação expressa pelo proprietário, especificação física e execução de testes; nada aplicado em código, banco, SQL ou deploy.
+
+## 20/11/2026 — Homologação de cinco decisões de produção
+- **Projeto:** MakerCusto — desenvolvimento próprio.
+- **Referência de horário:** 21:55 (Brasília), consultada durante esta sessão; início e término efetivos e duração produtiva não aferidos; não inferir tempo entre mensagens.
+- **Atividades executadas:** leitura dos documentos de proposta/homologações da branch; registro formal da aprovação expressa de RES, PAR, FAL, RET e RAT, distinção entre 28 diretrizes homologadas e detalhes ainda pendentes; atualização de continuidade e backlog para migração segura de conversa.
+- **Resultado/evidência:** `docs/HOMOLOGACAO_PRODUCAO_2026-11-20.md`, commit `683847ffc35abe1b586a6559efcbfa6cb6e04d1f`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 .
+- **Pendências:** políticas detalhadas de reservas, parciais, falhas/retrabalho, rateio e financeiro; nenhum teste funcional/RLS executado; sem código, banco, merge ou deploy.
