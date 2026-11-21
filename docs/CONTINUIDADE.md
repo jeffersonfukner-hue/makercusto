@@ -336,3 +336,8 @@
 - Catálogo de pontos de partida genéricos ampliado para PLA+, ABS, ASA, PA, PC e PVA. São **estimativas MakerCusto**, jamais perfis oficiais das marcas; avisos de compatibilidade, temperatura e ventilação para materiais mais exigentes.
 - Ajuda pequena contextual em peso e preço por unidade, equivalente por kg da embalagem, purga, duração/quantidade e outros custos. Cálculo matemático existente não foi alterado.
 - Novos testes Playwright para editar/voltar ao padrão/recarregar, pontos de partida por material e equivalência de preço por kg. CI e homologação visual pendentes nesta rodada. Sem SQL, banco, merge ou deploy.
+
+## 21/11/2026 — Validação do lote de perfis e ajuda financeira
+- **CI aprovado:** #44926757179 para commit `1034a2c421355f7680dc0b4ee1c775e17310cd98`. Job concluiu `success`: verificação de tipos, testes unitários, build e interface desktop/mobile.
+- Funcionalidades verificadas pelo CI: cópias de perfil de filamento editáveis sem alterar origem, retorno ao perfil padrão, reabertura após recarregar, catálogo genérico de PLA+, ABS, ASA, PA, PC e PVA, microdicas e conversão de embalagem para R$/kg.
+- **Limites:** perfis pessoais de slicer armazenados apenas no navegador; faixas genéricas são estimativas de partida, não configurações oficiais; integração real com conta/Supabase não validada. Sem merge, deploy nem alterações no banco. Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44926757179

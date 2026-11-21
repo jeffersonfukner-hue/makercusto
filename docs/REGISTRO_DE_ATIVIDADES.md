@@ -348,3 +348,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** frontend/documentação versionados na branch da PR #1, sem mudanças em engine financeira ou banco; CI a conferir.
 - **Pendências:** CI, validação visual, persistência remota dos perfis sob contrato de RLS futuramente aprovado.
 - **Evidências:** commit desta atualização e PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+
+## 21/11/2026 — Verificação do CI de edição dos perfis de filamento
+- **Projeto:** MakerCusto, próprio. **Início/término (Brasília):** não aferidos. **Tempo efetivo:** não mensurado.
+- **Atividades reais:** consulta de job do GitHub Actions #44926757179 e conferência de tipo, unitários, build e testes desktop/mobile.
+- **Resultados:** todos os estágios `success` para commit `1034a2c4`. Nenhuma publicação/alteração de banco/merge.
+- **Pendências:** persistência remota dos perfis pessoais, referências por fabricante/linha e homologação visual.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44926757179
