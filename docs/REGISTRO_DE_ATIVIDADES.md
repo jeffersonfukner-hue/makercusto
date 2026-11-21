@@ -407,3 +407,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Teste verificado:** criação de conjunto com lançador, haste e hélice usando contexto autenticado controlado; leitura por RPC e rollback; consulta posterior confirmou ausência de registros de teste.
 - **Evidências:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 e migração `supabase/migrations/20261121152000_assemblies.sql`, commits da branch.
 - **Pendências:** CI, validação de conta real no Preview, edição de composições, custos e estoque reais. Sem merge/deploy.
+
+
+## 21/11/2026 — Validação final do conjunto de peças
+- **Horários efetivos e duração:** não aferidos; sem inferência pelo intervalo da sessão.
+- **Atividade:** diagnóstico de dois ciclos de CI com falhas de seletor ambíguo nos testes preexistentes, ajustes de escopo de listagem e feedback, reexecução completa do pipeline.
+- **Evidência final:** GitHub Actions #44933944246 `success`, commit `5723a7e4f259b1ceb65f4d86a8cf8bb0f475f508`; 11 testes do motor, build e TypeScript aprovados, 74 E2E desktop/mobile aprovados. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44933944246
+- **Limite:** testes de interface usam REST simulado; banco foi testado por transação autenticada controlada com rollback, não por sessão real no navegador. Não houve deploy nem merge.
