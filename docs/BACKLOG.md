@@ -161,3 +161,10 @@ Não ampliar escopo sem homologação.
 - [ ] Homologar RES (reserva opcional), PAR (confirmação incremental), FAL (perda com 0 peças boas), RET (retrabalho separado) e RAT (rateio por categoria com conciliação).
 - [ ] Detalhar exceções: vencimento e sobras da reserva, medição e tratamento de pausas, fórmula específica de rateio, custo de refugo incorporado ou separado, critérios de estorno parcial.
 - [ ] Escolher precisão financeira e esquema de banco e testar RLS/transações apenas em etapa futura autorizada.
+
+## Homologação de cinco regras de produção — 20/11/2026
+- [x] RES, PAR, FAL, RET e RAT homologadas com registro em `docs/HOMOLOGACAO_PRODUCAO_2026-11-20.md` e preservação das 23 decisões anteriores.
+- [ ] Resolver reserva residual/vencimento, concorrência e política de lote.
+- [ ] Detalhar fluxo parcial, falha e retrabalho com critérios financeiros.
+- [ ] Homologar fórmulas por grupo de custo e regras de precisão/centavos.
+- [ ] Somente depois, refinar esquema físico e testes RLS, sem execução de banco sem autorização.
