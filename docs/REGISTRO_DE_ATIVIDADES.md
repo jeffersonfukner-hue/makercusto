@@ -80,3 +80,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** arquivos documentais versionados no PR #1 da branch `feat/fundacao-makercusto`. Nenhuma alteração funcional de aplicação, banco, SQL, merge ou deploy.
 - **Pendências:** homologação de detalhes operacionais e critérios de rateio, esquema físico e futuros testes de RLS/regressão (não realizados nesta tarefa).
 - **Evidência:** `docs/HOMOLOGACAO_ESTOQUE_2026-11-20.md`; `docs/REFINAMENTO_ESTOQUE_PRODUCAO.md`; https://github.com/jeffersonfukner-hue/makercusto/pull/1 .
+
+## 20/11/2026 — Planejamento de produção real, falhas e rateio
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Data e horário observado de referência:** 20/11/2026, 21:39 (Brasília), consulta durante a execução; **início, término e duração efetiva não aferidos**. Não inferir horas do intervalo entre mensagens.
+- **Atividade comprovada:** leitura da documentação de origem no commit `ca53d01c`; elaboração de contrato proposto de reserva, disponibilidade, confirmação parcial, falhas de impressão, retrabalho, mesa mista, pools de custo, rateio conciliado, eventos e critérios de teste futuro.
+- **Resultado:** criação de `docs/MODELAGEM_PRODUCAO_REAL_E_RATEIO.md` e atualização de continuidade e backlog, preservando as 23 homologações; nenhuma regra nova aprovada nesta etapa.
+- **Pendências:** homologação das decisões operacionais, desenho SQL físico, RLS e testes reais (não executados).
+- **Evidências:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; commit do arquivo de modelagem `8d44aa87eee6fbbabc67310c7beced6cbd19b203`; commits de atualização da branch.
