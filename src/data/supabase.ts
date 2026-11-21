@@ -56,3 +56,6 @@ export const createWorkspace=async(name:string)=>{
 export const listPrinters=(workspaceId:string)=>api<StoredPrinter[]>('mc_printers?workspace_id=eq.'+encodeURIComponent(workspaceId)+'&active=eq.true&select=id,workspace_id,model_id,name,purchase_price,average_watts,lifetime_hours,active&order=created_at.asc');
 export const insertPrinter=(workspaceId:string,data:PrinterDraft)=>api<StoredPrinter[]>('mc_printers?select=id,workspace_id,model_id,name,purchase_price,average_watts,lifetime_hours,active','POST',{workspace_id:workspaceId,...data},'return=representation');
 export const updateStoredPrinter=(id:string,workspaceId:string,data:PrinterDraft)=>api<StoredPrinter[]>('mc_printers?id=eq.'+encodeURIComponent(id)+'&workspace_id=eq.'+encodeURIComponent(workspaceId)+'&select=id,workspace_id,model_id,name,purchase_price,average_watts,lifetime_hours,active','PATCH',data,'return=representation');
+
+export const listCatalog=(kind:string)=>api<CatalogEntry[]>('mc_catalog?kind=eq.'+encodeURIComponent(kind)+'&status=eq.active&select=id,kind,name,manufacturer,scope&order=scope.asc,name.asc');
+export const insertCatalog=(workspaceId:string,authorId:string,kind:string,name:string)=>api<CatalogEntry[]>('mc_catalog?select=id,kind,name,manufacturer,scope','POST',{workspace_id:workspaceId,author_id:authorId,scope:'private',kind,name,status:'active'},'return=representation');
