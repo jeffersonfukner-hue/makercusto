@@ -118,13 +118,16 @@ test('seleciona, edita e reutiliza impressora na sessão sem alterar filamento',
  await expect(page.getByRole('heading',{name:'Impressora'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Filamento'})).toBeVisible();
  await page.getByRole('button',{name:'+ Nova impressora'}).click();
- await page.getByRole('textbox',{name:'Nome da impressora'}).fill('Kobra X bancada');
- await page.getByTestId('printerPrice').fill('5000');
- await page.getByTestId('averageWatts').fill('100');
- await page.getByRole('button',{name:'Fechar edição'}).click();
+ await expect(page.getByRole('dialog',{name:'Cadastrar impressora'})).toBeVisible();
+ await page.getByRole('textbox',{name:'Nome da minha impressora'}).fill('Kobra X bancada');
+ await page.getByRole('button',{name:/Avançado — custos/}).click();
+ await page.getByRole('spinbutton',{name:'Valor pago (R$)'}).fill('5000');
+ await page.getByRole('spinbutton',{name:/Potência média estimada/}).fill('100');
+ await page.getByRole('button',{name:'Salvar impressora'}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
  await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toContainText('Kobra X bancada');
  await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption('example');
- await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption('printer-2');
+ await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption({label:'Kobra X bancada'});
  await expect(page.locator('.printer-summary')).toContainText('100 W');
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
 });
@@ -161,4 +164,54 @@ test('retorno ao exemplo recupera a entrada simples',async({page})=>{
  await expect(page.getByRole('button',{name:/Simples/})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
  await expect(page.getByRole('button',{name:/Detalhar por cor/})).toHaveCount(0);
+});
+
+test('botões mais abrem modal de cadastro reutilizável',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByRole('button',{name:'Cadastrar cor'}).click();
+ await expect(page.getByRole('dialog',{name:'Cadastrar cor'})).toBeVisible();
+ await page.getByRole('textbox',{name:'Nome de cor'}).fill('Turquesa Única');
+ await page.getByRole('button',{name:'Salvar cadastro'}).click();
+ await expect(page.locator('#catalog-cor option[value="Turquesa Única"]')).toHaveCount(1);
+ await page.getByRole('button',{name:'Cadastrar tipo'}).click();
+ await expect(page.getByRole('dialog',{name:'Cadastrar tipo'})).toBeVisible();
+ await page.getByRole('button',{name:'Cancelar'}).click();
+ await page.getByRole('button',{name:'Cadastrar marca'}).click();
+ await expect(page.getByRole('dialog',{name:'Cadastrar marca'})).toBeVisible();
+});
+test('login, oficina e cadastro persistente consomem API autenticada',async({page})=>{
+ const base='https://bxtbfdddcxbyaomydgxn.supabase.co';
+ const user={id:'a93d1121-6fdd-4577-a696-ab4fe8fb73de',email:'teste@makercusto.local'};
+ const workshop='ac4ea594-d465-4b0b-9c0c-589dadb8624f';
+ const model='00ab1bb6-8b6f-4f10-b2a4-2a91d57d2268';
+ const printer='6d0f9788-bc84-4532-8a34-a923cab1546a';
+ let persisted=false;
+ await page.route(base+'/**',async(route)=>{
+  const req=route.request(),u=new URL(req.url()),path=u.pathname,method=req.method();
+  const json=(obj:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(obj)});
+  if(path==='/auth/v1/token'){await json({access_token:'test-token',refresh_token:'refresh-token',expires_in:3600,user});return;}
+  if(path==='/rest/v1/mc_catalog'){await json([{id:model,kind:'printer_model',name:'Kobra X',manufacturer:'Anycubic',scope:'global'}]);return;}
+  if(path==='/rest/v1/mc_workspaces'){await json([{id:workshop,name:'Minha oficina',owner_id:user.id}]);return;}
+  if(path==='/rest/v1/mc_printers'&&method==='POST'){
+   const body=JSON.parse(req.postData()||'{}');
+   expect(body.workspace_id).toBe(workshop);
+   expect(req.headers().authorization).toBe('Bearer test-token');
+   persisted=true;await json([{id:printer,...body,active:true}]);return;
+  }
+  if(path==='/rest/v1/mc_printers'){await json([]);return;}
+  await json([]);
+ });
+ await page.goto('/');
+ await page.getByRole('button',{name:'Entrar / Salvar'}).click();
+ await page.getByRole('textbox',{name:'E-mail'}).fill(user.email);
+ await page.getByLabel('Senha').fill('senha-teste');
+ await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ await page.getByRole('button',{name:/Avançado/}).click();
+ await expect(page.getByText('Oficina conectada ao Supabase.')).toBeVisible();
+ await page.getByRole('button',{name:'+ Nova impressora'}).click();
+ await page.getByRole('combobox',{name:'Modelo da impressora'}).selectOption(model);
+ await page.getByRole('button',{name:'Salvar impressora'}).click();
+ await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toContainText('Anycubic Kobra X');
+ expect(persisted).toBe(true);
 });
