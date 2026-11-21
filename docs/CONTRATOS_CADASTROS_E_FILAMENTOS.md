@@ -173,3 +173,8 @@ O plano **não altera a fórmula financeira** nem torna automático o compartilh
 - **Privacidade:** campos que entram em catálogo compartilhado, exclusão de mídia/arquivos e política de LGPD.
 
 A homologação das **13 regras** permanece válida; **nenhuma proposta nova deste contrato está automaticamente homologada**. O desenho não autoriza SQL, Supabase, alteração de código, merge ou deploy.
+
+## 11. Estado das quatro decisões técnicas — HOMOLOGADAS em 20/11/2026
+- O proprietário aprovou: tabelas específicas de catálogos, impressora física separada do modelo, tarifa elétrica por oficina e separação de definição/compra/bobina.
+- Registro formal em `docs/HOMOLOGACAO_CADASTROS_2026-11-20.md`. O restante das propostas deste arquivo permanece pendente de homologação específica.
+- A modelagem lógica seguinte de estoque, produtos e kits está documentada em `docs/CONTRATO_ESTOQUE_PRODUTOS.md` e ainda não está homologada.
