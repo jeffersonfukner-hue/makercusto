@@ -238,3 +238,10 @@
 ### Verificação de CI da UX progressiva — 20/11/2026
 - **PASSOU** para commit `ab67481cc259769d6acab47a8d38fd17cec16a52`: GitHub Actions run `44858012063`, job `136704638275`: verificação de tipos, testes unitários do motor de custos, build e **26 testes E2E desktop/mobile aprovados**. A rodada anterior `44857763701` identificou timeout em um teste mobile (25/26); o cenário foi corrigido no commit `ab67481c` e a execução seguinte concluiu com sucesso.
 - **Ainda não houve deploy nem homologação visual do proprietário**. Fonte oficial de execução: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44858012063
+
+## Supabase MakerCusto provisionado e banco aplicado — 21/11/2026
+- **Projeto Supabase exclusivo:** MakerCusto, id `bxtbfdddcxbyaomydgxn`, organização Flipzie Desenvolvimento de Sistemas (plano Free), região `sa-east-1`. Custo de criação confirmado pela API: **0/mês**. Projeto `ACTIVE_HEALTHY`.
+- **Migração aplicada:** `makercusto_foundation_v1`, sucesso confirmado na API e histórico de migrações; SQL versionado em `supabase/migrations/20261121015442_makercusto_foundation_v1.sql`, commit `13a7c897` na branch `feat/fundacao-makercusto`.
+- **Verificado por SQL somente leitura:** 33 tabelas de domínio `mc_*` com RLS habilitado; 34 objetos do tipo tabela/visão com prefixo `mc_`; 68 políticas, 89 chaves estrangeiras, 19 entradas de catálogo global, 1 modelo Anycubic Kobra X, zero oficinas e zero movimentações. Migração registrada (1 entrada).
+- **Limite efetivo:** banco é estrutura e catálogos, **não é aplicativo integrado**. Cadastro automático de oficina requer usuário autenticado e chamada `mc_create_workspace`; confirmação de produção, estorno, rateio final e estoque precisam de RPC transacional e testes antes de uso financeiro. Não prometer que 39 políticas estão integralmente operacionalizadas apenas por criar tabelas.
+- **Próxima entrega:** conectar frontend, login, seleção/instanciação de impressoras, botão + e modais completos para cadastros reais, com testes. Sem merge e sem deploy.
