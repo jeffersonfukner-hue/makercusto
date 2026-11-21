@@ -291,3 +291,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** código na branch do PR #1, sem alteração do banco ou publicação.
 - **Pendências:** conferir CI, ajustar falhas e homologar UI; eventual persistência remota exigirá contrato e testes RLS.
 - **Evidência:** commit deste lote e PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+
+## 21/11/2026 — Encerramento verificável do lote de cadastros inteligentes
+- **Projeto/cliente:** MakerCusto, desenvolvimento próprio.
+- **Início e término (Brasília):** não aferidos. **Duração efetiva comprovada:** não mensurada; nenhuma hora contabilizada pela diferença entre mensagens.
+- **Atividades:** implementação e refinamento de seleção de impressoras, catálogo de filamentos, dicas e sugestões, normalização, perfis consultáveis/clonáveis e regressões; diagnóstico e correção de falhas de toque no mobile com testes Playwright.
+- **Resultado comprovado:** CI para código `dff2fb8d20e5b751bc01a6b5fa5fb49d1104b7b9` concluído com sucesso: tipagem, 11 testes unitários, build e 38 testes E2E desktop/mobile.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44912210018 ; branch `feat/fundacao-makercusto` ; PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Pendências:** homologação visual no Preview; preenchimento de referências técnicas adicionais; persistência remota de cópias e arquitetura completa de catálogo protegido.
+- **Restrições cumpridas:** nenhum merge, deploy, alteração em produção ou operação sobre o banco nesta rodada.

@@ -294,3 +294,10 @@
 - Interface passou a consultar perfis por material/marca sem alterar motor de custo; SUNLU PLA usa referência pública da fabricante; Masterprint PETG e tipos genéricos são estimativas expressamente rotuladas.
 - Adicionado fluxo local de cópia de perfil de slicer com nome e parâmetros próprios; original permanece protegido. Persistência localStorage, não Supabase, nesta versão. Recomendações não são garantia de qualidade em impressoras diferentes.
 - Teste E2E de consulta, cópia e retorno ao original adicionado. Requer CI e homologação, sem merge/deploy.
+
+## 21/11/2026 — Fechamento técnico do lote de campos inteligentes e perfis
+- Código consolidado no commit `dff2fb8d20e5b751bc01a6b5fa5fb49d1104b7b9`. CI #44912210018 **aprovado**: tipagem, 11 testes unitários, build estático e **38 testes E2E desktop/mobile**.
+- Mudanças: fabricante/modelo dependente, 25 referências de impressoras, ficha técnica Kobra X com fonte fabricante, custos padrão marcados como estimativas, marcas/cores ampliadas, autocomplete com limite de três sugestões, normalização, perfis básicos de slicer e clonagem local dos perfis.
+- Corrigida ampliação horizontal indevida de grid no mobile, que impedia tocar no botão de clonagem do perfil. Teste de acesso do botão na largura da viewport passou.
+- Limites explícitos: apenas Kobra X teve dados técnicos específicos de fabricante verificados; SUNLU PLA utiliza fonte oficial para parte dos parâmetros; Masterprint PETG e genéricos usam estimativas informadas na UI; clones de perfil ainda ficam neste navegador, sem sincronização em nuvem. Clone universal com IDs históricos e RLS e fichas completas para demais marcas/modelos continuam pendentes.
+- Nenhum merge, deploy ou alteração de esquema/dados do banco nesta rodada; validação visual real do proprietário segue pendente e não deve ser confundida com CI verde.
