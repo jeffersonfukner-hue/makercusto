@@ -134,3 +134,10 @@ Não ampliar escopo sem homologação.
 - [x] Separar preço e estoque particulares das fichas descritivas compartilháveis, preservando as 13 decisões homologadas.
 - [ ] Homologar tabelas específicas vs catálogo unificado, tarifa elétrica por oficina, fluxo de instância de impressora, normalização por nome/variante, retenção e campos descritivos publicáveis.
 - [ ] Antes de SQL: definir FKs entre oficinas/itens, concorrência, regra de lotes sem nota, custo e política de estoque negativo; preparar testes RLS e de regressão em projeto de laboratório autorizado.
+
+## Contrato de estoque e produtos — 20/11/2026
+- [x] Registrar quatro decisões técnicas homologadas em `docs/HOMOLOGACAO_CADASTROS_2026-11-20.md` (base `4bab9d0c`).
+- [x] Criar proposta `docs/CONTRATO_ESTOQUE_PRODUTOS.md`: identidades de estoque, compras, lotes, ledger, ferramentas e serviços, composição de kits com revisões, produção e snapshots.
+- [ ] Homologar modelo de item estocável/FKs, saldo negativo/lote, reserva, baixa, estorno e transações.
+- [ ] Homologar rateio de mesa com múltiplos produtos, revisões de kits, precisão financeira e custos adicionais antes de SQL.
+- [ ] Preparar testes SQL/RLS somente depois de aprovação específica, sem provisionar projeto nesta rodada.
