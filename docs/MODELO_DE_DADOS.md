@@ -180,3 +180,8 @@ A mudança de plano **não** altera automaticamente `owner_id` nem `scope` de re
 9. Impedir atualização de `owner_id`, troca forjada de `workspace_id`, criação de ciclos na composição e acesso a oficinas alheias.
 
 **Bloqueadores para SQL:** resolver escolha de modelo físico e FKs, campos publicáveis, retenção/acesso após downgrade, limites de rascunhos, multi-oficina e políticas complementares de custo/estoque. Não provisionar banco até autorização explícita.
+
+## 10. Quatro decisões técnicas homologadas e aprofundamento do estoque — 20/11/2026
+- Homologação formal: `docs/HOMOLOGACAO_CADASTROS_2026-11-20.md` (tabelas específicas, impressora física distinta de modelo, tarifa por oficina, definição/compra/bobina separadas).
+- Continuação lógica proposta: `docs/CONTRATO_ESTOQUE_PRODUTOS.md` (item estocável, compras, lotes, movimentos como ledger, ferramentas/serviços, revisões de produtos/kits, produção e snapshots).
+- Garantir FK real entre oficina e dados operacionais, idempotência de movimentos, estorno não destrutivo, histórico financeiro e BOM sem ciclos. O novo contrato NÃO é aprovação de SQL.
