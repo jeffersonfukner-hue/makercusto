@@ -31,6 +31,9 @@ export const printerPresetLabel=(preset:PrinterPreset)=>preset.brand+' '+preset.
 
 export type PrinterReference={buildVolume?:string;nozzleDiameter?:number;maxNozzleTemp?:number;maxBedTemp?:number;source?:string;sourceKind:'fabricante'|'não verificado';};
 export const printerReferences:Record<string,PrinterReference>={
- 'anycubic-kobra-x':{buildVolume:'260 × 260 × 260 mm',nozzleDiameter:0.4,maxNozzleTemp:300,maxBedTemp:100,source:'https://wiki.anycubic.com/fr/fdm-3d-printer/anycubic-kobra-x/faq',sourceKind:'fabricante'}
+ 'anycubic-kobra-x':{buildVolume:'260 × 260 × 260 mm',nozzleDiameter:0.4,maxNozzleTemp:300,maxBedTemp:100,source:'https://wiki.anycubic.com/fr/fdm-3d-printer/anycubic-kobra-x/faq',sourceKind:'fabricante'},
+ 'bambu-a1-mini':{buildVolume:'180 × 180 × 180 mm',source:'https://blog.bambulab.com/best-3d-printer-for-beginners/',sourceKind:'fabricante'},
+ 'bambu-a1':{buildVolume:'256 × 256 × 256 mm',source:'https://blog.bambulab.com/best-3d-printer-for-beginners/',sourceKind:'fabricante'},
+ 'prusa-mk4s':{buildVolume:'250 × 210 × 220 mm',nozzleDiameter:0.4,source:'https://www.prusa3d.com/product/original-prusa-mk4s-3d-printer/',sourceKind:'fabricante'}
 };
 export const printerEstimatedCosts={purchasePrice:3500,averageWatts:150,lifetimeHours:3000} as const;

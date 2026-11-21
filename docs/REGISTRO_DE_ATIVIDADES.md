@@ -300,3 +300,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44912210018 ; branch `feat/fundacao-makercusto` ; PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
 - **Pendências:** homologação visual no Preview; preenchimento de referências técnicas adicionais; persistência remota de cópias e arquitetura completa de catálogo protegido.
 - **Restrições cumpridas:** nenhum merge, deploy, alteração em produção ou operação sobre o banco nesta rodada.
+
+## 21/11/2026 — Fechamento adicional do lote de cadastros
+- **Projeto:** MakerCusto, próprio.
+- **Início, término e duração efetiva (Brasília):** não aferidos; sem atribuir horas pelo intervalo de mensagens.
+- **Atividades realizadas:** revisão de componentes existentes, ajuste de escolha de modelo pela pesquisa, proteção de nome duplicado em clones de filamento, ampliação de fichas de 3 impressoras com referências de fabricantes e inclusão de cenários Playwright.
+- **Resultados:** mudanças na branch em PR #1, pendentes de CI/homologação visual; nenhuma alteração de banco, merge ou deploy.
+- **Evidências:** commits e Actions vinculados à PR #1; fontes oficiais documentadas na continuidade.

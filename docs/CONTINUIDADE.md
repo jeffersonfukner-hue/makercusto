@@ -301,3 +301,9 @@
 - Corrigida ampliação horizontal indevida de grid no mobile, que impedia tocar no botão de clonagem do perfil. Teste de acesso do botão na largura da viewport passou.
 - Limites explícitos: apenas Kobra X teve dados técnicos específicos de fabricante verificados; SUNLU PLA utiliza fonte oficial para parte dos parâmetros; Masterprint PETG e genéricos usam estimativas informadas na UI; clones de perfil ainda ficam neste navegador, sem sincronização em nuvem. Clone universal com IDs históricos e RLS e fichas completas para demais marcas/modelos continuam pendentes.
 - Nenhum merge, deploy ou alteração de esquema/dados do banco nesta rodada; validação visual real do proprietário segue pendente e não deve ser confundida com CI verde.
+
+## 21/11/2026 — Consolidação complementar do lote de cadastros
+- Busca por modelo: ao digitar/clicar nome correspondente, a referência é selecionada automaticamente, preenchendo o nome pessoal; remove etapa redundante do fluxo.
+- Perfis de filamento pessoais: impedir nomes equivalentes duplicados dentro da mesma referência, preservando cópia anterior sem sobrescrita.
+- Referências oficiais incrementais: adicionados volumes de impressão Bambu Lab A1 mini (180³ mm), A1 (256³ mm) e Prusa MK4S (250×210×220 mm; bico 0,4 mm), com links de fabricante. Campos sem evidência seguem ausentes na ficha em vez de inventados; estimativas de custos mantidas separadamente.
+- Evidências técnicas: https://blog.bambulab.com/best-3d-printer-for-beginners/ ; https://www.prusa3d.com/product/original-prusa-mk4s-3d-printer/ . CI do novo HEAD será conferido. Sem alterações no banco, merge ou deploy.

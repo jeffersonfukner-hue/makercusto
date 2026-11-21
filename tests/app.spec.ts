@@ -273,3 +273,35 @@ test('perfil básico de filamento pode ser consultado e clonado sem modificar pa
  await page.getByRole('combobox',{name:'Perfil do filamento'}).selectOption('');
  await expect(page.getByRole('region',{name:'Configuração de filamento para slicer'})).toContainText('200–230 °C');
 });
+
+test('busca de modelo escolhe referência e preenche o nome sem segunda seleção',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Nova impressora/}).click();
+ await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Anycubic');
+ await page.getByRole('textbox',{name:'Pesquisar modelo'}).fill('Kobra X');
+ await expect(page.getByRole('combobox',{name:'Modelo da impressora'})).toHaveValue('preset:anycubic-kobra-x');
+ await expect(page.getByRole('textbox',{name:'Nome da minha impressora'})).toHaveValue('Anycubic Kobra X');
+});
+test('fichas técnicas adicionais exibem referências verificadas do fabricante',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Nova impressora/}).click();
+ await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Bambu Lab');
+ await page.getByRole('combobox',{name:'Modelo da impressora'}).selectOption('preset:bambu-a1-mini');
+ await expect(page.getByText('180 × 180 × 180 mm')).toBeVisible();
+ await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Prusa');
+ await page.getByRole('combobox',{name:'Modelo da impressora'}).selectOption('preset:prusa-mk4s');
+ await expect(page.getByText('250 × 210 × 220 mm')).toBeVisible();
+});
+test('cópias de perfil não sobrescrevem perfis pessoais com nomes iguais',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByLabel('Tipo de filamento').fill('PLA');
+ await page.getByLabel('Marca do filamento').fill('SUNLU');
+ await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await page.getByRole('textbox',{name:'Nome da configuração'}).fill('Meu PLA');
+ await page.getByRole('button',{name:'Salvar meu perfil'}).click();
+ await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await page.getByRole('textbox',{name:'Nome da configuração'}).fill('meu pla');
+ await page.getByRole('button',{name:'Salvar meu perfil'}).click();
+ await expect(page.getByRole('alert')).toContainText('Já existe um perfil com esse nome');
+});
