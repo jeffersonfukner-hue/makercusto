@@ -155,3 +155,9 @@ Não ampliar escopo sem homologação.
 - [ ] Homologar política de reserva e expiração; confirmacões parciais; falhas com consumo e sem produto bom; custo de retrabalho; direcionadores de rateio.
 - [ ] Definir custo de pausa, unidade, precisão/centavos, lote sem identificação, segurança concorrente e proveniência dos dados do fatiador.
 - [ ] Preparar esquema físico/RLS e testes quando autorizado; **não criar banco nem mudar código nesta fase**.
+
+## Revisão para homologação das cinco decisões de produção (20/11/2026)
+- [x] Revisar commit `e479d08e` e formalizar recomendações, exemplos e limites em `docs/PROPOSTAS_HOMOLOGACAO_PRODUCAO_2026-11-20.md`.
+- [ ] Homologar RES (reserva opcional), PAR (confirmação incremental), FAL (perda com 0 peças boas), RET (retrabalho separado) e RAT (rateio por categoria com conciliação).
+- [ ] Detalhar exceções: vencimento e sobras da reserva, medição e tratamento de pausas, fórmula específica de rateio, custo de refugo incorporado ou separado, critérios de estorno parcial.
+- [ ] Escolher precisão financeira e esquema de banco e testar RLS/transações apenas em etapa futura autorizada.
