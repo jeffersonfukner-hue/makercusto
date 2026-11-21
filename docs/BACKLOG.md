@@ -148,3 +148,10 @@ Não ampliar escopo sem homologação.
 - [ ] Decidir política de reserva, lote indefinido, baixa parcial/falha e estorno parcial.
 - [ ] Aprovar fórmula(s) de rateio e conciliação de energia/tempo/purga para mesas mistas.
 - [ ] Aprovar schema físico, chaves estrangeiras, precisão monetária e controle de concorrência antes de SQL e RLS.
+
+## Produção real e rateio — contrato de proposta (20/11/2026)
+- [x] Revisar documentação do commit `ca53d01c` e formalizar `docs/MODELAGEM_PRODUCAO_REAL_E_RATEIO.md`.
+- [x] Documentar propostas de reservas, confirmação incremental, falha, retrabalho, múltiplas saídas na mesma mesa, custos separados por categoria, conciliação e testes futuros.
+- [ ] Homologar política de reserva e expiração; confirmacões parciais; falhas com consumo e sem produto bom; custo de retrabalho; direcionadores de rateio.
+- [ ] Definir custo de pausa, unidade, precisão/centavos, lote sem identificação, segurança concorrente e proveniência dos dados do fatiador.
+- [ ] Preparar esquema físico/RLS e testes quando autorizado; **não criar banco nem mudar código nesta fase**.
