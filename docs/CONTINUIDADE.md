@@ -91,3 +91,11 @@
 - **Cinco homologações preservadas**: global só com cópia renomeável, Compartilhado por autoria, Full privado e publicação de cópia, estoque auditável, kits multicomponentes.
 - Atenção: separação entre ficha pública/compartilhada e dados operacionais privados, transição de planos, privacidade de rascunhos, snapshot de custo e ausência de FK em referências genéricas.
 - Propostas não equivalem a homologação adicional. Nesta rodada somente documentação na branch; sem aplicação/banco/merge/deploy.
+
+## Oito diretrizes de permissões HOMOLOGADAS — 20/11/2026
+- Base expressamente aprovada: oito propostas de `docs/REVISAO_PERMISSOES_E_CADASTROS.md` no commit `3878be1807fac55d02b667816edbb76d7bf93fe4`.
+- Fonte oficial da homologação com limites claros: `docs/HOMOLOGACAO_PERMISSOES_2026-11-20.md`. As cinco regras estruturais anteriores permanecem inalteradas.
+- Diretrizes aprovadas: rascunhos Compartilhado privados até publicação confirmada; downgrade preserva titularidade/privacidade e restringe novas ações pagas; somente fichas descritivas publicáveis (sem compra/estoque/preço pessoal); cópias independentes com ID/origem/versão; gratuito sem leitura do Compartilhado inicialmente; `workspace_id` previsto; preço do lote real priorizado e snapshot imutável; catálogos oficiais somente administrados com versão e sugestões moderadas.
+- **Abertos, não homologados por consequência:** retenção e limites de rascunhos; leitura/exportação/prazos após downgrade; lista por entidade de campos publicáveis; alertas de versões; vitrine futura; equipes/convites e políticas multi-oficina; custeios alternativos/fiscais; critérios de moderação.
+- Novo refinamento lógico acrescentado a `docs/MODELO_DE_DADOS.md`: classes de domínio, IDs/cópias, proposta de oficina e estoque com FKs, snapshots e casos de teste RLS **não executados**.
+- Exclusivamente documentação no GitHub, sem SQL/migração, código, deploy, merge nem produção.
