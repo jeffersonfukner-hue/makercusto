@@ -68,7 +68,7 @@ test('memoriza cor personalizada sem duplicar opção padrão',async({page})=>{
  const c=page.getByLabel('Cor do filamento');
  await c.fill('Turquesa Especial');await c.blur();
  await expect(page.locator('#catalog-cor option[value="Turquesa Especial"]')).toHaveCount(1);
- await page.reload();await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.reload();await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await expect(page.locator('#catalog-cor option[value="Turquesa Especial"]')).toHaveCount(1);
  const c2=page.getByLabel('Cor do filamento');await c2.fill('aZuL');await c2.blur();
  await expect(page.locator('#catalog-cor option[value="Azul"]')).toHaveCount(1);
@@ -116,7 +116,7 @@ test('seleciona, edita e reutiliza impressora na sessão sem alterar filamento',
  await page.goto('/');
  await page.getByRole('button',{name:/Avançado/}).click();
  await expect(page.getByRole('heading',{name:'Impressora'})).toBeVisible();
- await expect(page.getByRole('heading',{name:'Filamentos'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Filamento'})).toBeVisible();
  await page.getByRole('button',{name:'+ Nova impressora'}).click();
  await page.getByRole('textbox',{name:'Nome da impressora'}).fill('Kobra X bancada');
  await page.getByTestId('printerPrice').fill('5000');
