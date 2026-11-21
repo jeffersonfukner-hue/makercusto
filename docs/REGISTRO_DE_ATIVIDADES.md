@@ -240,3 +240,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** commits `f9929ce4`, `655bd888`, `991dd531`, `c5c85351`, `402c4e8e`, `c977e59e`, `33a7ce3f`, `69487519`, `7e0bfa88`, `81f7fc2c`; PR #1 e verificações CI vinculadas.
 - **Horários e duração:** início/término não aferidos, duração efetiva não mensurada; não inferir tempo entre mensagens.
 - **Pendências:** verificar CI, corrigir falhas detectadas, testar conta real e confirmar permissões RLS; avançar integração de filamentos/estoque/produtos/produção em lote futuro, sem publicação sem autorização.
+
+## 21/11/2026 — Diagnóstico e correção do toque mobile
+- **Atividades reais:** execução do CI GitHub, leitura de logs de falha e do rastreamento de clique Playwright; diagnóstico de sobreposição de seções impedindo o botão `Cadastrar cor` no mobile; criação da barra de ações de cadastro para telas pequenas; nova rodada de CI.
+- **Resultado comprovado:** última versão de código em `c5dcc1eb` aprovada no workflow `44864163612` job `136723999519`: tipagem, testes unitários, build, E2E desktop/mobile. Nenhum merge ou deploy.
+- **Pendências:** verificação funcional com conta real Supabase e validação visual em Preview Cloudflare; integração operacional de materiais/estoque/produtos permanece não entregue. Ainda não é sistema apto a venda.
+- **Horários/duração efetiva (Brasília):** não aferidos; duração não mensurada. Não contabilizar automaticamente tempo entre mensagens.
