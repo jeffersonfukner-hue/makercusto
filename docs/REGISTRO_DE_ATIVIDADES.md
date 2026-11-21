@@ -201,3 +201,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Pendências:** equipes/convites, alçadas/limites de aprovação, RLS físico, evidências mínimas, conciliação sem origem comprovada, fechamento financeiro com custo desconhecido, fiscalidade, SQL físico, fluxo de vendas/devoluções/garantias, depreciação em pausas e tarifas variáveis. Consolidar pendências em pacote final antes da implementação.
 - **Evidências verificáveis:** `6745c2e8` (documento GAP-02), `9961ef62` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit próprio deste registro identificável no histórico GitHub.
 - **Restrições observadas:** sem código, SQL, banco, merge ou deploy.
+
+
+## 20/11/2026 — Primeira entrega de UX progressiva (Simples → Avançado)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; intervalo entre mensagens não é tempo comprovado.
+- **Atividades efetivamente realizadas:** leitura de AGENTS, README, arquitetura e padrões; inspeção do código React, motor de custos e cenários Playwright; implementação de navegação Simples/Avançado, campos essenciais no modo inicial, controles extras e multicor no Avançado, resumo de preço/custo/lucro e estilos responsivos; adaptação e ampliação dos testes; atualização de continuidade e deste registro.
+- **Resultados:** alterações no PR #1 draft, branch `feat/fundacao-makercusto`, sem modificar lógica matemática do motor; modo simples independente do detalhado, valores preservados entre modos. Nenhum merge/deploy. Testes Playwright adicionados, **não afirmar aprovação até conferir o CI correspondente**.
+- **Pendências:** CI de tipagem/unitários/build/E2E em andamento (run inicial `44857663329`), eventuais ajustes e validação visual do proprietário. Valores exemplo não são medição; gestão/contas/banco não implementados.
+- **Evidências verificáveis:** commits `12f45df5` (UI), `e70b78e8` (CSS), `637aa6a7` / `7d8d33ec` (E2E), `2ce6f92b` (continuidade), PR https://github.com/jeffersonfukner-hue/makercusto/pull/1. Este registro tem commit verificável no histórico.
