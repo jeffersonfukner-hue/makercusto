@@ -106,3 +106,8 @@
 - Riscos explicitados: `scope` não se aplica a compras/estoque; `workspace_id` deve restringir FKs; modelos globais não contêm preço pessoal; publicação depende de lista branca de campos; nenhuma interface ou política RLS foi implementada.
 - Pendências: aprovar escolha de tabelas específicas vs catálogo unificado, fluxo de cópia/instância, regras de rascunho no Compartilhado, tarifa por período, preço sem lote e inventário.
 - Nesta rodada, **somente documentos** na branch `feat/fundacao-makercusto`; sem alteração de aplicação, banco, merge ou deploy.
+
+## Homologação de quatro decisões técnicas e modelagem de estoque — 20/11/2026
+- Proprietário homologou expressamente quatro propostas do contrato `4bab9d0c`: tabelas específicas, impressora física diferente de modelo global, tarifa vinculada à oficina e separação de definição/compra/bobina. Registro oficial em `docs/HOMOLOGACAO_CADASTROS_2026-11-20.md`. **17 decisões/diretrizes homologadas no total (5+8+4)**.
+- `docs/CONTRATO_ESTOQUE_PRODUTOS.md` apresenta **proposta não homologada** de inventário, compras, lotes, movimentos, ferramentas, serviços, produtos e revisões de kits, produção e snapshots. Preserva histórico, autoria da oficina, lote real e estoque auditável.
+- Pendências críticas: esquema físico e FKs, saldo negativo, consumo sem lote, reserva, gatilho da baixa, rateio de mesa mista, regras de composição e precisão financeira. Sem código, SQL, banco, merge, deploy ou produção.
