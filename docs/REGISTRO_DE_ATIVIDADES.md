@@ -137,3 +137,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** `docs/HOMOLOGACAO_RETRABALHO_P04_2026-11-20.md` criado e P04 homologada como uma única política; **32 homologações** acumuladas, preservando 31 anteriores; sem código, SQL, banco, merge ou deploy.
 - **Pendências:** P05 a P09, critérios fiscal/contábil, garantia/pós-venda, valorização de materiais recuperáveis, permissões/RLS, SQL físico; testes funcionais não executados por ser atividade exclusivamente documental.
 - **Evidências verificáveis:** commits `2e25553e` (homologação P04) e `b82d5935` (continuidade); branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit próprio deste registro consta no histórico Git.
+
+
+## 20/11/2026 — Homologação documental P05 (rateio por categoria)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Início e término (Brasília):** não aferidos; **duração efetiva:** não mensurada. Não contabilizar tempo entre mensagens como atividade.
+- **Atividades executadas:** conferência somente leitura de continuidade, regras RAT, P04, P03 e contratos de estoque/produção; formalização da aprovação expressa P05-A a P05-F em uma política consolidada, com categorias, métodos de atribuição, exceções, casos aritméticos hipotéticos e limitações; atualização da continuidade e deste registro.
+- **Resultados:** criado `docs/HOMOLOGACAO_RATEIO_P05_2026-11-20.md`, registradas **33 homologações** com 32 anteriores intactas, P06–P09 pendentes; somente documentos da branch, sem código, SQL, banco, merge ou deploy.
+- **Pendências:** P06 precisão/arredondamento; P07 pausas/energia; P08 consumo sem lote; P09 estorno parcial; RLS/permissões, fiscalidade, dados do slicer e modelo físico SQL. **Testes funcionais/RLS não executados** (somente documentação).
+- **Evidências verificáveis:** commit `83168f07` (homologação P05), `9df8031d` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit deste registro encontra-se no histórico da branch.
