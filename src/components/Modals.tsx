@@ -27,7 +27,6 @@ export function AuthModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:()=>vo
   </form>
  </Modal>;
 }
-const numberValue=(value:string)=>value.trim()===''?null:Number(value);
 export function PrinterModal({models,initial,onClose,onSave}:{models:CatalogEntry[];initial?:StoredPrinter;onClose:()=>void;onSave:(draft:PrinterDraft)=>Promise<void>}){
  const manufacturerNames=[...new Set([...printerPresets.map(p=>p.brand),...models.map(m=>m.manufacturer).filter((v):v is string=>Boolean(v))])];
  const inferredPreset=printerPresets.find(p=>initial?.name.toLocaleLowerCase('pt-BR').includes(printerPresetLabel(p).toLocaleLowerCase('pt-BR')));
