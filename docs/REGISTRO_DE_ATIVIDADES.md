@@ -64,3 +64,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** contrato técnico documental e atualizações de continuidade/backlog, sem alterar código ou banco.
 - **Evidências:** PR #1 `https://github.com/jeffersonfukner-hue/makercusto/pull/1`; histórico de commits da branch `feat/fundacao-makercusto`.
 - **Pendências:** homologação das novas propostas, escolha da modelagem física e execução futura de testes (não realizados nesta etapa). **Tempo efetivo:** não aferido, sem estimar o intervalo entre mensagens.
+
+## 20/11/2026 — Homologação de cadastros e desenho lógico de estoque/produtos
+- **Projeto:** MakerCusto (desenvolvimento próprio).
+- **Horário de referência observado:** 21:25 de Brasília, durante a execução. **Horários de início/término e duração efetiva:** não aferidos; não inferir tempo trabalhado pelo intervalo entre mensagens.
+- **Atividades realizadas:** leitura do contrato e documentos do commit `4bab9d0c`; formalização das quatro escolhas técnicas aprovadas; especificação documental de estoque, fornecedores, compras, bobinas, movimentos auditáveis, ferramentas, serviços, produtos/kit, produção, históricos e regressões propostas.
+- **Resultados:** `docs/HOMOLOGACAO_CADASTROS_2026-11-20.md` e `docs/CONTRATO_ESTOQUE_PRODUTOS.md` criados na branch de trabalho; atualizados continuidade e backlog. **Nenhum código, banco, merge ou deploy**.
+- **Pendências:** homologação de contratos específicos do estoque e produção, modelo SQL físico e testes funcionais/RLS não executados.
+- **Evidências:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; commits verificáveis na branch `feat/fundacao-makercusto`.
