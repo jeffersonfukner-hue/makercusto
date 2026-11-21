@@ -84,3 +84,10 @@
 - A homologação não resolve política de privacidade de rascunhos do Compartilhado, cancelamentos, curadoria, custos por lote, múltiplas oficinas e autorizações administrativas detalhadas; manter como pendências explícitas.
 - Documento-mestre `docs/PLANO_MESTRE_MAKERCUSTO.md` e proposta técnica `docs/MODELO_DE_DADOS.md` consolidam requisitos, entidades, permissões e fases. **Propostas de modelagem não são homologação de banco físico**.
 - Nesta etapa: somente documentação na branch de trabalho e PR draft; sem alterar aplicação, criar Supabase, credenciais, migrações, merge ou deploy.
+
+## Revisão documental de permissões e fluxos — 20/11/2026
+- Base auditada: commit `896877b88eaed6d347ba757405394aeb64914c35` (`PLANO_MESTRE_MAKERCUSTO.md` e `MODELO_DE_DADOS.md`).
+- Relatório: `docs/REVISAO_PERMISSOES_E_CADASTROS.md`, com 12 riscos documentais, matriz por ator e classe de dados, seis fluxos e oito decisões adicionais propostas.
+- **Cinco homologações preservadas**: global só com cópia renomeável, Compartilhado por autoria, Full privado e publicação de cópia, estoque auditável, kits multicomponentes.
+- Atenção: separação entre ficha pública/compartilhada e dados operacionais privados, transição de planos, privacidade de rascunhos, snapshot de custo e ausência de FK em referências genéricas.
+- Propostas não equivalem a homologação adicional. Nesta rodada somente documentação na branch; sem aplicação/banco/merge/deploy.

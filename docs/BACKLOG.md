@@ -114,3 +114,9 @@ Não ampliar escopo sem homologação.
 - [x] Elaborar `docs/MODELO_DE_DADOS.md` como projeto lógico, com entidades, relações, matriz de permissões, invariantes, segurança/RLS e migrações **não executadas**.
 - [ ] Homologar pendências sobre rascunhos no Compartilhado, downgrade, propriedade de estoque, método de custeio, múltiplas oficinas, curadoria e privacidade.
 - [ ] Revisar modelo lógico antes de escrever SQL/migrações; sem provisionar banco ou integrar assinaturas nesta etapa.
+
+## Revisão de permissões/fluxos — 20/11/2026
+- [x] Auditar plano-mestre e modelo lógico do commit `896877b8`; documentar 12 achados, matriz, seis fluxos e oito propostas em `docs/REVISAO_PERMISSOES_E_CADASTROS.md`.
+- [ ] Homologar rascunhos do Compartilhado, comportamento após cancelamento, campos publicáveis, acesso gratuito a S, múltiplas oficinas, custo de lote e curadoria global.
+- [ ] Separar dados operacionais privados de fichas G/S no esquema físico e criar testes RLS de autoria, assinatura e imutabilidade.
+- [ ] Definir chaves estrangeiras para estoque e composição de produtos antes de migrações.
