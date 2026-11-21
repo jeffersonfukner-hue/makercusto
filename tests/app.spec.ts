@@ -424,3 +424,44 @@ test('visitante preserva última referência selecionada sem criar cópia',async
  await page.reload();await page.getByRole('button',{name:/Avançado/}).click();
  await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toHaveValue('reference:creality-k1c');
 });
+
+test('produto exige login para salvar e oferece entrada no modal',async({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
+ await page.getByRole('button',{name:'Entrar para salvar produto'}).click();
+ await expect(page.getByRole('dialog')).toBeVisible();
+});
+test('salva produto, custo e lista na oficina com feedback sem recarregar',async({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111';
+ const user='22222222-2222-4222-8222-222222222222';
+ const saved:{name:string;id:string;sku:string|null;kind:string;sale_price:number;workspace_id:string;description:string|null;active:boolean;created_at:string}[]=[];
+ let posted:Record<string,unknown>|undefined;
+ await page.addInitScript(({user})=>{
+  localStorage.setItem('makercusto:session:v1',JSON.stringify({
+   access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user,email:'teste@example.test'}
+  }));
+ },{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=route.request().url();
+  if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Minha oficina',owner_id:user}])});
+  if(url.includes('/mc_printers?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+  if(url.includes('/mc_catalog?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+  if(url.includes('/mc_products?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(saved)});
+  if(url.includes('/rpc/mc_save_calculated_product')){
+   posted=route.request().postDataJSON() as Record<string,unknown>;
+   saved.push({id:'33333333-3333-4333-8333-333333333333',workspace_id:workspace,name:String(posted.p_name),sku:String(posted.p_sku),kind:String(posted.p_kind),sale_price:Number(posted.p_sale_price),description:null,active:true,created_at:new Date().toISOString()});
+   return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(saved[0].id)});
+  }
+  return route.fulfill({status:404,contentType:'application/json',body:'{}'});
+ });
+ await page.goto('/');
+ await page.getByRole('textbox',{name:'Nome do produto'}).fill('Chaveiro Galo');
+ await page.getByRole('textbox',{name:'SKU do produto'}).fill('GAL-01');
+ await page.getByRole('button',{name:'Salvar produto e custo'}).click();
+ await expect(page.getByRole('status')).toContainText('Produto, versão inicial e custo estimado salvos');
+ await expect(page.locator('.product-list')).toContainText('Chaveiro Galo');
+ expect(posted?.p_workspace_id).toBe(workspace);
+ expect(posted?.p_kind).toBe('product');
+ expect(Number(posted?.p_total_cost)).toBeGreaterThan(0);
+ expect((posted?.p_parameters as Record<string,unknown>)?.saved_input).toBeTruthy();
+});
