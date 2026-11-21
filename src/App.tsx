@@ -49,6 +49,7 @@ export default function App(){
    setPrinters(prev=>[...prev,{...initialPrinter,id,name:'Impressora personalizada'}]);
    setPrinterId(id);setPrinterEditing(true);
  };
+ const [advanced,setAdvanced]=useState(false);
  const [details,setDetails]=useState(false);
  const [simple,setSimple]=useState<SimpleFilament>(initialSimple);
  const [detailedMaterials,setDetailedMaterials]=useState<MaterialLine[]>(seeded);
@@ -89,7 +90,7 @@ export default function App(){
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
    setDetailedMaterials(seeded());
-   setDetails(false);
+   setAdvanced(false);setDetails(false);
    setDraft(newDraft());setEditId(null);setNextId(1);setErrorDraft('');
  };
  const activeInput:CostInput={
@@ -100,20 +101,21 @@ export default function App(){
    pricePerKwh:activePrinter.pricePerKwh,
    grams:asGrams(simple.quantity,simple.quantityUnit),
    pricePerKg:perKg(simple.price,simple.priceUnit),
-   materials:details?detailedMaterials:undefined
+   materials:advanced&&details?detailedMaterials:undefined
  };
  let result:ReturnType<typeof calculateCost>|undefined, error='';
  try{result=calculateCost(activeInput)}catch(e){error=(e as Error).message;}
  const used = result ? result.modelGrams+result.wasteGrams : 0;
  const average = result&&used>0?result.material/used*1000:0;
  return <>
- <header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Protótipo · v0.1.0</span></div></header>
+ <header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span></div></header>
  <main className="shell">
-  <section className="intro"><p className="eyebrow">CÁLCULO DE IMPRESSÃO 3D</p><h1>Quanto custa produzir? Quanto sobra na venda?</h1><p>Informe o total de filamento ou detalhe o consumo por cor. Os demais custos são calculados automaticamente.</p></section>
+  <section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>
+  <nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples <small>Direto ao resultado</small></button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado <small>Cores, impressora e custos extras</small></button></nav>
   <div className="workspace">
    <section className="panel">
-    <div className="panel-heading"><div><h2>Dados de produção</h2><p>Exemplo: chaveiro Nossa Senhora, lote de 20 unidades.</p></div><button type="button" onClick={reset}>Restaurar exemplo</button></div>
-    <section className="printer-section" aria-labelledby="printer-title">
+    <div className="panel-heading"><div><h2>{advanced?"Personalize seu cálculo":"Seu cálculo"}</h2><p>{advanced?"Ajuste os detalhes sem perder os valores informados.":"Preencha os dados e veja o resultado na hora."}</p></div><button type="button" onClick={reset}>Restaurar exemplo</button></div>
+    {advanced&&<section className="printer-section" aria-labelledby="printer-title">
      <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterEditing(v=>!v)}>{printerEditing?'Fechar edição':'Editar dados'}</button></div>
      <div className="printer-selector">
       <label>Selecionar impressora
@@ -132,10 +134,10 @@ export default function App(){
        <label>Tarifa elétrica (R$/kWh)<input type="number" min="0" step="any" data-testid="pricePerKwh" value={display(activePrinter.pricePerKwh)} onChange={e=>updatePrinter('pricePerKwh',e.target.value)}/></label>
      </div>}
      <p className="footnote">Valores do exemplo são hipóteses. Cadastros ficam somente nesta sessão; salvamento em conta será definido para os planos pagos.</p>
-    </section>
+    </section>}
     <section className="materials" aria-labelledby="materials-title">
-     <div className="materials-heading"><h3 id="materials-title">Filamentos</h3><button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button></div>
-     {!details&&<div className="simple-material-fields">
+     <div className="materials-heading"><h3 id="materials-title">Filamento</h3>{advanced&&<button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button>}</div>
+     {(!advanced||!details)&&<div className="simple-material-fields">
        <label>Filamento utilizado
          <div className="simple-field-combo"><input data-testid="simpleQuantity" type="number" min="0" step="any" value={display(simple.quantity)} onChange={e=>setSimple(prev=>({...prev,quantity:numeric(e.target.value)}))}/><select aria-label="Unidade do total utilizado" value={simple.quantityUnit} onChange={e=>setSimple(prev=>({...prev,quantityUnit:e.target.value as Unit}))}><option value="g">g</option><option value="kg">kg</option></select></div>
        </label>
@@ -148,7 +150,7 @@ export default function App(){
        <div><small>Preço médio ponderado</small><strong data-testid="averagePrice">{result?money(average)+'/kg':'—'}</strong></div>
        <div><small>Custo do filamento</small><strong data-testid="materialCost">{result?money(result.material):'—'}</strong></div>
      </div>
-     <div id="material-details" hidden={!details}>
+     {advanced&&<div id="material-details" hidden={!details}>
       <datalist id="catalog-cor">{list('cor').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
       <datalist id="catalog-tipo">{list('tipo').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
       <datalist id="catalog-marca">{list('marca').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
@@ -177,14 +179,15 @@ export default function App(){
       <p className="footnote">A tabela usa quantidade adquirida e preço da embalagem para calcular o preço por grama. Informe purga apenas se ela não estiver incluída no peso usado.</p>
      </div>
     </section>
-    <div className="fields">{fields.map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/></label>)}</div>
-    <p className="footnote">Tarifa, potência e vida útil são hipóteses editáveis, não medições oficiais.</p>
+    <div className="fields">{fields.filter(field=>advanced||['hours','quantity','salePrice'].includes(field.key)).map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/></label>)}</div>
+    <p className="footnote">{advanced?"Tarifa, potência e vida útil são hipóteses editáveis, não medições oficiais.":"Energia, desgaste da impressora e outros custos usam valores de exemplo. Confira-os no Avançado antes de definir seu preço final."}</p>
    </section>
-   <section className="panel result-panel" aria-live="polite"><h2>Resultado da simulação</h2>{error?<p className="error" role="alert">{error}</p>:result&&<>
+   <section className="panel result-panel" aria-live="polite"><h2>Seu resultado</h2>{error?<p className="error" role="alert">{error}</p>:result&&<>
     <div className="hero-amount"><span>Custo de produção por unidade</span><strong data-testid="unitCost">{money(result.unitCost)}</strong><small>Total do lote: {money(result.lotCost)}</small></div>
-    <h3>Composição do lote</h3><dl className="cost-list">{([['Filamentos',result.material],['Energia',result.energy],['Depreciação',result.depreciation],['Acessórios',result.accessories],['Montagem',result.assembly]] as const).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}</dl>
+    <div className="quick-outcomes"><div><span>Você vende por unidade</span><strong data-testid="salePriceSummary">{money(form.salePrice)}</strong></div><div><span>Sobra por unidade (bruto)</span><strong data-testid="unitProfit" className={result.grossProfit<0?"negative":"positive"}>{money(form.salePrice-result.unitCost)}</strong></div></div>
+    <details className="breakdown" open={advanced}><summary>Entenda seu custo e lucro</summary><div className="breakdown-inner"><h3>Composição do lote</h3><dl className="cost-list">{([['Filamentos',result.material],['Energia',result.energy],['Depreciação',result.depreciation],['Acessórios',result.accessories],['Montagem',result.assembly]] as const).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}</dl>
     <div className="summary"><div><span>Faturamento do lote</span><strong>{money(result.lotRevenue)}</strong></div><div><span>Lucro bruto estimado</span><strong data-testid="grossProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.grossProfit)}</strong></div><div><span>Margem bruta</span><strong data-testid="margin">{result.marginPercent.toFixed(1).replace('.',',')}%</strong></div><div><span>Markup</span><strong>{result.markupPercent.toFixed(1).replace('.',',')}%</strong></div></div>
-    <p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p>
+    <p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p></div></details>
    </>}</section>
   </div>
  </main><footer className="shell footer">MakerCusto · Preview em homologação · Sem envio de dados</footer></>;
