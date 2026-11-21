@@ -5,13 +5,15 @@ test('resumo padrão compacto e valores do exemplo',async({page})=>{
  await expect(page.getByTestId('averagePrice')).toContainText('100,00');
  await expect(page.getByTestId('materialCost')).toContainText('15,16');
  await expect(page.getByTestId('unitCost')).toContainText('2,52');
- await expect(page.getByRole('button',{name:/Detalhar por cor/})).toHaveAttribute('aria-expanded','false');
+ await expect(page.getByRole('button',{name:/Simples/})).toHaveAttribute('aria-pressed','true');
+ await expect(page.getByRole('button',{name:/Detalhar por cor/})).toHaveCount(0);
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
  await expect(page.getByTestId('simplePrice')).toHaveValue('100');
  await expect(page.getByRole('table')).toBeHidden();
 });
 test('detalhar por cor exibe tabela alinhada e total',async({page})=>{
  await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await expect(page.getByRole('table')).toBeVisible();
  await expect(page.getByTestId('row-blue')).toContainText('Azul');
@@ -22,6 +24,7 @@ test('detalhar por cor exibe tabela alinhada e total',async({page})=>{
 });
 test('inclui rolo de 250g com preço total e consumo proporcional',async({page})=>{
  await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Cor do filamento').fill('Turquesa');
  await page.getByLabel('Marca do filamento').fill('Masterprint');
@@ -36,6 +39,7 @@ test('inclui rolo de 250g com preço total e consumo proporcional',async({page})
 });
 test('edita uma linha, calcula embalagem 1,3 kg e remove',async({page})=>{
  await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByRole('button',{name:'Editar Azul'}).click();
  await expect(page.getByRole('button',{name:'Salvar alteração'})).toBeVisible();
@@ -49,6 +53,7 @@ test('edita uma linha, calcula embalagem 1,3 kg e remove',async({page})=>{
 });
 test('valida o formulário sem criar linhas pendentes',async({page})=>{
  await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByRole('button',{name:'Adicionar à tabela'}).click();
  await expect(page.getByRole('alert')).toBeVisible();
@@ -58,6 +63,7 @@ test('valida o formulário sem criar linhas pendentes',async({page})=>{
 });
 test('memoriza cor personalizada sem duplicar opção padrão',async({page})=>{
  await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  const c=page.getByLabel('Cor do filamento');
  await c.fill('Turquesa Especial');await c.blur();
@@ -81,6 +87,7 @@ test('modo simples permite informar total e preço por kg sem somar cores',async
  await page.getByTestId('simplePrice').fill('68');
  await expect(page.getByTestId('materialCost')).toContainText('13,60');
  await expect(page.getByTestId('totalUsed')).toContainText('200 g');
+ await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await expect(page.getByTestId('materialCost')).toContainText('15,16');
  await page.getByRole('button',{name:/Usar total de filamento/}).click();
@@ -107,6 +114,7 @@ test('valor inválido do modo simples mostra erro sem resultado fictício',async
 
 test('seleciona, edita e reutiliza impressora na sessão sem alterar filamento',async({page})=>{
  await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
  await expect(page.getByRole('heading',{name:'Impressora'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Filamentos'})).toBeVisible();
  await page.getByRole('button',{name:'+ Nova impressora'}).click();
@@ -119,4 +127,37 @@ test('seleciona, edita e reutiliza impressora na sessão sem alterar filamento',
  await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption('printer-2');
  await expect(page.locator('.printer-summary')).toContainText('100 W');
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
+});
+
+test('jornada progressiva apresenta essencial, avancado preserva dados e ao voltar restaura calculo simples',async({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('button',{name:/Simples/})).toHaveAttribute('aria-pressed','true');
+ await expect(page.getByTestId('simpleQuantity')).toBeVisible();
+ await expect(page.getByTestId('hours')).toBeVisible();
+ await expect(page.getByTestId('quantity')).toBeVisible();
+ await expect(page.getByTestId('salePrice')).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Impressora'})).toHaveCount(0);
+ await expect(page.getByTestId('accessoryPerUnit')).toHaveCount(0);
+ await expect(page.getByTestId('unitProfit')).toBeVisible();
+ await page.getByTestId('simpleQuantity').fill('200');
+ await page.getByTestId('simplePrice').fill('68');
+ await expect(page.getByTestId('materialCost')).toContainText('13,60');
+ await page.getByRole('button',{name:/Avançado/}).click();
+ await expect(page.getByRole('heading',{name:'Impressora'})).toBeVisible();
+ await expect(page.getByTestId('accessoryPerUnit')).toBeVisible();
+ await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await expect(page.getByTestId('materialCost')).toContainText('15,16');
+ await page.getByRole('button',{name:/Simples/}).click();
+ await expect(page.getByTestId('materialCost')).toContainText('13,60');
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('200');
+ await expect(page.getByRole('heading',{name:'Impressora'})).toHaveCount(0);
+});
+test('retorno ao exemplo recupera a entrada simples',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByRole('button',{name:'Restaurar exemplo'}).click();
+ await expect(page.getByRole('button',{name:/Simples/})).toHaveAttribute('aria-pressed','true');
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
+ await expect(page.getByRole('button',{name:/Detalhar por cor/})).toHaveCount(0);
 });
