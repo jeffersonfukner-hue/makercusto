@@ -113,3 +113,11 @@
 .catalog-field-heading{display:flex;justify-content:space-between;align-items:center;min-height:30px}
 .catalog-field .catalog-add{position:static;min-width:40px;min-height:40px;border-radius:9px;touch-action:manipulation}
 .catalog-field input{width:100%;min-width:0;padding:9px 7px;color:#fff;background:#0c1727;border:1px solid #42506a;border-radius:8px;font-size:13px;margin-top:0}
+
+
+/* Em telas pequenas o navegador pode sobrepor a seção de impressora ao formulário ao rolar:
+   manter campos e seus botões + acima das seções anteriores no hit-testing. */
+.materials{position:relative;z-index:3}
+.material-form{position:relative;z-index:4;isolation:isolate}
+.catalog-field{position:relative;z-index:5}
+.catalog-field .catalog-add{position:relative;z-index:6;pointer-events:auto}
