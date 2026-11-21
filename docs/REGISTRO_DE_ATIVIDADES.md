@@ -191,3 +191,13 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** criação de `docs/HOMOLOGACAO_CONCILIACAO_EXCEPCIONAL_GAP01_2026-11-20.md`, total de **38 homologações** com preservação de 37 anteriores, incluindo distinção ocorrência física/baixa, investigação, inventário corretivo auditável, proteção das reservas, estornos e estados de conciliação. Nenhum código, SQL, banco, merge ou deploy alterado.
 - **Pendências:** autorizações e papéis, evidências mínimas, conciliação sem origem comprovada, custo desconhecido, fiscalidade/contabilidade, operações posteriores, RLS e modelo SQL físico. Nenhum teste funcional/RLS executado nesta etapa.
 - **Evidências verificáveis:** commits `e6548b2e` (documento GAP-01) e `ae1b4689` (continuidade); branch `feat/fundacao-makercusto`, PR draft #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit deste registro verificável no histórico Git.
+
+
+## 20/11/2026 — Homologação documental GAP-02 (permissões e autorização)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início e término (Brasília):** não aferidos para a execução. **Duração efetiva:** não mensurada, sem contar intervalo entre mensagens como trabalho.
+- **Atividades efetivamente realizadas:** consulta dos documentos homologados e de continuidade, matriz de papéis e regras de autorização; formalização da aprovação expressa GAP02-A a GAP02-F com a matriz funcional; criação de `docs/HOMOLOGACAO_PERMISSOES_GAP02_2026-11-20.md`; atualização de `docs/CONTINUIDADE.md` e deste registro.
+- **Resultado:** **39 homologações acumuladas**, com as 38 anteriores preservadas. Contrato funcional de papéis por oficina separado de planos e administração global, confirmação ordinária, segregação de exceções e auditoria documentados. Nenhuma implementação ou teste funcional/RLS nesta atividade.
+- **Pendências:** equipes/convites, alçadas/limites de aprovação, RLS físico, evidências mínimas, conciliação sem origem comprovada, fechamento financeiro com custo desconhecido, fiscalidade, SQL físico, fluxo de vendas/devoluções/garantias, depreciação em pausas e tarifas variáveis. Consolidar pendências em pacote final antes da implementação.
+- **Evidências verificáveis:** `6745c2e8` (documento GAP-02), `9961ef62` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit próprio deste registro identificável no histórico GitHub.
+- **Restrições observadas:** sem código, SQL, banco, merge ou deploy.
