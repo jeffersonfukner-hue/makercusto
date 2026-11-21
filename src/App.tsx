@@ -186,7 +186,7 @@ export default function App(){
      </div>
      <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa quando não informado) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>{!session&&<p className="footnote">Sem login: novas impressoras ficam apenas nesta sessão. Entre para salvar no banco.</p>}{session&&<p className="footnote">{cloudBusy?"Carregando sua oficina...":workspaceId?"Oficina conectada ao Supabase.":"Conectando oficina..."}</p>}{accountError&&<p role="alert" className="error">{accountError}</p>}
 
-     <p className="footnote">Valores do exemplo são hipóteses. Cadastros ficam somente nesta sessão; salvamento em conta será definido para os planos pagos.</p>
+     <p className="footnote">Valores de exemplo são estimativas. Cadastros pessoais são salvos no Supabase após login; sem login, ficam só nesta sessão.</p>
     </section>}
     <section className="materials" aria-labelledby="materials-title">
      <div className="materials-heading"><h3 id="materials-title">Filamento</h3>{advanced&&<button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button>}</div>
