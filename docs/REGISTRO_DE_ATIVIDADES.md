@@ -146,3 +146,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** criado `docs/HOMOLOGACAO_RATEIO_P05_2026-11-20.md`, registradas **33 homologações** com 32 anteriores intactas, P06–P09 pendentes; somente documentos da branch, sem código, SQL, banco, merge ou deploy.
 - **Pendências:** P06 precisão/arredondamento; P07 pausas/energia; P08 consumo sem lote; P09 estorno parcial; RLS/permissões, fiscalidade, dados do slicer e modelo físico SQL. **Testes funcionais/RLS não executados** (somente documentação).
 - **Evidências verificáveis:** commit `83168f07` (homologação P05), `9df8031d` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit deste registro encontra-se no histórico da branch.
+
+
+## 20/11/2026 — Homologação documental P06 (precisão financeira)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início e término (Brasília):** não aferidos. **Duração efetiva trabalhada:** não mensurada. Não presumir tempo ativo pelo intervalo entre mensagens.
+- **Atividades efetivamente executadas:** consulta dos documentos atuais de continuidade, P05 e contratos de estoque/custeio; formalização da aprovação expressa P06-A a P06-F como política consolidada; documentação das regras de cálculo decimal, preço por grama/lote, arredondamento half-up, resíduos de centavos, custo unitário e auditoria; atualização de continuidade e do registro oficial.
+- **Resultado:** documento `docs/HOMOLOGACAO_PRECISAO_P06_2026-11-20.md` criado; **34 homologações** acumuladas, preservando 33 anteriores; P07–P09 e fiscal/SQL permaneceram em aberto. Somente arquivos documentais; sem código, banco, SQL, merge ou deploy.
+- **Pendências:** P07 pausas/energia, P08 consumo sem lote, P09 estorno parcial; fiscal/contábil, autorização de equipe/RLS, esquema físico SQL e testes futuros. **Testes funcionais/RLS não executados** nesta atividade.
+- **Evidências verificáveis:** commit `b8c779b8` (homologação P06), `5841d92e` (continuidade); branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. O commit deste registro pode ser conferido no histórico GitHub.
