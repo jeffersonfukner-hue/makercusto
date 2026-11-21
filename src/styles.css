@@ -121,3 +121,11 @@
 .material-form{position:relative;z-index:4;isolation:isolate}
 .catalog-field{position:relative;z-index:5}
 .catalog-field .catalog-add{position:relative;z-index:6;pointer-events:auto}
+
+
+.mobile-catalog-actions{display:none}
+@media(max-width:600px){
+ .catalog-field .catalog-add{display:none}
+ .mobile-catalog-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+ .mobile-catalog-actions button{min-height:46px;flex:1;border:1px solid #437b83;background:#144f58;color:#e0fcf8;border-radius:10px;font-size:13px;font-weight:700}
+}
