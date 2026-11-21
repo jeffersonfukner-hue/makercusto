@@ -397,7 +397,7 @@ test('visitante preserva impressora pessoal e seleção após recarregar',async(
  await page.getByRole('textbox',{name:'Nome da minha impressora'}).fill('Aninha');
  await page.getByRole('button',{name:'Salvar personalização'}).click();
  await expect(dropdown.locator('option',{hasText:'Aninha'})).toHaveCount(1);
- await expect(dropdown.locator('option',{hasText:'Anycubic Kobra X'})).toHaveCount(1);
+ await expect(dropdown.locator('option[value="reference:anycubic-kobra-x"]')).toHaveCount(1);
  await page.reload();await page.getByRole('button',{name:/Avançado/}).click();
  const restored=page.getByRole('combobox',{name:'Selecionar impressora'});
  await expect(restored.locator('option',{hasText:'Aninha'})).toHaveCount(1);

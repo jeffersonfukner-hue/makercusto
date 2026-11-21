@@ -348,3 +348,6 @@
 - Última impressora selecionada preservada por visitante ou conta neste dispositivo; a seleção só é restaurada se o modelo/instância realmente existe. As configurações pessoais do visitante continuam sendo dados deste navegador; não há migração/sincronização automática para Supabase.
 - Restaurar exemplo não exclui cópias pessoais; logout restaura dados locais do visitante, sem trazer impressoras do usuário autenticado. O banco, as tabelas e o motor financeiro não foram alterados.
 - Acrescentados três testes E2E (persistência após reload, preservar cópia ao restaurar, última referência selecionada). CI do commit ainda precisa ser conferido. Sem merge/deploy.
+
+## 21/11/2026 — Correção de teste da persistência visitante
+- CI #44927149461: 62/64 E2E aprovados, duas falhas (mesmo cenário desktop/mobile) por teste que esperava somente um rótulo contendo "Anycubic Kobra X" embora a lista inclua corretamente o exemplo ilustrativo e o modelo global. Alterado teste para validar por ID inequívoco de referência; nenhum comportamento de produção alterado. Necessário reconfirmar CI do HEAD.

@@ -363,3 +363,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades efetivas:** análise dos padrões e do estado da branch; implementação de armazenamento local validado para impressoras de visitantes, preferência de seleção por conta/dispositivo, preservação de cadastros ao restaurar exemplo e três cenários Playwright.
 - **Resultados:** código e documentação preparados na PR #1; testes de CI a verificar. Sem SQL, dados de produção, merge ou deploy.
 - **Evidências:** commits e GitHub Actions associados à PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+
+## 21/11/2026 — Diagnóstico do teste de impressora visitante
+- **Projeto:** MakerCusto. **Horários/duração:** não aferidos; sem inferência de tempo entre mensagens.
+- **Atividade:** verificação dos logs de #44927149461 (62 sucessos, 2 falhas), identificação de seletor E2E não exclusivo e ajuste para ID real do modelo global.
+- **Resultado:** testes versionados na branch; CI seguinte pendente. Sem banco, deploy ou merge.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44927149461.
