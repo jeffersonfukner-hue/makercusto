@@ -120,3 +120,11 @@ Não ampliar escopo sem homologação.
 - [ ] Homologar rascunhos do Compartilhado, comportamento após cancelamento, campos publicáveis, acesso gratuito a S, múltiplas oficinas, custo de lote e curadoria global.
 - [ ] Separar dados operacionais privados de fichas G/S no esquema físico e criar testes RLS de autoria, assinatura e imutabilidade.
 - [ ] Definir chaves estrangeiras para estoque e composição de produtos antes de migrações.
+
+## Homologação adicional das permissões — 20/11/2026
+- [x] Homologar as oito **direções** propostas no relatório `REVISAO_PERMISSOES_E_CADASTROS.md` (base `3878be18`), com registro em `HOMOLOGACAO_PERMISSOES_2026-11-20.md`.
+- [x] Evoluir o modelo lógico com domínios, rascunho/publicação, oficina prevista, referências de estoque/produtos e validações futuras.
+- [ ] Definir retenção, limites, leitura e exportação após cancelamento; destino de publicações já realizadas.
+- [ ] Homologar campos específicos publicáveis de cada cadastro e critérios de moderação das sugestões globais.
+- [ ] Homologar o contrato de multi-oficina/equipes, modelagem relacional final e método complementar de custeio/estoque.
+- [ ] Somente após essas decisões, preparar migrações e testes RLS em projeto de laboratório autorizado. Nenhum banco criado.
