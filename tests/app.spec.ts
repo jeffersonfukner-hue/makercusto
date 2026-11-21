@@ -125,9 +125,9 @@ test('seleciona, edita e reutiliza impressora na sessão sem alterar filamento',
  await page.getByRole('spinbutton',{name:/Potência média estimada/}).fill('100');
  await page.getByRole('button',{name:'Salvar impressora'}).click();
  await expect(page.getByRole('dialog')).toHaveCount(0);
- await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toContainText('Kobra X bancada');
+ await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toContainText('Kobra X Bancada');
  await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption('example');
- await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption({label:'Kobra X bancada'});
+ await page.getByRole('combobox',{name:'Selecionar impressora'}).selectOption({label:'Kobra X Bancada'});
  await expect(page.locator('.printer-summary')).toContainText('100 W');
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
 });
