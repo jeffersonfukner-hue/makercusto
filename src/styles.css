@@ -222,3 +222,24 @@
 .product-list li strong{overflow-wrap:anywhere}
 .product-list li span{font-size:12px;color:#a4c0d0;text-align:right;overflow-wrap:anywhere}
 @media(max-width:600px){.product-save-fields{grid-template-columns:minmax(0,1fr)}.product-list li{align-items:start;flex-direction:column}.product-list li span{text-align:left}}
+
+/* Montagem real de produtos compostos — mobile sem rolagem horizontal global. */
+.assembly-panel{margin-top:22px}
+.assembly-body{display:grid;gap:15px}
+.assembly-parts{display:grid;gap:11px}
+.assembly-part{min-width:0;border:1px solid #38566e;border-radius:12px;padding:12px;background:#0e2132}
+.assembly-part-head{display:flex;justify-content:space-between;align-items:center;gap:9px;margin-bottom:10px}
+.assembly-part-head button:disabled{opacity:.5}
+.assembly-part-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.assembly-part-fields label{min-width:0;display:grid;gap:5px;font-size:12px}
+.assembly-part-fields input{width:100%;min-width:0;min-height:42px;border:1px solid #405a70;border-radius:9px;background:#0c1727;color:#fff;padding:10px}
+.assembly-part-fields input:focus-visible{outline:2px solid #8ed9ff;outline-offset:2px}
+.assembly-body>.primary-action{justify-self:start;min-height:42px}
+.assembly-body button:disabled{opacity:.5;cursor:not-allowed}
+.assembly-list-item{flex-wrap:wrap}
+.assembly-list-item>button{background:transparent;border:0;color:#d8f8ef;cursor:pointer;text-align:left;font-weight:600;min-height:40px}
+.assembly-list-item>button:focus-visible{outline:2px solid #8ed9ff}
+.assembly-details{width:100%;font-size:12px;color:#b6ccdb;border-top:1px solid #38566e;padding-top:10px}
+.assembly-details ol{margin:8px 0;padding-left:22px;display:grid;gap:5px}
+.assembly-details li{display:list-item;border:0;padding:0}
+@media(max-width:600px){.assembly-part-fields{grid-template-columns:minmax(0,1fr)}}
