@@ -397,3 +397,13 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividade:** chamada de `mc_save_calculated_product` sob papel `authenticated` e contexto de membro proprietário, dentro de transação explícita finalizada com `ROLLBACK`.
 - **Resultado comprovado:** RPC retornou UUID do produto de teste; consulta posterior confirmou **zero produtos** com SKU `TESTE-ROLLBACK` e **zero snapshots** com marcador `transaction_rollback`. Não houve inclusão persistente de dados de teste.
 - **Limite:** teste controlado de banco, com contexto JWT simulado pelo administrador; não substitui login real nem validação visual.
+
+
+## 21/11/2026 — Primeiro fluxo de uso real: conjunto lançador de hélices
+- **Projeto:** MakerCusto, desenvolvimento próprio.
+- **Horários de início/término e duração efetiva (Brasília):** não aferidos; nenhuma hora inferida a partir de mensagens.
+- **Autorização:** implementar código e banco para teste real; deploy manual pelo proprietário, sem merge.
+- **Execução:** inspeção de contratos e banco, nova migração RPC para conjunto e componentes, cliente REST, formulário responsivo para peças, composição, pesos opcionais, listagem e feedback, adição de testes Playwright.
+- **Teste verificado:** criação de conjunto com lançador, haste e hélice usando contexto autenticado controlado; leitura por RPC e rollback; consulta posterior confirmou ausência de registros de teste.
+- **Evidências:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 e migração `supabase/migrations/20261121152000_assemblies.sql`, commits da branch.
+- **Pendências:** CI, validação de conta real no Preview, edição de composições, custos e estoque reais. Sem merge/deploy.
