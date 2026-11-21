@@ -1,0 +1,13 @@
+export type SlicerProfile={id:string;brand:string;material:string;name:string;nozzle:string;bed:string;speed:string;fan:string;retraction:string;drying:string;sourceLabel:string;sourceUrl?:string;classification:'fabricante'|'estimativa inicial'};
+export const slicerProfiles:SlicerProfile[]=[
+ {id:'sunlu-pla',brand:'SUNLU',material:'PLA',name:'SUNLU PLA — referência',nozzle:'200–230 °C',bed:'50–65 °C',speed:'50–100 mm/s',fan:'Conforme máquina e peça; comece com refrigeração habitual para PLA',retraction:'Conforme extrusor e slicer',drying:'Consultar embalagem e condições de umidade',sourceLabel:'Fabricante: SUNLU',sourceUrl:'https://store.sunlu.com/products/5kg-large-spool-pla-abs-petg-and-pla-3d-printer-filament',classification:'fabricante'},
+ {id:'masterprint-petg',brand:'Masterprint',material:'PETG',name:'Masterprint PETG — ponto de partida',nozzle:'230–245 °C',bed:'70–85 °C',speed:'40–80 mm/s',fan:'30–60% como ponto de partida; ajustar pontes e detalhes',retraction:'Depende do extrusor; usar perfil da impressora como base',drying:'Seguir embalagem; secar somente com temperatura segura',sourceLabel:'Estimativa MakerCusto — não é ficha oficial da Masterprint',classification:'estimativa inicial'},
+ {id:'generic-pla',brand:'',material:'PLA',name:'PLA — ponto de partida genérico',nozzle:'195–220 °C',bed:'45–65 °C',speed:'40–100 mm/s',fan:'Alto após primeira camada, conforme peça',retraction:'Usar o perfil da impressora',drying:'Se úmido, consultar instruções do fabricante',sourceLabel:'Estimativa MakerCusto',classification:'estimativa inicial'},
+ {id:'generic-petg',brand:'',material:'PETG',name:'PETG — ponto de partida genérico',nozzle:'225–245 °C',bed:'70–85 °C',speed:'35–80 mm/s',fan:'Moderado; ajustar pontes',retraction:'Usar o perfil da impressora',drying:'Consultar fabricante e umidade',sourceLabel:'Estimativa MakerCusto',classification:'estimativa inicial'},
+ {id:'generic-tpu',brand:'',material:'TPU',name:'TPU — ponto de partida genérico',nozzle:'215–235 °C',bed:'40–60 °C',speed:'20–40 mm/s',fan:'Conforme flexibilidade e peça',retraction:'Reduzir conforme extrusor e teste',drying:'Sensível à umidade; consultar fabricante',sourceLabel:'Estimativa MakerCusto',classification:'estimativa inicial'}
+];
+export function chooseSlicerProfile(brand:string,material:string):SlicerProfile|undefined{
+ const normalize=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+ return slicerProfiles.find(p=>normalize(p.brand)===normalize(brand)&&normalize(p.material)===normalize(material))
+ ??slicerProfiles.find(p=>!p.brand&&normalize(p.material)===normalize(material));
+}

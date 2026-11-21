@@ -157,3 +157,10 @@
 .printer-model-search .smart-field input{font-size:14px;padding:10px}
 .printer-model-search{margin-top:-8px}
 .modal-body select:disabled{opacity:.55}
+
+.filament-profile{border:1px solid #38566e;background:#0e2132;border-radius:12px;padding:12px;margin:13px 0 0;display:grid;gap:11px}
+.filament-profile-head{display:flex;justify-content:space-between;align-items:start;gap:8px;flex-wrap:wrap}.filament-profile-head>div{display:grid;gap:4px}.filament-profile-head strong{font-size:13px;color:#d1f5ef}.filament-profile-head small{font-size:11px;color:#96b4c7}
+.filament-profile-data{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.filament-profile-data>div{display:grid;gap:3px;background:#162c3e;border-radius:9px;padding:8px;min-width:0}.filament-profile-data span{font-size:10px;color:#9db4c4}.filament-profile-data strong{font-size:12px;font-weight:600;overflow-wrap:anywhere}
+.filament-profile select,.profile-edit input{width:100%;padding:9px;border:1px solid #405a70;border-radius:8px;background:#0c1727;color:#fff}
+.filament-profile a{color:#89e7d5}.profile-edit{display:grid;gap:10px;border-top:1px solid #345063;padding-top:12px}.profile-edit label{display:grid;gap:5px;font-size:12px;color:#bdd2e0}
+@media(max-width:400px){.filament-profile-data{grid-template-columns:1fr}}

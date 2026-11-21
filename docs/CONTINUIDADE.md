@@ -289,3 +289,8 @@
 - Modais de impressora separam fabricante/modelo com filtro dependente; nome pessoal é editável e cadastros de referência têm ficha técnica somente quando fonte verificável, iniciando Kobra X (Anycubic). Custos pré-populados como hipóteses, sem igualá-los a ficha oficial.
 - Campos de cor, tipo e marca passam a utilizar sugestões locais limitadas a três resultados e mensagens curtas; catálogos de cores/marcas ampliados, preservando normalização e origem.
 - Regressões E2E propostas para filtro do fabricante, cópia com valores iniciais e formato Vermelho Fosco; exigir CI do HEAD antes do Preview. Sem alteração de Supabase, merge ou deploy.
+
+## 21/11/2026 — Lote de perfis básicos de filamento
+- Interface passou a consultar perfis por material/marca sem alterar motor de custo; SUNLU PLA usa referência pública da fabricante; Masterprint PETG e tipos genéricos são estimativas expressamente rotuladas.
+- Adicionado fluxo local de cópia de perfil de slicer com nome e parâmetros próprios; original permanece protegido. Persistência localStorage, não Supabase, nesta versão. Recomendações não são garantia de qualidade em impressoras diferentes.
+- Teste E2E de consulta, cópia e retorno ao original adicionado. Requer CI e homologação, sem merge/deploy.

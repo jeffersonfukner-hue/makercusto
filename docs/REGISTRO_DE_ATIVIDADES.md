@@ -284,3 +284,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividade:** leitura do código e padrões; implementação de componente de sugestões, seleção de fabricantes/modelos, ficha Kobra X e defaults ilustrativos; acréscimo de testes E2E e documentação.
 - **Resultado:** alterações versionadas na branch MakerCusto, sujeitas ao CI. Sem merge/deploy/banco.
 - **Evidência:** commit desta atualização no PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+
+## 21/11/2026 — Perfis técnicos consultáveis de filamento
+- **Início/término e duração:** não aferidos; nenhuma duração de trabalho inferida.
+- **Atividade:** implementação de referências básicas de filamento, painel no cadastro com fonte/estimativa, clonagem local editável, estilos e testes E2E.
+- **Resultado:** código na branch do PR #1, sem alteração do banco ou publicação.
+- **Pendências:** conferir CI, ajustar falhas e homologar UI; eventual persistência remota exigirá contrato e testes RLS.
+- **Evidência:** commit deste lote e PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
