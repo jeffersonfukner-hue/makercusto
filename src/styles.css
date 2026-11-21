@@ -166,3 +166,7 @@
 @media(max-width:400px){.filament-profile-data{grid-template-columns:1fr}}
 
 @media(max-width:600px){.catalog-field .catalog-add{display:none!important}}
+
+/* O painel de perfil deve receber toques acima dos campos catalogáveis no mobile. */
+.filament-profile{position:relative;z-index:12;isolation:isolate}
+.filament-profile-head button{position:relative;z-index:2;min-height:40px;touch-action:manipulation}
