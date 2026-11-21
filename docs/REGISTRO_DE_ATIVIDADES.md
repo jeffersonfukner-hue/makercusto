@@ -88,3 +88,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** criação de `docs/MODELAGEM_PRODUCAO_REAL_E_RATEIO.md` e atualização de continuidade e backlog, preservando as 23 homologações; nenhuma regra nova aprovada nesta etapa.
 - **Pendências:** homologação das decisões operacionais, desenho SQL físico, RLS e testes reais (não executados).
 - **Evidências:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; commit do arquivo de modelagem `8d44aa87eee6fbbabc67310c7beced6cbd19b203`; commits de atualização da branch.
+
+## 20/11/2026 — Revisão crítica de propostas de produção e exemplos 3D
+- **Projeto/cliente:** MakerCusto, desenvolvimento próprio.
+- **Horário de referência:** 21:42 de Brasília, consulta realizada durante esta tarefa; **início e término efetivos:** não aferidos; **duração efetiva:** não aferida (intervalo entre mensagens não contabilizado).
+- **Atividades comprovadas:** leitura do contrato `e479d08e` e homologações existentes; comparação das cinco decisões pendentes (reserva, confirmação parcial, falha, retrabalho e rateio); elaboração de recomendações com exemplos numéricos hipotéticos, condições de teste e limites ainda abertos.
+- **Resultado/evidência:** `docs/PROPOSTAS_HOMOLOGACAO_PRODUCAO_2026-11-20.md` na branch `feat/fundacao-makercusto`, commit `78867d47b74da6f5d4715066093b819a8b3ff63b`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 .
+- **Pendências:** homologação expressa pelo proprietário, especificação física e execução de testes; nada aplicado em código, banco, SQL ou deploy.
