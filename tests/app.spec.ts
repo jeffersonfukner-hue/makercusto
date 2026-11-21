@@ -156,6 +156,7 @@ test('retorno ao exemplo recupera a entrada simples',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByRole('button',{name:/Simples/}).click();
  await page.getByRole('button',{name:'Restaurar exemplo'}).click();
  await expect(page.getByRole('button',{name:/Simples/})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
