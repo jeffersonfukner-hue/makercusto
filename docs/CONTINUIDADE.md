@@ -233,3 +233,8 @@
 - Limites: valores de impressora/energia continuam **exemplos estimados** e devem ser conferidos; não há login, banco, salvamento remoto nem gestão implementada. Modelo de custos existente mantido. Esta fase não representa implantação nem homologação visual.
 - Testes: execução de CI do PR #1 em andamento, run `44857663329` no momento do registro; resultado final deve ser conferido antes de indicar preview. Nenhum deploy/merge autorizado.
 - Próxima etapa: conferir CI completo, corrigir eventuais falhas e solicitar validação visual somente sobre lote estável.
+
+
+### Verificação de CI da UX progressiva — 20/11/2026
+- **PASSOU** para commit `ab67481cc259769d6acab47a8d38fd17cec16a52`: GitHub Actions run `44858012063`, job `136704638275`: verificação de tipos, testes unitários do motor de custos, build e **26 testes E2E desktop/mobile aprovados**. A rodada anterior `44857763701` identificou timeout em um teste mobile (25/26); o cenário foi corrigido no commit `ab67481c` e a execução seguinte concluiu com sucesso.
+- **Ainda não houve deploy nem homologação visual do proprietário**. Fonte oficial de execução: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44858012063
