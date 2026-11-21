@@ -59,3 +59,11 @@ export const updateStoredPrinter=(id:string,workspaceId:string,data:PrinterDraft
 
 export const listCatalog=(kind:string)=>api<CatalogEntry[]>('mc_catalog?kind=eq.'+encodeURIComponent(kind)+'&status=eq.active&select=id,kind,name,manufacturer,scope&order=scope.asc,name.asc');
 export const insertCatalog=(workspaceId:string,authorId:string,kind:string,name:string)=>api<CatalogEntry[]>('mc_catalog?select=id,kind,name,manufacturer,scope','POST',{workspace_id:workspaceId,author_id:authorId,scope:'private',kind,name,status:'active'},'return=representation');
+
+export type ProductRecord = {id:string;workspace_id:string;name:string;sku:string|null;kind:'product'|'component'|'kit';description:string|null;sale_price:number|null;active:boolean;created_at:string};
+export type CalculatedProductDraft = {name:string;sku:string;description:string;kind:'product'|'component'|'kit';salePrice:number;quantity:number;totalCost:number;parameters:Record<string,unknown>};
+export const listProducts=(workspaceId:string)=>api<ProductRecord[]>('mc_products?workspace_id=eq.'+encodeURIComponent(workspaceId)+'&active=eq.true&select=id,workspace_id,name,sku,kind,description,sale_price,active,created_at&order=created_at.desc');
+export const saveCalculatedProduct=(workspaceId:string,draft:CalculatedProductDraft)=>api<string>('rpc/mc_save_calculated_product','POST',{
+ p_workspace_id:workspaceId,p_name:draft.name,p_kind:draft.kind,p_sku:draft.sku,p_description:draft.description,
+ p_sale_price:draft.salePrice,p_quantity:draft.quantity,p_total_cost:draft.totalCost,p_parameters:draft.parameters
+});
