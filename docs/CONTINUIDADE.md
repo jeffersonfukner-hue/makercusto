@@ -321,3 +321,7 @@
 - Modelos globais usam **estimativas financeiras genéricas rotuladas**, não consumo/preço oficial específico. Botão em referência é Clonar e personalizar; edição de uma impressora pessoal continua ação distinta. Cópia preserva padrão na lista.
 - Acrescentadas 6 fichas técnicas parciais com referências de fabricantes: Bambu P1S, Anycubic Kobra 3, Creality Ender-3 V3 SE/V3/V3 KE, Elegoo Neptune 4 Pro. Ausência de campo não implica valor zero; sem inferir potência operacional de fonte com potência nominal.
 - Persistência do perfil pessoal de impressora permanece nas colunas já existentes; especificações estendidas e RLS de clones completos requerem modelagem futura. Sem alteração de SQL, banco, merge ou deploy.
+
+## 21/11/2026 — Correção da regressão de seleção de clonagem
+- CI #44924935524: tipagem, testes unitários e build aprovados; E2E 48 passaram e quatro falharam porque os testes procuravam botão Clonar e personalizar globalmente quando agora o fluxo de impressora e o de filamento oferecem legitimamente o mesmo rótulo. Ajustado o escopo dos seletores Playwright à região de perfil de filamento, sem mudar a interface.
+- Exigir novo CI completo. Não ocorreu alteração de banco, merge ou deploy.

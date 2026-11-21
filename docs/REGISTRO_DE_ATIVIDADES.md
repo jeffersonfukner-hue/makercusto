@@ -327,3 +327,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Trabalho executado:** inspeção da seleção de impressoras, atualização de presets para escolha direta sem cadastro, separação de itens globais/pessoais, proteção da referência ao copiar; documentação de novas fichas técnicas de fabricantes e testes desktop/mobile.
 - **Resultados:** alterações versionadas na branch/PR #1; dependem da execução CI. Nenhum banco, merge ou deploy.
 - **Evidências:** commit correspondente, PR #1 e fontes de fabricante especificadas em src/data/printerPresets.ts.
+
+## 21/11/2026 — Correção de seletores de testes de clonagem
+- **Projeto:** MakerCusto, próprio. **Horários e duração:** não aferidos; não estimar tempo de trabalho pelo intervalo de mensagens.
+- **Atividade:** análise dos logs da execução #44924935524; identificação de colisão em nome de botões de clonagem de cadastros diferentes; especificação de região nos quatro caminhos de teste afetados.
+- **Resultado:** teste ajustado em branch, aguardando confirmação CI. Sem merge, deploy ou banco.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44924935524.

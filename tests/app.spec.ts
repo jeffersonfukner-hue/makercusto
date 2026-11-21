@@ -260,7 +260,7 @@ test('perfil básico de filamento pode ser consultado e clonado sem modificar pa
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Tipo de filamento').fill('PLA');await page.getByLabel('Marca do filamento').fill('SUNLU');
  await expect(page.getByRole('region',{name:'Configuração de filamento para slicer'})).toContainText('200–230 °C');
- const cloneButton=page.getByRole('button',{name:'Clonar e personalizar'});
+ const cloneButton=page.getByRole('region',{name:'Configuração de filamento para slicer'}).getByRole('button',{name:'Clonar e personalizar'});
  const box=await cloneButton.boundingBox();
  const viewport=page.viewportSize();
  expect(box).not.toBeNull();
@@ -297,10 +297,10 @@ test('cópias de perfil não sobrescrevem perfis pessoais com nomes iguais',asyn
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Tipo de filamento').fill('PLA');
  await page.getByLabel('Marca do filamento').fill('SUNLU');
- await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await page.getByRole('region',{name:'Configuração de filamento para slicer'}).getByRole('button',{name:'Clonar e personalizar'}).click();
  await page.getByRole('textbox',{name:'Nome da configuração'}).fill('Meu PLA');
  await page.getByRole('button',{name:'Salvar meu perfil'}).click();
- await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await page.getByRole('region',{name:'Configuração de filamento para slicer'}).getByRole('button',{name:'Clonar e personalizar'}).click();
  await page.getByRole('textbox',{name:'Nome da configuração'}).fill('meu pla');
  await page.getByRole('button',{name:'Salvar meu perfil'}).click();
  await expect(page.getByRole('alert')).toContainText('Já existe um perfil com esse nome');
