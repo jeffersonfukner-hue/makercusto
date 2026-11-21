@@ -41,7 +41,7 @@ Abreviações: **G** catálogo global oficial; **S** ficha compartilhada publica
 | Full ativo | Sim | Nunca | Sim | Sim | Sim, somente cópia publicada | Nunca | Sim, privado por padrão | Nunca |
 | Administrador de catálogo | Sim | Só operação administrativa auditada/versionada | Sim | Conforme função | Conforme função | Só intervenção administrativa com trilha | Sem acesso automático ao privado | Sem acesso automático |
 
-**Regra homologada para S:** Compartilhado e Full podem ler registros publicados, e somente autor/administrador designado altera. **Asteriscos = propostas pendentes**, não permissões homologadas: leitura S no gratuito, privacidade/tempo de retenção de rascunhos e necessidade de consentimento/confirmar publicação no Compartilhado.
+**Atualização de homologação:** Gratuito não lê S inicialmente; rascunhos permanecem privados e publicação exige confirmação. **Em aberto:** duração/limites dos rascunhos e eventual vitrine futura. Compartilhado e Full leem registros publicados e só autor/admin designado edita.
 
 **Regra de segurança recomendada:** O pertence ao dono, nunca se torna público por associação a um catálogo G/S. O usuário não pode forjar `owner_id`, editar `scope` por API ou atualizar origem global. Assinatura ativa deve ser checada no servidor. Administrador de catálogo não recebe acesso irrestrito a custos privados.
 
@@ -65,7 +65,7 @@ Referência descritiva de filamento/insumo → compra privada com preço histór
 ### F-06 — Alteração de plano
 Status de assinatura muda no servidor → revisar direitos para novas ações sem alterar propriedade/visibilidade de itens existentes → privado nunca vira compartilhado → definir acesso de leitura/exportação e destino de publicações antigas após cancelamento antes de lançar pagamento.
 
-## Oito decisões adicionais — PROPOSTAS, NÃO HOMOLOGADAS
+## Oito diretrizes HOMOLOGADAS quanto às recomendações — detalhes pendentes
 
 | Ordem | Tema | Recomendação | Falta decidir |
 | --- | --- | --- | --- |
@@ -93,4 +93,4 @@ Status de assinatura muda no servidor → revisar direitos para novas ações se
 
 Validar as oito decisões pendentes, congelar contratos de entidade, escolher modelagem referencial de estoque/componentes, então desenhar migrações/RLS e testes sem provisionar banco até autorização específica. Não realizar deploy por commit.
 
-**Integridade:** as cinco regras homologadas estão preservadas; nenhum novo item desta revisão deve ser tratado como aprovado automaticamente.
+**Atualização em 20/11/2026:** as oito recomendações foram expressamente homologadas pelo proprietário. Os itens da coluna “Falta decidir” permanecem abertos. Consultar `HOMOLOGACAO_PERMISSOES_2026-11-20.md`; preservar as cinco regras anteriores.
