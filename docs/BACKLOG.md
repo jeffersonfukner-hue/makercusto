@@ -128,3 +128,9 @@ Não ampliar escopo sem homologação.
 - [ ] Homologar campos específicos publicáveis de cada cadastro e critérios de moderação das sugestões globais.
 - [ ] Homologar o contrato de multi-oficina/equipes, modelagem relacional final e método complementar de custeio/estoque.
 - [ ] Somente após essas decisões, preparar migrações e testes RLS em projeto de laboratório autorizado. Nenhum banco criado.
+
+## Contrato detalhado de cadastros — proposta técnica 20/11/2026
+- [x] Propor campos, tipos, relações, ações e validações para referências globais, cópias pessoais, impressoras físicas e filamentos com compras/bobinas em `docs/CONTRATOS_CADASTROS_E_FILAMENTOS.md`.
+- [x] Separar preço e estoque particulares das fichas descritivas compartilháveis, preservando as 13 decisões homologadas.
+- [ ] Homologar tabelas específicas vs catálogo unificado, tarifa elétrica por oficina, fluxo de instância de impressora, normalização por nome/variante, retenção e campos descritivos publicáveis.
+- [ ] Antes de SQL: definir FKs entre oficinas/itens, concorrência, regra de lotes sem nota, custo e política de estoque negativo; preparar testes RLS e de regressão em projeto de laboratório autorizado.

@@ -56,3 +56,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados verificáveis:** `docs/HOMOLOGACAO_PERMISSOES_2026-11-20.md`, `docs/MODELO_DE_DADOS.md`, `docs/REVISAO_PERMISSOES_E_CADASTROS.md` e `docs/CONTINUIDADE.md` na branch `feat/fundacao-makercusto`; commits respectivos consultáveis no histórico do PR #1.
 - **Pendências:** políticas detalhadas ainda não homologadas, esquema SQL físico, testes RLS e homologação visual; nenhum teste de código executado nesta atividade.
 - **Restrições:** sem código, banco, migração, merge, deploy ou produção.
+
+## 20/11/2026 — Especificação de contratos de catálogos, impressoras e filamentos
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horário de referência observado:** 21:19 de Brasília, consulta durante a atividade; início/término efetivos e duração produtiva não aferidos.
+- **Atividades efetivamente executadas:** releitura dos documentos da branch; análise das 13 regras homologadas; definição de proposta de campos, relacionamentos, privacidade, validações e fluxos de cópia, impressora física, lote de filamento e histórico de custo; documentação de testes futuros e pendências.
+- **Resultado:** contrato técnico documental e atualizações de continuidade/backlog, sem alterar código ou banco.
+- **Evidências:** PR #1 `https://github.com/jeffersonfukner-hue/makercusto/pull/1`; histórico de commits da branch `feat/fundacao-makercusto`.
+- **Pendências:** homologação das novas propostas, escolha da modelagem física e execução futura de testes (não realizados nesta etapa). **Tempo efetivo:** não aferido, sem estimar o intervalo entre mensagens.

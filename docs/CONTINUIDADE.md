@@ -99,3 +99,10 @@
 - **Abertos, não homologados por consequência:** retenção e limites de rascunhos; leitura/exportação/prazos após downgrade; lista por entidade de campos publicáveis; alertas de versões; vitrine futura; equipes/convites e políticas multi-oficina; custeios alternativos/fiscais; critérios de moderação.
 - Novo refinamento lógico acrescentado a `docs/MODELO_DE_DADOS.md`: classes de domínio, IDs/cópias, proposta de oficina e estoque com FKs, snapshots e casos de teste RLS **não executados**.
 - Exclusivamente documentação no GitHub, sem SQL/migração, código, deploy, merge nem produção.
+
+## Contratos detalhados de catálogos e materiais — 20/11/2026
+- Fonte: `docs/CONTRATOS_CADASTROS_E_FILAMENTOS.md`. Revisadas regras dos documentos atuais; as **13 homologações continuam inalteradas**.
+- Novo contrato **proposto, não homologado** para entidades de tipo/cor/marca/modelo e especificação de filamento; fichas G/S/P e cópias independentes, instância física de impressora, tarifa de energia por oficina, compras e bobinas/lotes privados, snapshots e operações/validações.
+- Riscos explicitados: `scope` não se aplica a compras/estoque; `workspace_id` deve restringir FKs; modelos globais não contêm preço pessoal; publicação depende de lista branca de campos; nenhuma interface ou política RLS foi implementada.
+- Pendências: aprovar escolha de tabelas específicas vs catálogo unificado, fluxo de cópia/instância, regras de rascunho no Compartilhado, tarifa por período, preço sem lote e inventário.
+- Nesta rodada, **somente documentos** na branch `feat/fundacao-makercusto`; sem alteração de aplicação, banco, merge ou deploy.
