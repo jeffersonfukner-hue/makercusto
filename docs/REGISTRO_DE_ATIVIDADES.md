@@ -224,3 +224,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** SQL gerado como artefato para instalação exclusiva em projeto MakerCusto novo. **Não executado no Supabase; banco ainda não criado**. Nenhum dado do Kit Casa Pré LAB foi alterado. Fluxos de confirmação/estorno e integração visual continuam pendentes de desenvolvimento e testes.
 - **Horário/duração:** início e término não aferidos, tempo efetivo não comprovado.
 - **Pendência:** criar projeto Supabase específico, confirmar custo zero, aplicar SQL, validar esquema e integrar frontend com modais. Sem merge/deploy.
+
+## 21/11/2026 — Projeto Supabase e fundação SQL instalada
+- **Projeto/cliente:** MakerCusto, desenvolvimento próprio; organização Supabase Flipzie Desenvolvimento de Sistemas.
+- **Horários e duração efetiva:** início/término não aferidos; duração não mensurada. Não se considera o intervalo de mensagens como trabalho comprovado.
+- **Atividades executadas:** inspeção do SQL de fundação; consulta de custo de criação (0/mês); confirmação de custo zero; criação do projeto isolado MakerCusto (`bxtbfdddcxbyaomydgxn`, região São Paulo); espera/conferência de status `ACTIVE_HEALTHY`; aplicação da migração `makercusto_foundation_v1`; consultas SQL de validação de objetos, RLS, integridade e catálogo; versionamento da migração e atualização da documentação.
+- **Resultados comprovados:** migração aplicada, 33 tabelas RLS, 68 políticas, 89 FKs, 19 registros descritivos globais, modelo Kobra X cadastrado, sem oficinas e sem movimentos. Sem merge/deploy. Nenhuma alteração no Kit Casa Pré LAB.
+- **Pendências:** integração com autenticação e interface, modais de cadastros, funcionalidades operacionais transacionais, testes E2E por usuário, e homologação visual em Cloudflare Preview somente em etapa autorizada.
+- **Evidências:** projeto `bxtbfdddcxbyaomydgxn`, migração `makercusto_foundation_v1` confirmada via `supabase_migrations.schema_migrations`, SQL `supabase/migrations/20261121015442_makercusto_foundation_v1.sql` commit `13a7c897`, continuidade commit `02e920f9`.
