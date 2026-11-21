@@ -122,3 +122,61 @@ Pendente: política de privacidade de rascunhos próprios de assinantes Comparti
 5. Quando autorizado, aplicar migrações e consultar tabelas/políticas; integrar repositórios de dados no frontend, mantendo motor matemático independente.
 
 **Neste documento não existe SQL executado, esquema provisionado, autenticação configurada ou deploy.**
+
+## 8. Evolução lógica após homologação de oito diretrizes (20/11/2026)
+
+Ver `HOMOLOGACAO_PERMISSOES_2026-11-20.md` para regras homologadas e limites ainda abertos. **Este capítulo é proposta de modelagem, não esquema físico homologado ou SQL.**
+
+### 8.1 Fronteiras de autorização
+
+| Domínio | Exemplo | Política necessária |
+| --- | --- | --- |
+| Catálogo oficial global | tipo/cor/marca/modelo de impressora | Somente leitura por usuários; administração versiona |
+| Fichas descritivas copiáveis | definição de filamento, ficha de ferramenta, descrição de produto | Origem/versão; rascunho privado ou publicação de cópia, conforme plano |
+| Instâncias físicas e dados operacionais | impressora própria, compra, fornecedor, bobina, estoque, produção, custo | Pertencem à oficina/conta; nunca ficam públicos ao publicar a ficha |
+| Identidade e assinatura | perfil, plano, validade | Servidor controla elegibilidade; cliente não escolhe privilégios |
+
+As fichas compartilhadas devem apresentar **projeção explícita de campos descritivos permitidos**, nunca `SELECT *` de dados pessoais/operacionais. A lista por entidade ainda depende de decisão.
+
+### 8.2 Contrato proposto para referências copiáveis
+
+- `catalog_entries` (ou tabelas separadas por tipo): `id`, `kind`, `name`, `normalized_name`, `scope` (`global/private/shared`), `owner_id`, `source_id`, `source_version`, `version`, `status` (`draft/published/archived`), `created_at`, `updated_at`.
+- `source_id` é vínculo de proveniência, **não** autorização para editar o original. Cópias têm novo ID e não são atualizadas automaticamente pela origem.
+- `draft` sempre privado, independente do plano, até publicação explícita. No Full, compartilhar exige **nova cópia publicada**, não alteração de `scope` do original privado. No Compartilhado, política de tempo/quantidade de rascunhos fica em aberto.
+- Criar operações específicas `copyReference`, `editOwnCopy`, `publishCopy`, `suggestGlobal` e `adminVersionGlobal`; não aceitar alteração genérica de `owner_id`/`scope`/`source_id` fornecida pelo navegador.
+- A escolha entre uma tabela tipada e tabelas específicas permanece **não homologada**. Garantir integridade por FKs reais e validação por categoria.
+
+### 8.3 Oficina como fronteira operacional proposta
+
+- Reservar `workspaces(id, owner_id, name)` e `workspace_id` em impressoras físicas, fornecedores, compras, lotes, estoque, produtos, produção e custos.
+- No MVP individual, autorizar por titularidade da oficina. **Não** inferir colaboradores/convites/compartilhamento de saldo; essas políticas permanecem abertas.
+- `user_preferences(user_id, last_printer_id)` deve conferir se a impressora selecionada é do próprio usuário/oficina; visitantes usam armazenamento local do dispositivo.
+- Cadastros descritivos compartilháveis **não herdam** acesso operacional da oficina.
+
+### 8.4 Integridade referencial e estoque — proposta para evitar refatoração
+
+- Preferir `inventory_items(id, workspace_id, kind, unit, reference_id?)` como identidade do item estocável; `material_lots(id, inventory_item_id, purchase_line_id, ...)`, `stock_movements(id, workspace_id, inventory_item_id, lot_id?, location_id?, quantity_delta, source_event_id, reversal_of_id?, created_at)`.
+- `source_event_id` permite idempotência para impedir baixa duplicada por reenvio. Correções por estorno/movimentação inversa, sem alteração destrutiva. O saldo é projeção dos movimentos.
+- Alternativa de entidades distintas para referências de insumos continua tecnicamente possível: avaliar antes das migrações. Não usar `item_ref` polimórfico sem FK ou verificação equivalente.
+- `product_components(parent_product_id, child_product_id?, inventory_item_id?, tool_id?, service_id?, quantity, unit)` deve restringir exatamente um alvo e impedir ciclos em kits.
+- Produção pode ter diversos produtos por execução; `production_consumption` aponta lote utilizado, enquanto `cost_snapshots`/`cost_snapshot_lines` congelam quantidade, preço, moeda, fórmula e fonte para impedir recálculo histórico.
+
+### 8.5 Alteração de plano — comportamento aprovado versus aberto
+
+A mudança de plano **não** altera automaticamente `owner_id` nem `scope` de registros. Novas operações exclusivas de assinatura não ativa são bloqueadas por controle de servidor; dados permanecem preservados e privados.
+
+**Não foram definidos:** prazo de retenção, leitura/exportação após expiração, disponibilidade de publicações anteriores, reativação, períodos de carência e cobrança. Esses pontos exigem homologação antes de política efetiva no banco.
+
+### 8.6 Cenários para futura validação de RLS (ainda não executados)
+
+1. Qualquer usuário tenta alterar original global → negado; cópia nova com ID, origem e nome próprio → permitida conforme plano/destino.
+2. Compartilhado salva rascunho → terceiros não podem ler; publica após confirmação → assinantes Compartilhado/Full podem ler descritivos.
+3. Full publica → novo compartilhado acessível; privado original permanece inacessível aos demais.
+4. Gratuito tenta acessar compartilhados → negado inicialmente; catálogo global oficial permanece legível.
+5. Publicar definição de filamento não torna visíveis preço da compra, fornecedor, lote, estoque, snapshot nem cadastro operacional da oficina.
+6. Assinatura expira → novas ações pagas bloqueadas sem trocar a visibilidade/posse dos registros existentes.
+7. Consumo de mesmo evento de produção repetido → um único movimento efetivo; retificação por estorno.
+8. Compra de novo lote com preço distinto → snapshots antigos não mudam.
+9. Impedir atualização de `owner_id`, troca forjada de `workspace_id`, criação de ciclos na composição e acesso a oficinas alheias.
+
+**Bloqueadores para SQL:** resolver escolha de modelo físico e FKs, campos publicáveis, retenção/acesso após downgrade, limites de rascunhos, multi-oficina e políticas complementares de custo/estoque. Não provisionar banco até autorização explícita.
