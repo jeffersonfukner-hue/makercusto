@@ -105,3 +105,5 @@
 .modal-actions button.primary-action{background:#0f8e84;border-color:#0f8e84;color:#fff;font-weight:700}
 .modal-actions button:disabled{opacity:.55}
 @media(max-width:600px){.brand{flex-wrap:wrap;padding:12px 0}.phase{display:none}.account-button{margin-left:auto}.modal-window{max-height:94dvh}.modal-body{padding:15px}.modal-header{padding:15px}}
+
+.compact-inputs label{position:relative}.catalog-add{position:absolute;right:0;top:0;border:1px solid #3b7f80;border-radius:6px;background:#0a605e;color:#fff;font-weight:800;min-width:28px;min-height:25px;font-size:16px;line-height:1}.compact-inputs label input{margin-top:8px}
