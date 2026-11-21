@@ -117,3 +117,9 @@
 - Registro normativo: `docs/HOMOLOGACAO_ESTOQUE_2026-11-20.md`: identidade estocável por oficina, bloqueio de saldo negativo por padrão, baixa somente na confirmação de produção, kits com composição versionada, rateio explícito em mesas mistas e estornos auditáveis. Total acumulado: **23 homologações (5+8+4+6)**.
 - A `docs/REFINAMENTO_ESTOQUE_PRODUCAO.md` detalha PROPOSTAS de entidades, transações, conciliação, auditoria, RLS e testes não executados. Não impor fórmulas de rateio, exceções negativas, reservas, política de falhas ou SQL por inferência.
 - Seguimos somente com documentação na branch; sem código, SQL, banco, merge ou deploy.
+
+## Modelagem detalhada de produção real, reservas e rateio — 20/11/2026
+- Base revisada: commit `ca53d01c2a987af06bdf26e76e39fe871d6fa83d`; relatório em `docs/MODELAGEM_PRODUCAO_REAL_E_RATEIO.md`.
+- **23 homologações anteriores preservadas**. Novas hipóteses NÃO homologadas: reservas como compromisso separado do movimento físico, cálculo de disponível, confirmação incremental, tratamento de falha com consumo sem saída boa, retrabalho vinculado, pools de custo e bases de rateio.
+- Propostas descrevem fluxos, entidades, invariantes de idempotência, conciliação de custos, estoque por oficina e casos de testes futuros. Fórmula específica de rateio **não foi homologada**; não definir automaticamente perda/falha como custo por peça boa.
+- Antes de SQL: decidir política de reserva, baixa parcial, falhas, retrabalho, rateio, pausas e precisão monetária. Sem código, banco, migrações, merge ou deploy.
