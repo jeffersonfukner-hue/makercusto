@@ -128,3 +128,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** `docs/HOMOLOGACAO_FALHAS_P03_2026-11-20.md` criado; total de **31 homologações**, preservando as 30 anteriores. Nenhum código, SQL, banco, merge ou deploy.
 - **Pendências:** P04 a P06 e P07 a P09, valorização de recuperáveis, regras fiscais, permissões, RLS e modelo SQL físico. Testes funcionais/RLS não executados nesta etapa documental.
 - **Evidências verificáveis:** commits `f7b530a9` (homologação P03) e `e48a1b8d` (continuidade); branch `feat/fundacao-makercusto`; PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. O commit da atualização deste próprio registro está disponível no histórico do GitHub.
+
+
+## 20/11/2026 — Homologação documental P04 (retrabalho e recuperação)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; intervalo entre mensagens não corresponde a tempo comprovado.
+- **Atividades efetivamente realizadas:** leitura de continuidade, homologações de produção, P01/P02/P03 e contrato lógico de retrabalho, inspeção da branch, criação do registro normativo P04-A a P04-F, atualização da continuidade e do registro cronológico.
+- **Resultados:** `docs/HOMOLOGACAO_RETRABALHO_P04_2026-11-20.md` criado e P04 homologada como uma única política; **32 homologações** acumuladas, preservando 31 anteriores; sem código, SQL, banco, merge ou deploy.
+- **Pendências:** P05 a P09, critérios fiscal/contábil, garantia/pós-venda, valorização de materiais recuperáveis, permissões/RLS, SQL físico; testes funcionais não executados por ser atividade exclusivamente documental.
+- **Evidências verificáveis:** commits `2e25553e` (homologação P04) e `b82d5935` (continuidade); branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit próprio deste registro consta no histórico Git.
