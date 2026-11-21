@@ -198,6 +198,7 @@ export default function App(){
          <div className="simple-field-combo"><input data-testid="simplePrice" type="number" min="0" step="any" value={display(simple.price)} onChange={e=>setSimple(prev=>({...prev,price:numeric(e.target.value)}))}/><select aria-label="Unidade do preço do filamento" value={simple.priceUnit} onChange={e=>setSimple(prev=>({...prev,priceUnit:e.target.value as Unit}))}><option value="kg">R$/kg</option><option value="g">R$/g</option></select></div>
        </label>
      </div>}
+     {advanced&&details&&<div className="mobile-catalog-actions" aria-label="Cadastros rápidos"><button type="button" aria-label="Cadastrar tipo" onClick={()=>setCatalogModal('tipo')}>+ Tipo</button><button type="button" aria-label="Cadastrar cor" onClick={()=>setCatalogModal('cor')}>+ Cor</button><button type="button" aria-label="Cadastrar marca" onClick={()=>setCatalogModal('marca')}>+ Marca</button></div>}
      <div className="material-summary">
        <div><small>Total utilizado</small><strong data-testid="totalUsed">{result?count(used)+' g':'—'}</strong></div>
        <div><small>Preço médio ponderado</small><strong data-testid="averagePrice">{result?money(average)+'/kg':'—'}</strong></div>
