@@ -204,3 +204,21 @@
 .profile-head-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
 .profile-head-actions .details-button{max-width:100%;white-space:normal}
 @media(max-width:600px){.profile-head-actions{justify-content:stretch;width:100%}.profile-head-actions .details-button{flex:1 1 155px}}
+
+/* Cadastro persistente de produtos — dentro do mesmo padrão visual da calculadora. */
+.product-save-panel{margin-top:22px}
+.product-save-content{display:grid;gap:14px}
+.product-save-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.product-save-fields label{display:grid;gap:5px;min-width:0;font-size:12px}
+.product-save-fields input,.product-save-fields select{width:100%;min-width:0;min-height:42px;border-radius:9px;border:1px solid #405a70;background:#0c1727;color:#fff;padding:10px}
+.product-save-fields input:focus-visible,.product-save-fields select:focus-visible{outline:2px solid #8ed9ff;outline-offset:2px}
+.product-save-content .primary-action{justify-self:start;min-height:42px}
+.product-save-content button:disabled{opacity:.55;cursor:not-allowed}
+.product-success{color:#9df7d7;font-size:13px}
+.product-list{border-top:1px solid #345063;padding-top:12px}
+.product-list h3{margin:0 0 9px}
+.product-list ul{list-style:none;margin:0;padding:0;display:grid;gap:7px;max-height:270px;overflow:auto}
+.product-list li{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid #38566e;border-radius:9px;padding:10px;min-width:0}
+.product-list li strong{overflow-wrap:anywhere}
+.product-list li span{font-size:12px;color:#a4c0d0;text-align:right;overflow-wrap:anywhere}
+@media(max-width:600px){.product-save-fields{grid-template-columns:minmax(0,1fr)}.product-list li{align-items:start;flex-direction:column}.product-list li span{text-align:left}}
