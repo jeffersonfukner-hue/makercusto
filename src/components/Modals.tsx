@@ -50,3 +50,18 @@ export function PrinterModal({models,initial,onClose,onSave}:{models:CatalogEntr
  </form>
  </Modal>;
 }
+
+export function CatalogModal({title,onClose,onSave}:{title:string;onClose:()=>void;onSave:(name:string)=>Promise<void>}){
+ const [name,setName]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const submit=async(e:FormEvent)=>{e.preventDefault();if(!name.trim()){setError('Informe um nome.');return;}setBusy(true);setError('');
+  try{await onSave(name.trim());onClose();}catch(err){setError((err as Error).message);}finally{setBusy(false);}
+ };
+ return <Modal title={'Cadastrar '+title.toLowerCase()} onClose={onClose}>
+  <form className="modal-body" onSubmit={submit}>
+   <label>Nome<input required autoFocus value={name} onChange={e=>setName(e.target.value)} aria-label={'Nome de '+title.toLowerCase()}/></label>
+   <p>Seu cadastro pessoal não altera o catálogo oficial.</p>
+   {error&&<p role="alert" className="error">{error}</p>}
+   <div className="modal-actions"><button type="submit" className="primary-action" disabled={busy}>{busy?'Salvando...':'Salvar cadastro'}</button><button type="button" onClick={onClose}>Cancelar</button></div>
+  </form>
+ </Modal>;
+}
