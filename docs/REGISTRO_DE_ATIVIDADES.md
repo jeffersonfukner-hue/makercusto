@@ -210,3 +210,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** alterações no PR #1 draft, branch `feat/fundacao-makercusto`, sem modificar lógica matemática do motor; modo simples independente do detalhado, valores preservados entre modos. Nenhum merge/deploy. Testes Playwright adicionados, **não afirmar aprovação até conferir o CI correspondente**.
 - **Pendências:** CI de tipagem/unitários/build/E2E em andamento (run inicial `44857663329`), eventuais ajustes e validação visual do proprietário. Valores exemplo não são medição; gestão/contas/banco não implementados.
 - **Evidências verificáveis:** commits `12f45df5` (UI), `e70b78e8` (CSS), `637aa6a7` / `7d8d33ec` (E2E), `2ce6f92b` (continuidade), PR https://github.com/jeffersonfukner-hue/makercusto/pull/1. Este registro tem commit verificável no histórico.
+
+
+## 20/11/2026 — Verificação final do CI da UX Simples/Avançado
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio. **Início/término (Brasília):** não aferidos; **duração efetiva:** não mensurada.
+- **Atividades executadas:** leitura dos resultados de execução CI, investigação de erro TS e timeout Playwright mobile, correção do componente (`3aa98612`) e ajuste do cenário de restauração (`ab67481c`), reexecução e conferência do resultado final.
+- **Resultado comprovado:** GitHub Actions run **44858012063** (job **136704638275**) concluído **success** no commit de código/testes **ab67481cc259769d6acab47a8d38fd17cec16a52**: tipos, testes do motor de custos, build e **26 testes E2E desktop/mobile passaram**. Rodada anterior `44857763701` falhou com 25/26 E2E e foi corrigida.
+- **Pendências:** homologação visual pelo proprietário e deploy manual apenas com autorização; funções de banco/gestão continuam futuras. Não realizar merge ou deploy.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44858012063 e commits `3aa98612`/`ab67481c`, PR #1 draft.
