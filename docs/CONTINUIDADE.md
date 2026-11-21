@@ -307,3 +307,7 @@
 - Perfis de filamento pessoais: impedir nomes equivalentes duplicados dentro da mesma referência, preservando cópia anterior sem sobrescrita.
 - Referências oficiais incrementais: adicionados volumes de impressão Bambu Lab A1 mini (180³ mm), A1 (256³ mm) e Prusa MK4S (250×210×220 mm; bico 0,4 mm), com links de fabricante. Campos sem evidência seguem ausentes na ficha em vez de inventados; estimativas de custos mantidas separadamente.
 - Evidências técnicas: https://blog.bambulab.com/best-3d-printer-for-beginners/ ; https://www.prusa3d.com/product/original-prusa-mk4s-3d-printer/ . CI do novo HEAD será conferido. Sem alterações no banco, merge ou deploy.
+
+## 21/11/2026 — Acessibilidade do componente transversal de sugestões
+- Campos inteligentes passam a expor combobox/listbox com descrições ARIA, até três sugestões, navegação por setas, Enter para selecionar, Escape para fechar, feedback de foco/seleção e preservação do valor digitado ao fechar. Regra reaproveitada automaticamente onde SmartField já é utilizado.
+- Foram adicionados testes Playwright para teclado/limite de sugestões; verificar CI do HEAD antes de homologação. Sem banco, merge ou deploy.

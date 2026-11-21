@@ -307,3 +307,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades realizadas:** revisão de componentes existentes, ajuste de escolha de modelo pela pesquisa, proteção de nome duplicado em clones de filamento, ampliação de fichas de 3 impressoras com referências de fabricantes e inclusão de cenários Playwright.
 - **Resultados:** mudanças na branch em PR #1, pendentes de CI/homologação visual; nenhuma alteração de banco, merge ou deploy.
 - **Evidências:** commits e Actions vinculados à PR #1; fontes oficiais documentadas na continuidade.
+
+## 21/11/2026 — Autocomplete acessível e testes de teclado
+- **Projeto:** MakerCusto (próprio).
+- **Início/término e duração efetiva:** não aferidos; não inferir horas do intervalo entre mensagens.
+- **Atividades:** revisão do SmartField, implementação de navegação por teclado/ARIA, estilo de opção selecionada e dois testes E2E.
+- **Resultado:** alteração versionada em branch, dependente da execução de CI correspondente.
+- **Pendências:** confirmar CI e validação visual móvel.
+- **Evidências:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 e commit associado.

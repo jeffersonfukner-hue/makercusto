@@ -305,3 +305,24 @@ test('cópias de perfil não sobrescrevem perfis pessoais com nomes iguais',asyn
  await page.getByRole('button',{name:'Salvar meu perfil'}).click();
  await expect(page.getByRole('alert')).toContainText('Já existe um perfil com esse nome');
 });
+
+test('autocomplete aceita teclado e mantém no máximo três sugestões',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ const input=page.getByRole('combobox',{name:'Cor do filamento'});
+ await input.fill('ver');
+ await expect(page.getByRole('listbox',{name:'Sugestões para Cor do filamento'}).getByRole('option')).toHaveCount(3);
+ await input.press('ArrowDown');
+ await expect(page.getByRole('option',{selected:true})).toHaveCount(1);
+ await input.press('Enter');
+ await expect(input).toHaveValue(/Verde|Vermelho/);
+ await expect(page.getByRole('listbox',{name:'Sugestões para Cor do filamento'})).toHaveCount(0);
+});
+test('Escape fecha sugestões sem substituir o que usuário digitou',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ const input=page.getByRole('combobox',{name:'Cor do filamento'});
+ await input.fill('ver');
+ await expect(page.getByRole('listbox',{name:'Sugestões para Cor do filamento'})).toBeVisible();
+ await input.press('Escape');
+ await expect(input).toHaveValue('ver');
+ await expect(page.getByRole('listbox',{name:'Sugestões para Cor do filamento'})).toHaveCount(0);
+});
