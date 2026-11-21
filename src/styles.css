@@ -181,3 +181,8 @@
  .compact-inputs .catalog-field{position:static;z-index:auto}
  .filament-profile{position:relative;z-index:20;margin-top:22px}
 }
+
+/* Bloco do slicer fora da seção de entradas, sem sobreposição de camadas. */
+.panel>.filament-profile{position:relative;z-index:10;min-width:0;max-width:100%;width:100%;margin:0 0 20px}
+.filament-profile-head,.filament-profile-data,.profile-edit{min-width:0}
+@media(max-width:600px){.panel>.filament-profile{margin:0 0 20px}}

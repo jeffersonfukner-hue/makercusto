@@ -260,11 +260,7 @@ test('perfil básico de filamento pode ser consultado e clonado sem modificar pa
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Tipo de filamento').fill('PLA');await page.getByLabel('Marca do filamento').fill('SUNLU');
  await expect(page.getByRole('region',{name:'Configuração de filamento para slicer'})).toContainText('200–230 °C');
- console.log('PERFIL-MOBILE-ANTES-CLIQUE');
- const btn=page.getByRole('button',{name:'Clonar e personalizar'});
- const rect=await btn.evaluate(el=>{const r=el.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {x:r.x,y:r.y,w:r.width,h:r.height,hitTag:hit?.tagName,hitClass:hit?.getAttribute('class'),hitText:hit?.textContent?.slice(0,80)};});
- console.log('PERFIL-MOBILE-GEOMETRIA '+JSON.stringify(rect));
- await btn.click({timeout:8000});
+ await page.getByRole('button',{name:'Clonar e personalizar'}).click();
  await page.getByRole('textbox',{name:'Nome da configuração'}).fill('pla sunlu aninha');
  await page.getByRole('textbox',{name:'Bico do perfil'}).fill('210 °C');
  await page.getByRole('button',{name:'Salvar meu perfil'}).click();

@@ -227,7 +227,7 @@ export default function App(){
        <div className="form-actions"><button type="button" className="primary-action" onClick={save}>{editId?'Salvar alteração':'Adicionar à tabela'}</button>{editId&&<button type="button" onClick={()=>{setEditId(null);setDraft(newDraft());setErrorDraft('');}}>Cancelar edição</button>}</div>
        {errorDraft&&<p className="error" role="alert">{errorDraft}</p>}
       </div>
-      <FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>
+
       <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento / ações</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Usado</th><th>Custo</th></tr></thead><tbody>
         {detailedMaterials.map(item=>{
          const pkgQty=item.packageQuantity??1,pkgUnit=item.packageUnit??'kg';
@@ -238,6 +238,7 @@ export default function App(){
       <p className="footnote">A tabela usa quantidade adquirida e preço da embalagem para calcular o preço por grama. Informe purga apenas se ela não estiver incluída no peso usado.</p>
      </div>}
     </section>
+    {advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
     <div className="fields">{fields.filter(field=>advanced||['hours','quantity','salePrice'].includes(field.key)).map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/></label>)}</div>
     <p className="footnote">{advanced?"Tarifa, potência e vida útil são hipóteses editáveis, não medições oficiais.":"Energia, desgaste da impressora e outros custos usam valores de exemplo. Confira-os no Avançado antes de definir seu preço final."}</p>
    </section>
