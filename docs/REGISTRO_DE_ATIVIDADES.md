@@ -182,3 +182,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** criado `docs/HOMOLOGACAO_ESTORNOS_P09_2026-11-20.md`; registrados **37 conjuntos homologados**, com 36 anteriores preservados. Estorno parcial referenciado, distinção entre compensação documental e retorno físico, reclassificação de resultados, compensação de custos originais, idempotência e auditabilidade.
 - **Pendências:** conciliação excepcional de estoque/quantidade efetiva sem saldo ou origem, regras de autorização/permissões/RLS, peças vendidas/devolvidas, fiscalidade, custo desconhecido, depreciação em pausas, tarifas variáveis e esquema SQL físico. Testes funcionais/RLS não realizados; nenhuma alteração em código, SQL, banco, merge ou deploy.
 - **Evidências verificáveis:** commit `43feb126` (homologação P09), `92806f9d` (continuidade); branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit deste registro verificável no histórico da branch.
+
+
+## 20/11/2026 — Homologação documental GAP-01 (conciliação excepcional de estoque)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Início e término (horário de Brasília):** não aferidos para esta atividade. **Duração efetiva:** não mensurada; não contabilizar intervalo entre mensagens como tempo trabalhado.
+- **Atividades efetivamente executadas:** consulta em leitura de `docs/CONTINUIDADE.md`, homologações P01/P02/P03/P08/P09 e refinamento de estoque; formalização da aprovação expressa GAP01-A a GAP01-F como política consolidada; criação de documento normativo, atualização de continuidade e deste registro; conferência documental posterior.
+- **Resultados:** criação de `docs/HOMOLOGACAO_CONCILIACAO_EXCEPCIONAL_GAP01_2026-11-20.md`, total de **38 homologações** com preservação de 37 anteriores, incluindo distinção ocorrência física/baixa, investigação, inventário corretivo auditável, proteção das reservas, estornos e estados de conciliação. Nenhum código, SQL, banco, merge ou deploy alterado.
+- **Pendências:** autorizações e papéis, evidências mínimas, conciliação sem origem comprovada, custo desconhecido, fiscalidade/contabilidade, operações posteriores, RLS e modelo SQL físico. Nenhum teste funcional/RLS executado nesta etapa.
+- **Evidências verificáveis:** commits `e6548b2e` (documento GAP-01) e `ae1b4689` (continuidade); branch `feat/fundacao-makercusto`, PR draft #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit deste registro verificável no histórico Git.
