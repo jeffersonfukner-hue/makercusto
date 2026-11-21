@@ -212,3 +212,19 @@ test('login, oficina e cadastro persistente consomem API autenticada',async({pag
  await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toContainText('Anycubic Kobra X');
  expect(persisted).toBe(true);
 });
+
+test('modelos populares estão disponíveis sem retorno do catálogo remoto e custos não herdam preço fictício',async({page})=>{
+ await page.route('https://bxtbfdddcxbyaomydgxn.supabase.co/rest/v1/mc_catalog?**',route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Nova impressora/}).click();
+ const models=page.getByRole('combobox',{name:'Modelo da impressora'});
+ await expect(models.locator('option',{hasText:'Bambu Lab A1 mini'})).toHaveCount(1);
+ await expect(models.locator('option',{hasText:'Anycubic Kobra X'})).toHaveCount(1);
+ await expect(models.locator('option',{hasText:'Creality Ender-3 V3 SE'})).toHaveCount(1);
+ await models.selectOption('preset:anycubic-kobra-x');
+ await expect(page.getByRole('textbox',{name:'Nome da minha impressora'})).toHaveValue('Anycubic Kobra X');
+ await page.getByRole('button',{name:/Avançado — custos/}).click();
+ await expect(page.getByText('Conferência do custo por hora')).toBeVisible();
+ await page.getByRole('button',{name:'Salvar impressora'}).click();
+ await expect(page.locator('.printer-summary')).toContainText('R$ 0,00');
+});

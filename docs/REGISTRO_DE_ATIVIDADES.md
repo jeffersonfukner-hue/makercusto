@@ -246,3 +246,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado comprovado:** última versão de código em `c5dcc1eb` aprovada no workflow `44864163612` job `136723999519`: tipagem, testes unitários, build, E2E desktop/mobile. Nenhum merge ou deploy.
 - **Pendências:** verificação funcional com conta real Supabase e validação visual em Preview Cloudflare; integração operacional de materiais/estoque/produtos permanece não entregue. Ainda não é sistema apto a venda.
 - **Horários/duração efetiva (Brasília):** não aferidos; duração não mensurada. Não contabilizar automaticamente tempo entre mensagens.
+
+## 21/11/2026 — Melhorias de seleção de impressoras e UX
+- **Projeto:** MakerCusto (desenvolvimento próprio).
+- **Início/término e duração efetiva (Brasília):** não aferidos; nenhuma duração inventada.
+- **Atividades:** leitura dos padrões e da implementação; consulta de referências de modelos comerciais; preparação de catálogo local de impressoras FDM, informações complementares de custo/hora e revisão de botões de cadastro.
+- **Resultado:** mudanças versionadas na branch de trabalho; condicionadas a CI e homologação visual. Sem alteração de banco, merge ou deploy.
+- **Pendências:** confirmação do CI e revisão do Preview pelo proprietário.
+- **Evidência:** histórico da PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 e execução GitHub Actions associada ao commit.

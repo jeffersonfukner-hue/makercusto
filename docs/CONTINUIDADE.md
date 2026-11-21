@@ -258,3 +258,10 @@
 - **CI aprovado para o código:** run `44864163612`, job `136723999519`, commit `c5dcc1eb`: tipos, unitários, build e E2E desktop/mobile `success`. Problema de toque do botão + no mobile foi identificado com Playwright e resolvido por barra de cadastros rápida mobile.
 - **Escopo validado:** interface de login, cadastro de impressoras e catálogo por modal, APIs simuladas em E2E, regressão do cálculo. Não é ensaio de operação real autenticada: credenciais reais e isolamento RLS precisam de QA de integração antes de uso público.
 - **Publicação:** nenhum merge/deploy. O proprietário valida apenas pelo Cloudflare Preview em etapa expressamente autorizada.
+
+## 21/11/2026 — Pré-homologação: modelos de impressora e ações de cadastro
+- Solicitação: pré-popular impressoras de marcas populares; ampliar o cadastro avançado e harmonizar os botões de adição com o design existente.
+- Implementado em branch: referências FDM locais de Bambu Lab, Anycubic, Creality, Elegoo, Prusa, Flashforge, Sovol e QIDI; seleção disponível mesmo sem resposta do Supabase; cadastro personalizado não grava IDs falsos em chaves estrangeiras; nome do modelo é preenchido automaticamente.
+- Parâmetros de compra/potência/vida útil continuam editáveis e são hipóteses individuais, não especificações certificadas; custo de aquisição não informado não deve herdar R$3.500 de outra máquina.
+- Modal avançado inclui conferência de consumo por hora e depreciação, sem alterar o motor de cálculos; ações de inclusão ganharam estilo premium responsivo.
+- Pendência: conferir CI do HEAD e homologar visualmente após deploy manual do proprietário. Nenhum merge ou deploy automático autorizado.

@@ -51,7 +51,7 @@ export default function App(){
  const [accountError,setAccountError]=useState('');
  const [cloudBusy,setCloudBusy]=useState(false);
  const profileFromDb=(p:StoredPrinter):PrinterProfile=>({
-  id:p.id,name:p.name,printerPrice:p.purchase_price??initialPrinter.printerPrice,
+  id:p.id,name:p.name,printerPrice:p.purchase_price??0,
   averageWatts:p.average_watts??initialPrinter.averageWatts,
   lifetimeHours:p.lifetime_hours??initialPrinter.lifetimeHours,
   pricePerKwh:initialPrinter.pricePerKwh
@@ -75,7 +75,7 @@ export default function App(){
   if(!sessionStore.get()||!workspaceId){
    const oldId=printerModal==='edit'&&printerId!=='example'?printerId:null;
    const id=oldId??'local-'+String(Date.now());
-   const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??initialPrinter.printerPrice,averageWatts:data.average_watts??initialPrinter.averageWatts,lifetimeHours:data.lifetime_hours??initialPrinter.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
+   const local:PrinterProfile={id,name:data.name,printerPrice:data.purchase_price??0,averageWatts:data.average_watts??initialPrinter.averageWatts,lifetimeHours:data.lifetime_hours??initialPrinter.lifetimeHours,pricePerKwh:initialPrinter.pricePerKwh};
    setPrinters(prev=>[...prev.filter(p=>p.id!==id),local]);setPrinterId(id);return;
   }
   const old=stored.find(p=>p.id===printerId);
@@ -182,7 +182,7 @@ export default function App(){
         {printers.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
        </select>
       </label>
-      <button type="button" onClick={addPrinter}>+ Nova impressora</button>
+      <button type="button" className="printer-add-action" onClick={addPrinter}><span className="action-plus" aria-hidden="true">+</span><span>Nova impressora</span></button>
      </div>
      <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa quando não informado) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>{!session&&<p className="footnote">Sem login: novas impressoras ficam apenas nesta sessão. Entre para salvar no banco.</p>}{session&&<p className="footnote">{cloudBusy?"Carregando sua oficina...":workspaceId?"Oficina conectada ao Supabase.":"Conectando oficina..."}</p>}{accountError&&<p role="alert" className="error">{accountError}</p>}
 
@@ -211,9 +211,9 @@ export default function App(){
       <div className="material-form" role="group" aria-label="Cadastro compacto de filamento">
        <div className="material-form-title"><strong>{editId?'Editar filamento':'Adicionar filamento'}</strong><small>Preço da embalagem, não do quilo</small></div>
        <div className="compact-inputs">
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Tipo</span><button type="button" className="catalog-add" aria-label="Cadastrar tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><input list="catalog-tipo" aria-label="Tipo de filamento" value={draft.type||''} onBlur={e=>remember('tipo',e.target.value)} onChange={e=>setDraftText('type',e.target.value)}/></div>
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Cor</span><button type="button" className="catalog-add" aria-label="Cadastrar cor" onClick={()=>setCatalogModal('cor')}>+</button></div><input list="catalog-cor" aria-label="Cor do filamento" value={draft.name} onBlur={e=>remember('cor',e.target.value)} onChange={e=>setDraftText('name',e.target.value)}/></div>
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Marca</span><button type="button" className="catalog-add" aria-label="Cadastrar marca" onClick={()=>setCatalogModal('marca')}>+</button></div><input list="catalog-marca" aria-label="Marca do filamento" value={draft.brand||''} onBlur={e=>remember('marca',e.target.value)} onChange={e=>setDraftText('brand',e.target.value)}/></div>
+        <div className="catalog-field"><div className="catalog-field-heading"><span>Tipo</span><button type="button" className="catalog-add" aria-label="Cadastrar tipo" title="Cadastrar outro tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><input list="catalog-tipo" aria-label="Tipo de filamento" value={draft.type||''} onBlur={e=>remember('tipo',e.target.value)} onChange={e=>setDraftText('type',e.target.value)}/></div>
+        <div className="catalog-field"><div className="catalog-field-heading"><span>Cor</span><button type="button" className="catalog-add" aria-label="Cadastrar cor" title="Cadastrar outra cor" onClick={()=>setCatalogModal('cor')}>+</button></div><input list="catalog-cor" aria-label="Cor do filamento" value={draft.name} onBlur={e=>remember('cor',e.target.value)} onChange={e=>setDraftText('name',e.target.value)}/></div>
+        <div className="catalog-field"><div className="catalog-field-heading"><span>Marca</span><button type="button" className="catalog-add" aria-label="Cadastrar marca" title="Cadastrar outra marca" onClick={()=>setCatalogModal('marca')}>+</button></div><input list="catalog-marca" aria-label="Marca do filamento" value={draft.brand||''} onBlur={e=>remember('marca',e.target.value)} onChange={e=>setDraftText('brand',e.target.value)}/></div>
         <label>Embalagem<input type="number" min="0.001" step="any" data-testid="packageQuantity" value={display(draft.packageQuantity)} onChange={e=>setDraftNumber('packageQuantity',e.target.value)}/></label>
         <label>Unid. compra<select aria-label="Unidade da embalagem" value={draft.packageUnit||'kg'} onChange={e=>setDraft(prev=>({...prev,packageUnit:e.target.value as 'kg'|'g'}))}><option value="kg">kg</option><option value="g">g</option></select></label>
         <label>Preço total (R$)<input type="number" min="0" step="any" data-testid="packagePrice" value={display(draft.packagePrice)} onChange={e=>setDraftNumber('packagePrice',e.target.value)}/></label>
