@@ -123,3 +123,10 @@
 - **23 homologações anteriores preservadas**. Novas hipóteses NÃO homologadas: reservas como compromisso separado do movimento físico, cálculo de disponível, confirmação incremental, tratamento de falha com consumo sem saída boa, retrabalho vinculado, pools de custo e bases de rateio.
 - Propostas descrevem fluxos, entidades, invariantes de idempotência, conciliação de custos, estoque por oficina e casos de testes futuros. Fórmula específica de rateio **não foi homologada**; não definir automaticamente perda/falha como custo por peça boa.
 - Antes de SQL: decidir política de reserva, baixa parcial, falhas, retrabalho, rateio, pausas e precisão monetária. Sem código, banco, migrações, merge ou deploy.
+
+## Revisão das cinco decisões pendentes de produção — 20/11/2026
+- Fonte revisada: commit `e479d08e02228dab4b2ae9cf16cf6450b263e438`; documento de proposta: `docs/PROPOSTAS_HOMOLOGACAO_PRODUCAO_2026-11-20.md`.
+- **23 decisões homologadas preservadas, nenhuma nova aprovada nesta rodada.** Cinco recomendações para homologar: reservas opcionais e lógicas, confirmação parcial idempotente, registro de falha com consumo real mesmo sem saída boa, retrabalho como operação vinculada separada e rateio por categoria com medição direta prioritária/critério declarado e conciliação integral.
+- Exemplos documentais de 1 kg com reserva 300 g, confirmação de 50 + 20 g, falha com 80 g consumidos, retrabalho de 15 min e mesa com corpos/suportes. Nenhum exemplo é valor observado ou fórmula automática aprovada.
+- Permanecem pendentes expiração/sobra de reservas, UX das parciais, precificação de falhas/retrabalhos, rateios específicos por material/energia, pausas, arredondamento e esquema físico.
+- Somente documentação em branch; sem código, banco, SQL, merge nem deploy.
