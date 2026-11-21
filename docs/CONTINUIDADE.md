@@ -265,3 +265,10 @@
 - Parâmetros de compra/potência/vida útil continuam editáveis e são hipóteses individuais, não especificações certificadas; custo de aquisição não informado não deve herdar R$3.500 de outra máquina.
 - Modal avançado inclui conferência de consumo por hora e depreciação, sem alterar o motor de cálculos; ações de inclusão ganharam estilo premium responsivo.
 - Pendência: conferir CI do HEAD e homologar visualmente após deploy manual do proprietário. Nenhum merge ou deploy automático autorizado.
+
+## 21/11/2026 — Esclarecimento homologado: facilidade acima de formulários vazios
+- O proprietário esclareceu que a prioridade do MakerCusto é **FACILITAR** a vida de quem imprime. Diferentemente da leitura anterior, **é desejado apresentar estimativas iniciais já preenchidas** nos cadastros; cabe ao usuário ajustar para sua realidade quando quiser, sem precisar calcular potência, energia ou custos do zero.
+- Fluxo desejado: selecionar **fabricante**, depois **modelo** (popularidade primeiro); receber ficha de referência com especificações do fabricante verificadas e parâmetros operacionais estimados, diferenciados e editáveis. O aplicativo deve estar utilizável imediatamente.
+- Caso exemplar: partir de **Anycubic Kobra X** global, copiar todos os parâmetros para uma impressora pessoal chamada **"Aninha"** (ou "Ana Clara") e editar somente particularidades, sem reintroduzir a configuração inteira. O original permanece imutável, com vínculo de cópia e histórico isolado. Reafirma a regra global/cópia já homologada.
+- **Plus futuro:** dicas/perfis de impressão otimizados por impressora, tipo de peça, material e objetivo. Registrar somente no backlog; não implementar nem habilitar cobrança agora.
+- Estado real: este registro é documental; a ficha técnica integral, estimativas em todos os campos, seletor dependente e botão de cópia completa **ainda não foram implementados** nesta rodada. Não alegar homologação visual, integração completa nem testes funcionais.

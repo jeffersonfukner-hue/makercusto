@@ -254,3 +254,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** mudanças versionadas na branch de trabalho; condicionadas a CI e homologação visual. Sem alteração de banco, merge ou deploy.
 - **Pendências:** confirmação do CI e revisão do Preview pelo proprietário.
 - **Evidência:** histórico da PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 e execução GitHub Actions associada ao commit.
+
+## 21/11/2026 — Registro de regra de experiência e ideia Plus
+- **Projeto:** MakerCusto, desenvolvimento próprio.
+- **Início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; não inferida do intervalo entre mensagens.
+- **Atividade efetiva:** leitura de padrões, arquitetura, plano-mestre e continuidade; formalização da decisão do proprietário sobre valores de partida, ficha oficial + estimativas, cópia pessoal da impressora original e backlog de perfis otimizados pagos.
+- **Resultado:** documentação alterada na branch de trabalho, sem alteração funcional, migração, banco, cobrança, merge ou deploy.
+- **Pendências:** implementação e testes da seleção fabricante/modelo, defaults completos e fluxo Copiar e personalizar; homologação do Preview.
+- **Evidências:** commit documental correspondente e PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.

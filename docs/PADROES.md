@@ -37,3 +37,11 @@
 - Full: itens próprios privados por padrão, publicação opcional **de cópia separada**; nunca expor o original privado.
 - Estoque de matérias-primas, acessórios e acabados exige histórico de entradas/saídas/ajustes/perdas.
 - Produto/kit pode conter várias peças impressas, insumos comprados, ferramentas e montagem. Criar snapshots de custo imutáveis antes do uso financeiro real.
+
+## Regra de produto homologada — experiência pronta para usar (21/11/2026)
+- **Facilitar antes de configurar:** o usuário escolhe fabricante e modelo; a ficha global vem preenchida, sempre que houver dados, com especificações **do fabricante** identificadas por fonte/versão, e com **estimativas operacionais iniciais** prontas para cálculo (inclusive consumo médio de impressão, custo/vida útil ilustrativos quando não se conheça o valor individual). Não exigir cálculos manuais para começar a imprimir.
+- Distinguir, **campo a campo**, valor oficial comprovado, estimativa do MakerCusto, valor informado pelo usuário e medição real. Não deixar campo útil vazio por padrão apenas porque é estimado; rotular a estimativa e tornar o ajuste opcional e simples. Ausência de fonte não autoriza atribuir um dado como oficial.
+- **Fabricante → modelos dependentes**, mais populares primeiro; cadastro rápido usa padrões já carregados, sem exigir configuração técnica extensa.
+- **Original global protegido → cópia pessoal completa:** um clique deve duplicar todos os parâmetros disponíveis, vincular ao original, permitir renomear (ex.: Anycubic Kobra X → Aninha) e alterar apenas os poucos valores desejados. Não exigir redigitar nem editar o registro global. Cópia não deve receber atualizações destrutivas do original.
+- Padrão universal para cadastros (impressoras, filamentos, cores, marcas e futuros itens): sugerir valores existentes, ordenar por uso, oferecer pesquisa e cadastro livre normalizado; edição avançada opcional, sem transferir cálculos complexos ao usuário.
+- **Dicas e perfis de impressão otimizados:** recurso futuro candidato ao plano pago (Plus), com recomendações por fabricante/modelo, material, tipo de peça e prioridade (qualidade/rapidez/resistência). Apenas backlog; não implementar nem prometer configurações universais sem validação, procedência e avisos de segurança.

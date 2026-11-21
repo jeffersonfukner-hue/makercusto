@@ -168,3 +168,14 @@ Não ampliar escopo sem homologação.
 - [ ] Detalhar fluxo parcial, falha e retrabalho com critérios financeiros.
 - [ ] Homologar fórmulas por grupo de custo e regras de precisão/centavos.
 - [ ] Somente depois, refinar esquema físico e testes RLS, sem execução de banco sem autorização.
+
+## 21/11/2026 — Regra de produto: pronta para imprimir (homologada)
+- [ ] Pré-popular fichas completas de modelos de impressora: fabricante, modelo, tecnologia, volume de impressão e demais especificações disponíveis em fonte oficial; indicar fonte, data/versão e não preencher como "oficial" o que não foi verificado.
+- [ ] Pré-popular **estimativas operacionais utilizáveis**, incluindo consumo médio durante impressão, vida útil e valores financeiros ilustrativos, claramente marcadas e editáveis. O usuário não deve fazer cálculos técnicos para conseguir usar o MakerCusto.
+- [ ] Separar fabricante e modelo em seletores dependentes, modelos de maior uso primeiro e pesquisa fácil.
+- [ ] Implementar **Copiar e personalizar** modelo original em uma etapa: nome próprio da impressora (ex.: "Aninha"), herdar todos os parâmetros e alterar somente exceções; salvar vínculo de origem e manter original intacto.
+- [ ] Estender catálogo útil pré-populado a cores, marcas e tipos de filamento, com pesquisa e opções personalizadas sem duplicatas.
+- [ ] Testar seleção rápida, valores de partida, cópia com nome, ajustes individuais, original intacto e preservação do histórico em desktop/mobile.
+
+### Ideia de monetização futura — Plus (registrar, não executar agora)
+- [ ] **Dicas e perfis otimizados por tipo de impressão:** combinando impressora/modelo, filamento e objetivo (articulados, miniaturas, peças técnicas, acabamento, resistência, velocidade); orientações por fatiador quando aplicável, parâmetros revisados e origem/validação indicadas. Definir plano pago e escopo comercial em momento posterior; não confundir dicas com valores oficiais do fabricante.
