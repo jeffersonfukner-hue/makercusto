@@ -23,7 +23,7 @@ export function SmartField({label,value,onChange,options,hint,onBlur,placeholder
    onFocus={()=>setFocused(true)}
    onBlur={()=>{setFocused(false);onBlur?.(value);}}
    onChange={e=>onChange(e.target.value)} />
-  {picks.length>0&&<div className="smart-suggestions" role="group" aria-label={'Sugestões para '+label}>{picks.map(s=><button key={s} type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>{onChange(s);setFocused(false);onBlur?.(s);}}>{s}</button>)}</div>}
+  {picks.length>0&&<div className="smart-suggestions" role="group" aria-label="Opções sugeridas">{picks.map(s=><button key={s} type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>{onChange(s);setFocused(false);onBlur?.(s);}}>{s}</button>)}</div>}
   <small className="smart-hint">{exact?'Opção já cadastrada.':hint??'Digite para encontrar opções existentes ou criar uma personalizada.'}</small>
  </div>;
 }

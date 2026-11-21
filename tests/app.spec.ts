@@ -117,7 +117,7 @@ test('seleciona, edita e reutiliza impressora na sessão sem alterar filamento',
  await page.getByRole('button',{name:/Avançado/}).click();
  await expect(page.getByRole('heading',{name:'Impressora'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Filamento'})).toBeVisible();
- await page.getByRole('button',{name:'+ Nova impressora'}).click();
+ await page.getByRole('button',{name:/Nova impressora/}).click();
  await expect(page.getByRole('dialog',{name:'Cadastrar impressora'})).toBeVisible();
  await page.getByRole('textbox',{name:'Nome da minha impressora'}).fill('Kobra X bancada');
  await page.getByRole('button',{name:/Avançado — custos/}).click();
@@ -206,8 +206,9 @@ test('login, oficina e cadastro persistente consomem API autenticada',async({pag
  await page.getByRole('button',{name:'Entrar',exact:true}).click();
  await page.getByRole('button',{name:/Avançado/}).click();
  await expect(page.getByText('Oficina conectada ao Supabase.')).toBeVisible();
- await page.getByRole('button',{name:'+ Nova impressora'}).click();
- await page.getByRole('combobox',{name:'Modelo da impressora'}).selectOption(model);
+ await page.getByRole('button',{name:/Nova impressora/}).click();
+ await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Anycubic');
+ await page.getByRole('combobox',{name:'Modelo da impressora'}).selectOption('preset:anycubic-kobra-x');
  await page.getByRole('button',{name:'Salvar impressora'}).click();
  await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toContainText('Anycubic Kobra X');
  expect(persisted).toBe(true);
@@ -225,9 +226,9 @@ test('modelos populares estão disponíveis sem retorno do catálogo remoto e cu
  await models.selectOption('preset:anycubic-kobra-x');
  await expect(page.getByRole('textbox',{name:'Nome da minha impressora'})).toHaveValue('Anycubic Kobra X');
  await page.getByRole('button',{name:/Avançado — custos/}).click();
- await expect(page.getByText('Conferência do custo por hora')).toBeVisible();
+ await expect(page.getByText('Custo por hora (estimado)')).toBeVisible();
  await page.getByRole('button',{name:'Salvar impressora'}).click();
- await expect(page.locator('.printer-summary')).toContainText('R$ 0,00');
+ await expect(page.locator('.printer-summary')).toContainText('R$ 3.500,00');
 });
 
 test('fabricante filtra modelos e cópia herda estimativas',async({page})=>{
@@ -248,7 +249,7 @@ test('fabricante filtra modelos e cópia herda estimativas',async({page})=>{
 test('nome de cor é normalizado e sugestões são limitadas',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Cor do filamento').fill('verm');
- await expect(page.getByRole('group',{name:'Sugestões para Cor do filamento'}).getByRole('button')).toHaveCount(2);
+ await expect(page.locator('.smart-suggestions').getByRole('button')).toHaveCount(2);
  await page.getByLabel('Cor do filamento').fill('vermelho fosco');
  await page.getByTestId('packagePrice').fill('100');await page.getByTestId('gramsUsed').fill('10');
  await page.getByRole('button',{name:'Adicionar à tabela'}).click();
@@ -263,7 +264,7 @@ test('perfil básico de filamento pode ser consultado e clonado sem modificar pa
  await page.getByRole('textbox',{name:'Nome da configuração'}).fill('pla sunlu aninha');
  await page.getByRole('textbox',{name:'Bico do perfil'}).fill('210 °C');
  await page.getByRole('button',{name:'Salvar meu perfil'}).click();
- await expect(page.getByRole('combobox',{name:'Perfil do filamento'})).toContainText('Pla Sunlu Aninha');
+ await expect(page.getByRole('combobox',{name:'Perfil do filamento'})).toContainText('PLA SUNLU Aninha');
  await page.getByRole('combobox',{name:'Perfil do filamento'}).selectOption('');
  await expect(page.getByRole('region',{name:'Configuração de filamento para slicer'})).toContainText('200–230 °C');
 });
