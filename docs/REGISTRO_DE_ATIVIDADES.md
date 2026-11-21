@@ -382,3 +382,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados comprovados:** execução `success` do commit `b112c461`; persistência de clones locais e seleção validada por automação. Nenhum banco, merge ou deploy.
 - **Pendências:** persistência integral de cópias técnicas e perfis no Supabase com RLS e homologação visual do proprietário.
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44927634558
+
+## 21/11/2026 — Habilitação de salvamento de produtos no Supabase
+- **Projeto/cliente:** MakerCusto (próprio).
+- **Horário de início observado:** 14:52 (Brasília); **término efetivo e duração produtiva:** não aferidos. O horário de referência não equivale à duração trabalhada.
+- **Autorização:** proprietário autorizou integração de código e banco, preservando deploy manual e sem merge.
+- **Atividades realizadas:** inspeção do esquema e RLS; migração SQL com função transacional que cria produto, revisão inicial e snapshot de custo estimado; retirada da permissão EXECUTE de anon nas quatro funções SECURITY DEFINER existentes; painel de cadastro/listagem com estados de carregamento, sucesso/erro e validação; testes Playwright com REST simulado; SQL versionado.
+- **Resultado comprovado:** migração executada com sucesso no Supabase MakerCusto e consulta posterior confirmou execução das cinco funções permitida somente a authenticated, não a anon. Alterações de aplicação commitadas na branch de trabalho; não publicadas.
+- **Limites:** teste de integração real de usuário e RLS ainda precisa ser executado; CI do HEAD precisa confirmar tipos/build/E2E. O snapshot é declarado como estimado e não movimenta estoque. Nenhum deploy nem merge.
+- **Evidência:** GitHub PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; migração versionada `supabase/migrations/20261121145200_enable_product_save_rpc.sql`; consulta de permissões ao banco realizada nesta sessão.
