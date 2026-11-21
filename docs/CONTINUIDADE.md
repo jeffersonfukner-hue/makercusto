@@ -330,3 +330,9 @@
 - **Aprovado:** GitHub Actions #44925197270, código em `bf554134777a60e5a5ac8a8eff72e36cc0cfdb76`: tipagem, motor de custos, build e E2E desktop/mobile concluídos com sucesso. Corrigido apenas o escopo dos testes dos dois botões de clonagem; 25 referências de impressora selecionáveis imediatamente, cópia pessoal sem mutação do padrão, seis fichas técnicas parciais adicionais com fontes.
 - **Não comprova:** operação com conta real/Supabase, persistência de fichas técnicas avançadas nem homologação visual do proprietário. Nenhum merge/deploy/banco.
 - Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44925197270
+
+## 21/11/2026 — Fluxo de edição e cobertura de filamentos (novo lote)
+- Perfil de slicer pessoal agora pode ser reaberto com **Editar meu perfil**, alterar campos e salvar no mesmo ID local, sem gerar clone extra nem modificar a referência global. Nomes duplicados de cópias continuam bloqueados; cópias neste navegador/localStorage, não sincronizadas com Supabase.
+- Catálogo de pontos de partida genéricos ampliado para PLA+, ABS, ASA, PA, PC e PVA. São **estimativas MakerCusto**, jamais perfis oficiais das marcas; avisos de compatibilidade, temperatura e ventilação para materiais mais exigentes.
+- Ajuda pequena contextual em peso e preço por unidade, equivalente por kg da embalagem, purga, duração/quantidade e outros custos. Cálculo matemático existente não foi alterado.
+- Novos testes Playwright para editar/voltar ao padrão/recarregar, pontos de partida por material e equivalência de preço por kg. CI e homologação visual pendentes nesta rodada. Sem SQL, banco, merge ou deploy.

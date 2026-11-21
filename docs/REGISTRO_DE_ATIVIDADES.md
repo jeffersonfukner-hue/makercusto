@@ -340,3 +340,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado comprovado:** CI `success` para o commit `bf554134`; nenhuma publicação, migração ou merge.
 - **Pendências:** homologação visual e implementação posterior de perfis técnicos/persistência integral.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44925197270
+
+## 21/11/2026 — Edição de perfis pessoais e ajuda financeira contextual
+- **Projeto:** MakerCusto (próprio).
+- **Início/término (Brasília):** não aferidos. **Duração efetiva comprovada:** não mensurada; nenhum período entre mensagens considerado automaticamente trabalhado.
+- **Atividades:** leitura da arquitetura/regras e componentes; edição posterior de cópias de perfis de filamento; ampliação de referências genéricas não oficiais; microdicas de quantidades e custos; três cenários de teste de interface.
+- **Resultado:** frontend/documentação versionados na branch da PR #1, sem mudanças em engine financeira ou banco; CI a conferir.
+- **Pendências:** CI, validação visual, persistência remota dos perfis sob contrato de RLS futuramente aprovado.
+- **Evidências:** commit desta atualização e PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.

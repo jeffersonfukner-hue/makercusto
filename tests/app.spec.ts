@@ -353,3 +353,38 @@ test('troca entre padrões mantém fichas globais intactas',async({page})=>{
  await page.getByRole('button',{name:'Clonar e personalizar'}).click();
  await expect(page.getByText('220 × 220 × 250 mm')).toBeVisible();
 });
+
+test('perfil de filamento personalizado pode ser editado e persiste após recarregar',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByLabel('Tipo de filamento').fill('PETG');await page.getByLabel('Marca do filamento').fill('Masterprint');
+ const region=page.getByRole('region',{name:'Configuração de filamento para slicer'});
+ await region.getByRole('button',{name:'Clonar e personalizar'}).click();
+ await region.getByRole('textbox',{name:'Nome da configuração'}).fill('Minha regulagem PETG');
+ await region.getByRole('button',{name:'Salvar meu perfil'}).click();
+ await region.getByRole('button',{name:'Editar meu perfil'}).click();
+ await region.getByRole('textbox',{name:'Bico do perfil'}).fill('238 °C');
+ await region.getByRole('button',{name:'Salvar alterações'}).click();
+ await expect(region).toContainText('238 °C');
+ await region.getByRole('combobox',{name:'Perfil do filamento'}).selectOption('');
+ await expect(region).toContainText('230–245 °C');
+ await page.reload();await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByLabel('Tipo de filamento').fill('PETG');await page.getByLabel('Marca do filamento').fill('Masterprint');
+ await region.getByRole('combobox',{name:'Perfil do filamento'}).selectOption({label:'Minha Regulagem PETG'});
+ await expect(region).toContainText('238 °C');
+});
+test('outros materiais de catálogo têm pontos de partida visíveis no slicer',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ const region=page.getByRole('region',{name:'Configuração de filamento para slicer'});
+ for(const material of ['PLA+','ABS','ASA','PA','PC','PVA']){
+  await page.getByLabel('Marca do filamento').fill('');
+  await page.getByLabel('Tipo de filamento').fill(material);
+  await expect(region).toContainText('Estimativa MakerCusto');
+ }
+});
+test('preço da embalagem explica custo por quilo e preserva cálculo',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByTestId('packagePrice').fill('120');
+ await expect(page.getByText(/Custo equivalente:/)).toContainText('R$ 120,00/kg');
+ await page.getByTestId('packageQuantity').fill('0.5');
+ await expect(page.getByText(/Custo equivalente:/)).toContainText('R$ 240,00/kg');
+});

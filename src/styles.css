@@ -198,3 +198,9 @@
 /* Navegação por teclado na lista contextual, mantendo o tema premium. */
 .smart-suggestions [role="option"][aria-selected="true"]{background:#245263;color:#dcfff5;box-shadow:inset 3px 0 0 #5be0c1}
 .smart-field [role="combobox"]:focus-visible{outline:2px solid #8ed9ff;outline-offset:2px}
+
+/* Dicas de preenchimento: discretas e sem interferir no tamanho do campo. */
+.simple-material-fields label>.smart-hint,.compact-inputs label>.smart-hint,.fields label>.smart-hint{font-size:10px;line-height:1.45;color:var(--muted,#94b6c5);margin-top:5px}
+.profile-head-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
+.profile-head-actions .details-button{max-width:100%;white-space:normal}
+@media(max-width:600px){.profile-head-actions{justify-content:stretch;width:100%}.profile-head-actions .details-button{flex:1 1 155px}}
