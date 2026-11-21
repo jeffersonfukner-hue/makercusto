@@ -391,3 +391,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado comprovado:** migração executada com sucesso no Supabase MakerCusto e consulta posterior confirmou execução das cinco funções permitida somente a authenticated, não a anon. Alterações de aplicação commitadas na branch de trabalho; não publicadas.
 - **Limites:** teste de integração real de usuário e RLS ainda precisa ser executado; CI do HEAD precisa confirmar tipos/build/E2E. O snapshot é declarado como estimado e não movimenta estoque. Nenhum deploy nem merge.
 - **Evidência:** GitHub PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; migração versionada `supabase/migrations/20261121145200_enable_product_save_rpc.sql`; consulta de permissões ao banco realizada nesta sessão.
+
+## 21/11/2026 — Teste transacional de criação de produto
+- **Horários efetivos e duração:** não aferidos; execução nesta sessão, sem tempo estimado como comprovado.
+- **Atividade:** chamada de `mc_save_calculated_product` sob papel `authenticated` e contexto de membro proprietário, dentro de transação explícita finalizada com `ROLLBACK`.
+- **Resultado comprovado:** RPC retornou UUID do produto de teste; consulta posterior confirmou **zero produtos** com SKU `TESTE-ROLLBACK` e **zero snapshots** com marcador `transaction_rollback`. Não houve inclusão persistente de dados de teste.
+- **Limite:** teste controlado de banco, com contexto JWT simulado pelo administrador; não substitui login real nem validação visual.
