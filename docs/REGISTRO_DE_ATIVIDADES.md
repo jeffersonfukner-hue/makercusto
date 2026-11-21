@@ -262,3 +262,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** documentação alterada na branch de trabalho, sem alteração funcional, migração, banco, cobrança, merge ou deploy.
 - **Pendências:** implementação e testes da seleção fabricante/modelo, defaults completos e fluxo Copiar e personalizar; homologação do Preview.
 - **Evidências:** commit documental correspondente e PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+
+## 21/11/2026 — Universalização da regra dos cadastros
+- **Projeto:** MakerCusto, desenvolvimento próprio.
+- **Início/término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; nenhum intervalo entre mensagens presumido trabalhado.
+- **Atividade executada:** releitura documental e registro do padrão geral de fichas globais completas, clonagem pessoal com herança e nome editável, presets básicos de slicer nos filamentos, e normalização dos nomes.
+- **Resultado:** documentação na branch/PR #1; nenhuma mudança funcional, migração, banco, merge ou deploy.
+- **Pendências:** desenvolver e testar componentes reutilizáveis, perfis e controles de imutabilidade.
+- **Evidência:** commit deste registro no histórico da PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.

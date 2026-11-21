@@ -179,3 +179,10 @@ Não ampliar escopo sem homologação.
 
 ### Ideia de monetização futura — Plus (registrar, não executar agora)
 - [ ] **Dicas e perfis otimizados por tipo de impressão:** combinando impressora/modelo, filamento e objetivo (articulados, miniaturas, peças técnicas, acabamento, resistência, velocidade); orientações por fatiador quando aplicável, parâmetros revisados e origem/validação indicadas. Definir plano pago e escopo comercial em momento posterior; não confundir dicas com valores oficiais do fabricante.
+
+## Padrão universal — referência pronta, cópia personalizada e normalização (21/11/2026)
+- [ ] Implementar um fluxo reutilizável para todas as entidades cabíveis: selecionar referência protegida, consultar campos já preenchidos, clonar completamente, nomear cópia e alterar somente as exceções.
+- [ ] Fichas de filamentos por fabricante/linha/tipo com presets consultáveis de slicer (temperatura, mesa, velocidade, ventilação, retração, secagem), fontes e compatibilidade, incluindo Masterprint PETG e SUNLU PLA depois de verificar referências.
+- [ ] Manter consulta básica de parâmetros no cadastro; reservar otimizações por aplicação/impressora/material para proposta comercial Plus futura.
+- [ ] Normalização global de nomes por tipo de dado: vermelho fosco → Vermelho Fosco, siglas técnicas preservadas, grafias oficiais, prevenção de duplicatas e sugestão de correção para erros.
+- [ ] Testes de original imutável, cópia integral, edição independente, histórico, formatação de nomes, deduplicação e responsividade.

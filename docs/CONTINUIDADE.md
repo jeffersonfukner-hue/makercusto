@@ -272,3 +272,9 @@
 - Caso exemplar: partir de **Anycubic Kobra X** global, copiar todos os parâmetros para uma impressora pessoal chamada **"Aninha"** (ou "Ana Clara") e editar somente particularidades, sem reintroduzir a configuração inteira. O original permanece imutável, com vínculo de cópia e histórico isolado. Reafirma a regra global/cópia já homologada.
 - **Plus futuro:** dicas/perfis de impressão otimizados por impressora, tipo de peça, material e objetivo. Registrar somente no backlog; não implementar nem habilitar cobrança agora.
 - Estado real: este registro é documental; a ficha técnica integral, estimativas em todos os campos, seletor dependente e botão de cópia completa **ainda não foram implementados** nesta rodada. Não alegar homologação visual, integração completa nem testes funcionais.
+
+## 21/11/2026 — Alegoria Aninha vale para TODOS os cadastros
+- A história de clonar a Kobra X e renomear Aninha é uma regra geral, não exceção. O usuário deve encontrar conteúdo global pronto, usar e consultar imediatamente e só clonar quando quiser personalizar, recebendo todos os campos sem redigitação. Originais globais, inclusive nomes, são protegidos.
+- O mesmo princípio aplica-se a filamentos e perfis de slicer. Ex.: perfil de Masterprint PETG ou SUNLU PLA no próprio cadastro para consultar temperaturas, ventilação e demais configurações, diferenciando fonte oficial de sugestão validada. Dicas avançadas específicas permanecem como ideia de plano Plus futuro.
+- Normalizar nomes novos: entrada vermelho fosco vira Vermelho Fosco, sem prejudicar siglas e marcas; impedir duplicatas equivalentes. Exemplo textual vermelhor fosco contém provável erro ortográfico, não corrigido só com capitalização: oferecer sugestão, sem autocorreção silenciosa.
+- Alteração desta rodada exclusivamente documental. Código, banco, merge e deploy não alterados; implementar/testar posteriormente.
