@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import {AuthModal,PrinterModal} from './components/Modals';
-import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter} from './data/supabase';
+import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
+import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
 
 const money = (value:number) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value);
@@ -46,6 +46,7 @@ export default function App(){
  const [authOpen,setAuthOpen]=useState(false);
  const [printerModal,setPrinterModal]=useState<'new'|'edit'|null>(null);
  const [models,setModels]=useState<CatalogEntry[]>([]);
+ const [catalogModal,setCatalogModal]=useState<Catalog|null>(null);
  const [stored,setStored]=useState<StoredPrinter[]>([]);
  const [workspaceId,setWorkspaceId]=useState<string|null>(null);
  const [accountError,setAccountError]=useState('');
@@ -97,6 +98,27 @@ export default function App(){
  const [nextId,setNextId]=useState(1);
  const [errorDraft,setErrorDraft]=useState('');
  const [catalog,setCatalog]=useState<Record<Catalog,string[]>>(()=>({cor:readCatalog('cor'),tipo:readCatalog('tipo'),marca:readCatalog('marca')}));
+ const catalogKinds:Record<Catalog,string>={tipo:'filament_type',cor:'color',marca:'filament_brand'};
+ const catalogTitles:Record<Catalog,string>={tipo:'Tipo',cor:'Cor',marca:'Marca'};
+ const saveCatalog=async(value:string)=>{
+  const field=catalogModal;if(!field)return;
+  if(list(field).some(x=>normalize(x)===normalize(value)))throw new Error('Este nome já está na lista.');
+  if(sessionStore.get()&&workspaceId){
+   const created=await insertCatalog(workspaceId,sessionStore.get()!.user.id,catalogKinds[field],value);
+   if(!created[0])throw new Error('O cadastro não foi confirmado pelo banco.');
+  }
+  remember(field,value);
+  if(field==='cor')setDraft(prev=>({...prev,name:value}));
+  else if(field==='tipo')setDraft(prev=>({...prev,type:value}));
+  else setDraft(prev=>({...prev,brand:value}));
+ };
+ useEffect(()=>{const load=async()=>{
+  const lists=await Promise.allSettled([listCatalog('color'),listCatalog('filament_type'),listCatalog('filament_brand')]);
+  const types:Array<Catalog>=['cor','tipo','marca'];
+  lists.forEach((result,i)=>{
+   if(result.status==='fulfilled')setCatalog(prev=>({...prev,[types[i]]:unique([...prev[types[i]],...result.value.map(x=>x.name)])}));
+  });
+ };void load();},[workspaceId]);
  const list = (c:Catalog) => unique([...defaults[c],...catalog[c]]);
  const remember=(c:Catalog,value:string)=>{
    if(!value.trim()||list(c).some(item=>normalize(item)===normalize(value)))return;
@@ -196,9 +218,9 @@ export default function App(){
       <div className="material-form" role="group" aria-label="Cadastro compacto de filamento">
        <div className="material-form-title"><strong>{editId?'Editar filamento':'Adicionar filamento'}</strong><small>Preço da embalagem, não do quilo</small></div>
        <div className="compact-inputs">
-        <label>Tipo<input list="catalog-tipo" aria-label="Tipo de filamento" value={draft.type||''} onBlur={e=>remember('tipo',e.target.value)} onChange={e=>setDraftText('type',e.target.value)}/></label>
-        <label>Cor<input list="catalog-cor" aria-label="Cor do filamento" value={draft.name} onBlur={e=>remember('cor',e.target.value)} onChange={e=>setDraftText('name',e.target.value)}/></label>
-        <label>Marca<input list="catalog-marca" aria-label="Marca do filamento" value={draft.brand||''} onBlur={e=>remember('marca',e.target.value)} onChange={e=>setDraftText('brand',e.target.value)}/></label>
+        <label>Tipo<button type="button" className="catalog-add" aria-label="Cadastrar tipo" onClick={()=>setCatalogModal('tipo')}>+</button><input list="catalog-tipo" aria-label="Tipo de filamento" value={draft.type||''} onBlur={e=>remember('tipo',e.target.value)} onChange={e=>setDraftText('type',e.target.value)}/></label>
+        <label>Cor<button type="button" className="catalog-add" aria-label="Cadastrar cor" onClick={()=>setCatalogModal('cor')}>+</button><input list="catalog-cor" aria-label="Cor do filamento" value={draft.name} onBlur={e=>remember('cor',e.target.value)} onChange={e=>setDraftText('name',e.target.value)}/></label>
+        <label>Marca<button type="button" className="catalog-add" aria-label="Cadastrar marca" onClick={()=>setCatalogModal('marca')}>+</button><input list="catalog-marca" aria-label="Marca do filamento" value={draft.brand||''} onBlur={e=>remember('marca',e.target.value)} onChange={e=>setDraftText('brand',e.target.value)}/></label>
         <label>Embalagem<input type="number" min="0.001" step="any" data-testid="packageQuantity" value={display(draft.packageQuantity)} onChange={e=>setDraftNumber('packageQuantity',e.target.value)}/></label>
         <label>Unid. compra<select aria-label="Unidade da embalagem" value={draft.packageUnit||'kg'} onChange={e=>setDraft(prev=>({...prev,packageUnit:e.target.value as 'kg'|'g'}))}><option value="kg">kg</option><option value="g">g</option></select></label>
         <label>Preço total (R$)<input type="number" min="0" step="any" data-testid="packagePrice" value={display(draft.packagePrice)} onChange={e=>setDraftNumber('packagePrice',e.target.value)}/></label>
@@ -232,5 +254,6 @@ export default function App(){
  </main><footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
  {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?stored.find(p=>p.id===printerId):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
+ {catalogModal&&<CatalogModal title={catalogTitles[catalogModal]} onClose={()=>setCatalogModal(null)} onSave={saveCatalog}/>}
  </>;
 }
