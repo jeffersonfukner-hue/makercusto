@@ -173,3 +173,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** criado `docs/HOMOLOGACAO_CONSUMO_SEM_LOTE_P08_2026-11-20.md`, preservadas as 35 homologações anteriores e registrado total **36**; compra fictícia vedada, inventário de bobina operacional documentado, custo estimado diferenciado, conciliação não destrutiva. Sem código, SQL, banco, merge ou deploy.
 - **Pendências:** P09 estornos parciais; conciliação de consumo físico sem saldo/origem comprovável, confirmação financeira com custo desconhecido, permissões/RLS, normas fiscais/contábeis, depreciação em pausa, tarifas variáveis e estrutura SQL física. Testes funcionais/RLS não realizados nesta etapa documental.
 - **Evidências verificáveis:** `1bdff539` (homologação P08) e `4bfab1f9` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit do próprio registro consta no histórico GitHub.
+
+
+## 20/11/2026 — Homologação documental P09 (estornos parciais)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada, sem inferir trabalho entre mensagens.
+- **Atividades efetivamente executadas:** leitura de continuidade e das regras P01–P08 pertinentes a reservas, confirmações, perdas, retrabalho, custos e inventário; formalização de P09-A a P09-F como única política aprovada; criação do documento normativo e atualização da continuidade e deste registro.
+- **Resultados:** criado `docs/HOMOLOGACAO_ESTORNOS_P09_2026-11-20.md`; registrados **37 conjuntos homologados**, com 36 anteriores preservados. Estorno parcial referenciado, distinção entre compensação documental e retorno físico, reclassificação de resultados, compensação de custos originais, idempotência e auditabilidade.
+- **Pendências:** conciliação excepcional de estoque/quantidade efetiva sem saldo ou origem, regras de autorização/permissões/RLS, peças vendidas/devolvidas, fiscalidade, custo desconhecido, depreciação em pausas, tarifas variáveis e esquema SQL físico. Testes funcionais/RLS não realizados; nenhuma alteração em código, SQL, banco, merge ou deploy.
+- **Evidências verificáveis:** commit `43feb126` (homologação P09), `92806f9d` (continuidade); branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit deste registro verificável no histórico da branch.
