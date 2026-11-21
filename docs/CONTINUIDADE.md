@@ -374,3 +374,8 @@
 - Implementado na branch: formulário de conjunto com peças personalizáveis, quantidade por kit, peso opcional e observações, preço opcional, listagem e consulta da composição, mensagens de progresso/erro. Sem inventar custos nem baixar estoque.
 - Teste SQL com transação `ROLLBACK` confirmou cadastro e retorno da consulta, seguido de zero dados de teste persistentes. E2E simulado adicionado e CI do HEAD pendente.
 - Escopo ainda pendente: edição/versionamento do kit já salvo, custo real por peça vinculado à impressão/filamento, estoque/produção, montagem e geração de preços por composição. Não afirmar que a composição completa de custos está pronta.
+
+## 21/11/2026 — CI aprovado para montagem de peças
+- GitHub Actions #44933944246 aprovado para commit funcional `5723a7e4f259b1ceb65f4d86a8cf8bb0f475f508`: TypeScript, 11 unitários, build e 74 E2E desktop/mobile; https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44933944246 .
+- Atualizações seguintes foram somente de documentação. No banco, criação e consulta de conjunto de três componentes validadas em transação revertida. Não houve deploy/merge.
+- Próxima etapa prática: proprietário publica manualmente o commit/branch validado; cadastra Lançador de hélices com Lançador, Haste, Hélice e informa dados reais; verificar persistência ao recarregar, composição e autorização no navegador. Implementar edição de composição e custeio real por componente após observar os primeiros dados.
