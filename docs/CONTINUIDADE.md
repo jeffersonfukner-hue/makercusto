@@ -253,3 +253,8 @@
 - Cadastros como visitante permanecem explicitamente locais e transitórios; após login, novas impressoras/catálogos privados usam o Supabase com RLS. Valores de equipamento/energia ausentes são estimativas de UI e não são inventados no banco.
 - Arquivos: `src/data/supabase.ts`, `src/components/Modals.tsx`, `src/App.tsx`, `src/styles.css`, `tests/app.spec.ts`. Evidências: PR #1 em draft, commits desta branch posteriores a `f9929ce4`.
 - Limites: ainda falta testar fluxo real com conta autenticada e homologar visual; cenários Playwright usam simulação de API (não confirmam operação de usuário real). Serviços de estoque/produção continuam sem integração operacional. Nenhum deploy nem merge.
+
+## Validação final do lote de integração — 21/11/2026
+- **CI aprovado para o código:** run `44864163612`, job `136723999519`, commit `c5dcc1eb`: tipos, unitários, build e E2E desktop/mobile `success`. Problema de toque do botão + no mobile foi identificado com Playwright e resolvido por barra de cadastros rápida mobile.
+- **Escopo validado:** interface de login, cadastro de impressoras e catálogo por modal, APIs simuladas em E2E, regressão do cálculo. Não é ensaio de operação real autenticada: credenciais reais e isolamento RLS precisam de QA de integração antes de uso público.
+- **Publicação:** nenhum merge/deploy. O proprietário valida apenas pelo Cloudflare Preview em etapa expressamente autorizada.
