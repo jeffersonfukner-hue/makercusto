@@ -458,7 +458,7 @@ test('salva produto, custo e lista na oficina com feedback sem recarregar',async
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Chaveiro Galo');
  await page.getByRole('textbox',{name:'SKU do produto'}).fill('GAL-01');
  await page.getByRole('button',{name:'Salvar produto e custo'}).click();
- await expect(page.getByRole('status')).toContainText('Produto, versão inicial e custo estimado salvos');
+ await expect(page.locator('.product-save-panel .product-success')).toContainText('Produto, versão inicial e custo estimado salvos');
  await expect(page.locator('.product-save-panel .product-list')).toContainText('Chaveiro Galo');
  expect(posted?.p_workspace_id).toBe(workspace);
  expect(posted?.p_kind).toBe('product');
