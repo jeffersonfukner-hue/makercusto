@@ -260,7 +260,12 @@ test('perfil básico de filamento pode ser consultado e clonado sem modificar pa
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Tipo de filamento').fill('PLA');await page.getByLabel('Marca do filamento').fill('SUNLU');
  await expect(page.getByRole('region',{name:'Configuração de filamento para slicer'})).toContainText('200–230 °C');
- await page.getByRole('button',{name:'Clonar e personalizar'}).click();
+ const cloneButton=page.getByRole('button',{name:'Clonar e personalizar'});
+ const box=await cloneButton.boundingBox();
+ const viewport=page.viewportSize();
+ expect(box).not.toBeNull();
+ expect(box!.x+box!.width/2).toBeLessThan(viewport!.width);
+ await cloneButton.click();
  await page.getByRole('textbox',{name:'Nome da configuração'}).fill('pla sunlu aninha');
  await page.getByRole('textbox',{name:'Bico do perfil'}).fill('210 °C');
  await page.getByRole('button',{name:'Salvar meu perfil'}).click();

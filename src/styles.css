@@ -186,3 +186,11 @@
 .panel>.filament-profile{position:relative;z-index:10;min-width:0;max-width:100%;width:100%;margin:0 0 20px}
 .filament-profile-head,.filament-profile-data,.profile-edit{min-width:0}
 @media(max-width:600px){.panel>.filament-profile{margin:0 0 20px}}
+
+/* Corrigir largura mínima automática de itens do grid: tabela nunca deve alargar a página. */
+.workspace{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);min-width:0}
+.workspace>.panel,.panel>.materials,.materials>#material-details,
+.material-form,.compact-inputs,.materials-table-scroll,.panel>.filament-profile{min-width:0;max-width:100%}
+.materials-table-scroll{width:100%;overflow-x:auto}
+.material-form-title{min-width:0;flex-wrap:wrap}
+@media(max-width:820px){.workspace{grid-template-columns:minmax(0,1fr)}}
