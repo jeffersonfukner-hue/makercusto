@@ -164,3 +164,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** `docs/HOMOLOGACAO_ENERGIA_P07_2026-11-20.md` criado e P07 homologada como uma única política. **35 homologações acumuladas**, com 34 anteriores preservadas. P08/P09, depreciação em pausas, tarifas variáveis e temas fiscais/SQL não aprovados. Somente alterações em documentação, sem código, SQL, banco, merge ou deploy.
 - **Pendências:** P08 e P09; regras de depreciação/manutenção e tarifas horárias; fiscais/contábeis, permissões, RLS e esquema SQL. Testes funcionais/RLS não realizados nesta etapa exclusivamente documental.
 - **Evidências verificáveis:** commits `ccc543fa` (P07) e `e1cfd353` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit deste registro permanece verificável no histórico da branch.
+
+
+## 20/11/2026 — Homologação documental P08 (consumo sem lote)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; não inferir trabalho contínuo de mensagens.
+- **Atividades efetivamente realizadas:** consulta em modo leitura de continuidade, homologações P01/P02/P06/P07 e contratos de estoque/cadastros; criação do documento normativo P08-A a P08-F; atualização de continuidade e registro cronológico; verificação posterior dos arquivos documentais.
+- **Resultados:** criado `docs/HOMOLOGACAO_CONSUMO_SEM_LOTE_P08_2026-11-20.md`, preservadas as 35 homologações anteriores e registrado total **36**; compra fictícia vedada, inventário de bobina operacional documentado, custo estimado diferenciado, conciliação não destrutiva. Sem código, SQL, banco, merge ou deploy.
+- **Pendências:** P09 estornos parciais; conciliação de consumo físico sem saldo/origem comprovável, confirmação financeira com custo desconhecido, permissões/RLS, normas fiscais/contábeis, depreciação em pausa, tarifas variáveis e estrutura SQL física. Testes funcionais/RLS não realizados nesta etapa documental.
+- **Evidências verificáveis:** `1bdff539` (homologação P08) e `4bfab1f9` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. Commit do próprio registro consta no histórico GitHub.
