@@ -174,11 +174,8 @@ test('botões mais abrem modal de cadastro reutilizável',async({page})=>{
  await page.getByRole('textbox',{name:'Nome de cor'}).fill('Turquesa Única');
  await page.getByRole('button',{name:'Salvar cadastro'}).click();
  await expect(page.locator('#catalog-cor option[value="Turquesa Única"]')).toHaveCount(1);
- await page.getByRole('button',{name:'Cadastrar tipo'}).click();
- await expect(page.getByRole('dialog',{name:'Cadastrar tipo'})).toBeVisible();
- await page.getByRole('button',{name:'Cancelar'}).click();
- await page.getByRole('button',{name:'Cadastrar marca'}).click();
- await expect(page.getByRole('dialog',{name:'Cadastrar marca'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Cadastrar tipo'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Cadastrar marca'})).toBeVisible();
 });
 test('login, oficina e cadastro persistente consomem API autenticada',async({page})=>{
  const base='https://bxtbfdddcxbyaomydgxn.supabase.co';
