@@ -102,3 +102,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades executadas:** leitura dos documentos de proposta/homologações da branch; registro formal da aprovação expressa de RES, PAR, FAL, RET e RAT, distinção entre 28 diretrizes homologadas e detalhes ainda pendentes; atualização de continuidade e backlog para migração segura de conversa.
 - **Resultado/evidência:** `docs/HOMOLOGACAO_PRODUCAO_2026-11-20.md`, commit `683847ffc35abe1b586a6559efcbfa6cb6e04d1f`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 .
 - **Pendências:** políticas detalhadas de reservas, parciais, falhas/retrabalho, rateio e financeiro; nenhum teste funcional/RLS executado; sem código, banco, merge ou deploy.
+
+## 20/11/2026 — Homologação documental P01 (reservas e sobras)
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; não calcular tempo produtivo pelo intervalo entre mensagens.
+- **Atividades efetivamente executadas:** leitura de `docs/CONTINUIDADE.md`, `docs/REGISTRO_DE_ATIVIDADES.md` e homologação de produção da branch; formalização da aprovação expressa P01-A a P01-F como política única; atualização de continuidade; registro cronológico desta atividade.
+- **Resultados:** documento `docs/HOMOLOGACAO_RESERVAS_P01_2026-11-20.md` criado, 28 regras anteriores preservadas e novo total documental de 29; P02–P06 mantidas pendentes. Nenhum código, SQL, banco, merge ou deploy.
+- **Pendências:** revisão individual de P02, P03, P04, P05 e P06; demais exceções e modelo SQL físico ainda sem homologação. Testes funcionais/RLS não realizados (atividade exclusivamente documental).
+- **Evidências verificáveis:** commits `af0edb9d` (homologação P01), `c70996f7` (continuidade), branch `feat/fundacao-makercusto`, PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. O commit deste próprio registro consta no histórico da branch.
