@@ -143,3 +143,11 @@
 - P01-A: liberar sobra reservada ao encerramento/cancelamento definitivo, não durante parcial aberta; P01-B: prazo opcional com revisão, sem expiração liberadora automática; P01-C: excedente só com saldo/origem e conciliação explícita de inconsistências; P01-D: troca de bobina com consumos/custos por lote; P01-E: cancelamento parcial libera só excedente; P01-F: validação concorrente e transacional no servidor.
 - **NÃO homologadas:** P02–P06; pausas/energia P07; consumo sem lote P08; estornos parciais P09; reservas de kits, locais, bobinas parciais e ordens abandonadas; permissões detalhadas; esquema físico/SQL.
 - Próxima etapa: apresentar P02 para revisão individual. Apenas documentação na branch e PR draft; sem código, banco, SQL, merge ou deploy.
+
+
+## P02 — confirmações parciais HOMOLOGADA — 20/11/2026
+- Proprietário aprovou expressamente P02-A a P02-F como **uma política consolidada**, preservando as 29 homologações prévias, inclusive P01. Registro: `docs/HOMOLOGACAO_CONFIRMACOES_P02_2026-11-20.md` (commit `e77bd4b9`).
+- **30 homologações acumuladas:** 5 estruturais + 8 permissões + 4 técnicas + 6 estoque + 5 produção + P01 + P02. Sub-regras não aumentam essa contagem individualmente.
+- **P02-A:** confirmação parcial opcional; fluxo simples e avançado usam mecanismo único. **P02-B:** consumos e saídas exclusivamente novos por evento, com planejado/acumulado/pendente e proveniência. **P02-C:** IDs, idempotência, autoria, horário e transação atômica; reenvio divergente rejeitado. **P02-D:** conferência antes do encerramento definitivo e liberação de reserva só no encerramento conforme P01. **P02-E:** correções auditáveis por novo evento ou estorno, sem mutação do histórico. **P02-F:** excedente real exige origem/saldo e confirmação explícita, com conciliação de inconsistências sem apagar o ocorrido.
+- **PENDENTES (não homologadas):** P03 falhas e perdas; P04 retrabalho e valor financeiro; P05 critérios específicos de rateio; P06 precisão monetária; P07 pausas/energia; P08 consumo sem lote; P09 estornos parciais; detalhes de medição incremental, permissões/RLS, esquema físico/SQL e outras exceções de P01.
+- Próximo passo: revisão individual de P03, sem impor nova homologação. Somente documentação, nenhum código, SQL, banco, merge ou deploy.
