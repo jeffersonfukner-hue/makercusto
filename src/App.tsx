@@ -17,7 +17,7 @@ function readCatalog(catalog:Catalog):string[] {
  try { const value:unknown=JSON.parse(localStorage.getItem(key(catalog))||'[]');return Array.isArray(value)?unique(value.filter((v):v is string=>typeof v==='string').slice(0,100)):[]; }catch { return []; }
 }
 type PrinterProfile = {id:string;name:string;printerPrice:number;averageWatts:number;lifetimeHours:number;pricePerKwh:number};
-const initialPrinter:PrinterProfile = {id:'example',name:'Exemplo — ajustar valores',printerPrice:3500,averageWatts:150,lifetimeHours:3000,pricePerKwh:1.03};
+const initialPrinter:PrinterProfile = {id:'example',name:'Anycubic Kobra X — custos ilustrativos',printerPrice:3500,averageWatts:150,lifetimeHours:3000,pricePerKwh:1.03};
 type NumericKey = Exclude<keyof CostInput,'materials'>;
 const fields:{key:NumericKey;label:string;step:string}[] = [
  {key:'hours',label:'Tempo de impressão (horas)',step:'0.01'},
