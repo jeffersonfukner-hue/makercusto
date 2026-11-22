@@ -92,10 +92,7 @@ export function ProductWorkspace({workspaceId,tab}:Props){
      await updateAssembly(workspaceId,selected,{...basic,parts:cleanParts});id=selected;
     }else{
      id=await createAssembly(workspaceId,{...basic,parts:cleanParts});
-     // A criação inicial não é faturamento: custos manuais só são registrados após revisão explícita.
-     if(cleanParts.some(p=>p.unit_cost!==null&&p.unit_cost!==undefined)){
-      setFeedback('Conjunto salvo. Para registrar custos, abra Editar e informe os valores por peça.');
-     }
+     // A RPC registra custos informados já na primeira revisão, preservando o snapshot.
     }
    }else{
     id=await saveProductRecord(workspaceId,mode==='edit'?selected:null,{...basic,kind});
@@ -113,7 +110,7 @@ export function ProductWorkspace({workspaceId,tab}:Props){
     <p>{mode==='catalog'?'Selecione um cadastro para consultar, editar ou duplicar.':mode==='view'?'Detalhes registrados na oficina.':'Preencha somente os dados que você conhece.'}</p></div>
    <div className="product-workspace-buttons">
     {mode!=='catalog'&&<button type="button" className="secondary-action" onClick={()=>{setMode('catalog');setSelected(null);setError('');}}>Voltar ao catálogo</button>}
-    {mode==='catalog'&&<button type="button" className="primary-action" onClick={()=>reset(tab==='assemblies'?'kit':tab==='component'?'component':'product')}>+ Novo produto</button>}
+    {mode==='catalog'&&<button type="button" className="primary-action" onClick={()=>reset(tab==='assemblies'?'kit':tab==='component'?'component':'product')}>{tab==='assemblies'?'+ Novo conjunto':tab==='component'?'+ Nova peça':'+ Novo produto'}</button>}
    </div>
   </div>
   {error&&<p role="alert" className="error">{error}</p>}
