@@ -517,6 +517,9 @@ test('conjunto de três peças é salvo e consultado na mesma oficina',async({pa
  await expect(kit.locator('.assembly-details')).toContainText('Lançador');
  await expect(kit.locator('.assembly-details')).toContainText('Haste');
  await expect(kit.locator('.assembly-details')).toContainText('Hélice');
+ await expect(kit.getByRole('heading',{name:'Ficha do conjunto'})).toBeVisible();
+ await expect(kit.locator('.assembly-details')).toContainText('Custo real');
+ await expect(kit.locator('.assembly-details')).toContainText('Não apurado');
  expect((payload?.p_parts as unknown[])).toHaveLength(3);
  expect(payload?.p_workspace_id).toBe(workspace);
 });
