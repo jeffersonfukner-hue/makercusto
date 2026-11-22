@@ -6,7 +6,7 @@ import {ProductSavePanel} from './components/ProductSavePanel';
 import {ProductWorkspace} from './components/ProductWorkspace';
 import {AssemblyPanel} from './components/AssemblyPanel';
 import {WorkshopDashboard} from './components/WorkshopDashboard';
-import {SystemNavigation,type ProductTab} from './components/SystemNavigation';
+import {SystemNavigation,type ProductTab,type OverviewTab} from './components/SystemNavigation';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
@@ -87,6 +87,7 @@ export default function App(){
  const [workspaceName,setWorkspaceName]=useState('Minha oficina');
  const [activeSection,setActiveSection]=useState<'overview'|'products'|'assemblies'|'calculator'>('overview');
  const [productTab,setProductTab]=useState<ProductTab>('all');
+ const [overviewTab,setOverviewTab]=useState<OverviewTab>('general');
  const [cloudBusy,setCloudBusy]=useState(false);
  const profileFromDb=(p:StoredPrinter):PrinterProfile=>({
   id:p.id,name:p.name,printerPrice:p.purchase_price??0,
@@ -218,9 +219,9 @@ export default function App(){
  const average = result&&used>0?result.material/used*1000:0;
  return <>
  {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthOpen(true)}>Entrar / Salvar</button></div></header>}
- <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>
+ <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>
  <main className={session?"app-main":"shell"}>
-  {session&&activeSection==='overview'&&<WorkshopDashboard workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
+  {session&&activeSection==='overview'&&<WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
   {(!session||activeSection==='calculator')&&<>
   <section className={session?"intro app-calculator-intro":"intro"}><p className="eyebrow">{session?"FERRAMENTA DE CUSTOS":"IMPRESSÃO 3D SEM COMPLICAÇÃO"}</p><h1>{session?"Calculadora de produção":"Descubra seu custo. Venda com confiança."}</h1><p>{session?"Simule custos antes de registrar um produto. Valores ilustrativos permanecem identificados.":"Comece com o essencial. Precisa de mais controle? Ative o Avançado."}</p></section>
   <nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples <small>Direto ao resultado</small></button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado <small>Cores, impressora e custos extras</small></button></nav>
