@@ -5,6 +5,7 @@ import {FilamentProfilePanel} from './components/FilamentProfilePanel';
 import {ProductSavePanel} from './components/ProductSavePanel';
 import {AssemblyPanel} from './components/AssemblyPanel';
 import {WorkshopDashboard} from './components/WorkshopDashboard';
+import {SystemNavigation,type ProductTab} from './components/SystemNavigation';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
@@ -84,6 +85,7 @@ export default function App(){
  const [accountError,setAccountError]=useState('');
  const [workspaceName,setWorkspaceName]=useState('Minha oficina');
  const [activeSection,setActiveSection]=useState<'overview'|'products'|'assemblies'|'calculator'>('overview');
+ const [productTab,setProductTab]=useState<ProductTab>('all');
  const [cloudBusy,setCloudBusy]=useState(false);
  const profileFromDb=(p:StoredPrinter):PrinterProfile=>({
   id:p.id,name:p.name,printerPrice:p.purchase_price??0,
@@ -214,11 +216,9 @@ export default function App(){
  const used = result ? result.modelGrams+result.wasteGrams : 0;
  const average = result&&used>0?result.material/used*1000:0;
  return <>
- <header className={session?"site-header app-header":"site-header"}><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>{session?"Gestão da sua oficina":"Conheça seu custo. Defina seu preço."}</small></div><span className="phase">{session?"Sistema da oficina":"Prévia de desenvolvimento"}</span><button type="button" className="account-button" onClick={()=>session?void logout():setAuthOpen(true)}>{session?"Sair · "+(session.user.email??"Minha conta"):"Entrar / Salvar"}</button></div></header>
- {session&&<nav className="app-navigation" aria-label="Navegação do MakerCusto"><div className="shell app-navigation-inner">
-  {([{key:'overview',label:'Painel'},{key:'products',label:'Produtos'},{key:'assemblies',label:'Conjuntos'},{key:'calculator',label:'Calculadora'}] as const).map(item=><button key={item.key} type="button" aria-current={activeSection===item.key?'page':undefined} onClick={()=>setActiveSection(item.key)}>{item.label}</button>)}
- </div></nav>}
- <main className={session?"shell app-main":"shell"}>
+ {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthOpen(true)}>Entrar / Salvar</button></div></header>}
+ <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>
+ <main className={session?"app-main":"shell"}>
   {session&&activeSection==='overview'&&<WorkshopDashboard workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
   {(!session||activeSection==='calculator')&&<>
   <section className={session?"intro app-calculator-intro":"intro"}><p className="eyebrow">{session?"FERRAMENTA DE CUSTOS":"IMPRESSÃO 3D SEM COMPLICAÇÃO"}</p><h1>{session?"Calculadora de produção":"Descubra seu custo. Venda com confiança."}</h1><p>{session?"Simule custos antes de registrar um produto. Valores ilustrativos permanecem identificados.":"Comece com o essencial. Precisa de mais controle? Ative o Avançado."}</p></section>
@@ -301,9 +301,10 @@ export default function App(){
    </>}</section>
   </div>
   </>}
-  {(!session||activeSection==='products')&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} onLogin={()=>setAuthOpen(true)}/>}
+  {(!session||activeSection==='products')&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} filter={session&&productTab==='parts'?'component':'all'} onLogin={()=>setAuthOpen(true)}/>}
   {(!session||activeSection==='assemblies')&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
- </main><footer className="shell footer">{session?"MakerCusto · Oficina conectada ao Supabase · Ambiente de desenvolvimento":"MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login"}</footer>
+ </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
+ </SystemNavigation>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
  {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?(stored.find(p=>p.id===printerId)??{id:activePrinter.id,workspace_id:workspaceId??'',model_id:models.find(m=>activePrinter.name.includes(m.name))?.id??null,name:activePrinter.name,purchase_price:activePrinter.printerPrice,average_watts:activePrinter.averageWatts,lifetime_hours:activePrinter.lifetimeHours,active:true}):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
  {catalogModal&&<CatalogModal title={catalogTitles[catalogModal]} onClose={()=>setCatalogModal(null)} onSave={saveCatalog}/>}
