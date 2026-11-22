@@ -435,25 +435,23 @@ test('produto exige login para salvar e oferece entrada no modal',async({page})=
  await page.getByRole('button',{name:'Entrar para salvar produto'}).click();
  await expect(page.getByRole('dialog')).toBeVisible();
 });
-test('salva produto, custo e lista na oficina com feedback sem recarregar',async({page})=>{
+test('catálogo abre antes do formulário e salva novo produto na oficina',async({page})=>{
  const workspace='11111111-1111-4111-8111-111111111111';
  const user='22222222-2222-4222-8222-222222222222';
- const saved:{name:string;id:string;sku:string|null;kind:string;sale_price:number;workspace_id:string;description:string|null;active:boolean;created_at:string}[]=[];
+ const saved:{name:string;id:string;sku:string|null;kind:'product'|'component'|'kit';sale_price:number|null;workspace_id:string;description:string|null;active:boolean;created_at:string}[]=[];
  let posted:Record<string,unknown>|undefined;
- await page.addInitScript(({user})=>{
-  localStorage.setItem('makercusto:session:v1',JSON.stringify({
-   access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user,email:'teste@example.test'}
-  }));
- },{user});
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user,email:'teste@example.test'}
+ })),{user});
  await page.route('**/rest/v1/**',async route=>{
   const url=route.request().url();
   if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Minha oficina',owner_id:user}])});
-  if(url.includes('/mc_printers?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
-  if(url.includes('/mc_catalog?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+  if(url.includes('/mc_printers?')||url.includes('/mc_catalog?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
   if(url.includes('/mc_products?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(saved)});
-  if(url.includes('/rpc/mc_save_calculated_product')){
+  if(url.includes('/rpc/mc_list_assemblies'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+  if(url.includes('/rpc/mc_save_product_record')){
    posted=route.request().postDataJSON() as Record<string,unknown>;
-   saved.push({id:'33333333-3333-4333-8333-333333333333',workspace_id:workspace,name:String(posted.p_name),sku:String(posted.p_sku),kind:String(posted.p_kind),sale_price:Number(posted.p_sale_price),description:null,active:true,created_at:new Date().toISOString()});
+   saved.push({id:'33333333-3333-4333-8333-333333333333',workspace_id:workspace,name:String(posted.p_name),sku:String(posted.p_sku),kind:'product',sale_price:null,description:null,active:true,created_at:new Date().toISOString()});
    return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(saved[0].id)});
   }
   return route.fulfill({status:404,contentType:'application/json',body:'{}'});
@@ -461,47 +459,61 @@ test('salva produto, custo e lista na oficina com feedback sem recarregar',async
  await page.goto('/');
  await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveCount(0);
+ await page.getByRole('button',{name:'+ Novo produto'}).click();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Chaveiro Galo');
  await page.getByRole('textbox',{name:'SKU do produto'}).fill('GAL-01');
- await page.getByRole('button',{name:'Salvar produto e custo'}).click();
- await expect(page.locator('.product-save-panel .product-success')).toContainText('Produto, versão inicial e custo estimado salvos');
- await expect(page.locator('.product-save-panel .product-list')).toContainText('Chaveiro Galo');
+ await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Ficha do produto'})).toBeVisible();
+ await expect(page.getByText('Chaveiro Galo')).toBeVisible();
  expect(posted?.p_workspace_id).toBe(workspace);
  expect(posted?.p_kind).toBe('product');
- expect(Number(posted?.p_total_cost)).toBeGreaterThan(0);
- expect((posted?.p_parameters as Record<string,unknown>)?.saved_input).toBeTruthy();
+ expect(posted?.p_product_id).toBeNull();
 });
-
 test('visitante vê fluxo de montagem e pode abrir login',async({page})=>{
  await page.goto('/');
  await expect(page.getByRole('heading',{name:'Produtos com várias peças'})).toBeVisible();
  await page.getByRole('button',{name:'Entrar para montar produto'}).click();
  await expect(page.getByRole('dialog')).toBeVisible();
 });
-test('conjunto de três peças é salvo e consultado na mesma oficina',async({page})=>{
+test('conjunto de três peças: catálogo, criação, custos, edição e duplicação',async({page})=>{
  const workspace='11111111-1111-4111-8111-111111111111';
  const user='22222222-2222-4222-8222-222222222222';
- type Assembly={id:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:{id:string;name:string;quantity:number;grams:string|null;notes:string|null}[]};
- const kits:Assembly[]=[];
+ type Kit={id:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;revision:number;total_cost:number|null;cost_status:string;parts:{id:string;name:string;quantity:number;grams:string|null;unit_cost:number|null;notes:string|null}[]};
+ const kits:Kit[]=[];
+ const products:{id:string;workspace_id:string;name:string;sku:string|null;kind:string;sale_price:number|null;description:string|null;active:boolean;created_at:string}[]=[];
  let payload:Record<string,unknown>|undefined;
+ let revisions=0;
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
-  access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,
-  user:{id:user,email:'teste@example.test'}
+  access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user,email:'teste@example.test'}
  })),{user});
  await page.route('**/rest/v1/**',async route=>{
   const url=route.request().url();
-  if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Minha oficina',owner_id:user}])});
-  if(url.includes('/mc_printers?')||url.includes('/mc_catalog?')||url.includes('/mc_products?'))
-   return route.fulfill({status:200,contentType:'application/json',body:'[]'});
-  if(url.includes('/rpc/mc_list_assemblies'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(kits)});
+  const respond=(v:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(v)});
+  if(url.includes('/mc_workspaces?'))return respond([{id:workspace,name:'Minha oficina',owner_id:user}]);
+  if(url.includes('/mc_printers?')||url.includes('/mc_catalog?'))return respond([]);
+  if(url.includes('/mc_products?'))return respond(products);
+  if(url.includes('/rpc/mc_list_assemblies'))return respond(kits);
   if(url.includes('/rpc/mc_create_assembly')){
    payload=route.request().postDataJSON() as Record<string,unknown>;
-   const parts=payload.p_parts as {name:string;quantity:number;grams:number|null;notes:string}[];
-   kits.push({id:'33333333-3333-4333-8333-333333333333',name:String(payload.p_name),sku:String(payload.p_sku)||null,
-    description:String(payload.p_description)||null,sale_price:payload.p_sale_price===null?null:Number(payload.p_sale_price),
-    created_at:new Date().toISOString(),
-    parts:parts.map((p,i)=>({id:String(i+1),name:p.name,quantity:p.quantity,grams:p.grams===null?null:String(p.grams),notes:p.notes}))});
-   return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(kits[0].id)});
+   const parts=payload.p_parts as {name:string;quantity:number;grams:number|null;unit_cost:number|null;notes:string}[];
+   const id='33333333-3333-4333-8333-'+String(kits.length+1).padStart(12,'0');
+   const name=String(payload.p_name);
+   kits.push({id,name,sku:null,description:null,sale_price:null,created_at:new Date().toISOString(),revision:1,cost_status:'estimated',
+    total_cost:parts.every(p=>p.unit_cost!==null)?parts.reduce((n,p)=>n+p.unit_cost!*p.quantity,0):null,
+    parts:parts.map((p,i)=>({id:'part'+i,name:p.name,quantity:p.quantity,grams:p.grams===null?null:String(p.grams),unit_cost:p.unit_cost,notes:p.notes}))});
+   products.push({id,name,workspace_id:workspace,sku:null,kind:'kit',sale_price:null,description:null,active:true,created_at:new Date().toISOString()});
+   return respond(id);
+  }
+  if(url.includes('/rpc/mc_update_assembly')){
+   revisions++;payload=route.request().postDataJSON() as Record<string,unknown>;
+   const item=kits.find(p=>p.id===payload?.p_product_id)!;
+   item.name=String(payload.p_name);item.revision++;
+   const parts=payload.p_parts as {id:string;name:string;quantity:number;unit_cost:number|null;grams:number|null;notes:string}[];
+   item.parts=parts.map(p=>({...p,grams:p.grams===null?null:String(p.grams)}));
+   item.total_cost=parts.every(p=>p.unit_cost!==null)?parts.reduce((n,p)=>n+(p.unit_cost??0)*p.quantity,0):null;
+   return respond(item.revision);
   }
   return route.fulfill({status:404,contentType:'application/json',body:'{}'});
  });
@@ -509,28 +521,35 @@ test('conjunto de três peças é salvo e consultado na mesma oficina',async({pa
  await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
- const kit=page.locator('.assembly-panel');
- await kit.getByRole('textbox',{name:'Nome do conjunto'}).fill('Brinquedo lançador de hélices');
- await kit.getByRole('spinbutton',{name:'Peso da peça 1'}).fill('35.5');
- await kit.getByRole('spinbutton',{name:'Peso da peça 3'}).fill('12.5');
- await kit.getByRole('button',{name:'Salvar conjunto e peças'}).click();
- await expect(kit.locator('.product-success')).toContainText('Conjunto e 3 peças salvos');
- await expect(kit.locator('.product-list')).toContainText('Brinquedo lançador de hélices');
- await kit.getByRole('button',{name:/Brinquedo lançador de hélices/}).click();
- await expect(kit.locator('.assembly-details')).toContainText('Lançador');
- await expect(kit.locator('.assembly-details')).toContainText('Haste');
- await expect(kit.locator('.assembly-details')).toContainText('Hélice');
- await expect(kit.getByRole('heading',{name:'Ficha do conjunto'})).toBeVisible();
- await expect(kit.locator('.assembly-details')).toContainText('Custo real');
- await expect(kit.locator('.assembly-details')).toContainText('Não apurado');
+ await expect(page.getByRole('heading',{name:'Conjuntos'})).toBeVisible();
+ await page.getByRole('button',{name:'+ Novo produto'}).click();
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toBeEmpty();
+ await page.getByRole('textbox',{name:'Nome do produto'}).fill('Brinquedo lançador de hélices');
+ await page.getByRole('textbox',{name:'Nome da peça 1'}).fill('Lançador');
+ await page.getByRole('textbox',{name:'Nome da peça 2'}).fill('Haste');
+ await page.getByRole('button',{name:'+ Adicionar peça'}).click();
+ await page.getByRole('textbox',{name:'Nome da peça 3'}).fill('Hélice');
+ await page.getByRole('spinbutton',{name:'Custo da peça 1'}).fill('2.50');
+ await page.getByRole('spinbutton',{name:'Custo da peça 2'}).fill('0.80');
+ await page.getByRole('spinbutton',{name:'Custo da peça 3'}).fill('1.20');
+ await expect(page.getByText('R$ 4,50 (informado)')).toBeVisible();
+ await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Ficha do produto'})).toBeVisible();
+ await expect(page.getByText('Brinquedo lançador de hélices')).toBeVisible();
+ await expect(page.getByText('R$ 4,50 (informado)')).toBeVisible();
  expect((payload?.p_parts as unknown[])).toHaveLength(3);
- expect(payload?.p_workspace_id).toBe(workspace);
+ await page.getByRole('button',{name:'Editar',exact:true}).click();
+ await page.getByRole('spinbutton',{name:'Custo da peça 2'}).fill('1.10');
+ await page.getByRole('button',{name:'Salvar nova revisão'}).click();
+ await expect(page.getByText('R$ 4,80 (informado)')).toBeVisible();
+ expect(revisions).toBe(1);
+ await page.getByRole('button',{name:'Duplicar'}).click();
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Brinquedo lançador de hélices — cópia');
+ await expect(page.getByRole('spinbutton',{name:'Custo da peça 1'})).toBeEmpty();
 });
-test('validação impede cadastro incompleto e exige duas peças',async({page})=>{
+test('validação impede cadastrar conjunto sem nome das peças',async({page})=>{
  const user='22222222-2222-4222-8222-222222222222',workspace='11111111-1111-4111-8111-111111111111';
- await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
-  access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user}
- })),{user});
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user}})),{user});
  await page.route('**/rest/v1/**',async route=>{
   const url=route.request().url();
   if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Oficina',owner_id:user}])});
@@ -540,12 +559,11 @@ test('validação impede cadastro incompleto e exige duas peças',async({page})=
  await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
- const kit=page.locator('.assembly-panel');
- await kit.getByRole('textbox',{name:'Nome da peça 1'}).fill('');
- await kit.getByRole('button',{name:'Salvar conjunto e peças'}).click();
- await expect(kit.getByRole('alert')).toContainText('Informe pelo menos duas peças válidas');
+ await page.getByRole('button',{name:'+ Novo produto'}).click();
+ await page.getByRole('textbox',{name:'Nome do produto'}).fill('Kit de teste');
+ await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('Informe pelo menos duas peças válidas');
 });
-
 test('acesso público preserva calculadora sem apresentar sistema privado',async({page})=>{
  await page.goto('/');
  await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toBeVisible();
@@ -573,11 +591,11 @@ test('login transforma a página em sistema com menu lateral e painel de oficina
  await expect(page.getByRole('button',{name:'Impressões',exact:false})).toBeDisabled();
  await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();
  await page.getByRole('button',{name:'Peças',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Minhas peças'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Peças'})).toBeVisible();
  await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Produtos com várias peças'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Conjuntos'})).toBeVisible();
  await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Custos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Calculadora de produção'})).toBeVisible();
