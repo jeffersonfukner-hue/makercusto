@@ -522,7 +522,7 @@ test('conjunto de três peças: catálogo, criação, custos, edição e duplica
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Conjuntos'})).toBeVisible();
- await page.getByRole('button',{name:'+ Novo produto'}).click();
+ await page.getByRole('button',{name:'+ Novo conjunto'}).click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toBeEmpty();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Brinquedo lançador de hélices');
  await page.getByRole('textbox',{name:'Nome da peça 1'}).fill('Lançador');
@@ -559,7 +559,7 @@ test('validação impede cadastrar conjunto sem nome das peças',async({page})=>
  await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
- await page.getByRole('button',{name:'+ Novo produto'}).click();
+ await page.getByRole('button',{name:'+ Novo conjunto'}).click();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Kit de teste');
  await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
  await expect(page.getByRole('alert')).toContainText('Informe pelo menos duas peças válidas');
