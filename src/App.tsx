@@ -3,6 +3,7 @@ import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
 import {SmartField,formatCatalogName} from './components/SmartField';
 import {FilamentProfilePanel} from './components/FilamentProfilePanel';
 import {ProductSavePanel} from './components/ProductSavePanel';
+import {ProductWorkspace} from './components/ProductWorkspace';
 import {AssemblyPanel} from './components/AssemblyPanel';
 import {WorkshopDashboard} from './components/WorkshopDashboard';
 import {SystemNavigation,type ProductTab} from './components/SystemNavigation';
@@ -301,8 +302,9 @@ export default function App(){
    </>}</section>
   </div>
   </>}
-  {(!session||activeSection==='products')&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} filter={session&&productTab==='parts'?'component':'all'} onLogin={()=>setAuthOpen(true)}/>}
-  {(!session||activeSection==='assemblies')&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
+  {!session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} onLogin={()=>setAuthOpen(true)}/>}
+  {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
+  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'}/>} 
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
