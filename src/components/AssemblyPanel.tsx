@@ -84,7 +84,19 @@ export function AssemblyPanel({session,workspaceId,onLogin}:Props){
      <ul>{assemblies.map(kit=><li key={kit.id} className="assembly-list-item">
       <button type="button" aria-expanded={open===kit.id} onClick={()=>setOpen(open===kit.id?null:kit.id)}>{kit.name} · {kit.parts.length} peças</button>
       <span>{kit.sale_price===null?'Sem preço definido':money(kit.sale_price)}</span>
-      {open===kit.id&&<div className="assembly-details"><p>{kit.description||'Sem descrição'}</p><ol>{kit.parts.map(part=><li key={part.id}>{part.quantity} × {part.name}{part.grams!==null?' · '+part.grams+' g/peça':''}{part.notes?' — '+part.notes:''}</li>)}</ol></div>}
+      {open===kit.id&&<section className="assembly-details" aria-label={'Ficha do conjunto '+kit.name}>
+       <div className="assembly-detail-heading"><div><h4>Ficha do conjunto</h4><p>{kit.description||'Sem descrição cadastrada'}</p></div><span>Revisão inicial</span></div>
+       <dl className="assembly-detail-stats">
+        <div><dt>Tipo</dt><dd>Conjunto montado</dd></div>
+        <div><dt>Preço de venda</dt><dd>{kit.sale_price===null?'Não informado':money(kit.sale_price)}</dd></div>
+        <div><dt>Custo real</dt><dd>Não apurado</dd></div>
+       </dl>
+       <h5>Composição obrigatória</h5>
+       <div className="assembly-detail-table-wrap"><table className="assembly-detail-table"><thead><tr><th>Peça</th><th>Qtd.</th><th>Peso / unidade</th></tr></thead>
+        <tbody>{kit.parts.map(part=><tr key={part.id}><td><strong>{part.name}</strong>{part.notes&&<small>{part.notes}</small>}</td><td>{part.quantity}</td><td>{part.grams!==null?part.grams+' g':'Não informado'}</td></tr>)}</tbody>
+       </table></div>
+       <p className="footnote">A ficha usa a composição armazenada na oficina. Custos de produção e movimentação de estoque exigem registro próprio.</p>
+      </section>}
      </li>)}</ul>}
    </div>
   </div>}
