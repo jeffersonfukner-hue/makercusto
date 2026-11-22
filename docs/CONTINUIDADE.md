@@ -402,3 +402,10 @@
 - **Dados reais preservados:** produto Lançador de hélices `0a687413-fe87-4f80-a655-e6b914aceea6`, 3 componentes, sem pesos nem custos inventados; leitura comprovou 4 registros e uma revisão do kit real.
 - **Limites:** custo manual equivale a estimativa informada; não representa impressão/estoque real. UI de histórico integral das revisões, vinculação a impressão/filamentos/estoque e biblioteca STL permanecem pendentes. Testes E2E usam API simulada. Sem merge/deploy.
 - **Próximo passo:** usuário publica manualmente branch/commit funcional após revisão; realizar homologação visual e operação real sobre o produto existente, exercitando edição com pesos e custos reais.
+
+
+## 22/11/2026 — Abas do Início previstas no Modelo 4
+- Usuário apontou divergência com o protótipo homologado: o Início mostrava apenas `Visão geral`, faltando `Atividades` e `Pendências`.
+- Corrigido na branch `feat/fundacao-makercusto`: três abas selecionáveis com estado preservado ao navegar entre módulos. `Visão geral` mantém indicadores; `Atividades` consulta cadastros recentes de produtos, com data de criação; `Pendências` apresenta produtos sem preço e kits sem custo/sem preço. Sem dados inventados, sem declarar que cadastros são logs de produção.
+- Arquivos: `src/components/SystemNavigation.tsx`, `WorkshopDashboard.tsx`, `src/App.tsx`, `src/styles.css`, `tests/app.spec.ts`.
+- CI iniciado para commit funcional `1854af63bfc0fc4840e0034690f05dc57d99e7e6`; verificar resultado ao concluir. Sem merge/deploy.
