@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { listProducts, saveCalculatedProduct, type ProductRecord, type Session } from '../data/supabase';
 import type { CostInput, CostResult } from '../domain/cost';
 
-type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; onLogin: () => void };
+type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void };
 const currency=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
-export function ProductSavePanel({session,workspaceId,input,result,onLogin}:Props){
+export function ProductSavePanel({session,workspaceId,input,result,filter='all',onLogin}:Props){
  const [name,setName]=useState('');
  const [sku,setSku]=useState('');
  const [description,setDescription]=useState('');
@@ -24,6 +24,7 @@ export function ProductSavePanel({session,workspaceId,input,result,onLogin}:Prop
    .finally(()=>{if(live)setLoading(false);});
   return ()=>{live=false;};
  },[session?.user.id,workspaceId,refresh]);
+ const visibleItems=filter==='component'?items.filter(item=>item.kind==='component'):items;
  const save=async()=>{
   setError('');setMessage('');
   if(!session||!workspaceId){onLogin();return;}
@@ -43,7 +44,7 @@ export function ProductSavePanel({session,workspaceId,input,result,onLogin}:Prop
   finally{setBusy(false);}
  };
  return <section className="panel product-save-panel" aria-labelledby="product-save-title">
-  <div className="panel-heading"><div><h2 id="product-save-title">Meus produtos</h2>
+  <div className="panel-heading"><div><h2 id="product-save-title">{filter==='component'?'Minhas peças':'Meus produtos'}</h2>
    <p>Salve o cálculo como um produto da oficina. Os custos anteriores ficam registrados em um snapshot.</p></div></div>
   {!session?<div><p className="footnote">Entre na sua conta para salvar e consultar os produtos na nuvem.</p>
    <button type="button" className="primary-action" onClick={onLogin}>Entrar para salvar produto</button></div>:
@@ -57,8 +58,8 @@ export function ProductSavePanel({session,workspaceId,input,result,onLogin}:Prop
    <p className="footnote">O custo salvo será uma estimativa do cálculo atual ({result?currency(result.lotCost):'inválido'} por lote). Não há baixa automática de estoque.</p>
    <button className="primary-action" type="button" disabled={busy||!result||!workspaceId} onClick={()=>void save()}>{busy?'Salvando produto…':'Salvar produto e custo'}</button>
    <div aria-live="polite">{message&&<p className="product-success" role="status">{message}</p>}{error&&<p className="error" role="alert">{error}</p>}</div>
-   <div className="product-list"><h3>Produtos da oficina</h3>{loading?<p role="status">Carregando produtos…</p>:items.length===0?<p className="footnote">Nenhum produto cadastrado nesta oficina.</p>:
-    <ul>{items.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
+   <div className="product-list"><h3>{filter==='component'?'Peças cadastradas':'Produtos da oficina'}</h3>{loading?<p role="status">Carregando produtos…</p>:visibleItems.length===0?<p className="footnote">Nenhum produto cadastrado nesta oficina.</p>:
+    <ul>{visibleItems.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
    </div>
   </div>}
  </section>;
