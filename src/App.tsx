@@ -4,6 +4,7 @@ import {SmartField,formatCatalogName} from './components/SmartField';
 import {FilamentProfilePanel} from './components/FilamentProfilePanel';
 import {ProductSavePanel} from './components/ProductSavePanel';
 import {AssemblyPanel} from './components/AssemblyPanel';
+import {WorkshopDashboard} from './components/WorkshopDashboard';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
@@ -81,6 +82,8 @@ export default function App(){
  const [stored,setStored]=useState<StoredPrinter[]>([]);
  const [workspaceId,setWorkspaceId]=useState<string|null>(null);
  const [accountError,setAccountError]=useState('');
+ const [workspaceName,setWorkspaceName]=useState('Minha oficina');
+ const [activeSection,setActiveSection]=useState<'overview'|'products'|'assemblies'|'calculator'>('overview');
  const [cloudBusy,setCloudBusy]=useState(false);
  const profileFromDb=(p:StoredPrinter):PrinterProfile=>({
   id:p.id,name:p.name,printerPrice:p.purchase_price??0,
@@ -90,12 +93,12 @@ export default function App(){
  });
  const loadAccount=async()=>{
   const current=sessionStore.get();setSession(current);
-  if(!current){setWorkspaceId(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));return;}
+  if(!current){setWorkspaceId(null);setWorkspaceName('Minha oficina');setActiveSection('overview');setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));return;}
   setCloudBusy(true);setAccountError('');
   try{
    let ws=await listWorkspaces();
    if(!ws.length){const id=await createWorkspace('Minha oficina');ws=[{id,name:'Minha oficina',owner_id:current.user.id}];}
-   const id=ws[0].id;setWorkspaceId(id);
+   const id=ws[0].id;setWorkspaceName(ws[0].name);setWorkspaceId(id);
    const items=await listPrinters(id);setStored(items);
    const available=[...seedPrinters(),...items.map(profileFromDb)];
    setPrinters(available);
@@ -127,7 +130,7 @@ export default function App(){
   setStored(prev=>[...prev.filter(p=>p.id!==saved.id),saved]);
   setPrinters(prev=>[...prev.filter(p=>p.id!==saved.id),profileFromDb(saved)]);setPrinterId(saved.id);
  };
- const logout=async()=>{await signOut();setSession(null);setWorkspaceId(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));};
+ const logout=async()=>{await signOut();setActiveSection('overview');setSession(null);setWorkspaceId(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));};
  const activePrinter=printers.find(p=>p.id===printerId)??printers[0];
  const addPrinter=()=>setPrinterModal('new');
  const isReferencePrinter=printerId==='example'||printerId.startsWith('reference:');
@@ -211,9 +214,14 @@ export default function App(){
  const used = result ? result.modelGrams+result.wasteGrams : 0;
  const average = result&&used>0?result.material/used*1000:0;
  return <>
- <header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>session?void logout():setAuthOpen(true)}>{session?"Sair · "+(session.user.email??"Minha conta"):"Entrar / Salvar"}</button></div></header>
- <main className="shell">
-  <section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>
+ <header className={session?"site-header app-header":"site-header"}><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>{session?"Gestão da sua oficina":"Conheça seu custo. Defina seu preço."}</small></div><span className="phase">{session?"Sistema da oficina":"Prévia de desenvolvimento"}</span><button type="button" className="account-button" onClick={()=>session?void logout():setAuthOpen(true)}>{session?"Sair · "+(session.user.email??"Minha conta"):"Entrar / Salvar"}</button></div></header>
+ {session&&<nav className="app-navigation" aria-label="Navegação do MakerCusto"><div className="shell app-navigation-inner">
+  {([{key:'overview',label:'Painel'},{key:'products',label:'Produtos'},{key:'assemblies',label:'Conjuntos'},{key:'calculator',label:'Calculadora'}] as const).map(item=><button key={item.key} type="button" aria-current={activeSection===item.key?'page':undefined} onClick={()=>setActiveSection(item.key)}>{item.label}</button>)}
+ </div></nav>}
+ <main className={session?"shell app-main":"shell"}>
+  {session&&activeSection==='overview'&&<WorkshopDashboard workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
+  {(!session||activeSection==='calculator')&&<>
+  <section className={session?"intro app-calculator-intro":"intro"}><p className="eyebrow">{session?"FERRAMENTA DE CUSTOS":"IMPRESSÃO 3D SEM COMPLICAÇÃO"}</p><h1>{session?"Calculadora de produção":"Descubra seu custo. Venda com confiança."}</h1><p>{session?"Simule custos antes de registrar um produto. Valores ilustrativos permanecem identificados.":"Comece com o essencial. Precisa de mais controle? Ative o Avançado."}</p></section>
   <nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples <small>Direto ao resultado</small></button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado <small>Cores, impressora e custos extras</small></button></nav>
   <div className="workspace">
    <section className="panel">
@@ -292,9 +300,10 @@ export default function App(){
     <p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p></div></details>
    </>}</section>
   </div>
-  <ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} onLogin={()=>setAuthOpen(true)}/>
-  <AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>
- </main><footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>
+  </>}
+  {(!session||activeSection==='products')&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} onLogin={()=>setAuthOpen(true)}/>}
+  {(!session||activeSection==='assemblies')&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
+ </main><footer className="shell footer">{session?"MakerCusto · Oficina conectada ao Supabase · Ambiente de desenvolvimento":"MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login"}</footer>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
  {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?(stored.find(p=>p.id===printerId)??{id:activePrinter.id,workspace_id:workspaceId??'',model_id:models.find(m=>activePrinter.name.includes(m.name))?.id??null,name:activePrinter.name,purchase_price:activePrinter.printerPrice,average_watts:activePrinter.averageWatts,lifetime_hours:activePrinter.lifetimeHours,active:true}):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
  {catalogModal&&<CatalogModal title={catalogTitles[catalogModal]} onClose={()=>setCatalogModal(null)} onSave={saveCatalog}/>}
