@@ -307,3 +307,22 @@
 }
 @media(max-width:430px){.system-brand small{display:none}.system-topbar{gap:8px}.system-account button{font-size:11px;padding:9px 7px}.system-primary-link{font-size:10px}.system-section-header{flex-wrap:wrap}.dashboard-metrics{gap:8px}.dashboard-metric{padding:12px}.dashboard-metric strong{font-size:24px}.dashboard-welcome{align-items:flex-start;flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.system-sidebar{transition:none}}
+
+/* Ficha de composição do produto: dados do banco sem custos presumidos. */
+.system-shell .assembly-details{background:#192945;border:1px solid #3a4c6e;border-radius:12px;padding:18px;display:grid;gap:13px;margin-top:12px}
+.assembly-detail-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.assembly-detail-heading h4{font-size:16px;margin:0 0 7px;color:#f0ecff}
+.assembly-detail-heading p{margin:0;color:#b7c4da;line-height:1.5}
+.assembly-detail-heading span{color:#b8a5f4;background:#32274d;border-radius:30px;padding:6px 10px;white-space:nowrap;font-size:11px}
+.assembly-detail-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0}
+.assembly-detail-stats>div{padding:12px;border:1px solid #394d68;border-radius:10px;background:#223451;min-width:0}
+.assembly-detail-stats dt{font-size:11px;color:#a2b6d0;margin-bottom:5px}.assembly-detail-stats dd{margin:0;color:#eff2fa;font-weight:650;font-size:13px;overflow-wrap:anywhere}
+.assembly-details h5{font-size:13px;margin:0;color:#e1e7fa}
+.assembly-detail-table-wrap{width:100%;overflow-x:auto}
+.assembly-detail-table{border-collapse:collapse;width:100%;font-size:12px}
+.assembly-detail-table th{text-align:left;color:#aebcce;font-weight:500;border-bottom:1px solid #4a5670;padding:10px 6px}
+.assembly-detail-table td{padding:12px 6px;border-bottom:1px solid #334760;white-space:nowrap}
+.assembly-detail-table td:first-child{white-space:normal;min-width:130px}
+.assembly-detail-table td small{display:block;font-size:10px;color:#9eafc6;margin-top:3px}
+.system-shell .assembly-details .footnote{margin:0}
+@media(max-width:560px){.assembly-detail-heading{flex-direction:column}.assembly-detail-stats{grid-template-columns:1fr}.system-shell .assembly-details{padding:12px}}
