@@ -2,9 +2,11 @@ import {useEffect,useState,type ReactNode} from 'react';
 
 export type SystemSection='overview'|'products'|'assemblies'|'calculator';
 export type ProductTab='all'|'parts';
+export type OverviewTab='general'|'activities'|'pending';
 type Props={
  authenticated:boolean;workspaceName:string;email:string;section:SystemSection;
  productTab:ProductTab;onProductTab:(tab:ProductTab)=>void;
+ overviewTab:OverviewTab;onOverviewTab:(tab:OverviewTab)=>void;
  onNavigate:(section:SystemSection)=>void;onLogout:()=>void;children:ReactNode
 };
 const menu=[
@@ -17,7 +19,7 @@ const menu=[
  {label:'Relatórios',symbol:'▧',section:null},
  {label:'Configurações',symbol:'⚙',section:null}
 ] as const;
-export function SystemNavigation({authenticated,workspaceName,email,section,productTab,onProductTab,onNavigate,onLogout,children}:Props){
+export function SystemNavigation({authenticated,workspaceName,email,section,productTab,onProductTab,overviewTab,onOverviewTab,onNavigate,onLogout,children}:Props){
  const [open,setOpen]=useState(false);
  const [collapsed,setCollapsed]=useState(false);
  useEffect(()=>{setOpen(false);},[section]);
@@ -54,7 +56,12 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
      {section==='overview'&&<button className="system-primary-link" type="button" onClick={()=>navigate('assemblies')}>+ Novo conjunto</button>}
     </div>
     <div className="system-tabs" role="navigation" aria-label={'Abas de '+title}>
-     {section==='overview'&&<button className="system-tab-active" aria-current="page" type="button">Visão geral</button>}
+     {section==='overview'&&([
+      {id:'general',label:'Visão geral'},
+      {id:'activities',label:'Atividades'},
+      {id:'pending',label:'Pendências'}
+     ] as const).map(tab=><button key={tab.id} type="button" className={overviewTab===tab.id?'system-tab-active':''}
+      aria-current={overviewTab===tab.id?'page':undefined} onClick={()=>onOverviewTab(tab.id)}>{tab.label}</button>)}
      {(section==='products'||section==='assemblies')&&<>
       <button type="button" className={section==='products'&&productTab==='all'?'system-tab-active':''} aria-current={section==='products'&&productTab==='all'?'page':undefined} onClick={()=>{onProductTab('all');navigate('products');}}>Todos os produtos</button>
       <button type="button" className={section==='products'&&productTab==='parts'?'system-tab-active':''} aria-current={section==='products'&&productTab==='parts'?'page':undefined} onClick={()=>{onProductTab('parts');navigate('products');}}>Peças</button>
