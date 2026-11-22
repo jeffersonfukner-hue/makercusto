@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+async function openSystemMenuIfMobile(page:Page){const toggle=page.getByRole('button',{name:'Abrir menu do sistema'});if(await toggle.isVisible())await toggle.click();}
 test('resumo padrão compacto e valores do exemplo',async({page})=>{
  await page.goto('/');
  await expect(page.getByTestId('totalUsed')).toContainText('151,58 g');
@@ -455,6 +456,7 @@ test('salva produto, custo e lista na oficina com feedback sem recarregar',async
   return route.fulfill({status:404,contentType:'application/json',body:'{}'});
  });
  await page.goto('/');
+ await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Chaveiro Galo');
  await page.getByRole('textbox',{name:'SKU do produto'}).fill('GAL-01');
@@ -501,6 +503,8 @@ test('conjunto de três peças é salvo e consultado na mesma oficina',async({pa
   return route.fulfill({status:404,contentType:'application/json',body:'{}'});
  });
  await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
  const kit=page.locator('.assembly-panel');
  await kit.getByRole('textbox',{name:'Nome do conjunto'}).fill('Brinquedo lançador de hélices');
@@ -527,6 +531,8 @@ test('validação impede cadastro incompleto e exige duas peças',async({page})=
   return route.fulfill({status:200,contentType:'application/json',body:'[]'});
  });
  await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
  const kit=page.locator('.assembly-panel');
  await kit.getByRole('textbox',{name:'Nome da peça 1'}).fill('');
@@ -559,14 +565,17 @@ test('login transforma a página em sistema com menu lateral e painel de oficina
  await expect(page.getByText('Oficina de Testes').first()).toBeVisible();
  await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Impressões',exact:false})).toBeDisabled();
+ await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
  await page.getByRole('button',{name:'Peças',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Minhas peças'})).toBeVisible();
  await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Produtos com várias peças'})).toBeVisible();
+ await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Custos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Calculadora de produção'})).toBeVisible();
+ await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Início',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Visão geral da oficina'})).toBeVisible();
  if(testInfo.project.name==='mobile'){
