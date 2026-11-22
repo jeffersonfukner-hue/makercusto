@@ -68,12 +68,21 @@ export const saveCalculatedProduct=(workspaceId:string,draft:CalculatedProductDr
  p_sale_price:draft.salePrice,p_quantity:draft.quantity,p_total_cost:draft.totalCost,p_parameters:draft.parameters
 });
 
-export type AssemblyPart = {id:string;name:string;quantity:number;notes:string|null;grams:string|null};
-export type AssemblyRecord = {id:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:AssemblyPart[]};
-export type AssemblyPartDraft = {name:string;quantity:number;notes:string;grams:number|null};
+export type AssemblyPart = {id:string;name:string;quantity:number;notes:string|null;grams:string|null;unit_cost:number|null};
+export type AssemblyRecord = {id:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:AssemblyPart[];revision:number;total_cost:number|null;cost_status:'unknown'|'estimated'|'confirmed'};
+export type AssemblyPartDraft = {id?:string;name:string;quantity:number;notes:string;grams:number|null;unit_cost?:number|null};
 export const listAssemblies=(workspaceId:string)=>api<AssemblyRecord[]>('rpc/mc_list_assemblies','POST',{p_workspace_id:workspaceId});
 export const createAssembly=(workspaceId:string,draft:{name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]})=>
  api<string>('rpc/mc_create_assembly','POST',{
   p_workspace_id:workspaceId,p_name:draft.name,p_sku:draft.sku,p_description:draft.description,
   p_sale_price:draft.salePrice,p_parts:draft.parts
  });
+
+export type ProductFormDraft={name:string;kind:'product'|'component';sku:string;description:string;salePrice:number|null};
+export const saveProductRecord=(workspaceId:string,productId:string|null,draft:ProductFormDraft)=>
+ api<string>('rpc/mc_save_product_record','POST',{p_workspace_id:workspaceId,p_product_id:productId,
+ p_name:draft.name,p_kind:draft.kind,p_sku:draft.sku,p_description:draft.description,p_sale_price:draft.salePrice});
+export const updateAssembly=(workspaceId:string,productId:string,draft:{name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]})=>
+ api<number>('rpc/mc_update_assembly','POST',{p_workspace_id:workspaceId,p_product_id:productId,
+ p_name:draft.name,p_sku:draft.sku,p_description:draft.description,p_sale_price:draft.salePrice,
+ p_parts:draft.parts.map(x=>({id:x.id??null,name:x.name,quantity:x.quantity,notes:x.notes,grams:x.grams,unit_cost:x.unit_cost??null}))});
