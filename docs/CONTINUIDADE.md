@@ -409,3 +409,5 @@
 - Corrigido na branch `feat/fundacao-makercusto`: três abas selecionáveis com estado preservado ao navegar entre módulos. `Visão geral` mantém indicadores; `Atividades` consulta cadastros recentes de produtos, com data de criação; `Pendências` apresenta produtos sem preço e kits sem custo/sem preço. Sem dados inventados, sem declarar que cadastros são logs de produção.
 - Arquivos: `src/components/SystemNavigation.tsx`, `WorkshopDashboard.tsx`, `src/App.tsx`, `src/styles.css`, `tests/app.spec.ts`.
 - CI iniciado para commit funcional `1854af63bfc0fc4840e0034690f05dc57d99e7e6`; verificar resultado ao concluir. Sem merge/deploy.
+
+- **CI final desta correção:** #45085517877 `success`, commit `68258aed5bb1ead0b2fa82be72dcc9b29dfb2a22`: 11 unitários, 78 E2E desktop/mobile, build e TypeScript aprovados. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45085517877 . Faltam apenas deploy manual do usuário e homologação visual das três abas.
