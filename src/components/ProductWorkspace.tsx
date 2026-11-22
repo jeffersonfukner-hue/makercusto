@@ -58,7 +58,7 @@ export function ProductWorkspace({workspaceId,tab}:Props){
   if(!record)return;
   setName(record.name);setSku(record.sku??'');setDescription(record.description??'');
   setSalePrice(record.sale_price===null?'':String(record.sale_price));
-  setKind(record.kind);
+  setKind(kit?'kit':product?.kind??'product');
   if(kit)setParts(kit.parts.map(partDraft));
   setMode('edit');setFeedback('');setError('');
  };
@@ -66,7 +66,7 @@ export function ProductWorkspace({workspaceId,tab}:Props){
   const record=kit??product;
   if(!record)return;
   setName(record.name+' — cópia');setSku('');setDescription(record.description??'');
-  setSalePrice(record.sale_price===null?'':String(record.sale_price));setKind(record.kind);
+  setSalePrice(record.sale_price===null?'':String(record.sale_price));setKind(kit?'kit':product?.kind??'product');
   if(kit)setParts(kit.parts.map(p=>({...partDraft(p),id:undefined,unit_cost:null})));
   setSelected(null);setMode('new');setError('');setFeedback('A cópia receberá novos registros e não herdará os custos históricos.');
  };
