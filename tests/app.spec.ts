@@ -205,6 +205,9 @@ test('login, oficina e cadastro persistente consomem API autenticada',async({pag
  await page.getByRole('textbox',{name:'E-mail'}).fill(user.email);
  await page.getByLabel('Senha').fill('senha-teste');
  await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Visão geral da oficina'})).toBeVisible();
+ await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Custos',exact:true}).click();
  await page.getByRole('button',{name:/Avançado/}).click();
  await expect(page.getByText('Oficina conectada ao Supabase.')).toBeVisible();
  await page.getByRole('button',{name:/Nova impressora/}).click();
@@ -565,7 +568,7 @@ test('login transforma a página em sistema com menu lateral e painel de oficina
  await expect(page.getByRole('navigation',{name:'Módulos do MakerCusto'})).toBeAttached();
  await expect(page.getByRole('heading',{name:'Visão geral da oficina'})).toBeVisible();
  await expect(page.getByText('Lançador de hélices')).toBeVisible();
- await expect(page.getByText('Oficina de Testes').first()).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Oficina de Testes'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Impressões',exact:false})).toBeDisabled();
  await openSystemMenuIfMobile(page);
