@@ -455,6 +455,7 @@ test('salva produto, custo e lista na oficina com feedback sem recarregar',async
   return route.fulfill({status:404,contentType:'application/json',body:'{}'});
  });
  await page.goto('/');
+ await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Chaveiro Galo');
  await page.getByRole('textbox',{name:'SKU do produto'}).fill('GAL-01');
  await page.getByRole('button',{name:'Salvar produto e custo'}).click();
@@ -500,6 +501,7 @@ test('conjunto de três peças é salvo e consultado na mesma oficina',async({pa
   return route.fulfill({status:404,contentType:'application/json',body:'{}'});
  });
  await page.goto('/');
+ await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
  const kit=page.locator('.assembly-panel');
  await kit.getByRole('textbox',{name:'Nome do conjunto'}).fill('Brinquedo lançador de hélices');
  await kit.getByRole('spinbutton',{name:'Peso da peça 1'}).fill('35.5');
@@ -525,8 +527,50 @@ test('validação impede cadastro incompleto e exige duas peças',async({page})=
   return route.fulfill({status:200,contentType:'application/json',body:'[]'});
  });
  await page.goto('/');
+ await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
  const kit=page.locator('.assembly-panel');
  await kit.getByRole('textbox',{name:'Nome da peça 1'}).fill('');
  await kit.getByRole('button',{name:'Salvar conjunto e peças'}).click();
  await expect(kit.getByRole('alert')).toContainText('Informe pelo menos duas peças válidas');
+});
+
+test('acesso público preserva calculadora sem apresentar sistema privado',async({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toBeVisible();
+ await expect(page.getByRole('navigation',{name:'Módulos do MakerCusto'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Entrar / Salvar'})).toBeVisible();
+});
+test('login transforma a página em sistema com menu lateral e painel de oficina',async({page},testInfo)=>{
+ const workspace='11111111-1111-4111-8111-111111111111',user='22222222-2222-4222-8222-222222222222';
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user,email:'maker@example.test'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=route.request().url();
+  if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Oficina de Testes',owner_id:user}])});
+  if(url.includes('/mc_printers?')||url.includes('/mc_catalog?')||url.includes('/mc_products?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+  if(url.includes('/rpc/mc_list_assemblies'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:'44444444-4444-4444-8444-444444444444',name:'Lançador de hélices',sku:null,description:null,sale_price:null,created_at:'2026-11-22T00:00:00Z',parts:[{id:'1',name:'Lançador',quantity:1,notes:null,grams:null},{id:'2',name:'Haste',quantity:1,notes:null,grams:null},{id:'3',name:'Hélice',quantity:1,notes:null,grams:null}]}])});
+  return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+ });
+ await page.goto('/');
+ await expect(page.getByRole('navigation',{name:'Módulos do MakerCusto'})).toBeAttached();
+ await expect(page.getByRole('heading',{name:'Visão geral da oficina'})).toBeVisible();
+ await expect(page.getByText('Lançador de hélices')).toBeVisible();
+ await expect(page.getByText('Oficina de Testes').first()).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Impressões',exact:false})).toBeDisabled();
+ await page.getByRole('button',{name:'Produtos',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
+ await page.getByRole('button',{name:'Peças',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Minhas peças'})).toBeVisible();
+ await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Produtos com várias peças'})).toBeVisible();
+ await page.getByRole('button',{name:'Custos',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Calculadora de produção'})).toBeVisible();
+ await page.getByRole('button',{name:'Início',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Visão geral da oficina'})).toBeVisible();
+ if(testInfo.project.name==='mobile'){
+  const button=page.getByRole('button',{name:'Abrir menu do sistema'});
+  await expect(button).toBeVisible();
+ }
 });
