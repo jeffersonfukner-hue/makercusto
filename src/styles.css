@@ -376,3 +376,14 @@
 @media(max-width:950px){.product-detail-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.product-detail-head{flex-direction:column}.product-detail-stats{grid-template-columns:1fr 1fr}.product-workspace-search{flex-wrap:wrap}.product-workspace-search input{width:100%}}
 @media(max-width:390px){.product-detail-stats{grid-template-columns:1fr}}
+
+/* Abas homologadas do Início: atividades verificáveis e pendências de cadastro. */
+.dashboard-tab-panel{min-height:260px}
+.dashboard-activity-list{list-style:none;display:grid;gap:9px;margin:10px 0 0;padding:0}
+.dashboard-activity-list li{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid #40516e;border-radius:10px;padding:13px;background:#22324d}
+.dashboard-activity-list li>div{display:grid;gap:5px;min-width:0}
+.dashboard-activity-list strong{font-size:13px;overflow-wrap:anywhere}
+.dashboard-activity-list small{font-size:11px;color:#acc0d9}
+.dashboard-activity-list button{flex-shrink:0;background:#354c74;border:1px solid #6379a1;color:#e6edff;padding:9px 12px;border-radius:8px;font-size:12px;cursor:pointer}
+.dashboard-activity-list button:hover{background:#46618d}
+@media(max-width:560px){.dashboard-activity-list li{flex-direction:column;align-items:flex-start}.dashboard-activity-list button{align-self:flex-start}}
