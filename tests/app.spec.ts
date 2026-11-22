@@ -514,7 +514,7 @@ test('conjunto de três peças é salvo e consultado na mesma oficina',async({pa
  await kit.getByRole('spinbutton',{name:'Peso da peça 1'}).fill('35.5');
  await kit.getByRole('spinbutton',{name:'Peso da peça 3'}).fill('12.5');
  await kit.getByRole('button',{name:'Salvar conjunto e peças'}).click();
- await expect(kit.getByRole('status')).toContainText('Conjunto e 3 peças salvos');
+ await expect(kit.locator('.product-success')).toContainText('Conjunto e 3 peças salvos');
  await expect(kit.locator('.product-list')).toContainText('Brinquedo lançador de hélices');
  await kit.getByRole('button',{name:/Brinquedo lançador de hélices/}).click();
  await expect(kit.locator('.assembly-details')).toContainText('Lançador');
