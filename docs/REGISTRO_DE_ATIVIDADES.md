@@ -414,3 +414,14 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividade:** diagnóstico de dois ciclos de CI com falhas de seletor ambíguo nos testes preexistentes, ajustes de escopo de listagem e feedback, reexecução completa do pipeline.
 - **Evidência final:** GitHub Actions #44933944246 `success`, commit `5723a7e4f259b1ceb65f4d86a8cf8bb0f475f508`; 11 testes do motor, build e TypeScript aprovados, 74 E2E desktop/mobile aprovados. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44933944246
 - **Limite:** testes de interface usam REST simulado; banco foi testado por transação autenticada controlada com rollback, não por sessão real no navegador. Não houve deploy nem merge.
+
+
+## 22/11/2026 — Verificação do Cloudflare e cadastro REAL do lançador de hélices
+- **Projeto/cliente:** MakerCusto (projeto próprio).
+- **Início (Brasília):** 01:12, horário de observação obtido do relógio local. **Término e duração efetiva comprovada:** não aferidos; não atribuir horas automaticamente.
+- **Autorização:** usuário declarou ter publicado manualmente e solicitou cadastrar o produto real, verificar publicação e persistência.
+- **Atividades executadas:** leitura dos estados do navegador e da página Cloudflare `makercusto-preview`; constatação de que a publicação ativa corresponde ao commit `e54e132` enquanto a versão com montagem aprovada pelo CI é `5723a7e` (74 E2E e 11 unitários); consulta em modo leitura da oficina no Supabase MakerCusto; cadastro persistente mediante RPC `mc_create_assembly` na oficina existente e confirmação pela RPC de listagem.
+- **Produto persistido:** ID `0a687413-fe87-4f80-a655-e6b914aceea6`, nome `Lançador de hélices`, tipo kit; Lançador (1), Haste (1), Hélice (1), três componentes próprios vinculados por uma revisão; 4 registros de produto totais na oficina após a gravação. Custos, pesos, tempo e preço não informados, sem suposições; custo `unknown`.
+- **Verificações:** 1 revisão e 3 vínculos confirmados por SQL após COMMIT; RPC `mc_list_assemblies` como papel `authenticated` e contexto do proprietário recuperou o produto persistido e seus três componentes.
+- **Evidências verificáveis:** GitHub https://github.com/jeffersonfukner-hue/makercusto/actions/runs/44933944246 ; projeto Cloudflare `makercusto-preview`, publicado `e54e132` em `https://cdb4b74a.makercusto-preview.pages.dev/`; projeto Supabase `bxtbfdddcxbyaomydgxn` e identificador de produto acima.
+- **Pendências:** o usuário precisa publicar manualmente o commit funcional `5723a7e` (ou versão posterior idêntica em código) para mostrar Meus produtos e Produtos com várias peças; conferir no navegador o componente após publicação. Não houve merge nem deploy do assistente.
