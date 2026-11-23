@@ -141,3 +141,8 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - Migração `print_execution_l2_l3` aplicada **com autorização do proprietário** exclusivamente ao Supabase MakerCusto: histórico `20261123022622`. Preflight e postflight no banco real executados sem erro. RPCs `mc_create_print`, `mc_confirm_print` e `mc_list_prints` e tabela `mc_production_output_events` existem, com RLS/grants pós-verificados.
 - Nenhuma produção, confirmação ou movimento de estoque foi gerado durante a aplicação. **Permanece 20 P, 19 A, 0 C**: esquema presente ≠ fluxo de negócio integralmente homologado.
 - Testes reais de Supabase Auth (sessão/JWT/usuários e oficinas), reservas, fechamento e snapshots continuam pendentes. Frontend ainda não publicado; nenhuma homologação visual adicional.
+
+## Evidência de isolamento multi-oficina — 22/11/2026
+- CI #45101156582 **success** (SHA `00e79a1c1612cab8eaba0fb6da1102776a99604e`). Regressão SQL passou com duas oficinas contendo impressões distintas. Cada proprietário fictício viu os dados da própria oficina e **não** viu os da outra, tanto por `mc_list_prints` quanto por RLS em `mc_productions`.
+- Supabase MakerCusto real: grants de três RPCs validados, `anon` sem EXECUTE; tabela de deltas com RLS ativo e `authenticated` sem INSERT. Base operacional ainda sem impressões/confirmacões/movimentos.
+- Limite: isolamento de duas oficinas foi comprovado **somente no PostgreSQL descartável com identidades simuladas**, não com JWT real de Supabase Auth. Nenhuma política reclassificada; permanecem **20 P, 19 A, 0 C** e as 39 homologações preservadas.
