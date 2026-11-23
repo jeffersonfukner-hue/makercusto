@@ -163,3 +163,9 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - A regra P01-A é parcial porque **encerramento definitivo** continua bloqueado até custeio; P01-B possui implementação inicial de data de revisão manual. As políticas R01/P01 continuam **P** e a matriz permanece com **22 parciais, 17 ausentes e nenhuma completamente validada**.
 - **Ainda ausentes neste lote:** cancelamento parcial P01-E com redução de necessidade, troca de lote e liberação proporcional auditada (P01-D), conciliação excepcional GAP01, estoque acabado, snapshots financeiros, testes de JWT reais e homologação visual.
 - **Não aplicado** no Supabase operacional; sem merge/deploy. As 39 homologações documentais não foram modificadas.
+
+
+## Evolução P01-E: redução parcial auditada, CI 23/11/2026
+- **CI #45105318775 `success` (SHA `92e310ed365cae2b25a7ac963da1ca30c4498420`)**: 92 Playwright desktop/mobile, SQL PostgreSQL efêmero com rollback, concorrência, RLS, tipos, unitários e build. Redução explícita da quantidade não produzida, sem diminuir boas/rejeitadas confirmadas; reservas liberadas somente por gramas informados e justificativa, com histórico anterior preservado, auditoria e idempotência. UI com validação de quantidade e liberação por reserva.
+- **P01-E evoluiu dentro da política P01, que continua parcial (P)**: falta UI de múltiplas saídas e liberação multi-bobina atômica, integração com usuário real e homologação visual; P01-D troca de bobina, GAP01 e encerramento definitivo também pendentes. **Contagem permanece 22 P, 17 A e 0 C; nenhuma das 39 diretrizes foi re-homologada ou recontada.**
+- Migração P01-E ainda **não aplicada no banco operacional**; nenhum merge/deploy.
