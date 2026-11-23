@@ -793,3 +793,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Pendências:** CI final, fontes P07 e demais categorias verificadas, snapshots finais e testes P09 antes de fechar custos, homologação visual do usuário.
 
 - **Teste efetivamente concluído:** CI #433 (run `45287099185`), commit `98f55e814e3bf032540ba5a6f7d337defb9dce28` — aprovação integral de SQL transacional/rollback, duas sessões concorrentes, idempotência, permissões, testes unitários, build e interface desktop/mobile. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45287099185 . Não executar deploy ou migração operacional com base neste resultado isoladamente.
+
+## 23/11/2026 — L4-G02: dossiê de prontidão sem efeitos financeiros
+
+- **Projeto:** MakerCusto. **Início/término (Brasília):** não registrados. **Duração efetiva:** não mensurada, sem inferir horas da conversa.
+- **Atividades efetivamente realizadas:** releitura das homologações e esquema financeiro; implementação de RPC read-only para conferir prontidão real de execução e revisão histórica, com bloqueios explícitos e papéis de acesso; criação de teste SQL transacional com rollback de dados efêmeros e proibição de mutações; inclusão da nova migração e teste no CI.
+- **Evidências:** commits `d663789140d0a630ea1c55d93c0f3db3f1696fa8`, `acc511902ad5781d57f58eca03a83ba23e3a1fe6`, `9d421e9130c4b713d6a2df7ce8c62a1ea6c65556`; PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. CI do lote em apuração.
+- **Resultado:** dossiê implementado exclusivamente na branch, ainda com contabilização final proibida. Nenhum merge, deploy ou alteração de banco operacional.
+- **Pendências:** resultado integral do CI; integração da conciliação exata P05/P06/P07 e estorno P09; homologação visual futura.
