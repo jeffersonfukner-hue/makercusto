@@ -7,6 +7,7 @@ create table if not exists public.mc_assembly_part_snapshots (
  workspace_id uuid not null references public.mc_workspaces(id) on delete cascade,
  component_row_id uuid not null,
  component_product_id uuid not null,
+ component_name_at_revision text not null,
  source_snapshot_id uuid,
  grams_per_unit numeric(18,3) check (grams_per_unit >= 0),
  cost_per_unit numeric(18,4) check (cost_per_unit >= 0),
@@ -158,6 +159,7 @@ begin
    v_cost:=v_cost_text::numeric;
    v_grams:=v_grams_text::numeric;
    v_status:=case when v_cost is null then 'unknown' else 'estimated' end;
+   v_component_name:=v_name;
    insert into public.mc_products(workspace_id,name,kind,description)
    values(p_workspace_id,v_name,'component',v_notes) returning id into v_component;
    insert into public.mc_product_revisions(workspace_id,product_id,revision,state,notes)
@@ -172,9 +174,9 @@ begin
    workspace_id,revision_id,component_product_id,quantity,unit,notes)
   values(p_workspace_id,v_rev,v_component,v_qty,'unit',v_notes) returning id into v_row;
   insert into public.mc_assembly_part_snapshots(
-   workspace_id,component_row_id,component_product_id,source_snapshot_id,
+   workspace_id,component_row_id,component_product_id,component_name_at_revision,source_snapshot_id,
    grams_per_unit,cost_per_unit,cost_status,source_type)
-  values(p_workspace_id,v_row,v_component,v_source,v_grams,v_cost,v_status,
+  values(p_workspace_id,v_row,v_component,v_component_name,v_source,v_grams,v_cost,v_status,
    case when v_is_linked then 'linked_product' else 'inline_entry' end);
   if v_cost is null then v_all:=false;
   else v_total:=v_total+v_cost*v_qty;end if;
@@ -204,7 +206,7 @@ select coalesce(jsonb_agg(
   'cost_status',coalesce(cost.cost_status,'unknown'),
   'parts',(select coalesce(jsonb_agg(jsonb_build_object(
    'id',piece.id,'product_id',case when aps.source_type='linked_product' then piece.id else null end,
-   'name',piece.name,'quantity',cp.quantity,'notes',cp.notes,
+   'name',coalesce(aps.component_name_at_revision,piece.name),'quantity',cp.quantity,'notes',cp.notes,
    'grams',coalesce(aps.grams_per_unit::text,legacy.parameters->>'grams'),
    'unit_cost',coalesce(aps.cost_per_unit,legacy.total_cost),
    'cost_source',case when aps.source_type='linked_product' then 'linked'
