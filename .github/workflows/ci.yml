@@ -57,6 +57,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123002000_print_reservation_p01_partial_cancel.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123003500_print_reservation_p01_lot_swap.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123005500_gap01_physical_occurrences.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123014500_gap01_investigation_tracking.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_postflight_readonly.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/fixture_ci_l2_l3.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_rollback.sql
@@ -65,6 +66,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_partial_cancel_rollback.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_lot_swap_rollback.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_occurrence_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_investigation_rollback.sql
           remaining="$(psql -v ON_ERROR_STOP=1 -Atc "select count(*) from public.mc_productions")"
           test "$remaining" = "0" || { echo "ROLLBACK não preservou o banco limpo"; exit 1; }
       - name: Concorrência de estoque L3 e isolamento RLS no PostgreSQL efêmero
