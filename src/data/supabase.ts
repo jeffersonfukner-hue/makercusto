@@ -86,3 +86,11 @@ export const updateAssembly=(workspaceId:string,productId:string,draft:{name:str
  api<number>('rpc/mc_update_assembly','POST',{p_workspace_id:workspaceId,p_product_id:productId,
  p_name:draft.name,p_sku:draft.sku,p_description:draft.description,p_sale_price:draft.salePrice,
  p_parts:draft.parts.map(x=>({id:x.id??null,name:x.name,quantity:x.quantity,notes:x.notes,grams:x.grams,unit_cost:x.unit_cost??null}))});
+
+export type ExistingSpool={id:string;name:string;label:string;initial_grams:number;remaining_grams:number;remaining_cost_estimate:number|null;cost_status:'known'|'estimated'|'unknown';notes:string|null;created_at:string};
+export type ExistingSpoolDraft={idempotencyKey:string;name:string;label:string;grams:number;basis:'measured'|'informed'|'estimated';remainingCost:number|null;notes:string};
+export const listExistingSpools=(workspaceId:string)=>api<ExistingSpool[]>('rpc/mc_list_existing_spools','POST',{p_workspace_id:workspaceId});
+export const registerExistingSpool=(workspaceId:string,draft:ExistingSpoolDraft)=>api<string>('rpc/mc_register_existing_spool','POST',{
+ p_workspace_id:workspaceId,p_idempotency_key:draft.idempotencyKey,p_filament_name:draft.name,p_label:draft.label,
+ p_grams:draft.grams,p_quantity_basis:draft.basis,p_remaining_cost:draft.remainingCost,p_notes:draft.notes
+});
