@@ -110,7 +110,7 @@ export const confirmPrint=(workspaceId:string,draft:{id:string;key:string;output
 
 export type PrintReservation={
  id:string;production_id:string;lot_id:string;lot_label:string|null;
- quantity:number;remaining:number;status:'active'|'released'|'fulfilled';created_at:string
+ quantity:number;remaining:number;status:'active'|'released'|'fulfilled';due_at:string|null;review_overdue:boolean;created_at:string
 };
 export const listPrintReservations=(workspaceId:string)=>api<PrintReservation[]>('rpc/mc_list_print_reservations','POST',{p_workspace_id:workspaceId});
 export const reservePrintLot=(workspaceId:string,draft:{
@@ -118,4 +118,13 @@ export const reservePrintLot=(workspaceId:string,draft:{
 })=>api<string>('rpc/mc_reserve_print_lot','POST',{
  p_workspace_id:workspaceId,p_production_id:draft.productionId,p_lot_id:draft.lotId,
  p_quantity_g:draft.quantityGrams,p_request_key:draft.key
+});
+
+export const setPrintReservationDue=(workspaceId:string,reservationId:string,dueAt:string|null)=>
+ api<string>('rpc/mc_set_print_reservation_due','POST',{
+ p_workspace_id:workspaceId,p_reservation_id:reservationId,p_due_at:dueAt
+});
+export const cancelPrint=(workspaceId:string,productionId:string,requestKey:string,reason:string)=>
+ api<string>('rpc/mc_cancel_print','POST',{
+ p_workspace_id:workspaceId,p_production_id:productionId,p_request_key:requestKey,p_reason:reason
 });
