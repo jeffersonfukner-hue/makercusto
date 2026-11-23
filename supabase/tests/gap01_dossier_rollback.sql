@@ -15,7 +15,7 @@ begin
  select id into printer from public.mc_printers where workspace_id=w and active limit 1;
  select id into product from public.mc_products where workspace_id=w and active and kind in ('product','component') limit 1;
  lot:=public.mc_register_existing_spool(w,'gap01-dossier-'||gen_random_uuid()::text,
-  'PETG QA','Bobina investigada',80,'measured',64,'Custo de teste conhecido');
+  'PETG QA','Bobina investigada',80,'measured',5.12,'Custo de teste conhecido');
  p:=public.mc_create_print(w,printer,jsonb_build_array(jsonb_build_object('product_id',product,'quantity',2)),null,'GAP01 dossier','slicer');
  other_p:=public.mc_create_print(w,printer,jsonb_build_array(jsonb_build_object('product_id',product,'quantity',1)),null,'Reserva de outra ordem','slicer');
  perform public.mc_reserve_print_lot(w,p,lot,20,'gap01-dossier-res-own');
