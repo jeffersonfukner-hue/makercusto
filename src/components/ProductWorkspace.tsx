@@ -94,7 +94,7 @@ export function ProductWorkspace({workspaceId,tab}:Props){
   changePart(i,{product_id:id,id:undefined,name:source?.name??fallback!.name,
    grams:source?.grams??null,unit_cost:source?.unit_cost??null});
  };
- const componentChoices=items.filter(p=>p.kind==='component');
+ const componentChoices=items.filter(p=>p.kind==='component'||p.kind==='product');
  const save=async()=>{
   setError('');setFeedback('');
   if(!workspaceId){setError('A oficina não está conectada.');return;}
