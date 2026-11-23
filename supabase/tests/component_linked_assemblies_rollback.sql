@@ -3,7 +3,7 @@ begin;
 do $test$
 declare w uuid;u uuid;guirlanda uuid;estrela_g uuid;estrela_p uuid;kit uuid;kit2 uuid;
  rev_id uuid;rev2 uuid;pieces_before int;pieces_after int;d jsonb;lib jsonb;
- cost_initial numeric;deny boolean;
+ cost_initial numeric;denied boolean;
 begin
  select workspace_id,user_id into w,u from public.mc_members
  where active and role in ('owner','manager') limit 1;
