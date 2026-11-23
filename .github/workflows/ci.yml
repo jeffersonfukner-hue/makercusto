@@ -89,6 +89,14 @@ jobs:
           PGDATABASE: makercusto_ci
           PGPASSWORD: makercusto_ci_only
         run: bash supabase/tests/p01_cancel_confirmation_race.sh
+      - name: P01-D troca simultânea de reserva entre bobinas no PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/p01_lot_swap_concurrency.sh
       - name: Isolamento entre duas oficinas com dados no PostgreSQL efêmero
         env:
           PGHOST: localhost
