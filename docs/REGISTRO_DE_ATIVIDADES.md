@@ -663,3 +663,14 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados comprovados:** CI #45208428395 `success`, funcional `963081a6571eb6a518827f65b255aa3bc8a943de`, **108/108 Playwright**, PostgreSQL efêmero com rollback, concorrência, isolamento, tipagem, unitários e build. Guirlanda e duas estrelas vinculadas por ID, sem duplicação e com histórico de custo preservado. Documento UX commit `e45bd1deef723e787fe436c17d2f3d7a374399f5`.
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45208428395 ; `supabase/tests/component_linked_assemblies_rollback.sql`, `tests/app.spec.ts`, `src/App.tsx`, `src/components/ProductWorkspace.tsx`, `src/components/ProductSavePanel.tsx`.
 - **Pendências:** implementação real e homologação visual do padrão UX por campo e Filamento, rateio de placa mista, autenticação real e migrações somente na branch. **Sem merge, deploy, SQL operacional ou créditos pagos.**
+
+
+## 23/11/2026 — Auditoria de integração Calculadora, Peças, Conjuntos e Impressões
+
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início e término:** não aferidos. **Duração efetiva:** não mensurada; intervalo entre mensagens não computado como trabalho.
+- **Atividades executadas:** leitura de AGENTS.md, README.md, ARQUITETURA.md, PADROES.md, PLANO_MESTRE_MAKERCUSTO.md, CONTRATO_ESTOQUE_PRODUTOS.md e inspeção de src/App.tsx, ProductSavePanel.tsx, ProductWorkspace.tsx, AssemblyPanel.tsx, PrintsWorkspace.tsx e data/supabase.ts; consulta ao PR e CI do HEAD.
+- **Resultados:** diagnóstico de conectividade em docs/AUDITORIA_INTEGRACAO_MODULOS_2026-11-23.md; confirmados código de salvar cálculo, selector de peças e múltiplas saídas; lacunas de ficha detalhada, reentrada na calculadora e rateio guiado. Nenhuma hipótese de erro no banco declarada como fato.
+- **Pendências:** confirmar versão implantada e registros de peças no mesmo workspace; implementar/testar integração de ficha, cálculo e conjunto; rateio de placas mistas; CI após futuras alterações.
+- **Evidências:** commit documental 304d4f9c7d84329596c3625c58c3421c376782b2; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; CI aprovado do HEAD inicial https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45209805896.
+- **Restrições:** sem alteração de aplicativo, migração, banco, merge ou deploy nesta auditoria.
