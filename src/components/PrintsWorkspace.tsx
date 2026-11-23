@@ -583,7 +583,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
 
 
   </section>}
-  <PrintAllocationPreview prints={prints} active={activePrimaryForm==='allocation'} onActivate={()=>setActivePrimaryForm('allocation')}/>
+  <PrintAllocationPreview workspaceId={workspaceId} prints={prints} active={activePrimaryForm==='allocation'} onActivate={()=>setActivePrimaryForm('allocation')}/>
   <h3>Execuções registradas</h3>
   {prints.length===0?<p>Nenhuma impressão registrada nesta oficina.</p>:<div className="materials-spool-grid">{prints.map(p=><article className="materials-spool-card" key={p.id}>
    <h4>{p.printer_name||'Impressora sem nome'}</h4><p>Status: {p.status} · {new Date(p.created_at).toLocaleString('pt-BR')}</p>
