@@ -593,3 +593,13 @@
 - Migrações **somente na branch**: `20261123123500_component_linked_assemblies.sql` (conjunto vincula peças ou produtos existentes por ID e congela nomes/custos por revisão, sem duplicar) e `20261123125000_reuse_saved_calculations.sql` (recuperação de parâmetros). Não presumir rateio da mesma placa com peças diferentes.
 - CI #45208428395 `success` no commit `963081a6571eb6a518827f65b255aa3bc8a943de`: **108/108 Playwright**, SQL reversível de guirlanda + estrela grande + pequena com 3 IDs e histórico preservado, tipo, unitários, build, concorrência e isolamento. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45208428395
 - Pendências: implementar componente UX progressivo real para filamento e campos de outros módulos; integração completa de perfis e custo de placas mistas; autenticação e homologação visual; migrações ainda não aplicadas no Supabase operacional. Sem merge ou deploy. Matriz não reclassificada (última: 22 P, 17 A, 0 C).
+
+
+## 23/11/2026 — Integração orgânica entre módulos (diagnóstico)
+
+- Auditoria estática atual da branch: `docs/AUDITORIA_INTEGRACAO_MODULOS_2026-11-23.md`.
+- HEAD examinado: `8598a6cd4fbda4ab1fcd78fb64be74fd31e26bd7`; CI #347 aprovado (workflow 45209805896). Após os commits documentais, consultar CI novamente.
+- Código já implementa `saveCalculatedProduct`, seletor de peça cadastrada em `ProductWorkspace` e saídas múltiplas em `PrintsWorkspace`. A ausência percebida no Preview **não demonstra ausência no HEAD**; verificar implantação e workspace.
+- Lacunas confirmadas: ficha de peça sem edição integrada de parâmetros produtivos; retorno contextual da ficha para a calculadora; fluxo guiado para custos e outputs de uma placa mista.
+- Prioridade: validar discrepância Preview/HEAD; integrar ficha ↔ calculadora ↔ conjunto preservando snapshots, sem baixa de estoque; depois melhorar mesa mista sob regras L2/L3.
+- Nenhuma mudança funcional ou no banco nesta rodada documental. Preservadas homologações e proibições de merge/deploy sem autorização.
