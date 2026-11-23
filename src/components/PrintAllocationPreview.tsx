@@ -3,6 +3,7 @@ import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord
 import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory} from '../domain/print-allocation';
 import {preparePrintFinancialDraft,type FinancialDraft} from '../domain/print-financial-draft';
 import {FormActionDock} from './FormActionDock';
+import {PrintReadinessPanel} from './PrintReadinessPanel';
 
 type Props={workspaceId:string|null;prints:PrintRecord[];active:boolean;onActivate:()=>void};
 type OutputOption={id:string;name:string;outcome:'good'|'rejected';quantity:number};
@@ -100,6 +101,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
    </select><small>Somente saídas com quantidades já confirmadas aparecem como destinos.</small></label>
   </div>
   {print&&<div>
+   <PrintReadinessPanel key={print.id} workspaceId={workspaceId} executionId={print.id}/>
    <h4>Consumos confirmados vinculados à impressão</h4>
    {sourcesBusy&&<p role="status">Consultando histórico de bobinas…</p>}
    {sourcesError&&<p role="alert" className="error">{sourcesError}</p>}
