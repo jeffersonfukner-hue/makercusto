@@ -489,3 +489,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Execução final funcional:** #45088224296 **success**, commit `ca7ef53028f99795b4fc71d43f2d5af76b2dfbb6`, TypeScript, 11 testes unitários, build e **82/82 testes Playwright desktop/mobile** aprovados.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45088224296
 - **Limites:** frontend testado com REST simulado; migração L2/L3 não aplicada nem testada transacionalmente no Supabase; sem confirmação de estoque real, merge ou deploy. Nenhuma política das 39 pode ser reclassificada como integralmente comprovada por esse CI.
+
+
+## 22/11/2026 — Inspeção segura e preparação dos testes L2/L3
+- **Projeto/cliente:** MakerCusto / próprio. **Início/término efetivos, duração:** não medidos; referência local da conversa não é hora trabalhada.
+- **Atividades:** consulta de changelog/instruções atuais do Supabase; listagem de projetos disponíveis; leitura de migrações aplicadas e esquema das tabelas no banco MakerCusto, sem escrita; comparação com RPCs versionadas; reforço da validação de saída e lotes de filamento; criação do roteiro SQL reversível `supabase/tests/l2_l3_rollback.sql`.
+- **Resultados observados:** banco MakerCusto tem Postgres 17.12, 0 produções, 0 confirmações e 0 movimentos. RPCs L2/L3 não instaladas. Testes automatizados de lógica SQL **ainda não executados**, pois nenhum ambiente MakerCusto isolado foi identificado. Kit Casa Pré LAB não foi alterado.
+- **Evidências:** migração `supabase/migrations/20261122212500_print_execution_l2_l3.sql`, roteiro `supabase/tests/l2_l3_rollback.sql`, commits `c49cb6e26f67dedac7956d12daeab8cf61d79d7d` e `bf22c505fe7c6d394bd72beb7df5d1ffa69a13db`, consultas somente leitura ao Supabase.
+- **Pendências:** ambiente isolado para instalar migração, execução real com rollback, teste de concorrência multi-sessão e usuários reais, snapshots/concilição P01/P02, homologação de produção.
+- **Sem:** merge, deploy, SQL aplicado, manipulação de estoque ou consumo de créditos pagos.
