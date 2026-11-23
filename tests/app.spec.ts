@@ -1243,7 +1243,7 @@ test('GAP01-D/E: dossiê mostra reservas alheias e consumo histórico sem aciona
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
  await page.getByRole('combobox',{name:'Ocorrência para dossiê'}).selectOption(occurrence);
  await page.getByRole('button',{name:'Consultar dossiê (somente leitura)'}).click();
- const result=page.getByRole('generic',{name:'Resultado do dossiê GAP01'});
+ const result=page.locator('[aria-label="Resultado do dossiê GAP01"]');
  await expect(result).toContainText('Reservas de outras ordens: 10 g');
  await expect(result).toContainText('Saldo físico cadastrado atual: 65 g');
  await expect(result.getByRole('list',{name:'Consumos históricos vinculados'})).toContainText('15 g');
