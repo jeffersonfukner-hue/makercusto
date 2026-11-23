@@ -751,3 +751,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados/pendências:** código e testes commitados, CI final ainda não homologado neste registro. Integração persistente L4 e homologação visual pendentes. Sem merge/deploy/SQL operacional.
 
 - **Verificação complementar da entrega L4:** CI #396 (`45273610045`), commit testado `a15ce4c6d9c08c0b1744be0a8a009bc818ffce3e`, **sucesso integral**: tipos, testes unitários, build, PostgreSQL temporário, concorrência/RLS e interface desktop/mobile. Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45273610045 . Este CI não executa homologação humana nem deploy.
+
+
+## 23/11/2026 — L4-R01, fonte histórica de consumo na prévia
+
+- **Projeto:** MakerCusto; **início/término/duração efetiva (Brasília):** não aferidos, não estimados a partir das mensagens.
+- **Atividades executadas:** revisão da migração L2/L3, `mc_production_consumption`, `mc_stock_lots` e funções de dossiê; nova RPC read-only com bloqueio por oficina; tipos no cliente; consulta de fontes na prévia L4, importação de valores por categoria com base manual e sem escritas; teste SQL de permissões, custo desconhecido e ausência de movimentações; ampliação E2E; workflow do PostgreSQL efêmero atualizado.
+- **Commits verificáveis:** `dacf6b4f9b8d5b0b281490614c2ab3eeafadfd28`, `682b3da5e2bb27be39d4e284e178c026e00992d8`, `3bb1748c18a4fe15a26b1338399583ff63502a5f`, `73b7588e47f623570c202ee8e01f126d1c16bd32`, `2c2710bd3885d8d6e1b4ce98eeced9b2b00f84be`, `5f93b3815a08c59d1114917a9ccd7ca63fe3a2bb`, `1981e1f84eadf1c011621255f857385829e7e378`, `a466e90e596c61186d7af1dd18f3b3c103dd2ee5`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Resultado:** mudança na branch, CI correspondente ainda em execução no momento do registro. Fonte de preço L3 tem apenas seis decimais; nenhum valor final L4 foi homologado.
+- **Pendências:** CI completo, vínculo financeiro exato e snapshots finais, migração separadamente autorizada e homologação visual. Nenhum merge/deploy ou alteração no Supabase operacional.
