@@ -118,6 +118,24 @@ export const registerExistingSpool=(workspaceId:string,draft:ExistingSpoolDraft)
 export type PrintOutput={id:string;product_id:string;name:string;planned:number;good:number;failed:number};
 export type PrintRecord={id:string;status:'draft'|'partial'|'reserved'|'running'|'completed'|'failed'|'cancelled';printer_id:string;printer_name:string|null;planned_hours:number|null;actual_hours:number|null;notes:string|null;created_at:string;outputs:PrintOutput[]};
 export const listPrints=(workspaceId:string)=>api<PrintRecord[]>('rpc/mc_list_prints','POST',{p_workspace_id:workspaceId});
+
+/** Fontes históricas de consumo: read-only, custo estimado ou ausente não vira custo confirmado. */
+export type PrintConsumptionSource={
+ consumption_id:string;confirmation_id:string;lot_id:string|null;lot_label:string|null;
+ cost_status:'known'|'estimated'|'unknown';quantity_basis:'weighed'|'slicer'|'estimated';
+ model_g:string;purge_g:string;loss_g:string;unit_cost_snapshot:string|null;
+ model_cost_brl:string|null;purge_cost_brl:string|null;loss_cost_brl:string|null;
+ author_id:string;confirmed_at:string;precision_note:string;
+};
+export type PrintConsumptionSources={
+ execution_id:string;read_only:true;financially_final:false;snapshot_precision:string;
+ lines:PrintConsumptionSource[];
+};
+export const getPrintConsumptionSources=(workspaceId:string,productionId:string)=>
+ api<PrintConsumptionSources>('rpc/mc_get_print_consumption_sources','POST',{
+  p_workspace_id:workspaceId,p_production_id:productionId
+ });
+
 export const createPrint=(workspaceId:string,draft:{printerId:string;outputs:{product_id:string;quantity:number}[];plannedHours:number|null;notes:string;source:'slicer'|'measured'|'informed'|'estimated'})=>
  api<string>('rpc/mc_create_print','POST',{p_workspace_id:workspaceId,p_printer_id:draft.printerId,
  p_outputs:draft.outputs.map(({product_id,quantity})=>({product_id,quantity})),
