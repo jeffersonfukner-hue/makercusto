@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useRef,useState} from 'react';
 import type {PrintRecord} from '../data/supabase';
 import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory,type AllocationSnapshot} from '../domain/print-allocation';
 import {FormActionDock} from './FormActionDock';
@@ -25,6 +25,7 @@ export function PrintAllocationPreview({prints,active,onActivate}:Props){
  const [separate,setSeparate]=useState(false);
  const [basis,setBasis]=useState<Record<string,string>>({});
  const [lines,setLines]=useState<AllocationLine[]>([]);
+ const sequence=useRef(0);
  const [preview,setPreview]=useState<AllocationSnapshot|null>(null);
  const [error,setError]=useState('');
  const print=prints.find(x=>x.id===printId);
@@ -40,7 +41,7 @@ export function PrintAllocationPreview({prints,active,onActivate}:Props){
   if(!print||!destinations.length){setError('Selecione uma impressão com peças confirmadas.');return;}
   const selected=destinations.filter(o=>basis[o.id]&&basis[o.id].trim()!==''&&basis[o.id].trim()!=='0')
    .map(o=>({outputId:o.id,basis:basis[o.id]}));
-  const next:AllocationLine={id:'categoria-'+(lines.length+1),category,amountBrl:amount,source,
+  const next:AllocationLine={id:'categoria-'+(++sequence.current),category,amountBrl:amount,source,
    sourceVersion:'entrada-local-1',method,rationale,
    separatelyMeasured:category!=='purge'&&category!=='loss'?false:separate,destinations:selected};
   try{
