@@ -49,7 +49,7 @@ begin
   if jsonb_typeof(v_item)<>'object' then raise exception 'Checklist de custo inválido';end if;
   v_category:=v_item->>'category';v_status:=v_item->>'status';
   if v_category is null or not(v_category=any(v_required)) or v_category=any(v_seen)
-   or v_status not in ('supported','not_applicable','pending')
+   or v_status is null or v_status not in ('supported','not_applicable','pending')
    or length(btrim(coalesce(v_item->>'reason',''))) not between 8 and 1000
   then raise exception 'Categoria ou justificativa de custo inválida';end if;
   -- A ausência de custo só pode ser DECLARADA, jamais inferida.
