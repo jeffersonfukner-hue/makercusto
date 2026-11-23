@@ -52,9 +52,11 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122211000_spool_inventory_hardening.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_preflight_readonly.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122212500_print_execution_l2_l3.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122235000_print_reservation_p01_partial.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_postflight_readonly.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/fixture_ci_l2_l3.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_reservations_rollback.sql
           remaining="$(psql -v ON_ERROR_STOP=1 -Atc "select count(*) from public.mc_productions")"
           test "$remaining" = "0" || { echo "ROLLBACK não preservou o banco limpo"; exit 1; }
       - name: Concorrência de estoque L3 e isolamento RLS no PostgreSQL efêmero
