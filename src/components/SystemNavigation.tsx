@@ -1,6 +1,6 @@
 import {useEffect,useState,type ReactNode} from 'react';
 
-export type SystemSection='overview'|'products'|'assemblies'|'calculator';
+export type SystemSection='overview'|'products'|'assemblies'|'materials'|'calculator';
 export type ProductTab='all'|'parts';
 export type OverviewTab='general'|'activities'|'pending';
 type Props={
@@ -13,7 +13,7 @@ const menu=[
  {label:'Início',symbol:'▦',section:'overview'},
  {label:'Produtos',symbol:'▣',section:'products'},
  {label:'Impressões',symbol:'▤',section:null},
- {label:'Materiais',symbol:'◈',section:null},
+ {label:'Materiais',symbol:'◈',section:'materials'},
  {label:'Estoque',symbol:'▥',section:null},
  {label:'Custos',symbol:'◷',section:'calculator'},
  {label:'Relatórios',symbol:'▧',section:null},
@@ -30,7 +30,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
   return()=>window.removeEventListener('keydown',close);
  },[open]);
  if(!authenticated)return <>{children}</>;
- const title=section==='overview'?'Visão geral da oficina':section==='calculator'?'Custos e precificação':'Produtos e componentes';
+ const title=section==='overview'?'Visão geral da oficina':section==='calculator'?'Custos e precificação':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
  const navigate=(next:SystemSection)=>{onNavigate(next);setOpen(false);};
  return <div className={'system-shell'+(collapsed?' is-collapsed':'')}>
   <header className="system-topbar">
@@ -51,8 +51,8 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
    </aside>
    <div className="system-content">
     <div className="system-section-header">
-     <div><p className="system-breadcrumb">MakerCusto / {section==='overview'?'Início':section==='calculator'?'Custos':'Produtos'}</p><h1>{title}</h1>
-      <p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='calculator'?'Simule custos e confira os parâmetros de produção.':'Produtos fabricados, peças e conjuntos da sua oficina.'}</p></div>
+     <div><p className="system-breadcrumb">MakerCusto / {section==='overview'?'Início':section==='calculator'?'Custos':section==='materials'?'Materiais':'Produtos'}</p><h1>{title}</h1>
+      <p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='calculator'?'Simule custos e confira os parâmetros de produção.':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':'Produtos fabricados, peças e conjuntos da sua oficina.'}</p></div>
      {section==='overview'&&<button className="system-primary-link" type="button" onClick={()=>navigate('assemblies')}>+ Novo conjunto</button>}
     </div>
     <div className="system-tabs" role="navigation" aria-label={'Abas de '+title}>
@@ -68,6 +68,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
       <button type="button" className={section==='assemblies'?'system-tab-active':''} aria-current={section==='assemblies'?'page':undefined} onClick={()=>navigate('assemblies')}>Conjuntos</button>
       <button type="button" disabled title="Biblioteca STL em desenvolvimento">Biblioteca STL <small>Em breve</small></button>
      </>}
+     {section==='materials'&&<button type="button" aria-current="page" className="system-tab-active">Bobinas existentes</button>}
      {section==='calculator'&&<><button type="button" aria-current="page" className="system-tab-active">Calculadora</button><button type="button" disabled>Histórico <small>Em breve</small></button></>}
     </div>
     <div className="system-module-body">{children}</div>
