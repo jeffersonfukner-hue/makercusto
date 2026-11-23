@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
+import {FormActionDock} from './FormActionDock';
 import {listExistingSpools,registerExistingSpool,type ExistingSpool,type ExistingSpoolDraft} from '../data/supabase';
 
 type Props={workspaceId:string|null};
@@ -74,10 +75,7 @@ export function MaterialsWorkspace({workspaceId}:Props){
     <label>Observações (opcional)<input aria-label="Observações da bobina" maxLength={1000} value={notes} onChange={e=>setNotes(e.target.value)}/>
      <small>Ex.: origem da estimativa, pesagem, data ou etiqueta.</small></label>
    </div>
-   <div className="product-workspace-buttons">
-    <button type="button" className="secondary-action" disabled={busy} onClick={()=>setShow(false)}>Cancelar</button>
-    <button type="button" className="primary-action" disabled={busy||!workspaceId} onClick={()=>void save()}>{busy?'Registrando bobina…':'Registrar bobina existente'}</button>
-   </div>
+
   </div>}
   <div className="materials-list">
    <h3>Bobinas inventariadas</h3>
@@ -92,5 +90,9 @@ export function MaterialsWorkspace({workspaceId}:Props){
     </article>)}</div>}
   </div>
   <p className="footnote">Inventariar registra uma entrada física auditável, sem criar compra fictícia. Simular um custo não baixa estoque; a confirmação de produção será implementada separadamente.</p>
+  {show&&<FormActionDock title={label.trim()||'Nova bobina'} subtitle="Inventário físico da oficina">
+   <button type="button" className="secondary-action" disabled={busy} onClick={()=>setShow(false)}>Cancelar</button>
+   <button type="button" className="primary-action" disabled={busy||!workspaceId} onClick={()=>void save()}>{busy?'Registrando bobina…':'Registrar bobina existente'}</button>
+  </FormActionDock>}
  </section>;
 }
