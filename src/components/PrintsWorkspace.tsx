@@ -1,10 +1,12 @@
 import {useEffect,useRef,useState} from 'react';
+import {FormActionDock} from './FormActionDock';
 import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,proposeInventoryAdjustment,listInventoryAdjustmentProposals,getPhysicalOccurrenceDossier,
  type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview,type InventoryAdjustmentProposal,type PhysicalOccurrenceDossier} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
 export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
+ const [activePrimaryForm,setActivePrimaryForm]=useState<'new'|'reserve'|'confirm'|'other'>('new');
  const [printers,setPrinters]=useState<StoredPrinter[]>([]),[products,setProducts]=useState<ProductRecord[]>([]);
  const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]),[reservations,setReservations]=useState<PrintReservation[]>([]),[occurrences,setOccurrences]=useState<PhysicalConsumptionOccurrence[]>([]);
  const [printer,setPrinter]=useState(''),[product,setProduct]=useState(''),[quantity,setQuantity]=useState('1');
@@ -301,7 +303,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   <div className="product-workspace-heading"><div><h2>Impressões da oficina</h2>
    <p>L2 registra a impressão sem baixar estoque. L3 confirma apenas os incrementos físicos.</p></div></div>
   {error&&<p role="alert" className="error">{error}</p>}{message&&<p role="status" className="product-success">{message}</p>}
-  <section className="panel materials-form"><h3>Nova impressão</h3>
+  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('new')} onClickCapture={()=>setActivePrimaryForm('new')}><h3>Nova impressão</h3>
    <div className="product-save-fields">
     <label>Impressora física<select aria-label="Impressora física" value={printer} onChange={e=>setPrinter(e.target.value)}>
      <option value="">Selecione</option>{printers.map(x=><option value={x.id} key={x.id}>{x.name}</option>)}</select>
@@ -317,9 +319,9 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>
    <button type="button" onClick={addOutput} disabled={busy}>+ Adicionar peça à mesa</button>
    <ul>{outputs.map(o=><li key={o.product_id}>{o.name}: {o.quantity} <button type="button" aria-label={'Remover '+o.name} onClick={()=>setOutputs(v=>v.filter(x=>x.product_id!==o.product_id))}>Remover</button></li>)}</ul>
-   <button type="button" className="primary-action" disabled={busy||!workspaceId||outputs.length===0} onClick={()=>void save()}>{busy?'Salvando…':'Registrar impressão sem baixa'}</button>
+
   </section>
-  <section className="panel materials-form"><h3>Reserva opcional de filamento</h3>
+  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('reserve')} onClickCapture={()=>setActivePrimaryForm('reserve')}><h3>Reserva opcional de filamento</h3>
    <p className="footnote">A reserva apenas compromete gramas da bobina para esta impressão. Não retira material físico nem gera custo. O saldo reservado é abatido somente durante confirmações reais.</p>
    <div className="product-save-fields">
     <label>Impressão para reservar<select aria-label="Impressão para reservar" value={reservePrintId} onChange={e=>{setReservePrintId(e.target.value);reservationKey.current=newKey();}}>
@@ -330,7 +332,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Quantidade a reservar (g)<input aria-label="Quantidade a reservar" type="number" min=".001" step=".001" value={reserveGrams} onChange={e=>{setReserveGrams(e.target.value);reservationKey.current=newKey();}}/>
      <small>Reserva opcional, por bobina. Não libera sobra em uma confirmação parcial.</small></label>
    </div>
-   <button type="button" className="primary-action" disabled={busy||!workspaceId||!reservePrintId||!reserveLot} onClick={()=>void reserve()}>{busy?'Registrando…':'Registrar reserva sem baixa'}</button>
+
    {reservations.filter(x=>x.status==='active').length>0&&<ul aria-label="Reservas ativas da oficina">
     {reservations.filter(x=>x.status==='active').map(x=><li key={x.id}>{x.lot_label||'Bobina'} — reservado {x.remaining} g de {x.quantity} g para {prints.find(p=>p.id===x.production_id)?.outputs.map(o=>o.name).join(' + ')||'impressão registrada'}
      {x.due_at&&<> · Revisão: {new Date(x.due_at).toLocaleString('pt-BR')}{x.review_overdue&&<strong> · Revisão vencida (reserva mantida)</strong>}</>}
@@ -344,7 +346,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <button type="button" disabled={busy||!dueReservation} onClick={()=>void updateReviewDue()}>Salvar prazo de revisão</button>
    </div>}
   </section>
-  <section className="panel materials-form"><h3>Confirmação incremental de impressão</h3>
+  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('confirm')} onClickCapture={()=>setActivePrimaryForm('confirm')}><h3>Confirmação incremental de impressão</h3>
    <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo e o tempo informados são incrementais; registre falhas mesmo sem peças boas. O material da mesa não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
    <div className="product-save-fields">
     <label>Impressão<select aria-label="Impressão para confirmar" value={selected} onChange={e=>{setSelected(e.target.value);setSelectedOutput('');operation.current=newKey();}}>
@@ -360,7 +362,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Peças boas adicionais<input aria-label="Peças boas adicionais" type="number" min="0" step="1" value={good} onChange={e=>setGood(e.target.value)}/></label>
     <label>Peças rejeitadas adicionais<input aria-label="Peças rejeitadas adicionais" type="number" min="0" step="1" value={failed} onChange={e=>setFailed(e.target.value)}/></label>
    </div>
-   <button type="button" className="primary-action" disabled={busy||!selected||!lot||!workspaceId||!selectedOutput} onClick={()=>void confirm()}>{busy?'Confirmando…':'Confirmar consumo incremental'}</button>
+
   </section>
   <section className="panel materials-form" aria-label="Ocorrências físicas pendentes">
    <h3>Ocorrência física pendente — GAP01</h3>
@@ -597,5 +599,15 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     onClick={()=>{setCancelTarget(p.id);setCancelReason('');cancelKey.current=newKey();setError('');}}>
     Cancelar impressão</button>}
   </article>)}</div>}
+
+  {activePrimaryForm==='new'&&<FormActionDock title="Nova impressão" subtitle={outputs.length+' peça(s) na mesa · sem baixa de estoque'}>
+   <button type="button" className="primary-action" disabled={busy||!workspaceId||outputs.length===0} onClick={()=>void save()}>{busy?'Salvando…':'Registrar impressão sem baixa'}</button>
+  </FormActionDock>}
+  {activePrimaryForm==='reserve'&&<FormActionDock title="Reserva de filamento" subtitle="Reservar não movimenta estoque">
+   <button type="button" className="primary-action" disabled={busy||!workspaceId||!reservePrintId||!reserveLot} onClick={()=>void reserve()}>{busy?'Registrando…':'Registrar reserva sem baixa'}</button>
+  </FormActionDock>}
+  {activePrimaryForm==='confirm'&&<FormActionDock title="Consumo incremental" subtitle="Esta operação pode baixar estoque">
+   <button type="button" className="primary-action" disabled={busy||!selected||!lot||!workspaceId||!selectedOutput} onClick={()=>void confirm()}>{busy?'Confirmando…':'Confirmar consumo incremental'}</button>
+  </FormActionDock>}
  </section>
 }
