@@ -798,3 +798,52 @@ test('Impressões L3: bloqueia deltas fracionários e quantidade superior ao pla
  await expect(page.getByText('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.')).toBeVisible();
  expect(called).toBe(true);
 });
+
+
+test('Reserva P01: disponibilidade desconta reservas, valida saldo e reenvia a mesma chave',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const lot='77777777-7777-4777-8777-777777777777',production='66666666-6666-4666-8666-666666666666';
+ const other='99999999-9999-4999-8999-999999999999';
+ const output='55555555-5555-4555-8555-555555555555';
+ const attempts:Record<string,unknown>[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina QA',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'draft',printer_id:null,
+    printer_name:'Impressora de testes',planned_hours:null,actual_hours:null,notes:null,
+    created_at:new Date().toISOString(),outputs:[{id:output,product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',name:'Hélice',planned:2,good:0,failed:0}]}]);
+  if(u.includes('rpc/mc_list_existing_spools'))return send([{id:lot,label:'Bobina PETG',name:'PETG',
+    initial_grams:100,remaining_grams:100,remaining_cost_estimate:null,cost_status:'unknown',notes:null,
+    created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_list_print_reservations'))return send([{id:'88888888-8888-4888-8888-888888888888',
+   production_id:other,lot_id:lot,lot_label:'Bobina PETG',quantity:60,remaining:60,status:'active',
+   created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_reserve_print_lot')){
+   attempts.push(route.request().postDataJSON() as Record<string,unknown>);
+   if(attempts.length===1)return send({message:'Erro transitório simulado'},503);
+   return send('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+  }
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await expect(page.getByRole('option',{name:/Bobina PETG — disponíveis 40.000 g/})).toHaveCount(1);
+ await page.getByRole('combobox',{name:'Impressão para reservar'}).selectOption(production);
+ await page.getByRole('combobox',{name:'Bobina para reservar'}).selectOption(lot);
+ await page.getByRole('spinbutton',{name:'Quantidade a reservar'}).fill('41');
+ await page.getByRole('button',{name:'Registrar reserva sem baixa'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('excede a disponibilidade');
+ expect(attempts).toHaveLength(0);
+ await page.getByRole('spinbutton',{name:'Quantidade a reservar'}).fill('40');
+ await page.getByRole('button',{name:'Registrar reserva sem baixa'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('Erro transitório simulado');
+ await page.getByRole('button',{name:'Registrar reserva sem baixa'}).click();
+ await expect(page.getByText('Reserva lógica registrada sem movimentar o estoque físico.')).toBeVisible();
+ expect(attempts).toHaveLength(2);
+ expect(attempts[0].p_request_key).toBe(attempts[1].p_request_key);
+ expect(attempts[0].p_quantity_g).toBe(40);
+ expect(attempts[0].p_lot_id).toBe(lot);
+});
