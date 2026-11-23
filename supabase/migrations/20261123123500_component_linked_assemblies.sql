@@ -1,6 +1,8 @@
 -- MakerCusto: S01/S04 — conjunto reutiliza peças existentes pelo ID da oficina.
 -- Somente branch/CI. NÃO aplicar ao Supabase operacional sem autorização específica.
 -- Uma placa pode produzir várias peças diferentes; nenhum rateio de mesa é inferido.
+create unique index if not exists mc_product_components_id_workspace_unique
+ on public.mc_product_components(id,workspace_id);
 create table if not exists public.mc_assembly_part_snapshots (
  workspace_id uuid not null references public.mc_workspaces(id) on delete cascade,
  component_row_id uuid not null,
