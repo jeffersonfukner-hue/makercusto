@@ -210,3 +210,25 @@ export const proposeInventoryAdjustment=(workspaceId:string,draft:{
  p_justification:draft.justification,p_evidence_reference:draft.evidenceReference,
  p_request_key:draft.key
 });
+
+export type PhysicalOccurrenceDossier={
+ occurrence_id:string;production_id:string;status:'registered'|'under_review'|'pending_decision';
+ observed_quantity_g:number;possible_lot_id:string|null;possible_lot_label:string|null;
+ lot_verification:'unverified';snapshot_type:'read_only_current_state';
+ physical_g:number|null;reserved_g:number|null;own_reserved_g:number|null;
+ other_reserved_g:number|null;unreserved_g:number|null;
+ reservations:{reservation_id:string;production_id:string;lot_id:string;remaining_g:number;quantity_g:number;status:string;belongs_to_occurrence_production:boolean}[];
+ confirmed_consumption_lines:{consumption_id:string;confirmation_id:string;lot_id:string|null;lot_label:string|null;
+ model_g:number;purge_g:number;loss_g:number;total_g:number;unit_cost_snapshot:number|null;
+ confirmed_at:string;confirmation_status:string;author_id:string|null}[];
+ investigation_history:{review_id:string;prior_status:string;next_status:string;cause_hypothesis:string;
+ evidence_reference:string|null;created_at:string}[];
+ pending_adjustment_proposals:{proposal_id:string;lot_id:string;proposed_delta_g:number;status:string;
+ evidence_reference:string;created_at:string}[];
+ possible_compensation_review:'manual_review_only';reversible_quantity_g:null;financial_adjustment:null;
+ inventory_effect:'none';approval:'not_available';warning:string
+};
+export const getPhysicalOccurrenceDossier=(workspaceId:string,occurrenceId:string)=>
+ api<PhysicalOccurrenceDossier>('rpc/mc_get_physical_occurrence_dossier','POST',{
+ p_workspace_id:workspaceId,p_occurrence_id:occurrenceId
+});
