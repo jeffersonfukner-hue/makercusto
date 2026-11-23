@@ -98,3 +98,10 @@
 ## Limites desta auditoria
 
 Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma certificação de segurança do Supabase ou uma varredura exaustiva de todos os gatilhos e funções SQL. Estados “A” indicam ausência de fluxo observável na implementação examinada, sem afirmar impossibilidade técnica ou inexistência de qualquer rotina interna não inspecionada. A homologação funcional exige testes de banco reais com reversão, permissões cruzadas, CI e aceitação visual do proprietário.
+
+
+## Progresso L2/L3 em código — 22/11/2026 (ainda sem comprovação operacional do banco)
+- A migração `20261122212500_print_execution_l2_l3.sql` e o módulo Impressões adicionam registro descritivo de execução com impressora física, saída(s), quantidade e proveniência; não atribuem consumo automaticamente.
+- Confirmações incrementais foram implementadas **em SQL versionado** com chave idempotente, conferência de payload, bloqueio transacional, validação de saldos e registros de saída/consumo. Nenhuma execução real foi contabilizada.
+- L3 tem limites explícitos: não encerra produção nem concilia reserva ativa; não realiza rateio financeiro nem cria snapshot monetário completo de confirmação. Fluxos de exceção, reversão e perdas completas permanecem pendentes.
+- Não alterar contagem de 17 P / 22 A / 0 C até a migração ser aplicada e os testes de banco e autorização comprovarem os novos comportamentos. O CI com REST simulado valida somente o frontend.
