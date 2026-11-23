@@ -199,3 +199,8 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - **CI #45194048555 `success`**, commit `f030c58467ccbc2189f94555b142ee77474c6fb3`: 102/102 Playwright, SQL PostgreSQL 17 efêmero com rollback, concorrência, isolamento, TypeScript, unitários e build. Dossiê exibe saldo físico atual, reservas da ordem e de outras ordens, linhas originais com ID e preço histórico, investigações e propostas ainda não aprovadas. Nenhuma ação de estorno, aprovação, liberação de reserva ou movimentação física foi habilitada.
 - **GAP01 e P09 continuam parciais:** sem prova de reversibilidade/condição física, dependências posteriores, suficiência de evidência, perfis de aprovação ou conciliação excepcional efetiva. Não supor que a consulta autorize estoque disponível futuro. **Matriz global 22 P, 17 A, 0 C**, mantendo as 39 decisões.
 - Migração complementar somente na branch; não aplicada no Supabase operacional. Sem merge/deploy ou homologação visual/JWT real.
+
+
+## 23/11/2026 — Fluxo orgânico e UX progressiva
+- CI funcional #45208428395 `success`, SHA `963081a6571eb6a518827f65b255aa3bc8a943de`: 108/108 Playwright e SQL reversível; calculadora logada salva e recupera cálculo, conjuntos selecionam peças/produtos existentes por ID sem duplicação e preservam snapshots. O padrão `docs/PADRAO_UX_SIMPLES_DETALHES_AVANCADO.md` orienta evolução transversal com escolher/cadastrar/detalhes/avançado, campos contextuais, simplicidade inicial e flexibilidade avançada.
+- **Ainda não integralmente implementado** em todos os módulos; o CI não equivale a homologação visual. Não reclassificar automaticamente as 39 resoluções (última contagem 22 P / 17 A / 0 C). Sem merge, deploy ou aplicação de migrações no Supabase operacional.

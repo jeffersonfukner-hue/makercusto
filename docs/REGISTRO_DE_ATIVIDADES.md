@@ -654,3 +654,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidência verificável:** https://github.com/jeffersonfukner-hue/makercusto/commit/29b5f0d8cf6c2fe302b8a94e7b8c83fe652836eb ; caminho `docs/PROPOSTA_HOMOLOGACAO_APROVACOES_EXCEPCIONAIS_GAP01_P09.md`. Não houve testes SQL/Playwright nesta etapa, pois só houve edição documental.
 - **Pendências:** homologação expressa dos seis grupos de decisão no novo documento; sem ela não habilitar aprovação/execução de ajuste excepcional ou estorno extraordinário.
 - **Sem:** código, SQL, migração, merge, deploy, alteração do Supabase operacional, estoque real ou créditos pagos.
+
+
+## 23/11/2026 — Calculadora/peças/conjuntos e padrão de UX
+- **Projeto/cliente:** MakerCusto / projeto próprio.
+- **Horários Brasília observados:** 12:46 e 12:48 em 23/11/2026; **horários reais de início/término e duração efetiva não aferidos**. Não contabilizar intervalo entre mensagens ou CI como tempo trabalhado.
+- **Ações executadas:** inspeção de documentação, cadastro de produtos e migrações; descoberta e correção do painel de salvamento de cálculo oculto para logados; APIs e frontend de seleção de peças existentes para conjuntos, snapshots por revisão, recuperação de cálculos, navegação entre módulos; testes SQL e Playwright da guirlanda com três peças distintas; elaboração de `docs/PADRAO_UX_SIMPLES_DETALHES_AVANCADO.md` com padrão escolher/cadastrar/detalhes/avançado e complexidade opcional por campo.
+- **Resultados comprovados:** CI #45208428395 `success`, funcional `963081a6571eb6a518827f65b255aa3bc8a943de`, **108/108 Playwright**, PostgreSQL efêmero com rollback, concorrência, isolamento, tipagem, unitários e build. Guirlanda e duas estrelas vinculadas por ID, sem duplicação e com histórico de custo preservado. Documento UX commit `e45bd1deef723e787fe436c17d2f3d7a374399f5`.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45208428395 ; `supabase/tests/component_linked_assemblies_rollback.sql`, `tests/app.spec.ts`, `src/App.tsx`, `src/components/ProductWorkspace.tsx`, `src/components/ProductSavePanel.tsx`.
+- **Pendências:** implementação real e homologação visual do padrão UX por campo e Filamento, rateio de placa mista, autenticação real e migrações somente na branch. **Sem merge, deploy, SQL operacional ou créditos pagos.**
