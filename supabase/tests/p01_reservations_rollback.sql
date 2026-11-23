@@ -71,7 +71,7 @@ begin
   raise exception 'Reserva consumida não foi marcada como fulfilled'; end if;
  select details->'reservation_excesses' into excess from public.mc_audit_events
   where workspace_id=w and entity='production_confirmation' and details ? 'reservation_excesses'
- order by created_at desc limit 1;
+ order by occurred_at desc limit 1;
  if excess is null or jsonb_array_length(excess)<>1 or (excess->0->>'excess_g')::numeric<>5 then
   raise exception 'Excedente de 5 g não auditado: %',excess; end if;
  -- Protege reserva de B: saldo físico 65 g, comprometidos 60 g.
