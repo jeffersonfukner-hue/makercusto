@@ -508,3 +508,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45094382511 ; commits `3ba56cd6110567ae3b9714e56ff1eb2b2d6cb03a`, `9645a86e71314cfeac049fb5a065c4b84964742f`.
 - **Limites:** o CI usa REST simulado para o fluxo L3. A migração SQL `20261122212500_print_execution_l2_l3.sql` permanece sem execução transacional em PostgreSQL de teste e sem aplicação no Supabase MakerCusto. Conformidade de concorrência, saldo, RLS e autoria no banco ainda **não comprovada**.
 - **Sem merge, deploy, mudança no banco, dados reais de produção ou gastos pagos autorizados.**
+
+## 22/11/2026 — CI PostgreSQL isolado para regressão L2/L3
+- **Projeto/cliente:** MakerCusto / desenvolvimento próprio.
+- **Início/término e duração efetiva (Brasília):** não aferidos, não contabilizar intervalo entre mensagens ou duração do CI como horas de trabalho humano.
+- **Atividades executadas:** verificação de infraestrutura local (sem servidor PostgreSQL instalado); leitura do contrato de CI; criação de `supabase/tests/bootstrap_ci_auth.sql` e `supabase/tests/fixture_ci_l2_l3.sql`; adaptação do `.github/workflows/ci.yml` com serviço PostgreSQL 17 efêmero, aplicação das migrações em DB descartável e execução automática do roteiro reversível já versionado.
+- **Resultados comprovados:** #45095409926, `success`, SHA funcional `cd1f58729587c279e822d5b972ab9f998ab2bc03`; SQL de L1/L2/L3 executou sem erro em PostgreSQL 17, verificou replay, rejeição de conteúdo divergente, saldo disponível insuficiente, bloqueio de usuário estranho e rollback; verificação final de 0 produções registradas após rollback. Tipagem, testes unitários, build e **86/86 Playwright desktop/mobile** aprovados.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45095409926 ; commits `933abd48e40d904247fb2859c8a46607309dba4e`, `72549f7038b62ede716491fbfde97c7774db68d0`, `cd1f58729587c279e822d5b972ab9f998ab2bc03`.
+- **Pendências/limites:** concorrência simultânea, JWT real/RLS, cenários multioficina e reservas; custos financeiros e movimentação de produto acabado permanecem pendentes. Teste SQL usa identidade simulada em banco descartável, não garante segurança operacional integral.
+- **Sem alterações no Supabase real, merge, deploy ou contratação de serviço externo pago.**

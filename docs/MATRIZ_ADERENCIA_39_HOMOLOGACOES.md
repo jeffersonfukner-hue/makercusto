@@ -34,18 +34,18 @@
 | T03 | [T] 3 | Tarifa elétrica própria da oficina; ajuste pontual e valor histórico congelado | P | `mc_energy_tariffs` existe vazia; calculadora aceita tarifa manual; não comprova registro/histórico de tarifa da oficina. |
 | T04 | [T] 4 | Definição de filamento, compra e bobina/lote em entidades separadas | P | Tabelas `mc_filaments`, `mc_purchases`, `mc_stock_lots` separadas; sem fluxo funcional de compra/bobina e custo histórico. |
 | S01 | [S] 1 | Identidade estocável própria por oficina com vínculos verificáveis e sem expor saldos | P | `mc_inventory_items` e `workspace_id` estruturados; sem operações ou teste entre oficinas. |
-| S02 | [S] 2 | Bloquear saldo negativo ordinário; ajustes justificados e rastreáveis | A | Sem endpoint de movimento/validação de saldo disponível em uso; não inferir regra de tabela vazia. |
+| S02 | [S] 2 | Bloquear saldo negativo ordinário; ajustes justificados e rastreáveis | P | CI PostgreSQL descartável #45095409926 comprova rejeição transacional de baixa acima do saldo para confirmação sem reserva; ainda faltam ajustes, concorrência multi-sessão e outras operações. |
 | S03 | [S] 3 | Baixa física somente após confirmação de produção, nunca na simulação | P | Cadastro/cálculo atuais não baixam estoque; falta mecanismo efetivo de confirmação e baixa idempotente. |
 | S04 | [S] 4 | BOM de kit versionada; histórico imutável; incluir fabricados/comprados/ferramentas/montagem | P | `mc_product_revisions` e `mc_product_components` reais; ainda só peças fabricadas e sem execução ligada à revisão usada. |
 | S05 | [S] 5 | Rateio explícito por tipo de saída em mesa mista, sem divisão arbitrária | A | `mc_cost_pools`/`mc_cost_allocations` vazias; motor atual não aceita uma mesa com saídas distintas e bases explícitas por categoria. |
 | S06 | [S] 6 | Estorno com novo evento vinculado, motivo/autor/data, sem reescrever original | A | Sem operações de estoque confirmado/estorno na API; `mc_stock_movements` vazio. |
 | R01 | [R] RES | Reserva opcional lógica, sem baixa, com saldo físico menos reservas e reconciliação | A | `mc_production_reservations` existe vazia; fluxo/reserva por execução ausentes da API. |
-| R02 | [R] PAR | Confirmações incrementais e idempotentes, contabilizando só novos consumos e saídas | A | `mc_production_confirmations` vazia; sem API de confirmações. |
+| R02 | [R] PAR | Confirmações incrementais e idempotentes, contabilizando só novos consumos e saídas | P | RPC L3 executada no PostgreSQL 17 efêmero; teste de delta, replay idempotente e payload divergente aprovado; ainda falta conciliação de reservas, snapshots monetários e autenticação real. |
 | R03 | [R] FAL | Falha pode consumir material e tempo com zero peças boas; perda separada | A | `mc_production_failures` vazia; sem operação de falha. |
 | R04 | [R] RET | Retrabalho separado e vinculado, com novos custos/snapshots sem alterar original | A | Sem RPC/fluxo de retrabalho; revisões de produto não substituem produção retrabalhada. |
 | R05 | [R] RAT | Rateio mensurável por categoria, base declarada e conciliação integral | A | Ausente fluxo de distribuição de custos por execução mista. |
 | P01 | [P01] A–F | Liberação segura de sobras; expiração não libera automaticamente; origem/excedente; troca de bobina; parcial; concorrência | A | Sem mecanismo de reserva/encerramento executável e testado. |
-| P02 | [P02] A–F | Confirmação parcial opcional, delta por evento, IDs/idempotência, auditabilidade, encerramento e concorrência | A | Sem confirmação física e deltas registrados; testes E2E focados em UI com REST simulado. |
+| P02 | [P02] A–F | Confirmação parcial opcional, delta por evento, IDs/idempotência, auditabilidade, encerramento e concorrência | P | CI PostgreSQL #45095409926 validou confirmação inicial, autoria em auditoria, replay e bloqueio de saldo; encerramento, concorrência em duas sessões e reserva ativa ainda bloqueados. |
 | P03 | [P03] A–F | Falha total/parcial, consumo/refugo, custo separado, destinos, indicadores e trilha | A | Fluxo operacional de falhas ausente. |
 | P04 | [P04] A–F | Retrabalho vinculado e custeio incremental, reimpressão como nova execução, sem produção duplicada | A | Fluxo de retrabalho e vínculo de execuções ausente. |
 | P05 | [P05] A–F | Rateio por categoria (massa/cor/lote, purga, energia, máquina, trabalho, perdas) e conciliação | A | `calculateCost` soma categorias básicas; não recebe saídas múltiplas nem lotes reais, nem rateio auditado por categoria. |
@@ -117,3 +117,10 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - O frontend agora rejeita deltas fracionários por saída, excesso acima das peças planejadas pendentes e massa com precisão superior a 0,001 g.
 - Testes de retry da confirmação com mesma chave de idempotência e rejeições locais aprovados em ambiente REST simulado; CI #45094382511: 86 Playwright desktop/mobile, tipos, unitários e build, `success`.
 - **Sem mudança de classificação** das 39 políticas: o backend L3 permanece como migração não aplicada; testes reais transacionais, isolamento entre usuários, concorrência, reservas e snapshot conciliado continuam ausentes.
+
+## Atualização de aderência verificada — PostgreSQL 17 efêmero, 22/11/2026
+- **CI:** #45095409926 (`success`, commit `cd1f58729587c279e822d5b972ab9f998ab2bc03`). SQL de fundação, inventário inicial L1, registro de impressão L2 e confirmação L3 aplicado e testado somente em banco descartável com fixtures sintéticas.
+- **Reclassificação justificada:** S02 A→P, R02 A→P, P02 A→P. **Estado corrente: 20 parciais, 19 ausentes, 0 completas.** As contagens históricas L1 (17/22) acima permanecem registros da etapa anterior.
+- **Testes SQL positivos:** L2 não movimenta estoque; L3 lança somente o delta; replay de mesma chave e payload retorna confirmação original; payload diferente rejeitado; estoque insuficiente rejeitado com saldo preservado; identidade alheia rejeitada; `anon` sem EXECUTE; `ROLLBACK` não persistiu produção.
+- **Não comprovado:** fluxo de usuários autenticados reais, RLS cruzado por oficinas distintas, concorrência multi-sessão, consumo com reserva ativa, snapshots de confirmação, produção em estoque de acabados, encerramento e rateio financeiro. Nenhuma das 39 homologações recebeu status C.
+- **Sem alterações no Supabase operacional**, merge ou deploy; persistência ocorreu apenas no container temporário de CI.

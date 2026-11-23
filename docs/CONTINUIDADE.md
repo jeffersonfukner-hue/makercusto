@@ -456,3 +456,10 @@
 - **CI final funcional:** #45094382511 `success`, commit `9645a86e71314cfeac049fb5a065c4b84964742f`, TypeScript, unitários, build e 86/86 E2E desktop/mobile aprovados: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45094382511 .
 - Não há PostgreSQL local instalado no ambiente de execução; não houve validação SQL de banco. Ainda não aplicar L2/L3 no Supabase operacional, nem tratar P01/P02/G02 como homologadas na implementação.
 - Manter branch de trabalho, sem merge, deploy ou alteração de banco.
+
+## 22/11/2026 — L2/L3: PostgreSQL descartável integrado ao CI, SQL testado
+- A etapa SQL foi incorporada ao GitHub Actions da branch `feat/fundacao-makercusto`: container PostgreSQL 17 descartável, bootstrap mínimo de `auth` exclusivo do CI, migrações de fundação/L1/L2/L3, oficina/impressora/peça fictícias, execução de `supabase/tests/l2_l3_rollback.sql` e verificação final de ausência de produção persistida.
+- **Resultado comprovado:** GitHub Actions #45095409926, `success` para commit `cd1f58729587c279e822d5b972ab9f998ab2bc03`; migração aplicada apenas no banco efêmero do CI; ensaios de criação L2 sem baixa, confirmação incremental L3, replay idempotente, payload divergente, saldo insuficiente, bloqueio de usuário desconhecido e permissão de `anon`; 86/86 Playwright desktop/mobile, tipagem, unitários e build aprovados. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45095409926
+- Os dados usados são **inteiramente sintéticos**; ambiente descartado após CI. Banco Supabase MakerCusto não foi alterado.
+- **Limites:** `auth.uid()` foi simulado no banco de testes para chamadas SQL sob administrador; não houve teste E2E com JWT real, matriz RLS entre duas oficinas reais, corrida multi-sessão, confirmação com reserva ativa, produção de estoque acabado ou fechamento/rateio financeiro. L3 permanece implementação parcial, não homologação integral.
+- Matriz: S02, R02 e P02 agora classificados **P** por evidência efetiva do fluxo inicial (20 P, 19 A, 0 C), sem alterar as decisões homologadas.
