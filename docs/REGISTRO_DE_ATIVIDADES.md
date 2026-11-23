@@ -801,3 +801,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** commits `d663789140d0a630ea1c55d93c0f3db3f1696fa8`, `acc511902ad5781d57f58eca03a83ba23e3a1fe6`, `9d421e9130c4b713d6a2df7ce8c62a1ea6c65556`; PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1. CI do lote em apuração.
 - **Resultado:** dossiê implementado exclusivamente na branch, ainda com contabilização final proibida. Nenhum merge, deploy ou alteração de banco operacional.
 - **Pendências:** resultado integral do CI; integração da conciliação exata P05/P06/P07 e estorno P09; homologação visual futura.
+
+
+## 23/11/2026 — L4-G03: consulta de prontidão na interface de Impressões
+
+- **Projeto:** MakerCusto. **Horários de início/fim:** não aferidos; **duração efetiva:** não registrada, sem estimativa pelo intervalo de mensagens.
+- **Atividades efetivamente executadas:** leitura de `AGENTS.md`, continuidade, arquitetura/padrões, componentes existentes e contrato G02; adição de tipos/client RPC; componente read-only de dossiê com erros visíveis e prevenção de respostas atrasadas; integração por impressão; extensão do teste Playwright para bloquear interpretação de custos pendentes como fechados e verificar ausência de escrita.
+- **Evidências:** commits `691fb40d9488cad231bc827d120b14a9f26707f2`, `60ce53ddf6bc237e508932622d76952eac25ea5e`, `ad06a274a9da875e1a669528d3d4778fa29a9bfc`, `72290216ce05826407f60a8e279dac3fd841c9c3`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1. CI no momento de edição: aguardando verificação do commit final.
+- **Resultados:** integração adicionada à branch; nenhum merge, deploy ou alteração no Supabase operacional.
+- **Pendências:** aprovação integral CI no HEAD, migrações operacionais somente após autorização explícita, e fechamento imutável P05/P06/P07/P09 ainda não implementado.
