@@ -131,6 +131,22 @@ export type PrintConsumptionSources={
  execution_id:string;read_only:true;financially_final:false;snapshot_precision:string;
  lines:PrintConsumptionSource[];
 };
+export type ExactConsumptionOrigin={
+ consumption_id:string;confirmation_id:string;lot_id:string;status:'known'|'estimated'|'unknown';
+ original_quantity_g:string;original_total_cost_brl:string|null;
+ model_g:string;purge_g:string;loss_g:string;quantity_basis:string;
+ purchase_line_id:string|null;source_version:string;captured_at:string;
+};
+export type ExactConsumptionOrigins={
+ execution_id:string;read_only:true;financially_final:false;
+ exact_source_version:string;historical_rows_without_capture:number;
+ origins:ExactConsumptionOrigin[];
+};
+export const getL4ExactOrigins=(workspaceId:string,productionId:string)=>
+ api<ExactConsumptionOrigins>('rpc/mc_get_l4_exact_origins','POST',{
+  p_workspace_id:workspaceId,p_production_id:productionId
+ });
+
 export const getPrintConsumptionSources=(workspaceId:string,productionId:string)=>
  api<PrintConsumptionSources>('rpc/mc_get_print_consumption_sources','POST',{
   p_workspace_id:workspaceId,p_production_id:productionId
