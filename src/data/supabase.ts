@@ -107,3 +107,15 @@ export const confirmPrint=(workspaceId:string,draft:{id:string;key:string;output
  actualHours:number|null})=>api<string>('rpc/mc_confirm_print','POST',{p_workspace_id:workspaceId,p_production_id:draft.id,
  p_idempotency_key:draft.key,p_outputs:draft.outputs,p_consumptions:draft.consumptions,
  p_actual_hours:draft.actualHours,p_finish:false});
+
+export type PrintReservation={
+ id:string;production_id:string;lot_id:string;lot_label:string|null;
+ quantity:number;remaining:number;status:'active'|'released'|'fulfilled';created_at:string
+};
+export const listPrintReservations=(workspaceId:string)=>api<PrintReservation[]>('rpc/mc_list_print_reservations','POST',{p_workspace_id:workspaceId});
+export const reservePrintLot=(workspaceId:string,draft:{
+ productionId:string;lotId:string;quantityGrams:number;key:string
+})=>api<string>('rpc/mc_reserve_print_lot','POST',{
+ p_workspace_id:workspaceId,p_production_id:draft.productionId,p_lot_id:draft.lotId,
+ p_quantity_g:draft.quantityGrams,p_request_key:draft.key
+});
