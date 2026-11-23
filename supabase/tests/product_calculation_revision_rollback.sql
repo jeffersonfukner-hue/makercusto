@@ -20,6 +20,9 @@ begin
  then raise exception 'Não criou uma única nova revisão';end if;
  if (select total_cost from public.mc_cost_snapshots where id=old_snapshot)<>old_cost
  then raise exception 'Alterou custo histórico';end if;
+ if not exists(select 1 from jsonb_array_elements(public.mc_list_saved_calculations(w)) item
+  where item->>'product_id'=pid::text and (item->>'unit_cost')::numeric=3.75)
+ then raise exception 'Novo custo não aparece no seletor de cálculos reutilizáveis';end if;
  if (select sale_price from public.mc_products where id=pid)<>19
  then raise exception 'Não atualizou preço explícito';end if;
  select id into new_snapshot from public.mc_cost_snapshots
