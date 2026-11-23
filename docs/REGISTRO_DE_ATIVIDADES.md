@@ -714,3 +714,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados verificáveis:** commits `91082fea`, `6c161955`, `d87bb8f`, `7cb6ffc`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
 - **Pendências:** CI do HEAD, testes visuais, dock nas demais operações avançadas; migração SQL anterior ainda não aplicada ao banco operacional.
 - **Restrições:** nenhuma alteração em Supabase, merge ou deploy.
+
+
+## 23/11/2026 — Padronização avançada do rodapé de ações em Impressões
+
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários início/término (Brasília):** não aferidos; **duração efetiva:** não mensurada. Nenhum intervalo entre mensagens foi usado como jornada.
+- **Atividades executadas:** consulta de CI #378 concluído com sucesso; inspeção do módulo `PrintsWorkspace`, padrões e testes; integração do rodapé fixo em oito operações adicionais com acionamento por formulário ativo e salvaguardas contextuais; extensão de testes Playwright sobre os principais fluxos e ausência de botões de outros formulários.
+- **Resultados versionados:** commits `63e36e4edcaf02e3b5d51797e17fdf3f6c38783c`, `24fd5f71c09ef667ff5db3cb2b112da1a444d5fe`, `cf94c4ed7de757c2c0ea1f27ded5928498ecc36c`. Verificação anterior: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45263293703
+- **Pendências e evidências:** CI novo ainda não confirmado; homologação visual pelo proprietário pendente. PR https://github.com/jeffersonfukner-hue/makercusto/pull/1. Não foi feita alteração no banco, merge nem deploy.
