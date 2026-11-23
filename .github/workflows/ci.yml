@@ -48,6 +48,10 @@ jobs:
           set -euo pipefail
           psql -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap_ci_auth.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261121015442_makercusto_foundation_v1.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261121145200_enable_product_save_rpc.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122203000_assembly_revisions_costs.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122204000_product_form_records.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122204500_initial_assembly_costs.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122210500_initial_spool_inventory.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122211000_spool_inventory_hardening.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_preflight_readonly.sql
