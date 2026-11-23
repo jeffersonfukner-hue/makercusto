@@ -663,3 +663,44 @@ test('bobina física: inventário na oficina sem criar compra fictícia',async({
  expect(sent.p_quantity_basis).toBe('measured');
  expect(String(sent.p_idempotency_key).length).toBeGreaterThanOrEqual(10);
 });
+
+
+test('Impressões: registra L2 sem consumo e mostra a execução na oficina', async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222';
+ const ws='11111111-1111-4111-8111-111111111111';
+ const printer='33333333-3333-4333-8333-333333333333';
+ const product='44444444-4444-4444-8444-444444444444';
+ let saved:Record<string,unknown>|null=null;
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url();
+  const respond=(value:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(value)});
+  if(u.includes('mc_workspaces?'))return respond([{id:ws,name:'Oficina L2',owner_id:user}]);
+  if(u.includes('mc_printers?'))return respond([{id:printer,workspace_id:ws,name:'Impressora 1',model_id:null,purchase_price:null,average_watts:null,lifetime_hours:null,active:true}]);
+  if(u.includes('mc_products?'))return respond([{id:product,workspace_id:ws,name:'Hélice',sku:null,kind:'component',description:null,sale_price:null,active:true,created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_list_prints'))return respond(saved?[{id:'55555555-5555-4555-8555-555555555555',
+   status:'draft',printer_id:printer,printer_name:'Impressora 1',planned_hours:null,actual_hours:null,notes:null,
+   created_at:new Date().toISOString(),outputs:[{id:'66666666-6666-4666-8666-666666666666',
+   product_id:product,name:'Hélice',planned:3,good:0,failed:0}]}]:[]);
+  if(u.includes('rpc/mc_create_print')){saved=route.request().postDataJSON() as Record<string,unknown>;return respond('55555555-5555-4555-8555-555555555555');}
+  if(u.includes('rpc/mc_list_existing_spools')||u.includes('rpc/mc_list_assemblies')||u.includes('mc_catalog?'))return respond([]);
+  return respond([]);
+ });
+ await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Impressões da oficina'})).toBeVisible();
+ await page.getByRole('combobox',{name:'Impressora física'}).selectOption(printer);
+ await page.getByRole('combobox',{name:'Peça a imprimir'}).selectOption(product);
+ await page.getByRole('spinbutton',{name:'Quantidade planejada'}).fill('3');
+ await page.getByRole('button',{name:'+ Adicionar peça à mesa'}).click();
+ await page.getByRole('button',{name:'Registrar impressão sem baixa'}).click();
+ await expect(page.getByText('Impressão registrada como rascunho.')).toBeVisible();
+ expect(saved).not.toBeNull();
+ const payload=saved as unknown as Record<string,unknown>;
+ expect(payload.p_outputs).toEqual([{product_id:product,quantity:3}]);
+ expect(payload.p_planned_hours).toBeNull();
+ await expect(page.getByText('Hélice: planejadas 3, boas 0, rejeitadas 0')).toBeVisible();
+});
