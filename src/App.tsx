@@ -208,14 +208,14 @@ export default function App(){
  const [loadedCalculation,setLoadedCalculation]=useState('');
  const applySavedCalculation=(saved:SavedCalculation)=>{
   const input=saved.saved_input as Partial<CostInput>|null;
-  if(!input||typeof input!=='object'){setAccountError('Cálculo salvo sem parâmetros válidos.');return;}
+  if(!input||typeof input!=='object'){setAccountError('Cálculo salvo sem parâmetros válidos.');return false;}
   const restored:CostInput={...referenceCase,...input};
   const data=Array.isArray(input.materials)?input.materials:undefined;
   const testInput={...restored,materials:data,
    printerPrice:activePrinter.printerPrice,averageWatts:activePrinter.averageWatts,
    lifetimeHours:activePrinter.lifetimeHours,pricePerKwh:activePrinter.pricePerKwh};
   try{calculateCost(testInput);}
-  catch(e){setAccountError('Este cálculo salvo não pode ser reutilizado: '+(e as Error).message);return;}
+  catch(e){setAccountError('Este cálculo salvo não pode ser reutilizado: '+(e as Error).message);return false;}
   setForm({...restored,materials:undefined});
   setSimple({quantity:Number(restored.grams),quantityUnit:'g',
    price:Number(restored.pricePerKg),priceUnit:'kg'});
@@ -223,6 +223,7 @@ export default function App(){
   else{setAdvanced(false);setDetails(false);}
   setAccountError('');
   setLoadedCalculation('Dados de "'+saved.name+'" carregados. Recalculando com a impressora selecionada; o histórico original foi preservado.');
+  return true;
  };
  const activeInput:CostInput={
    ...form,
@@ -332,7 +333,7 @@ export default function App(){
   {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
-  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCalculate={snapshot=>{applySavedCalculation(snapshot);setActiveSection('calculator');}}/>} 
+  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCalculate={snapshot=>{if(applySavedCalculation(snapshot))setActiveSection('calculator');}}/>} 
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
