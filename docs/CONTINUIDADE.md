@@ -718,3 +718,5 @@
 - Testes SQL `supabase/tests/l4_close_review_rollback.sql` (rollback, idempotência, autoria/permissões, checklist, imutabilidade e ausência de escrita financeira). Teste Bash `supabase/tests/l4_close_review_concurrency.sh`: duas sessões para replay simultâneo e para payload divergente. Workflow CI ampliado.
 - **Limite de segurança intencional:** estrutura de revisão transacional **não** é fechamento definitivo. Ainda faltam integração de todos os custos comprovados no servidor, fonte P07, autorização de postagem de snapshots finais imutáveis, critérios de estorno P09 e seus testes. Não afirmar que L4 está liberada ou homologada.
 - Sem merge, deploy, migração operacional ou gasto de créditos.
+
+- **CI integral aprovado para o L4-G01:** #433 / run `45287099185` no commit `98f55e814e3bf032540ba5a6f7d337defb9dce28`: tipos, Vitest, build, regressão SQL e rollback da revisão financeira, concorrência em duas sessões, RLS/isolamento e Playwright desktop/mobile. Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45287099185 . O CI comprova a **revisão pendente auditável**, NÃO fechamento financeiro final.
