@@ -54,7 +54,7 @@ begin
  for v_row in select value from jsonb_array_elements(p_outputs) loop
   begin v_product:=(v_row->>'product_id')::uuid; v_quantity:=(v_row->>'quantity')::numeric;
   exception when others then raise exception 'Identificador ou quantidade de saída inválido'; end;
-  if v_quantity is null or v_quantity<1 or v_quantity>100000 or v_quantity<>trunc(v_quantity) then
+  if v_product is null or v_quantity is null or v_quantity<1 or v_quantity>100000 or v_quantity<>trunc(v_quantity) then
     raise exception 'Quantidade planejada deve ser inteira positiva'; end if;
   if not exists(select 1 from public.mc_products where id=v_product and workspace_id=p_workspace_id and active and kind in ('product','component')) then
     raise exception 'Peça não pertence à oficina ou está inativa'; end if;
@@ -137,7 +137,7 @@ begin
    v_model:=(v_row->>'model_g')::numeric;v_purge:=(v_row->>'purge_g')::numeric;
    v_loss:=(v_row->>'loss_g')::numeric;v_basis:=v_row->>'basis';
   exception when others then raise exception 'Bobina ou quantidade inválida'; end;
-  if not found or v_lot.item_id is null or v_basis is null or v_basis not in ('weighed','slicer','estimated')
+  if not found or v_lot.item_id is null or not exists (select 1 from public.mc_inventory_items i where i.workspace_id=p_workspace_id and i.id=v_lot.item_id and i.kind='filament' and i.base_unit='g') or v_basis is null or v_basis not in ('weighed','slicer','estimated')
    or v_model is null or v_purge is null or v_loss is null
    or v_model<0 or v_purge<0 or v_loss<0
    or v_model<>round(v_model,3) or v_purge<>round(v_purge,3) or v_loss<>round(v_loss,3)
