@@ -1,18 +1,18 @@
 import {useEffect,useMemo,useState} from 'react';
 import {
- createAssembly,listAssemblies,listProducts,saveProductRecord,updateAssembly,listComponentLibrary,saveAssemblyWithComponents,
- type AssemblyPartDraft,type AssemblyRecord,type ProductRecord,type ComponentLibraryItem
+ createAssembly,listAssemblies,listProducts,saveProductRecord,updateAssembly,listComponentLibrary,saveAssemblyWithComponents,listSavedCalculations,
+ type AssemblyPartDraft,type AssemblyRecord,type ProductRecord,type ComponentLibraryItem,type SavedCalculation
 } from '../data/supabase';
 
 type Tab='all'|'component'|'assemblies';
 type Mode='catalog'|'view'|'edit'|'new';
-type Props={workspaceId:string|null;tab:Tab};
+type Props={workspaceId:string|null;tab:Tab;onCalculate?:(snapshot:SavedCalculation)=>void};
 const brl=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const blank=():AssemblyPartDraft=>({name:'',quantity:1,grams:null,unit_cost:null,notes:''});
 const template=()=>[blank(),blank()];
 const moneyValue=(s:string):number|null=>s.trim()===''?null:Number(s);
 const partDraft=(p:AssemblyRecord['parts'][number]):AssemblyPartDraft=>({id:p.id,product_id:p.product_id??null,name:p.name,quantity:Number(p.quantity),notes:p.notes??'',grams:p.grams===null?null:Number(p.grams),unit_cost:p.unit_cost});
-export function ProductWorkspace({workspaceId,tab}:Props){
+export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [kits,setKits]=useState<AssemblyRecord[]>([]);
  const [library,setLibrary]=useState<ComponentLibraryItem[]>([]);
@@ -30,6 +30,7 @@ export function ProductWorkspace({workspaceId,tab}:Props){
  const [feedback,setFeedback]=useState('');
  const [error,setError]=useState('');
  const [reload,setReload]=useState(0);
+ const [openingCalculation,setOpeningCalculation]=useState(false);
  useEffect(()=>{
   let active=true;setLoading(true);
   if(!workspaceId){setLoading(false);return;}
@@ -95,6 +96,18 @@ export function ProductWorkspace({workspaceId,tab}:Props){
    grams:source?.grams??null,unit_cost:source?.unit_cost??null});
  };
  const componentChoices=items.filter(p=>p.kind==='component'||p.kind==='product');
+ const calculateExisting=async()=>{
+  if(!workspaceId||!product||product.kind==='kit'||!onCalculate)return;
+  setError('');setOpeningCalculation(true);
+  try{
+   const history=await listSavedCalculations(workspaceId);
+   const latest=history.filter(x=>x.product_id===product.id)
+    .sort((a,b)=>b.saved_at.localeCompare(a.saved_at))[0];
+   if(!latest){setError('Esta ficha ainda não possui um cálculo salvo. Use a calculadora para registrar o primeiro custo; o cadastro atual será preservado.');return;}
+   onCalculate(latest);
+  }catch(e){setError('Não foi possível abrir o cálculo: '+(e as Error).message);}
+  finally{setOpeningCalculation(false);}
+ };
  const save=async()=>{
   setError('');setFeedback('');
   if(!workspaceId){setError('A oficina não está conectada.');return;}
@@ -153,7 +166,7 @@ export function ProductWorkspace({workspaceId,tab}:Props){
   {mode==='view'&&product&&<section className="product-detail">
    <div className="product-detail-head"><div><span className="product-kind">{label(product)}</span><h3>{product.name}</h3>
     <p>{product.description||'Sem descrição cadastrada'}</p></div>
-    <div className="product-workspace-buttons"><button type="button" onClick={edit}>Editar</button><button type="button" onClick={duplicate}>Duplicar</button></div>
+    <div className="product-workspace-buttons">{product.kind!=='kit'&&onCalculate&&<button type="button" disabled={openingCalculation} onClick={()=>void calculateExisting()}>{openingCalculation?'Consultando cálculo…':'Reutilizar na calculadora'}</button>}<button type="button" onClick={edit}>Editar</button><button type="button" onClick={duplicate}>Duplicar</button></div>
    </div>
    <div className="product-detail-stats">
     <div><small>Referência</small><strong>{product.sku??'Não informada'}</strong></div>
