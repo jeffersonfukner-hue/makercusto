@@ -1,6 +1,7 @@
 import {useRef,useState} from 'react';
 import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource} from '../data/supabase';
-import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory,type AllocationSnapshot} from '../domain/print-allocation';
+import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory} from '../domain/print-allocation';
+import {preparePrintFinancialDraft,type FinancialDraft} from '../domain/print-financial-draft';
 import {FormActionDock} from './FormActionDock';
 
 type Props={workspaceId:string|null;prints:PrintRecord[];active:boolean;onActivate:()=>void};
@@ -31,7 +32,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
  const [lines,setLines]=useState<AllocationLine[]>([]);
  const sequence=useRef(0);
  const sourceRequest=useRef(0);
- const [preview,setPreview]=useState<AllocationSnapshot|null>(null);
+ const [preview,setPreview]=useState<FinancialDraft|null>(null);
  const [error,setError]=useState('');
  const print=prints.find(x=>x.id===printId);
  const destinations:OutputOption[]=print?.outputs.flatMap(o=>[
@@ -86,7 +87,8 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
  const reconcile=()=>{
   setError('');setPreview(null);
   if(!print||!destinations.length||!lines.length){setError('Selecione uma impressão com saídas confirmadas e inclua categorias de custo.');return;}
-  try{setPreview(reconcilePrintAllocation({executionId:print.id,outputs:destinations,lines}));}
+  try{setPreview(preparePrintFinancialDraft({allocationRequest:{executionId:print.id,outputs:destinations,lines},
+   historicalSources:sources?.lines??null}));}
   catch(e){setError((e as Error).message);}
  };
  return <section className="panel materials-form" aria-label="Prévia L4 de rateio" onFocusCapture={onActivate} onClickCapture={onActivate}>
@@ -152,10 +154,16 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
   </div>}
   {error&&<p role="alert" className="error">{error}</p>}
   {preview&&<div className="panel" role="status" aria-label="Resultado da prévia de rateio">
-   <h4>Prévia conciliada das categorias informadas: {formatCents(preview.totalCents)}</h4>
+   <h4>Prévia conciliada das categorias informadas: {formatCents(preview.allocation.totalCents)}</h4>
    <p>Esta conciliação vale apenas para as categorias fornecidas. Não confirma custo final de produção.</p>
-   <ul>{preview.outputTotals.map(o=><li key={o.outputId}>{destinations.find(d=>d.id===o.outputId)?.name}: {formatCents(o.totalCents)}</li>)}</ul>
+   <ul>{preview.allocation.outputTotals.map(o=><li key={o.outputId}>{destinations.find(d=>d.id===o.outputId)?.name}: {formatCents(o.totalCents)}</li>)}</ul>
    <small>P05/P06: half-up por categoria, maiores restos e desempate por ID. Sem gravação no banco.</small>
+   <section aria-label="Pendências de fechamento financeiro L4">
+    <h4>Fechamento financeiro: PENDENTE</h4>
+    <p>Fontes históricas associadas: {preview.assignedConsumptionCount} de {preview.expectedConsumptionCount}.
+     A conciliação acima representa apenas as categorias informadas. Nenhum snapshot financeiro foi confirmado.</p>
+    <ul>{preview.issues.map((issue,index)=><li key={index}>{issue.description}{issue.sourceId?' — '+issue.sourceId:''}</li>)}</ul>
+   </section>
   </div>}
   {active&&<FormActionDock title="Prévia L4" subtitle="Cálculo local, não registra custo nem movimenta estoque">
    <button type="button" className="primary-action" disabled={!print||!destinations.length||!lines.length} onClick={reconcile}>Calcular prévia de rateio</button>
