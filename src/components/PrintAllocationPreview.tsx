@@ -1,9 +1,9 @@
 import {useRef,useState} from 'react';
-import type {PrintRecord} from '../data/supabase';
+import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource} from '../data/supabase';
 import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory,type AllocationSnapshot} from '../domain/print-allocation';
 import {FormActionDock} from './FormActionDock';
 
-type Props={prints:PrintRecord[];active:boolean;onActivate:()=>void};
+type Props={workspaceId:string|null;prints:PrintRecord[];active:boolean;onActivate:()=>void};
 type OutputOption={id:string;name:string;outcome:'good'|'rejected';quantity:number};
 const formatCents=(cents:string)=>{const value=BigInt(cents);return 'R$ '+new Intl.NumberFormat('pt-BR').format(value/100n)+','+(value%100n).toString().padStart(2,'0');};
 const categories: {id:AllocationCategory;label:string}[]=[
@@ -15,12 +15,16 @@ const categories: {id:AllocationCategory;label:string}[]=[
 ];
 
 /** Apenas estudo local de distribuição: nunca salva custo, snapshot ou estoque. */
-export function PrintAllocationPreview({prints,active,onActivate}:Props){
+export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Props){
  const [printId,setPrintId]=useState('');
  const [category,setCategory]=useState<AllocationCategory>('model');
  const [method,setMethod]=useState<'direct'|'shared'>('direct');
  const [amount,setAmount]=useState('');
  const [source,setSource]=useState('');
+ const [sourceVersion,setSourceVersion]=useState('entrada-local-1');
+ const [sources,setSources]=useState<PrintConsumptionSources|null>(null);
+ const [sourcesBusy,setSourcesBusy]=useState(false);
+ const [sourcesError,setSourcesError]=useState('');
  const [rationale,setRationale]=useState('');
  const [separate,setSeparate]=useState(false);
  const [basis,setBasis]=useState<Record<string,string>>({});
@@ -35,18 +39,42 @@ export function PrintAllocationPreview({prints,active,onActivate}:Props){
  ])??[];
  const changePrint=(id:string)=>{
   setPrintId(id);setLines([]);setPreview(null);setError('');setBasis({});
+  setSources(null);setSourcesError('');setSourceVersion('entrada-local-1');
+  setAmount('');setSource('');setRationale('');
+  if(!workspaceId||!id)return;
+  setSourcesBusy(true);
+  void getPrintConsumptionSources(workspaceId,id).then(data=>{
+   setSources(current=>current?.execution_id===id?current:data);
+  }).catch(e=>setSourcesError('Fontes não disponíveis: '+(e as Error).message))
+   .finally(()=>setSourcesBusy(false));
+ };
+ const importCost=(row:PrintConsumptionSource,costCategory:'model'|'purge'|'loss')=>{
+  const value=costCategory==='model'?row.model_cost_brl:
+   costCategory==='purge'?row.purge_cost_brl:row.loss_cost_brl;
+  if(value===null||row.cost_status==='unknown')return;
+  const version='historico:'+row.consumption_id+':'+costCategory;
+  setCategory(costCategory);setAmount(value);
+  setSource('Consumo confirmado '+row.consumption_id+' · bobina '+(row.lot_label||row.lot_id||'não identificada'));
+  setSourceVersion(version);setSeparate(costCategory!=='model');
+  setPreview(null);setError('');
+ };
+ const resetImportedSource=()=>{
+  setSourceVersion('entrada-local-1');setSource('');setAmount('');setSeparate(false);
  };
  const addLine=()=>{
   setError('');setPreview(null);
   if(!print||!destinations.length){setError('Selecione uma impressão com peças confirmadas.');return;}
   const selected=destinations.filter(o=>basis[o.id]&&basis[o.id].trim()!==''&&basis[o.id].trim()!=='0')
    .map(o=>({outputId:o.id,basis:basis[o.id]}));
+  if(sourceVersion!=='entrada-local-1'&&lines.some(l=>l.sourceVersion===sourceVersion)){
+   setError('Esta categoria de consumo já está na prévia. Remova a anterior antes de reutilizar.');return;
+  }
   const next:AllocationLine={id:'categoria-'+(++sequence.current),category,amountBrl:amount,source,
-   sourceVersion:'entrada-local-1',method,rationale,
+   sourceVersion,method,rationale,
    separatelyMeasured:category!=='purge'&&category!=='loss'?false:separate,destinations:selected};
   try{
    reconcilePrintAllocation({executionId:print.id,outputs:destinations,lines:[next]});
-   setLines(v=>[...v,next]);setAmount('');setSource('');setRationale('');setSeparate(false);setBasis({});
+   setLines(v=>[...v,next]);setAmount('');setSource('');setRationale('');setSeparate(false);setBasis({});setSourceVersion('entrada-local-1');
   }catch(e){setError((e as Error).message);}
  };
  const reconcile=()=>{
@@ -64,14 +92,32 @@ export function PrintAllocationPreview({prints,active,onActivate}:Props){
    </select><small>Somente saídas com quantidades já confirmadas aparecem como destinos.</small></label>
   </div>
   {print&&<div>
+   <h4>Consumos confirmados vinculados à impressão</h4>
+   {sourcesBusy&&<p role="status">Consultando histórico de bobinas…</p>}
+   {sourcesError&&<p role="alert" className="error">{sourcesError}</p>}
+   {sources&&sources.lines.length===0&&<p>Nenhum consumo físico confirmado disponível no histórico desta impressão.</p>}
+   {sources&&sources.lines.length>0&&<ul aria-label="Fontes de consumo L4">{sources.lines.map(row=><li key={row.consumption_id}>
+    <strong>{row.lot_label||'Bobina sem identificação'}</strong> — {row.cost_status==='known'?'custo registrado':row.cost_status==='estimated'?'custo estimado':'custo desconhecido'}
+    <small>Modelo: {row.model_g} g · purga: {row.purge_g} g · perda: {row.loss_g} g · origem: {row.quantity_basis}</small>
+    {row.unit_cost_snapshot===null?<p>Custo desconhecido: não será considerado zero nem importado.</p>:
+    <div className="product-workspace-buttons">
+     {([
+      ['model',row.model_cost_brl,'Modelo'],
+      ['purge',row.purge_cost_brl,'Purga'],
+      ['loss',row.loss_cost_brl,'Perda']
+     ] as const).map(([kind,value,title])=>value!==null&&value!=='0'&&value!=='0.0000000000'?<button key={kind}
+      type="button" onClick={()=>importCost(row,kind)}>{'Usar '+title.toLowerCase()+' no rateio'}</button>:null)}
+    </div>}
+    <small>Referência: {row.consumption_id}. {row.precision_note} — estimativa de prévia, não fechamento financeiro.</small>
+   </li>)}</ul>}
    {destinations.length===0?<p>Nenhuma peça boa ou rejeitada foi confirmada nesta impressão; não há destinos conciliáveis.</p>:<>
     <h4>Adicionar uma categoria de custo explícita</h4>
     <div className="product-save-fields">
-     <label>Categoria<select aria-label="Categoria de custo L4" value={category} onChange={e=>{setCategory(e.target.value as AllocationCategory);setPreview(null);}}>
+     <label>Categoria<select aria-label="Categoria de custo L4" value={category} disabled={sourceVersion!=='entrada-local-1'} onChange={e=>{setCategory(e.target.value as AllocationCategory);setPreview(null);}}>
       {categories.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
-     <label>Custo total da categoria (R$)<input aria-label="Valor da categoria L4" placeholder="Ex.: 1.235" value={amount} onChange={e=>setAmount(e.target.value)} />
+     <label>Custo total da categoria (R$)<input aria-label="Valor da categoria L4" placeholder="Ex.: 1.235" readOnly={sourceVersion!=='entrada-local-1'} value={amount} onChange={e=>setAmount(e.target.value)} />
       <small>Use ponto decimal; a categoria é fechada em centavos apenas uma vez.</small></label>
-     <label>Fonte do custo<input aria-label="Fonte do custo L4" value={source} onChange={e=>setSource(e.target.value)} placeholder="Ex.: lote e pesagem, tarifa e medidor" />
+     <label>Fonte do custo<input aria-label="Fonte do custo L4" value={source} readOnly={sourceVersion!=='entrada-local-1'} onChange={e=>setSource(e.target.value)} placeholder="Ex.: lote e pesagem, tarifa e medidor" />
       <small>Não presuma preço da bobina ou energia. Informe a origem real ou estimada.</small></label>
      <label>Critério<select aria-label="Método de rateio L4" value={method} onChange={e=>setMethod(e.target.value as 'direct'|'shared')}>
       <option value="direct">Atribuição direta (um destino)</option><option value="shared">Compartilhado (base explícita)</option>
@@ -79,7 +125,8 @@ export function PrintAllocationPreview({prints,active,onActivate}:Props){
      <label>Justificativa e unidade da base<input aria-label="Justificativa do rateio L4" value={rationale} onChange={e=>setRationale(e.target.value)} placeholder="Ex.: massa medida em gramas ou tempo atribuível" />
       <small>Na distribuição compartilhada, explique a base e se é medição ou estimativa.</small></label>
     </div>
-    {(category==='purge'||category==='loss')&&<label><input type="checkbox" checked={separate} onChange={e=>setSeparate(e.target.checked)} />
+    {sourceVersion!=='entrada-local-1'&&<p className="footnote">Fonte histórica selecionada: valor indicativo protegido contra edição. É preciso informar o destino e uma base válida. <button type="button" onClick={resetImportedSource}>Usar entrada manual</button></p>}
+    {(category==='purge'||category==='loss')&&<label><input type="checkbox" checked={separate} disabled={sourceVersion!=='entrada-local-1'} onChange={e=>setSeparate(e.target.checked)} />
      Esta purga/perda foi medida separadamente e NÃO está incluída no custo do modelo.</label>}
     <div className="materials-spool-grid">{destinations.map(o=><label key={o.id}>
      {o.name} ({o.quantity})
