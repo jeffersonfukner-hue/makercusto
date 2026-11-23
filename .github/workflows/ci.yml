@@ -65,6 +65,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123110500_gap01_inventory_adjustment_proposals.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123112000_gap01_reconciliation_dossier.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123123500_component_linked_assemblies.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123125000_reuse_saved_calculations.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123152000_append_product_calculation.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_postflight_readonly.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/fixture_ci_l2_l3.sql
