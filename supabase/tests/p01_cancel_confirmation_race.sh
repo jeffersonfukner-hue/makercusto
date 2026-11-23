@@ -38,5 +38,5 @@ test "$held" = "0.0000" || { echo "Sobra não liberada: $held"; exit 1; }
 test "$reservation_state" = "released" || { echo "Reserva não liberada: $reservation_state"; exit 1; }
 test "$nconfirm" = "$confirmed" || { echo "Confirmações incorretas: $nconfirm"; exit 1; }
 test "$goods" = "$confirmed.0000" || { echo "Saída alterada indevidamente: $goods"; exit 1; }
-test "$release" = "$expected_release" || { echo "Auditoria não corresponde à sobra: $release"; exit 1; }
+test "$(psql -X -At -v ON_ERROR_STOP=1 -c "select ($release)::numeric = ($expected_release)::numeric")" = "t" || { echo "Auditoria não corresponde à sobra: $release"; exit 1; }
 echo "P01-A/F: cancelamento versus confirmação concorrente: ordem cancelada, consumo preservado quando confirmado, sobra auditada: APROVADO"
