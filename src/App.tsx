@@ -198,6 +198,7 @@ export default function App(){
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
  const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
  const reset=()=>{
+   setRevisionTarget(null);
    if(!sessionStore.get()){setPrinters([...seedPrinters(),...readLocalPrinters()]);setPrinterId('example');}
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
