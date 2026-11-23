@@ -1251,3 +1251,98 @@ test('GAP01-D/E: dossiê mostra reservas alheias e consumo histórico sem aciona
  await expect(result).toContainText('Nenhuma quantidade reversível ou ajuste financeiro foi calculado');
  expect(requests).toEqual(['dossier']);
 });
+
+
+test('calculadora logada oferece salvar cálculo como peça com snapshot',async ({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111',user='22222222-2222-4222-8222-222222222222';
+ let saved:Record<string,unknown>|null=null;
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url();
+  const send=(data:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('/mc_workspaces?'))return send([{id:workspace,name:'Oficina teste',owner_id:user}]);
+  if(u.includes('/mc_printers?')||u.includes('/mc_catalog?')||u.includes('/mc_products?'))return send([]);
+  if(u.includes('/rpc/mc_save_calculated_product')){
+   saved=route.request().postDataJSON() as Record<string,unknown>;
+   return send('55555555-5555-4555-8555-555555555555');
+  }
+  return send([]);
+ });
+ await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Custos',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
+ await page.getByRole('textbox',{name:'Nome do produto'}).fill('Estrela grande');
+ await page.getByRole('combobox',{name:'Tipo'}).selectOption('component');
+ await page.getByRole('button',{name:'Salvar produto e custo'}).click();
+ await expect(page.getByText('Produto, versão inicial e custo estimado salvos na sua oficina.')).toBeVisible();
+ expect(saved).not.toBeNull();
+ expect((saved as unknown as Record<string,unknown>).p_kind).toBe('component');
+ expect((saved as unknown as Record<string,unknown>).p_workspace_id).toBe(workspace);
+ const params=(saved as unknown as Record<string,unknown>).p_parameters as Record<string,unknown>;
+ expect(params.origin).toBe('calculator');
+ expect(params.saved_input).toBeTruthy();
+ expect(params.calculated_result).toBeTruthy();
+});
+
+test('conjunto vincula guirlanda, estrela grande e pequena sem duplicar cadastros',async ({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111',user='22222222-2222-4222-8222-222222222222';
+ const componentIds=[
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+ ];
+ const names=['Guirlanda','Estrela grande','Estrela pequena'];
+ const costs=[7.4,2.5,1.1],grams=[74,25,11];
+ const products=componentIds.map((id,i)=>({id,workspace_id:workspace,name:names[i],sku:'PEC-'+i,
+  kind:'component',description:'Peça cadastrada',sale_price:null,active:true,created_at:'2026-11-23T10:00:00Z'}));
+ const kits:unknown[]=[];let payload:Record<string,unknown>|null=null;
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('/mc_workspaces?'))return send([{id:workspace,name:'Oficina teste',owner_id:user}]);
+  if(u.includes('/mc_printers?')||u.includes('/mc_catalog?'))return send([]);
+  if(u.includes('/mc_products?'))return send(products);
+  if(u.includes('/rpc/mc_list_assemblies'))return send(kits);
+  if(u.includes('/rpc/mc_list_component_library'))return send(componentIds.map((id,i)=>({
+   id,name:names[i],sku:'PEC-'+i,grams:grams[i],unit_cost:costs[i],cost_source:'snapshot'
+  })));
+  if(u.includes('/rpc/mc_save_assembly_linked')){
+   payload=route.request().postDataJSON() as Record<string,unknown>;
+   const id='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+   const parts=(payload.p_parts as {product_id:string;quantity:number;notes:string}[]).map((p,i)=>({
+    id:p.product_id,product_id:p.product_id,name:names[i],quantity:p.quantity,
+    notes:p.notes,grams:String(grams[i]),unit_cost:costs[i],cost_source:'linked'
+   }));
+   kits.push({id,name:'Guirlanda de Natal',sku:null,description:null,sale_price:null,
+    created_at:'2026-11-23T10:00:00Z',revision:1,total_cost:11,cost_status:'estimated',parts});
+   products.push({id,workspace_id:workspace,name:'Guirlanda de Natal',sku:'NATAL-001',
+    kind:'kit',description:'Conjunto',sale_price:59,active:true,created_at:'2026-11-23T10:00:00Z'});
+   return send(id);
+  }
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Produtos',exact:true}).click();
+ await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
+ await page.getByRole('button',{name:'+ Novo conjunto'}).click();
+ await page.getByRole('textbox',{name:'Nome do produto'}).fill('Guirlanda de Natal');
+ await page.getByRole('combobox',{name:'Selecionar peça cadastrada 1'}).selectOption(componentIds[0]);
+ await page.getByRole('combobox',{name:'Selecionar peça cadastrada 2'}).selectOption(componentIds[1]);
+ await page.getByRole('button',{name:'+ Adicionar peça'}).click();
+ await page.getByRole('combobox',{name:'Selecionar peça cadastrada 3'}).selectOption(componentIds[2]);
+ await expect(page.getByRole('textbox',{name:'Nome da peça 2'})).toHaveValue('Estrela grande');
+ await expect(page.getByRole('textbox',{name:'Nome da peça 2'})).toBeDisabled();
+ await expect(page.getByText('R$ 11,00 (informado)')).toBeVisible();
+ await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Ficha do produto'})).toBeVisible();
+ expect(payload).not.toBeNull();
+ expect((payload as unknown as Record<string,unknown>).p_parts).toEqual(
+  componentIds.map((id,i)=>({product_id:id,name:names[i],quantity:1,notes:'',grams:grams[i],unit_cost:costs[i]}))
+ );
+ expect(products.filter(p=>p.kind==='component')).toHaveLength(3);
+});
