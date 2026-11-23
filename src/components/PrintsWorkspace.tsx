@@ -324,7 +324,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('reserve')} onClickCapture={()=>setActivePrimaryForm('reserve')}><h3>Reserva opcional de filamento</h3>
    <p className="footnote">A reserva apenas compromete gramas da bobina para esta impressão. Não retira material físico nem gera custo. O saldo reservado é abatido somente durante confirmações reais.</p>
    <div className="product-save-fields">
-    <label>Impressão para reservar<select aria-label="Impressão para reservar" value={reservePrintId} onChange={e=>{setReservePrintId(e.target.value);reservationKey.current=newKey();}}>
+    <label>Impressão para reservar<select aria-label="Impressão para reservar" value={reservePrintId} onChange={e=>{setActivePrimaryForm('reserve');setReservePrintId(e.target.value);reservationKey.current=newKey();}}>
      <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
     <label>Bobina para reservar<select aria-label="Bobina para reservar" value={reserveLot} onChange={e=>{setReserveLot(e.target.value);reservationKey.current=newKey();}}>
      <option value="">Selecione</option>{spools.map(x=><option key={x.id} value={x.id}>{x.label} — disponíveis {(Number(x.remaining_grams)-remainingReserved(x.id)).toFixed(3)} g</option>)}</select>
@@ -339,7 +339,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     </li>)}
    </ul>}
    {reservations.some(x=>x.status==='active')&&<div className="product-save-fields" onFocusCapture={()=>setActivePrimaryForm('due')} onClickCapture={()=>setActivePrimaryForm('due')}>
-    <label>Reserva para revisar<select aria-label="Reserva para revisar" value={dueReservation} onChange={e=>{setDueReservation(e.target.value);setDueLocal('');}}>
+    <label>Reserva para revisar<select aria-label="Reserva para revisar" value={dueReservation} onChange={e=>{setActivePrimaryForm('due');setDueReservation(e.target.value);setDueLocal('');}}>
      <option value="">Selecione</option>{reservations.filter(x=>x.status==='active').map(x=><option key={x.id} value={x.id}>{x.lot_label||'Bobina'} — {x.remaining} g</option>)}</select></label>
     <label>Data e hora de revisão (opcional)<input aria-label="Data e hora de revisão" type="datetime-local" value={dueLocal} onChange={e=>setDueLocal(e.target.value)}/>
      <small>Uma data vencida apenas alerta. Nunca libera reserva. Deixe vazio para remover a data.</small></label>
@@ -349,7 +349,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('confirm')} onClickCapture={()=>setActivePrimaryForm('confirm')}><h3>Confirmação incremental de impressão</h3>
    <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo e o tempo informados são incrementais; registre falhas mesmo sem peças boas. O material da mesa não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
    <div className="product-save-fields">
-    <label>Impressão<select aria-label="Impressão para confirmar" value={selected} onChange={e=>{setSelected(e.target.value);setSelectedOutput('');operation.current=newKey();}}>
+    <label>Impressão<select aria-label="Impressão para confirmar" value={selected} onChange={e=>{setActivePrimaryForm('confirm');setSelected(e.target.value);setSelectedOutput('');operation.current=newKey();}}>
      <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
     <label>Peça confirmada<select aria-label="Peça confirmada" value={selectedOutput} onChange={e=>setSelectedOutput(e.target.value)}><option value="">Selecione</option>{selectedPrint?.outputs.map(o=><option key={o.id} value={o.id}>{o.name} — pendentes {Number(o.planned)-Number(o.good)-Number(o.failed)}</option>)}</select></label>
     <label>Bobina<select aria-label="Bobina consumida" value={lot} onChange={e=>setLot(e.target.value)}>
@@ -368,7 +368,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <h3>Ocorrência física pendente — GAP01</h3>
    <p className="footnote">Registre o que realmente aconteceu, mesmo quando a massa observada exceder o saldo cadastrado ou a bobina não for conhecida. Este registro NÃO é baixa de estoque, confirmação de consumo, regularização financeira ou aprovação.</p>
    <div className="product-save-fields">
-    <label>Impressão da ocorrência<select aria-label="Impressão da ocorrência" value={occPrint} onChange={e=>{setOccPrint(e.target.value);occKey.current=newKey();}}>
+    <label>Impressão da ocorrência<select aria-label="Impressão da ocorrência" value={occPrint} onChange={e=>{setActivePrimaryForm('occurrence');setOccPrint(e.target.value);occKey.current=newKey();}}>
      <option value="">Selecione</option>{prints.map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
     <label>Material observado<input aria-label="Material observado" maxLength={150} value={occMaterial} onChange={e=>{setOccMaterial(e.target.value);occKey.current=newKey();}}/>
      <small>Nome informado do material. Não cria cadastro de estoque nem filamento fictício.</small></label>
@@ -403,7 +403,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <p className="footnote">Cada investigação acrescenta um evento auditável. A causa selecionada continua sendo hipótese até conferência externa; não altera massa observada, saldo, reserva ou custo.</p>
    <div className="product-save-fields" onFocusCapture={()=>setActivePrimaryForm('review')} onClickCapture={()=>setActivePrimaryForm('review')}>
     <label>Ocorrência para investigar<select aria-label="Ocorrência para investigar" value={reviewOccurrence}
-     onChange={e=>{const id=e.target.value;setReviewOccurrence(id);const item=occurrences.find(x=>x.id===id);
+     onChange={e=>{setActivePrimaryForm('review');const id=e.target.value;setReviewOccurrence(id);const item=occurrences.find(x=>x.id===id);
       setReviewNext(item?.status==='under_review'?'pending_decision':'under_review');
       setReviewNote('');setReviewEvidence('');setReviewLot('');reviewKey.current=newKey();}}>
      <option value="">Selecione</option>{occurrences.map(o=><option key={o.id} value={o.id}>{o.material_name} — {o.quantity_g} g — {o.status}</option>)}
@@ -448,7 +448,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <p className="footnote">Apenas uma proposta para análise humana. Quantidades positivas ou negativas não movimentam estoque, não corrigem saldos e não atribuem custo. Nenhuma aprovação extraordinária está habilitada.</p>
    <div className="product-save-fields">
     <label>Ocorrência investigada<select aria-label="Ocorrência para proposta de inventário" value={proposalOccurrence}
-     onChange={e=>{setProposalOccurrence(e.target.value);proposalKey.current=newKey();}}>
+     onChange={e=>{setActivePrimaryForm('proposal');setProposalOccurrence(e.target.value);proposalKey.current=newKey();}}>
      <option value="">Selecione</option>
      {occurrences.filter(o=>o.status==='under_review'||o.status==='pending_decision').map(o=><option key={o.id} value={o.id}>
       {o.material_name} — {o.quantity_g} g — {o.status}
@@ -488,7 +488,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <p className="footnote">Consulta somente leitura do saldo atual, das reservas de todas as ordens e das linhas históricas de consumo relacionadas à impressão. Não verifica automaticamente a origem física nem autoriza estornos, ajustes ou compensações financeiras.</p>
    <div className="product-save-fields">
     <label>Ocorrência para dossiê<select aria-label="Ocorrência para dossiê" value={dossierTarget}
-     onChange={e=>{setDossierTarget(e.target.value);setDossier(null);}}>
+     onChange={e=>{setActivePrimaryForm('dossier');setDossierTarget(e.target.value);setDossier(null);}}>
      <option value="">Selecione</option>{occurrences.map(o=><option key={o.id} value={o.id}>
       {o.material_name} — {o.quantity_g} g — {o.status}
      </option>)}</select></label>
@@ -524,7 +524,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <p className="footnote">A troca ajusta apenas as reservas lógicas. O filamento já consumido continua atribuído à bobina original, com o preço histórico original. A próxima confirmação deve indicar a bobina realmente consumida.</p>
    <div className="product-save-fields">
     <label>Reserva de origem<select aria-label="Reserva de origem para troca" value={swapReservation}
-     onChange={e=>{setSwapReservation(e.target.value);setSwapNewLot('');setSwapRelease('');setSwapReserve('');swapKey.current=newKey();}}>
+     onChange={e=>{setActivePrimaryForm('swap');setSwapReservation(e.target.value);setSwapNewLot('');setSwapRelease('');setSwapReserve('');swapKey.current=newKey();}}>
      <option value="">Selecione</option>
      {reservations.filter(r=>r.status==='active').map(r=><option value={r.id} key={r.id}>{r.lot_label||'Bobina'} — {r.remaining} g reservados</option>)}
     </select><small>Somente gramas ainda reservados podem ser liberados; nada retorna fisicamente à bobina.</small></label>
@@ -550,7 +550,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <p className="footnote">Reduza somente peças ainda não produzidas. O material já extrudado e os resultados confirmados permanecem registrados. Informe explicitamente gramas a liberar por bobina: não presumimos consumo de material por peça.</p>
    <div className="product-save-fields">
     <label>Impressão para redução parcial<select aria-label="Impressão para redução parcial" value={reduceTarget}
-     onChange={e=>{setReduceTarget(e.target.value);setReduceOutput('');setReduceReservation('');setReducePlanned('');setReduceGrams('');reduceKey.current=newKey();}}>
+     onChange={e=>{setActivePrimaryForm('reduction');setReduceTarget(e.target.value);setReduceOutput('');setReduceReservation('');setReducePlanned('');setReduceGrams('');reduceKey.current=newKey();}}>
      <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')}</option>)}</select></label>
     <label>Peça a reduzir<select aria-label="Peça a reduzir" value={reduceOutput}
      onChange={e=>{setReduceOutput(e.target.value);setReducePlanned('');reduceKey.current=newKey();}}>
