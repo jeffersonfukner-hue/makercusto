@@ -438,3 +438,12 @@
 - **Estado dos testes:** CI da nova branch em andamento ao registrar esta nota; SQL ainda não aplicado nem validado em Supabase. Operações reais L3 indisponíveis até aplicação controlada da migração, testes transacionais de replay/concorrência/isolamento e validação manual.
 - **Sem merge, deploy, aplicação de SQL no banco ou operações pagas.**
 - Evidências: commits da branch a partir de `658e0875de3f47a8bc7cb5350fcd8cb1d1b73e7c`; PR #1 e arquivo de migração citado.
+
+
+## 22/11/2026 — Pré-validação de banco para L2/L3, sem aplicação de migração
+- Autorização: continuidade para validação isolada com rollback; sem merge/deploy/gastos. Ferramenta Supabase conectada a somente dois projetos: MakerCusto e Kit Casa Pré LAB. O LAB pertence a outro projeto e não foi utilizado.
+- Leitura real no banco MakerCusto `bxtbfdddcxbyaomydgxn`: Postgres 17.12; zero execuções, zero confirmações e zero movimentos de estoque; RPCs `mc_create_print` e `mc_confirm_print` não instaladas. As migrações L1 constam na lista aplicada.
+- Verificada a estrutura de oito tabelas operacionais com RLS habilitado; esquema compatível com a migração versionada, sem comprovação de execução da DDL.
+- Revisão do L3: validação adicional exige lotes vinculados a item `filament` de unidade `g` e identidade não nula da saída.
+- Roteiro `supabase/tests/l2_l3_rollback.sql` criado para **executar somente após instalar a migração em ambiente apropriado**, dentro de transação `BEGIN/ROLLBACK`. Verifica L2 sem baixa, delta L3, replay, payload divergente, saldo insuficiente e usuário sem vínculo. O roteiro foi versionado, **não executado**; não prova concorrência entre sessões nem autenticação por token real.
+- Bloqueio explícito: nenhum ambiente de teste isolado MakerCusto disponível entre projetos conectados. Sem aplicação de SQL, transação de teste real ou modificação de dados neste lote.
