@@ -120,6 +120,14 @@ jobs:
           PGDATABASE: makercusto_ci
           PGPASSWORD: makercusto_ci_only
         run: bash supabase/tests/p01_lot_swap_concurrency.sh
+      - name: L4-G01 revisão concorrente idempotente em PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/l4_close_review_concurrency.sh
       - name: Isolamento entre duas oficinas com dados no PostgreSQL efêmero
         env:
           PGHOST: localhost
