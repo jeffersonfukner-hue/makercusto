@@ -740,3 +740,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividade executada:** conferência do contrato já existente em `docs/CONTINUIDADE.md` e promoção para o arquivo normativo `AGENTS.md`, lido em novos chats. Formalizados os responsáveis por CI, correções, deploy manual e homologação, além de linguagem explícita para “NÃO FAÇA O DEPLOY AINDA” e “PODE FAZER O DEPLOY MANUAL”.
 - **Evidência:** commit `d78a8dd5faf391d65314eeffa2e31751819e176a`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
 - **Pendência:** CI do HEAD e homologação visual somente quando a versão estiver pronta. Sem merge/deploy/SQL operacional.
+
+
+## 23/11/2026 — Motor P05/P06 para mesa compartilhada e prévia em Impressões
+
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Início/término (Brasília):** não aferidos; **duração efetiva:** não mensurada, sem inferir jornada por mensagens.
+- **Atividades realizadas:** leitura de `AGENTS.md`, `docs/PADROES.md`, `docs/ARQUITETURA.md`, documentos homologados P05/P06; implementação de motor de rateio exato por categoria/destino, com regras de rastreabilidade, centavos residuais e bloqueio de bases inválidas; testes Vitest; interface para prévia manual e não persistida conectada à lista real de Impressões; teste Playwright de mesa com três produtos e ausência de escrita financeira.
+- **Evidências:** commits `00ba7694c77f25e23c9206d18acdf67c3d9457f8`, `fe0355f422870fc896a5c2c2571262c66f25fdfe`, `74d19837be05f7c22ce7e6d7407e182dd9a984a8`, `66b7f6e57a744343f4b4b2dc1646908b4dbe7fc5`, `d6752e55c333611fa6b1fd8848e51bbf6a30122f`, `6eadfbab7f838b3be1b85d66ecd030bc9e5ec4ba`, `bba8e1f388157adbd459ce28095126e71bc09250`, `875e86a70661081bb2fe4f1c5e229b33ec1b2c89`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Resultados/pendências:** código e testes commitados, CI final ainda não homologado neste registro. Integração persistente L4 e homologação visual pendentes. Sem merge/deploy/SQL operacional.
