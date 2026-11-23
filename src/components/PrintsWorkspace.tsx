@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,
+import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,
  type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
@@ -13,6 +13,9 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [selected,setSelected]=useState(''),[selectedOutput,setSelectedOutput]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[purge,setPurge]=useState(''),[loss,setLoss]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
  const [reservePrintId,setReservePrintId]=useState(''),[reserveLot,setReserveLot]=useState(''),[reserveGrams,setReserveGrams]=useState('');
  const reservationKey=useRef(newKey());
+ const [dueReservation,setDueReservation]=useState(''),[dueLocal,setDueLocal]=useState('');
+ const [cancelTarget,setCancelTarget]=useState(''),[cancelReason,setCancelReason]=useState('');
+ const cancelKey=useRef(newKey());
  const [basis,setBasis]=useState<'weighed'|'slicer'|'estimated'>('slicer'),[actualHours,setActualHours]=useState('');
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const [reload,setReload]=useState(0),operation=useRef(newKey());
@@ -57,6 +60,35 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    setReserveGrams('');setMessage('Reserva lógica registrada sem movimentar o estoque físico.');
    setReload(x=>x+1);
   }catch(e){setError('Reserva recusada: '+(e as Error).message)}
+  finally{setBusy(false)}
+ };
+ const updateReviewDue=async()=>{
+  if(!workspaceId||!dueReservation){setError('Selecione uma reserva ativa.');return;}
+  const parsed=dueLocal===''?null:new Date(dueLocal);
+  if(parsed&&Number.isNaN(parsed.getTime())){setError('Data e hora de revisão inválidas.');return;}
+  setBusy(true);setError('');setMessage('');
+  try{
+   await setPrintReservationDue(workspaceId,dueReservation,parsed?.toISOString()??null);
+   setMessage('Prazo de revisão atualizado; nenhuma reserva foi liberada.');
+   setReload(n=>n+1);
+  }catch(e){setError('Prazo recusado: '+(e as Error).message)}
+  finally{setBusy(false)}
+ };
+ const submitCancel=async()=>{
+  const target=prints.find(p=>p.id===cancelTarget);
+  if(!workspaceId||!target||!['draft','partial','reserved','running'].includes(target.status)){
+   setError('Selecione uma impressão aberta para cancelar.');return;
+  }
+  if(cancelReason.trim().length<10||cancelReason.trim().length>1000){
+   setError('Informe justificativa de cancelamento com 10 a 1000 caracteres.');return;
+  }
+  setBusy(true);setError('');setMessage('');
+  try{
+   await cancelPrint(workspaceId,cancelTarget,cancelKey.current,cancelReason.trim());
+   cancelKey.current=newKey();setCancelTarget('');setCancelReason('');
+   setMessage('Impressão cancelada. Reservas não utilizadas liberadas; consumos e peças anteriores preservados.');
+   setReload(n=>n+1);
+  }catch(e){setError('Cancelamento recusado: '+(e as Error).message)}
   finally{setBusy(false)}
  };
  const selectedPrint=prints.find(p=>p.id===selected);
@@ -121,8 +153,17 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>
    <button type="button" className="primary-action" disabled={busy||!workspaceId||!reservePrintId||!reserveLot} onClick={()=>void reserve()}>{busy?'Registrando…':'Registrar reserva sem baixa'}</button>
    {reservations.filter(x=>x.status==='active').length>0&&<ul aria-label="Reservas ativas da oficina">
-    {reservations.filter(x=>x.status==='active').map(x=><li key={x.id}>{x.lot_label||'Bobina'} — reservado {x.remaining} g de {x.quantity} g para {prints.find(p=>p.id===x.production_id)?.outputs.map(o=>o.name).join(' + ')||'impressão registrada'}</li>)}
+    {reservations.filter(x=>x.status==='active').map(x=><li key={x.id}>{x.lot_label||'Bobina'} — reservado {x.remaining} g de {x.quantity} g para {prints.find(p=>p.id===x.production_id)?.outputs.map(o=>o.name).join(' + ')||'impressão registrada'}
+     {x.due_at&&<> · Revisão: {new Date(x.due_at).toLocaleString('pt-BR')}{x.review_overdue&&<strong> · Revisão vencida (reserva mantida)</strong>}</>}
+    </li>)}
    </ul>}
+   {reservations.some(x=>x.status==='active')&&<div className="product-save-fields">
+    <label>Reserva para revisar<select aria-label="Reserva para revisar" value={dueReservation} onChange={e=>{setDueReservation(e.target.value);setDueLocal('');}}>
+     <option value="">Selecione</option>{reservations.filter(x=>x.status==='active').map(x=><option key={x.id} value={x.id}>{x.lot_label||'Bobina'} — {x.remaining} g</option>)}</select></label>
+    <label>Data e hora de revisão (opcional)<input aria-label="Data e hora de revisão" type="datetime-local" value={dueLocal} onChange={e=>setDueLocal(e.target.value)}/>
+     <small>Uma data vencida apenas alerta. Nunca libera reserva. Deixe vazio para remover a data.</small></label>
+    <button type="button" disabled={busy||!dueReservation} onClick={()=>void updateReviewDue()}>Salvar prazo de revisão</button>
+   </div>}
   </section>
   <section className="panel materials-form"><h3>Confirmação incremental de impressão</h3>
    <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo e o tempo informados são incrementais; registre falhas mesmo sem peças boas. O material da mesa não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
@@ -142,11 +183,27 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>
    <button type="button" className="primary-action" disabled={busy||!selected||!lot||!workspaceId||!selectedOutput} onClick={()=>void confirm()}>{busy?'Confirmando…':'Confirmar consumo incremental'}</button>
   </section>
+  {cancelTarget&&<section className="panel materials-form" aria-label="Confirmar cancelamento de impressão">
+   <h3>Confirmar cancelamento</h3>
+   <p>O cancelamento encerra a impressão e libera somente reservas ainda não consumidas.
+    Peças produzidas, falhas, tempo e material consumido continuam registrados.</p>
+   <p>Impressão: {prints.find(p=>p.id===cancelTarget)?.outputs.map(o=>o.name).join(' + ')||'não encontrada'}</p>
+   <label>Justificativa do cancelamento<input aria-label="Justificativa do cancelamento" maxLength={1000}
+    value={cancelReason} onChange={e=>{setCancelReason(e.target.value);cancelKey.current=newKey();}}/>
+    <small>Obrigatória, de 10 a 1000 caracteres. Fica registrada na auditoria.</small></label>
+   <button type="button" disabled={busy} className="primary-action" onClick={()=>void submitCancel()}>
+    {busy?'Cancelando…':'Confirmar cancelamento e liberar reservas'}</button>
+   <button type="button" disabled={busy} onClick={()=>{setCancelTarget('');setCancelReason('');cancelKey.current=newKey();}}>Voltar sem cancelar</button>
+  </section>}
   <h3>Execuções registradas</h3>
   {prints.length===0?<p>Nenhuma impressão registrada nesta oficina.</p>:<div className="materials-spool-grid">{prints.map(p=><article className="materials-spool-card" key={p.id}>
    <h4>{p.printer_name||'Impressora sem nome'}</h4><p>Status: {p.status} · {new Date(p.created_at).toLocaleString('pt-BR')}</p>
    <ul>{p.outputs.map(o=><li key={o.id}>{o.name}: planejadas {o.planned}, boas {o.good}, rejeitadas {o.failed}</li>)}</ul>
    <small>Tempo previsto: {p.planned_hours===null?'não informado':p.planned_hours+' h'}. Tempo registrado: {p.actual_hours===null?'não informado':p.actual_hours+' h'}.</small>
+   {(p.status==='draft'||p.status==='partial')&&
+    <button type="button" disabled={busy} aria-label={'Cancelar impressão '+p.outputs.map(o=>o.name).join(' + ')}
+    onClick={()=>{setCancelTarget(p.id);setCancelReason('');cancelKey.current=newKey();setError('');}}>
+    Cancelar impressão</button>}
   </article>)}</div>}
  </section>
 }
