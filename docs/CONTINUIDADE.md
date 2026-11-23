@@ -687,3 +687,13 @@
 - **Estado desta anotação:** CI da implementação em verificação; sem merge, deploy, migração operacional ou créditos.
 
 - **Verificação concluída:** CI #406 (`45276261898`) do commit `576dd4bede1b3f46966efde1da2889ecf2aec9d1` **aprovado integralmente**, incluindo migração read-only, regressão SQL L4, Vitest, build, concorrência/RLS e Playwright desktop/mobile. Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45276261898 . **Não** equivale a deploy nem a homologação de custos L4 final.
+
+## 23/11/2026 — L4-F: distinção entre rateio matemático e snapshot financeiro
+
+- CI #408 da entrega L4-R01 foi confirmado aprovado; a branch de integração atual continua sem deploy/migração operacional.
+- Criado `src/domain/print-financial-draft.ts` com `preparePrintFinancialDraft`: sobre o motor P05/P06 existente, produz **somente** `l4-financial-draft-v1`, sempre `pending_financial_close` e `financialSnapshot=null`, mesmo quando a soma das categorias bate em centavos. Não cria snapshot definitivo.
+- Diagnósticos: histórico indisponível, custo de bobina desconhecido/estimado, preço de confirmação L3 limitado a seis decimais, consumo de modelo/purga/perda sem linha atribuída, fonte duplicada ou desconhecida, origem manual não comprovada e categoria relevante declarada mas não informada. Nenhuma regra usa zero para substituir custo desconhecido nem distribui perda automaticamente a peças boas.
+- `src/components/PrintAllocationPreview.tsx` usa o diagnóstico no cálculo e mostra **Fechamento financeiro: PENDENTE**, contagem de categorias históricas atribuídas e motivos verificáveis. Continua sem persistir o rascunho.
+- Criados testes unitários `src/domain/print-financial-draft.test.ts` e reforço E2E em `tests/app.spec.ts` para cobertura, precisão histórica e custo desconhecido.
+- Contrato futuro documentado em `docs/L4_CONTRATO_SNAPSHOT_FINANCEIRO.md`: origem congelada exata, categorias, bases e resíduos conciliados, imutabilidade, trilha P09, autorização/concorrência e impeditivos antes de qualquer fechamento; documento **não** autoriza SQL físico nem migrações de produção.
+- **Pendências reais:** fonte original imutável com precisão P06, dados P07 completos, categorias de custo auditáveis, transação de fechamento, RLS/idempotência e testes de estorno/concorrência, além de homologação visual. Não aplicar o SQL existente ao banco operacional nem publicar enquanto houver pendências.
