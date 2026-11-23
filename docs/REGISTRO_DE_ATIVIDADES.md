@@ -674,3 +674,13 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Pendências:** confirmar versão implantada e registros de peças no mesmo workspace; implementar/testar integração de ficha, cálculo e conjunto; rateio de placas mistas; CI após futuras alterações.
 - **Evidências:** commit documental 304d4f9c7d84329596c3625c58c3421c376782b2; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; CI aprovado do HEAD inicial https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45209805896.
 - **Restrições:** sem alteração de aplicativo, migração, banco, merge ou deploy nesta auditoria.
+
+
+## 23/11/2026 — Integração de navegação Ficha → Calculadora
+
+- **Cliente/projeto:** MakerCusto — desenvolvimento próprio.
+- **Início/término (Brasília):** não aferidos individualmente; **duração efetiva:** não mensurada, sem inferir pelo intervalo entre mensagens.
+- **Atividades executadas:** edição de `src/components/ProductWorkspace.tsx` para consultar o último snapshot da peça/produto selecionado e oferecer ação contextual; edição de `src/App.tsx` para restaurar dados existentes via `applySavedCalculation` e navegar à calculadora após validação; preservados registro sem snapshot e histórico original.
+- **Resultado comprovado:** commits `7c3f1e6cd5fe992d8242e5ffdd9a95f52c924379`, `43c74a7ec8392f3b59cb6ff1d6810d3eac931360`, `986ec69f1f621d64dc8c0eef6e6ba5d63730ca7f` na branch de trabalho.
+- **Pendências:** CI do HEAD, testes E2E autenticados e homologação visual; salvar novo cálculo em cadastro existente ainda não implementado; sem integração de rateio para mesa mista nesta entrega.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/pull/1 . Nenhum merge, deploy ou alteração de banco.
