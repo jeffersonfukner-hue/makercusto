@@ -66,7 +66,7 @@ function decimal(value: string, label: string) {
   throw new Error(label + ': informe decimal não negativo usando ponto, sem notação científica.');
  }
  const [integer, fraction = ''] = v.split('.');
- if (fraction.length > 18) throw new Error(label + ': precisão superior a 18 casas não suportada.');
+ if (integer.length > 15 || fraction.length > 18) throw new Error(label + ': magnitude ou precisão não suportada.');
  const unit = 10n ** BigInt(fraction.length);
  return {numerator: BigInt(integer) * unit + BigInt(fraction || '0'), denominator: unit};
 }
@@ -94,7 +94,8 @@ export function reconcilePrintAllocation(request: AllocationRequest): Allocation
  let total = 0n;
  const categoryTotals = request.lines.map(line => {
   if (!line.source.trim() || !line.sourceVersion.trim() || !line.category ||
-      !['direct', 'shared'].includes(line.method)) {
+      !['direct', 'shared'].includes(line.method) ||
+      !['model','purge','energy','machine','labor','accessory','loss','rework','other'].includes(line.category)) {
    throw new Error('Categoria ' + line.id + ': origem, versão, natureza e método obrigatórios.');
   }
   if (line.category === 'purge' || line.category === 'loss') {
