@@ -684,3 +684,14 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado comprovado:** commits `7c3f1e6cd5fe992d8242e5ffdd9a95f52c924379`, `43c74a7ec8392f3b59cb6ff1d6810d3eac931360`, `986ec69f1f621d64dc8c0eef6e6ba5d63730ca7f` na branch de trabalho.
 - **Pendências:** CI do HEAD, testes E2E autenticados e homologação visual; salvar novo cálculo em cadastro existente ainda não implementado; sem integração de rateio para mesa mista nesta entrega.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/pull/1 . Nenhum merge, deploy ou alteração de banco.
+
+
+## 23/11/2026 — Revisão de cálculo no mesmo cadastro, sem duplicação
+
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários efetivos de início e término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; o intervalo entre mensagens não foi contabilizado.
+- **Atividades executadas:** verificação da CI #354 (sucesso); auditoria SQL de `mc_save_calculated_product` e `mc_save_product_record`; implementação da RPC de revisão com idempotência/isolamento; integração de `App.tsx`, `ProductSavePanel.tsx`, `data/supabase.ts`; preparação de regressão SQL com rollback; atualização do workflow para PostgreSQL efêmero.
+- **Resultado:** nova revisão permanece no mesmo `product_id`, sem alterar snapshots antigos conforme contrato implementado; código e testes versionados na branch, não executados no banco operacional. **A aprovação da lógica depende de CI**; nenhum resultado de teste foi presumido.
+- **Evidências:** PR https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; migração `supabase/migrations/20261123152000_append_product_calculation.sql` e teste `supabase/tests/product_calculation_revision_rollback.sql`; CI #354 previamente aprovado https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45212942492.
+- **Pendências:** conclusão da CI do HEAD, aplicação futura da RPC apenas mediante autorização específica, E2E visual/autenticado e integração das placas mistas.
+- **Restrições cumpridas:** sem alteração direta do Supabase, merge ou deploy; tempo trabalhado não estimado.
