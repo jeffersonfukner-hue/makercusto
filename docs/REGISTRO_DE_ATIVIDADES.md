@@ -706,3 +706,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Pendências:** confirmação da CI do HEAD, homologação visual nos dois tamanhos, aplicar padrão a outros formulários em etapas apropriadas. Não declarar revisão visual aprovada.
 - **Evidências:** PR https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; histórico dos commits na branch `feat/fundacao-makercusto`.
 - **Restrições cumpridas:** sem SQL aplicado, merge ou deploy; nenhum tempo de execução presumido.
+
+## 23/11/2026 — Correção E2E e extensão do dock de ações
+
+- **Projeto:** MakerCusto; **início/término (Brasília):** não aferidos; **duração efetiva:** não mensurada; intervalo entre mensagens não usado.
+- **Trabalho executado:** consulta ao workflow #373; diagnóstico de seletor E2E ambíguo e correção; aplicação do componente `FormActionDock` no inventário de bobinas e em três operações principais de Impressões, com diferenciação de formulário ativo. Código documentado no relatório de continuidade.
+- **Resultados verificáveis:** commits `91082fea`, `6c161955`, `d87bb8f`, `7cb6ffc`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Pendências:** CI do HEAD, testes visuais, dock nas demais operações avançadas; migração SQL anterior ainda não aplicada ao banco operacional.
+- **Restrições:** nenhuma alteração em Supabase, merge ou deploy.
