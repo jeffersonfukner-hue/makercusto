@@ -534,3 +534,14 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45099111748 ; `supabase/tests/l2_l3_preflight_readonly.sql`; `supabase/tests/l2_l3_postflight_readonly.sql`; `docs/PLANO_APLICACAO_CONTROLADA_L2_L3.md`; commits `141ffe6a797f589af43063b74cec90171b31e416`, `19aa5d9dd848b1c753a9863222996e33119bfa82`, `5a39ad9afe10993b5e2001108537d9fc63c4c4ad` e `6ab26e701889f152c44c0800e84ee125ace1ac20`.
 - **Pendências:** autorização específica para migração do esquema operacional MakerCusto, avaliação de backup/janela e teste de autenticação real; reservas, snapshots financeiros e produção acabada ainda não estão homologados.
 - **Sem merge, deploy, DDL no banco operacional ou contratação de serviço pago.**
+
+
+## 22/11/2026 — Aplicação autorizada da migração L2/L3 no Supabase MakerCusto
+- **Projeto/cliente:** MakerCusto / próprio.
+- **Autorização:** proprietário escreveu “pode alterar”, em continuidade à etapa específica de aplicação da migração L2/L3, sem autorização de merge/deploy.
+- **Horários de início/término/duração efetiva (Brasília):** não aferidos com precisão; referência de conversa em torno de 23:25; **não converter essa referência em horas trabalhadas**.
+- **Atividades efetivamente executadas:** leitura da skill Supabase; confirmação do projeto-alvo e das migrações existentes; execução de `l2_l3_preflight_readonly.sql` no Supabase; aplicação exclusiva da migração SQL versionada `20261122212500_print_execution_l2_l3.sql`; pós-verificação de migrations, schema, RPCs, RLS/grants e contagem de registros; consulta ao Security Advisor.
+- **Resultados comprovados:** `apply_migration` retornou `success: true`; migração no histórico: **`20261123022622_print_execution_l2_l3`**; postflight em somente leitura passou sem erros; RPCs e tabela L2/L3 instaladas; **0 produções, 0 confirmações e 0 movimentos** depois da implantação. RLS da nova tabela ativo, `anon` sem SELECT, `authenticated` sem INSERT direto.
+- **Evidências:** migração `supabase/migrations/20261122212500_print_execution_l2_l3.sql` (blob `914ee07a10bcf41638f623eec576a334837ae968`); scripts `supabase/tests/l2_l3_preflight_readonly.sql`, `supabase/tests/l2_l3_postflight_readonly.sql`; histórico de migrações Supabase MakerCusto `20261123022622`; último CI isolado de revisão `https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45099111748`.
+- **Pendências:** validar RLS e RPCs com usuários Supabase Auth reais, conciliação de reservas, fechamento, rateio financeiro e produto acabado; Security Advisor mantém 14 avisos sobre acesso autenticado a SECURITY DEFINER (inclui os três novos) e um aviso sobre proteção contra senhas vazadas.
+- **Sem:** merge, deploy, criação de produção/bobinas fictícias no banco operacional, movimento de estoque ou operação paga autorizada.

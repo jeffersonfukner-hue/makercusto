@@ -45,3 +45,11 @@ Migração aplicada uma única vez e documentada **somente após autorização**
 - `supabase/tests/l2_l3_preflight_readonly.sql` executado em leitura no Supabase MakerCusto sem erro; não gerou dados nem alterou esquema.
 - `supabase/tests/l2_l3_postflight_readonly.sql` executado **somente em PostgreSQL descartável** via CI #45099111748 com `success`. O mesmo pipeline comprovou rollback, concorrência, RLS sintético, tipos, unitários, build e 86/86 Playwright. Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45099111748 .
 - A instalação no Supabase operacional **não aconteceu**. A aplicação demanda autorização específica nova e confirmação de recursos/backup; não interpretar este plano como autorização.
+
+
+## Execução efetiva autorizada — 22/11/2026
+- Proprietário autorizou: “pode alterar”, referindo-se à migração L2/L3 do MakerCusto.
+- Confirmado projeto `bxtbfdddcxbyaomydgxn`; preflight de somente leitura aprovado; SQL versionado aplicado via migração Supabase com `success: true`.
+- **Histórico:** `20261123022622_print_execution_l2_l3`. **Postflight:** aprovado no banco real, sem erros; RPCs, tabela, RLS e permissões conferidas. Contagens mantidas em zero para produções, confirmações e movimentos.
+- **Status atualizado:** INSTALADO NO BANCO; NÃO PUBLICADO/HOMOLOGADO PARA USO OPERACIONAL. Qualquer texto anterior neste documento que diga “não aplicado” descreve seu estado na fase de planejamento antes desta autorização.
+- Testes de autorização com JWT real e fluxos incompletos continuam pendentes. Nenhum merge/deploy, teste destrutivo, dados de produção nem gasto pago.

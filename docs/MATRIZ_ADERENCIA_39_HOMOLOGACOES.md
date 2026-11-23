@@ -135,3 +135,9 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - **CI #45099111748 (`success`)** validou preflight e postflight SQL no PostgreSQL 17 efêmero, após executar a migração. Também passou regressão de rollback, duas confirmações concorrentes, isolamento sob identidade simulada, tipagem, unitários, build e **86/86 Playwright**.
 - Plano de implantação com gates e recuperação documentado em `docs/PLANO_APLICACAO_CONTROLADA_L2_L3.md`; sem execução operacional autorizada. **Contagem preservada: 20 P, 19 A, 0 C.**
 - Requisitos ainda não cobertos: JWT real e RLS com usuários Supabase reais, reservas ativas, snapshots financeiros, estoque de acabados, estornos e fechamento definitivo.
+
+
+## Implantação do esquema L2/L3 — 22/11/2026
+- Migração `print_execution_l2_l3` aplicada **com autorização do proprietário** exclusivamente ao Supabase MakerCusto: histórico `20261123022622`. Preflight e postflight no banco real executados sem erro. RPCs `mc_create_print`, `mc_confirm_print` e `mc_list_prints` e tabela `mc_production_output_events` existem, com RLS/grants pós-verificados.
+- Nenhuma produção, confirmação ou movimento de estoque foi gerado durante a aplicação. **Permanece 20 P, 19 A, 0 C**: esquema presente ≠ fluxo de negócio integralmente homologado.
+- Testes reais de Supabase Auth (sessão/JWT/usuários e oficinas), reservas, fechamento e snapshots continuam pendentes. Frontend ainda não publicado; nenhuma homologação visual adicional.
