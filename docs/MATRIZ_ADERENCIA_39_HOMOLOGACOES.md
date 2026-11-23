@@ -181,3 +181,9 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - **CI #45108226913 `success`** (commit `d94edd1a4deba1dc4f90c0d9aaa649c6fb15b7fa`): 96/96 Playwright desktop/mobile, TypeScript, unitários, build, testes PostgreSQL com rollback, concorrência de estoque e isolamento entre oficinas. Migração e UI GAP01-A registram ocorrência física com autor, momento informado, quantidade observada, fonte, possível lote e evidência, **independentemente do saldo contábil**, sem afetar estoque, confirmações ou preço histórico. Reenvio idempotente e permissão por oficina comprovados em CI descartável.
 - GAP01 continua **P**, não se deve reclassificar como completa porque investigação, aprovação excepcional, correção de inventário, estorno referenciado e estados definitivos estão ausentes. Aderência global mantém **22 P, 17 A, 0 C**, sem modificar as 39 homologações originais.
 - Migração `20261123005500_gap01_physical_occurrences.sql` ainda **NÃO aplicada no Supabase MakerCusto real**; sem JWT real e sem homologação visual. Nenhum merge ou deploy.
+
+
+## GAP01-B/F — investigação e transições pendentes, evidência 23/11/2026
+- CI #45113967113 `success` (SHA funcional `926ef0f9eb6da8a246867b7a28f968af18f76d15`): 98/98 Playwright desktop/mobile, PostgreSQL descartável com rollback, isolamento por oficina, concorrência, tipos, unitários e build. Investigação append-only com hipótese/evidência/autor, observação original preservada, estados `registered/under_review/pending_decision` e replay idempotente sem estoque, custo ou aprovação extraordinária.
+- **A GAP01 permanece P:** não inclui avaliação da suficiência da prova, proposta de ajuste/compensação, autorização de regularização, custo financeiro, estorno, nem aceite visual ou JWT real. **Matriz global permanece 22 P, 17 A, 0 C**; preservar integralmente as 39 homologações.
+- Migração GAP01-B/F ainda **não aplicada ao Supabase MakerCusto operacional**, sem merge ou deploy.
