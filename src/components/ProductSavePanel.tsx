@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { listProducts, saveCalculatedProduct, type ProductRecord, type Session } from '../data/supabase';
 import type { CostInput, CostResult } from '../domain/cost';
 
-type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void };
+type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:()=>void };
 const currency=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
-export function ProductSavePanel({session,workspaceId,input,result,filter='all',onLogin}:Props){
+export function ProductSavePanel({session,workspaceId,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly}:Props){
  const [name,setName]=useState('');
  const [sku,setSku]=useState('');
  const [description,setDescription]=useState('');
- const [kind,setKind]=useState<'product'|'component'|'kit'>('product');
+ const [kind,setKind]=useState<'product'|'component'>('product');
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [busy,setBusy]=useState(false);
  const [loading,setLoading]=useState(false);
@@ -52,12 +52,17 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    <div className="product-save-fields">
     <label>Nome do produto <input aria-label="Nome do produto" maxLength={150} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex.: Chaveiro galo" /></label>
     <label>SKU / referência (opcional) <input aria-label="SKU do produto" maxLength={100} value={sku} onChange={e=>setSku(e.target.value)} placeholder="Ex.: CH-GALO-01" /></label>
-    <label>Tipo <select aria-label="Tipo de produto" value={kind} onChange={e=>setKind(e.target.value as typeof kind)}><option value="product">Produto</option><option value="component">Componente</option><option value="kit">Kit</option></select></label>
+    <label>Tipo <select aria-label="Tipo de produto" value={kind} onChange={e=>setKind(e.target.value as typeof kind)}><option value="product">Produto final</option><option value="component">Peça / componente</option></select></label>
     <label>Descrição (opcional) <input aria-label="Descrição do produto" maxLength={2000} value={description} onChange={e=>setDescription(e.target.value)} /></label>
    </div>
+   <p className="footnote">Uma placa com peças diferentes precisa de distribuição de custos validada antes de salvar cada peça. Conjuntos são montados a partir de peças cadastradas.</p>
    <p className="footnote">O custo salvo será uma estimativa do cálculo atual ({result?currency(result.lotCost):'inválido'} por lote). Não há baixa automática de estoque.</p>
    <button className="primary-action" type="button" disabled={busy||!result||!workspaceId} onClick={()=>void save()}>{busy?'Salvando produto…':'Salvar produto e custo'}</button>
-   <div aria-live="polite">{message&&<p className="product-success" role="status">{message}</p>}{error&&<p className="error" role="alert">{error}</p>}</div>
+   <div aria-live="polite">{message&&<div><p className="product-success" role="status">{message}</p>
+    <div className="product-workspace-buttons">
+     {onViewSaved&&<button type="button" onClick={()=>onViewSaved(kind)}>Ver cadastros da oficina</button>}
+     {onCreateAssembly&&<button type="button" onClick={onCreateAssembly}>Montar conjunto com peças</button>}
+    </div></div>}{error&&<p className="error" role="alert">{error}</p>}</div>
    <div className="product-list"><h3>{filter==='component'?'Peças cadastradas':'Produtos da oficina'}</h3>{loading?<p role="status">Carregando produtos…</p>:visibleItems.length===0?<p className="footnote">Nenhum produto cadastrado nesta oficina.</p>:
     <ul>{visibleItems.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
    </div>
