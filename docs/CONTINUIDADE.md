@@ -603,3 +603,11 @@
 - Lacunas confirmadas: ficha de peça sem edição integrada de parâmetros produtivos; retorno contextual da ficha para a calculadora; fluxo guiado para custos e outputs de uma placa mista.
 - Prioridade: validar discrepância Preview/HEAD; integrar ficha ↔ calculadora ↔ conjunto preservando snapshots, sem baixa de estoque; depois melhorar mesa mista sob regras L2/L3.
 - Nenhuma mudança funcional ou no banco nesta rodada documental. Preservadas homologações e proibições de merge/deploy sem autorização.
+
+
+## 23/11/2026 — Primeiro vínculo funcional Ficha → Calculadora
+
+- Código atualizado: `src/components/ProductWorkspace.tsx` permite abrir na calculadora o snapshot mais recente do cadastro selecionado, usando `listSavedCalculations`, filtragem por `product_id` e ordenação por `saved_at`. Registro sem snapshot não inventa dados nem cria vínculos fictícios.
+- `src/App.tsx` reutiliza `applySavedCalculation` e somente muda para o módulo Calculadora quando os parâmetros passam pela validação. O histórico permanece inalterado; o fluxo é **reutilização para novo cálculo**, não edição/atualização do produto existente.
+- Commits funcionais: `7c3f1e6`, `43c74a7`, `986ec69`. Sem migração, banco, merge ou deploy.
+- Pendências: CI do HEAD funcional, E2E do fluxo autenticado, pré-preenchimento da ficha ao gerar novo snapshot e vínculo de atualização com confirmação; integração de conjunto e placa mista. Nenhuma dessas pendências deve ser apresentada como concluída.
