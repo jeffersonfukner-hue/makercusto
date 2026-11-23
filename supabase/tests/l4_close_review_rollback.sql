@@ -62,7 +62,7 @@ begin
  denied:=false;
  begin
   perform public.mc_submit_l4_close_review(w,p,'l4-review-other-key',
-   evidence-'0');
+   evidence - 0);
  exception when others then denied:=true;end;
  if not denied then raise exception 'Checklist incompleto aceito';end if;
  denied:=false;
