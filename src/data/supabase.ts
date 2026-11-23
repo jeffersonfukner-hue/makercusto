@@ -147,3 +147,27 @@ export const swapPrintReservedLot=(workspaceId:string,draft:{
  p_release_g:draft.releaseGrams,p_new_reserve_g:draft.newReserveGrams,
  p_request_key:draft.requestKey,p_reason:draft.reason
 });
+
+export type PhysicalConsumptionOccurrence={
+ id:string;production_id:string;material_name:string;quantity_g:number;
+ quantity_basis:'weighed'|'slicer'|'informed'|'other';observed_at:string;
+ source_note:string;possible_lot_id:string|null;possible_lot_label:string|null;
+ evidence_reference:string|null;possible_origin_note:string|null;
+ status:'registered'|'under_review'|'pending_decision';reported_by:string;created_at:string
+};
+export const listPhysicalOccurrences=(workspaceId:string)=>
+ api<PhysicalConsumptionOccurrence[]>('rpc/mc_list_physical_occurrences','POST',{
+  p_workspace_id:workspaceId
+ });
+export const recordPhysicalOccurrence=(workspaceId:string,draft:{
+ productionId:string;materialName:string;quantityGrams:number;
+ basis:'weighed'|'slicer'|'informed'|'other';observedAt:string;sourceNote:string;
+ possibleLotId:string|null;evidenceReference:string|null;possibleOriginNote:string|null;key:string
+})=>api<string>('rpc/mc_record_physical_occurrence','POST',{
+ p_workspace_id:workspaceId,p_production_id:draft.productionId,
+ p_material_name:draft.materialName,p_quantity_g:draft.quantityGrams,
+ p_quantity_basis:draft.basis,p_observed_at:draft.observedAt,
+ p_source_note:draft.sourceNote,p_possible_lot_id:draft.possibleLotId,
+ p_evidence_reference:draft.evidenceReference,p_possible_origin_note:draft.possibleOriginNote,
+ p_idempotency_key:draft.key
+});
