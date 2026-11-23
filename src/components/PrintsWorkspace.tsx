@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,
- type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview} from '../data/supabase';
+import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,proposeInventoryAdjustment,listInventoryAdjustmentProposals,
+ type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview,type InventoryAdjustmentProposal} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
@@ -30,6 +30,11 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [reviewCause,setReviewCause]=useState<PhysicalOccurrenceReview['cause_hypothesis']>('unknown');
  const [reviewNote,setReviewNote]=useState(''),[reviewEvidence,setReviewEvidence]=useState(''),[reviewLot,setReviewLot]=useState('');
  const reviewKey=useRef(newKey());
+ const [proposals,setProposals]=useState<InventoryAdjustmentProposal[]>([]);
+ const [proposalOccurrence,setProposalOccurrence]=useState(''),[proposalLot,setProposalLot]=useState('');
+ const [proposalGrams,setProposalGrams]=useState(''),[proposalCause,setProposalCause]=useState<InventoryAdjustmentProposal['cause']>('verified_count_error');
+ const [proposalOrigin,setProposalOrigin]=useState(''),[proposalReason,setProposalReason]=useState(''),[proposalEvidence,setProposalEvidence]=useState('');
+ const proposalKey=useRef(newKey());
  const occKey=useRef(newKey());
  const [dueReservation,setDueReservation]=useState(''),[dueLocal,setDueLocal]=useState('');
  const [cancelTarget,setCancelTarget]=useState(''),[cancelReason,setCancelReason]=useState('');
@@ -39,8 +44,8 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [reload,setReload]=useState(0),operation=useRef(newKey());
  useEffect(()=>{
   let live=true;if(!workspaceId)return;
-  Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId),listPrintReservations(workspaceId),listPhysicalOccurrences(workspaceId),listPhysicalOccurrenceReviews(workspaceId)])
-   .then(([p,pr,s,executions,held,pending,history])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);setReservations(held);setOccurrences(pending);setReviews(history);}})
+  Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId),listPrintReservations(workspaceId),listPhysicalOccurrences(workspaceId),listPhysicalOccurrenceReviews(workspaceId),listInventoryAdjustmentProposals(workspaceId)])
+   .then(([p,pr,s,executions,held,pending,history,adjustments])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);setReservations(held);setOccurrences(pending);setReviews(history);setProposals(adjustments);}})
    .catch(e=>{if(live)setError('Falha ao consultar impressões: '+(e as Error).message);});
   return()=>{live=false};
  },[workspaceId,reload]);
@@ -227,6 +232,35 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Investigação recusada: '+(e as Error).message)}
   finally{setBusy(false)}
  };
+ const submitInventoryProposal=async()=>{
+  const occurrence=occurrences.find(x=>x.id===proposalOccurrence);
+  const grams=Number(proposalGrams);
+  if(!workspaceId||!occurrence||!['under_review','pending_decision'].includes(occurrence.status)
+   ||!spools.some(x=>x.id===proposalLot)){
+   setError('Selecione uma ocorrência investigada e uma bobina existente da oficina.');return;
+  }
+  if(proposalGrams.trim()===''||!Number.isFinite(grams)||grams===0||Math.abs(grams)>1000000
+   ||Math.abs(grams*1000-Math.round(grams*1000))>0.000001){
+   setError('Informe ajuste proposto em gramas, diferente de zero, com até três casas decimais.');return;
+  }
+  if(proposalOrigin.trim().length<10||proposalOrigin.trim().length>2000
+   ||proposalReason.trim().length<10||proposalReason.trim().length>2000
+   ||proposalEvidence.trim().length<3||proposalEvidence.trim().length>2000){
+   setError('Informe origem e justificativa de 10 a 2000 caracteres e evidência de 3 a 2000.');return;
+  }
+  setBusy(true);setError('');setMessage('');
+  try{
+   await proposeInventoryAdjustment(workspaceId,{occurrenceId:occurrence.id,lotId:proposalLot,
+    deltaGrams:grams,cause:proposalCause,originNote:proposalOrigin.trim(),
+    justification:proposalReason.trim(),evidenceReference:proposalEvidence.trim(),
+    key:proposalKey.current});
+   proposalKey.current=newKey();setProposalOccurrence('');setProposalLot('');setProposalGrams('');
+   setProposalOrigin('');setProposalReason('');setProposalEvidence('');
+   setMessage('Proposta registrada como pendente de decisão. Nenhum ajuste de estoque, custo ou aprovação foi executado.');
+   setReload(n=>n+1);
+  }catch(e){setError('Proposta de inventário recusada: '+(e as Error).message)}
+  finally{setBusy(false)}
+ };
  const selectedPrint=prints.find(p=>p.id===selected);
  const confirm=async()=>{
   if(!workspaceId||!selectedPrint||!lot||!valid(mass)||!valid(purge)||!valid(loss)||Number(mass)+Number(purge)+Number(loss)<=0||!valid(good)||!valid(failed)){
@@ -397,6 +431,47 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      {' — '}{new Date(r.created_at).toLocaleString('pt-BR')} — {r.finding_note}
      <small>Hipótese: {r.cause_hypothesis}; responsável: {r.author_id}
       {r.evidence_reference&&'; evidência: '+r.evidence_reference}. Nenhuma regularização aprovada.</small>
+    </li>)}</ul>
+   </div>}
+  </section>
+  <section className="panel materials-form" aria-label="Propostas de ajuste de inventário GAP01">
+   <h3>Proposta de correção de inventário — GAP01-C</h3>
+   <p className="footnote">Apenas uma proposta para análise humana. Quantidades positivas ou negativas não movimentam estoque, não corrigem saldos e não atribuem custo. Nenhuma aprovação extraordinária está habilitada.</p>
+   <div className="product-save-fields">
+    <label>Ocorrência investigada<select aria-label="Ocorrência para proposta de inventário" value={proposalOccurrence}
+     onChange={e=>{setProposalOccurrence(e.target.value);proposalKey.current=newKey();}}>
+     <option value="">Selecione</option>
+     {occurrences.filter(o=>o.status==='under_review'||o.status==='pending_decision').map(o=><option key={o.id} value={o.id}>
+      {o.material_name} — {o.quantity_g} g — {o.status}
+     </option>)}</select><small>É necessário registrar a investigação antes de propor qualquer correção.</small></label>
+    <label>Bobina cadastrada para possível ajuste<select aria-label="Bobina da proposta de ajuste" value={proposalLot}
+     onChange={e=>{setProposalLot(e.target.value);proposalKey.current=newKey();}}>
+     <option value="">Selecione</option>{spools.map(l=><option key={l.id} value={l.id}>{l.label}</option>)}
+    </select><small>O lote deve existir na oficina; nenhuma nova compra ou bobina é criada.</small></label>
+    <label>Diferença proposta em gramas<input aria-label="Diferença proposta em gramas" type="number" step=".001" value={proposalGrams}
+     onChange={e=>{setProposalGrams(e.target.value);proposalKey.current=newKey();}}/>
+     <small>Positivo para material anteriormente não contabilizado; negativo para erro de contagem demonstrado. Não é uma baixa.</small></label>
+    <label>Causa investigada<select aria-label="Causa da proposta de inventário" value={proposalCause}
+     onChange={e=>{setProposalCause(e.target.value as typeof proposalCause);proposalKey.current=newKey();}}>
+     <option value="verified_count_error">Erro de contagem</option>
+     <option value="unrecorded_physical_input">Material físico anteriormente não contabilizado</option>
+    </select><small>A causa informada é submetida à revisão, não considerada automaticamente comprovada.</small></label>
+    <label>Origem material a conferir<textarea aria-label="Origem material a conferir" rows={2} maxLength={2000} value={proposalOrigin}
+     onChange={e=>{setProposalOrigin(e.target.value);proposalKey.current=newKey();}}/>
+     <small>Identifique a origem real alegada, sem inventar compra ou fornecedor.</small></label>
+    <label>Justificativa da proposta<textarea aria-label="Justificativa da proposta" rows={2} maxLength={2000} value={proposalReason}
+     onChange={e=>{setProposalReason(e.target.value);proposalKey.current=newKey();}}/></label>
+    <label>Evidência do inventário<input aria-label="Evidência da proposta" maxLength={2000} value={proposalEvidence}
+     onChange={e=>{setProposalEvidence(e.target.value);proposalKey.current=newKey();}}/>
+     <small>Referência verificável da pesagem, contagem ou documento. Este campo não envia arquivos.</small></label>
+   </div>
+   <button type="button" className="primary-action" disabled={busy||!proposalOccurrence||!proposalLot}
+    onClick={()=>void submitInventoryProposal()}>{busy?'Registrando…':'Registrar proposta sem alterar estoque'}</button>
+   {proposals.length>0&&<div><h4>Propostas pendentes de decisão</h4>
+    <ul aria-label="Propostas de inventário pendentes">{proposals.map(p=><li key={p.id}>
+     <strong>Pendente de decisão</strong> — {p.lot_label}, {p.proposed_delta_g>0?'+':''}{p.proposed_delta_g} g
+     {' — '}{p.justification}
+     <small>Evidência: {p.evidence_reference}. Nenhuma baixa, entrada, aprovação ou custo confirmado.</small>
     </li>)}</ul>
    </div>}
   </section>
