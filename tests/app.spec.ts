@@ -938,11 +938,11 @@ test('P01-E: redução parcial preserva peças confirmadas e exige liberação e
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
  await page.getByRole('combobox',{name:'Impressão para redução parcial'}).selectOption(production);
  await page.getByRole('combobox',{name:'Peça a reduzir'}).selectOption(output);
- await page.getByRole('spinbutton',{name:'Nova quantidade planejada'}).fill('2');
+ await page.getByRole('spinbutton',{name:'Novo total após redução parcial'}).fill('2');
  await page.getByRole('button',{name:'Confirmar redução parcial'}).click();
  await expect(page.getByRole('alert').last()).toContainText('nunca inferior às peças já confirmadas');
  expect(attempts).toHaveLength(0);
- await page.getByRole('spinbutton',{name:'Nova quantidade planejada'}).fill('3');
+ await page.getByRole('spinbutton',{name:'Novo total após redução parcial'}).fill('3');
  await page.getByRole('combobox',{name:'Reserva para liberação parcial'}).selectOption(reservation);
  await page.getByRole('spinbutton',{name:'Gramas a liberar da reserva'}).fill('21');
  await page.getByRole('textbox',{name:'Motivo da redução parcial'}).fill('Redução de quantidade solicitada pelo cliente');
