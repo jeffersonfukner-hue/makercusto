@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,
+import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,
  type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
@@ -13,6 +13,10 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [selected,setSelected]=useState(''),[selectedOutput,setSelectedOutput]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[purge,setPurge]=useState(''),[loss,setLoss]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
  const [reservePrintId,setReservePrintId]=useState(''),[reserveLot,setReserveLot]=useState(''),[reserveGrams,setReserveGrams]=useState('');
  const reservationKey=useRef(newKey());
+ const [reduceTarget,setReduceTarget]=useState(''),[reduceOutput,setReduceOutput]=useState('');
+ const [reducePlanned,setReducePlanned]=useState(''),[reduceReservation,setReduceReservation]=useState('');
+ const [reduceGrams,setReduceGrams]=useState(''),[reduceReason,setReduceReason]=useState('');
+ const reduceKey=useRef(newKey());
  const [dueReservation,setDueReservation]=useState(''),[dueLocal,setDueLocal]=useState('');
  const [cancelTarget,setCancelTarget]=useState(''),[cancelReason,setCancelReason]=useState('');
  const cancelKey=useRef(newKey());
@@ -89,6 +93,41 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    setMessage('Impressão cancelada. Reservas não utilizadas liberadas; consumos e peças anteriores preservados.');
    setReload(n=>n+1);
   }catch(e){setError('Cancelamento recusado: '+(e as Error).message)}
+  finally{setBusy(false)}
+ };
+ const submitReduction=async()=>{
+  if(!workspaceId||!reduceTarget||!reduceOutput){
+   setError('Selecione uma impressão e uma peça para reduzir o planejamento.');return;
+  }
+  const print=prints.find(p=>p.id===reduceTarget);
+  const output=print?.outputs.find(o=>o.id===reduceOutput);
+  const newPlanned=Number(reducePlanned);
+  if(!print||!output||reducePlanned.trim()===''||!Number.isInteger(newPlanned)||
+    newPlanned<Number(output.good)+Number(output.failed)||newPlanned>=Number(output.planned)){
+   setError('A nova quantidade deve ser inteira, menor que a planejada e nunca inferior às peças já confirmadas.');return;
+  }
+  const isReleasing=reduceReservation!=='';
+  const reservation=reservations.find(x=>x.id===reduceReservation&&x.production_id===reduceTarget&&x.status==='active');
+  const release=Number(reduceGrams);
+  if((isReleasing&&(!reservation||!valid(reduceGrams)||release<=0||
+    Math.abs(release*1000-Math.round(release*1000))>0.000001||
+    release>Number(reservation.remaining)))||(!isReleasing&&reduceGrams.trim()!=='')){
+   setError('Para liberar uma reserva, selecione a bobina e informe gramas válidos, até o saldo reservado, com três casas decimais.');return;
+  }
+  if(reduceReason.trim().length<10||reduceReason.trim().length>1000){
+   setError('Informe justificativa de 10 a 1000 caracteres.');return;
+  }
+  setBusy(true);setError('');setMessage('');
+  try{
+   await reducePrintPlan(workspaceId,{productionId:reduceTarget,requestKey:reduceKey.current,
+    outputChanges:[{output_id:reduceOutput,new_planned:newPlanned}],
+    reservationReleases:isReleasing?[{reservation_id:reduceReservation,release_g:release}]:[],
+    reason:reduceReason.trim()});
+   reduceKey.current=newKey();setReduceTarget('');setReduceOutput('');setReducePlanned('');
+   setReduceReservation('');setReduceGrams('');setReduceReason('');
+   setMessage('Planejamento parcialmente reduzido. Peças, consumo e tempo já confirmados preservados; apenas a reserva informada foi liberada.');
+   setReload(n=>n+1);
+  }catch(e){setError('Redução parcial recusada: '+(e as Error).message)}
   finally{setBusy(false)}
  };
  const selectedPrint=prints.find(p=>p.id===selected);
@@ -182,6 +221,32 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Peças rejeitadas adicionais<input aria-label="Peças rejeitadas adicionais" type="number" min="0" step="1" value={failed} onChange={e=>setFailed(e.target.value)}/></label>
    </div>
    <button type="button" className="primary-action" disabled={busy||!selected||!lot||!workspaceId||!selectedOutput} onClick={()=>void confirm()}>{busy?'Confirmando…':'Confirmar consumo incremental'}</button>
+  </section>
+  <section className="panel materials-form"><h3>Cancelar parcialmente o planejamento</h3>
+   <p className="footnote">Reduza somente peças ainda não produzidas. O material já extrudado e os resultados confirmados permanecem registrados. Informe explicitamente gramas a liberar por bobina: não presumimos consumo de material por peça.</p>
+   <div className="product-save-fields">
+    <label>Impressão para redução parcial<select aria-label="Impressão para redução parcial" value={reduceTarget}
+     onChange={e=>{setReduceTarget(e.target.value);setReduceOutput('');setReduceReservation('');setReducePlanned('');setReduceGrams('');reduceKey.current=newKey();}}>
+     <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')}</option>)}</select></label>
+    <label>Peça a reduzir<select aria-label="Peça a reduzir" value={reduceOutput}
+     onChange={e=>{setReduceOutput(e.target.value);setReducePlanned('');reduceKey.current=newKey();}}>
+     <option value="">Selecione</option>{prints.find(p=>p.id===reduceTarget)?.outputs.map(o=><option key={o.id} value={o.id}>{o.name} — previstas {o.planned}, confirmadas {Number(o.good)+Number(o.failed)}</option>)}</select></label>
+    <label>Nova quantidade planejada<input aria-label="Nova quantidade planejada" type="number" min="0" step="1" value={reducePlanned}
+     onChange={e=>{setReducePlanned(e.target.value);reduceKey.current=newKey();}}/>
+     <small>Nunca inferior à soma de peças boas e rejeitadas já confirmadas.</small></label>
+    <label>Reserva para liberação parcial (opcional)<select aria-label="Reserva para liberação parcial" value={reduceReservation}
+     onChange={e=>{setReduceReservation(e.target.value);setReduceGrams('');reduceKey.current=newKey();}}>
+     <option value="">Nenhuma liberação</option>{reservations.filter(r=>r.production_id===reduceTarget&&r.status==='active').map(r=><option key={r.id} value={r.id}>{r.lot_label||'Bobina'} — {r.remaining} g reservados</option>)}</select></label>
+    <label>Gramas a liberar da reserva<input aria-label="Gramas a liberar da reserva" type="number" min="0" step=".001"
+     disabled={!reduceReservation} value={reduceGrams}
+     onChange={e=>{setReduceGrams(e.target.value);reduceKey.current=newKey();}}/>
+     <small>Somente o excedente comprovado. Se houver mais de uma bobina, registre cada redução separadamente.</small></label>
+    <label>Motivo da redução parcial<input aria-label="Motivo da redução parcial" value={reduceReason} maxLength={1000}
+     onChange={e=>{setReduceReason(e.target.value);reduceKey.current=newKey();}}/>
+     <small>Justificativa auditada, de 10 a 1000 caracteres.</small></label>
+   </div>
+   <button type="button" className="primary-action" disabled={busy||!reduceTarget||!reduceOutput}
+    onClick={()=>void submitReduction()}>{busy?'Registrando…':'Confirmar redução parcial'}</button>
   </section>
   {cancelTarget&&<section className="panel materials-form" aria-label="Confirmar cancelamento de impressão">
    <h3>Confirmar cancelamento</h3>
