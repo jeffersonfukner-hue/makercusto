@@ -596,7 +596,7 @@ test('login transforma a página em sistema com menu lateral e painel de oficina
  await expect(page.getByText('Lançador de hélices')).toBeVisible();
  await expect(page.getByRole('heading',{name:'Oficina de Testes'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toHaveCount(0);
- await expect(page.getByRole('button',{name:'Impressões',exact:false})).toBeDisabled();
+ await expect(page.getByRole('button',{name:'Impressões',exact:true})).toBeEnabled();
  await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Produtos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();
@@ -691,7 +691,7 @@ test('Impressões: registra L2 sem consumo e mostra a execução na oficina', as
  await page.goto('/');
  await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Impressões da oficina'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Impressões da oficina',level:1})).toBeVisible();
  await page.getByRole('combobox',{name:'Impressora física'}).selectOption(printer);
  await page.getByRole('combobox',{name:'Peça a imprimir'}).selectOption(product);
  await page.getByRole('spinbutton',{name:'Quantidade planejada'}).fill('3');
