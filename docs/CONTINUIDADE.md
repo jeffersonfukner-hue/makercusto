@@ -447,3 +447,12 @@
 - Revisão do L3: validação adicional exige lotes vinculados a item `filament` de unidade `g` e identidade não nula da saída.
 - Roteiro `supabase/tests/l2_l3_rollback.sql` criado para **executar somente após instalar a migração em ambiente apropriado**, dentro de transação `BEGIN/ROLLBACK`. Verifica L2 sem baixa, delta L3, replay, payload divergente, saldo insuficiente e usuário sem vínculo. O roteiro foi versionado, **não executado**; não prova concorrência entre sessões nem autenticação por token real.
 - Bloqueio explícito: nenhum ambiente de teste isolado MakerCusto disponível entre projetos conectados. Sem aplicação de SQL, transação de teste real ou modificação de dados neste lote.
+
+
+## 22/11/2026 — Regressão L3, resultado de CI
+- O CI anterior #45090668995 foi concluído com `success`.
+- Ajustes de segurança no formulário `PrintsWorkspace.tsx`: peças boas/rejeitadas devem ser números inteiros individuais; quantidade incremental não pode exceder o saldo de produção planejado; massas de modelo, purga e perdas limitadas a três casas decimais.
+- Em `tests/app.spec.ts`, cenários de retry preservando chave de idempotência e de bloqueio local de deltas inválidos foram adicionados, com REST simulado.
+- **CI final funcional:** #45094382511 `success`, commit `9645a86e71314cfeac049fb5a065c4b84964742f`, TypeScript, unitários, build e 86/86 E2E desktop/mobile aprovados: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45094382511 .
+- Não há PostgreSQL local instalado no ambiente de execução; não houve validação SQL de banco. Ainda não aplicar L2/L3 no Supabase operacional, nem tratar P01/P02/G02 como homologadas na implementação.
+- Manter branch de trabalho, sem merge, deploy ou alteração de banco.
