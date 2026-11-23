@@ -611,3 +611,12 @@
 - `src/App.tsx` reutiliza `applySavedCalculation` e somente muda para o módulo Calculadora quando os parâmetros passam pela validação. O histórico permanece inalterado; o fluxo é **reutilização para novo cálculo**, não edição/atualização do produto existente.
 - Commits funcionais: `7c3f1e6`, `43c74a7`, `986ec69`. Sem migração, banco, merge ou deploy.
 - Pendências: CI do HEAD funcional, E2E do fluxo autenticado, pré-preenchimento da ficha ao gerar novo snapshot e vínculo de atualização com confirmação; integração de conjunto e placa mista. Nenhuma dessas pendências deve ser apresentada como concluída.
+
+
+## 23/11/2026 — Revisão de cálculo vinculada ao cadastro (fase estrutural)
+
+- Implementação em branch: calculadora mantém vínculo explícito com a ficha selecionada e exibe opção para criar revisão no mesmo cadastro ou salvar como novo. Ação de reiniciar cálculo e salvamento bem-sucedido removem o vínculo para evitar associação acidental.
+- Nova migração **preparada mas NÃO aplicada ao Supabase operacional**: `supabase/migrations/20261123152000_append_product_calculation.sql`, RPC `mc_append_product_calculation` com verificação de membro autorizado, bloqueio de registro, chave de idempotência, nova revisão e snapshot imutável, sem duplicar `mc_products`. Atualiza preço de venda explicitamente submetido; conserva identidade, nome e SKU.
+- Teste SQL `supabase/tests/product_calculation_revision_rollback.sql`, incluído no workflow de PostgreSQL efêmero. Cobre cadastro único, histórico, tentativa duplicada, permissões, dados inválidos e seleção da revisão mais recente.
+- Atenção: o **Preview existente não tem a nova RPC**; NÃO publicar frontend enquanto migração ainda não aplicada e validação não autorizada. Executar CI e homologar antes de definir aplicação ao banco de teste e deploy manual.
+- Ainda pendentes: CI do novo HEAD, E2E autenticado em navegador, rateio de peças distintas na mesma placa e conexão completa ao conjunto; nenhuma mudança física de banco ou deploy nesta etapa.
