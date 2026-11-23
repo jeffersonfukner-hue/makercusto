@@ -1,3 +1,4 @@
+import {parseExactDecimal,roundPositiveCentsHalfUp} from './decimal-exact';
 /**
  * L4 — reconciliação local e determinística de rateios por execução (P05/P06).
  * Sem efeitos de banco, sem distribuição automática de perdas ou preços presumidos.
@@ -59,19 +60,11 @@ export type AllocationSnapshot = {
  }[];
 };
 
-/** Converte um decimal estrito, não negativo, sem usar Number. */
-function decimal(value: string, label: string) {
- const v = value.trim();
- if (!/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(v) || v.length > 64) {
-  throw new Error(label + ': informe decimal não negativo usando ponto, sem notação científica.');
- }
- const [integer, fraction = ''] = v.split('.');
- if (integer.length > 15 || fraction.length > 18) throw new Error(label + ': magnitude ou precisão não suportada.');
- const unit = 10n ** BigInt(fraction.length);
- return {numerator: BigInt(integer) * unit + BigInt(fraction || '0'), denominator: unit};
+function decimal(value:string,label:string){
+ try{return parseExactDecimal(value);}
+ catch(e){throw new Error(label+': '+(e as Error).message);}
 }
-const centsHalfUp = (value: ReturnType<typeof decimal>) =>
- (value.numerator * 100n * 2n + value.denominator) / (2n * value.denominator);
+const centsHalfUp=roundPositiveCentsHalfUp;
 const validId = (v: string) => Boolean(v && v.trim() === v && v.trim().length > 0);
 const expectUnique = (xs: string[], label: string) => {
  if (new Set(xs).size !== xs.length || xs.some(x => !validId(x))) throw new Error(label + ': identificadores obrigatórios e únicos.');
