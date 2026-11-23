@@ -6,7 +6,7 @@ import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExisti
 const newKey=()=>crypto.randomUUID();
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
 export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
- const [activePrimaryForm,setActivePrimaryForm]=useState<'new'|'reserve'|'confirm'|'other'>('new');
+ const [activePrimaryForm,setActivePrimaryForm]=useState<'new'|'reserve'|'confirm'|'due'|'occurrence'|'review'|'proposal'|'dossier'|'swap'|'reduction'|'cancel'|'other'>('new');
  const [printers,setPrinters]=useState<StoredPrinter[]>([]),[products,setProducts]=useState<ProductRecord[]>([]);
  const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]),[reservations,setReservations]=useState<PrintReservation[]>([]),[occurrences,setOccurrences]=useState<PhysicalConsumptionOccurrence[]>([]);
  const [printer,setPrinter]=useState(''),[product,setProduct]=useState(''),[quantity,setQuantity]=useState('1');
@@ -338,12 +338,12 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      {x.due_at&&<> · Revisão: {new Date(x.due_at).toLocaleString('pt-BR')}{x.review_overdue&&<strong> · Revisão vencida (reserva mantida)</strong>}</>}
     </li>)}
    </ul>}
-   {reservations.some(x=>x.status==='active')&&<div className="product-save-fields">
+   {reservations.some(x=>x.status==='active')&&<div className="product-save-fields" onFocusCapture={()=>setActivePrimaryForm('due')} onClickCapture={()=>setActivePrimaryForm('due')}>
     <label>Reserva para revisar<select aria-label="Reserva para revisar" value={dueReservation} onChange={e=>{setDueReservation(e.target.value);setDueLocal('');}}>
      <option value="">Selecione</option>{reservations.filter(x=>x.status==='active').map(x=><option key={x.id} value={x.id}>{x.lot_label||'Bobina'} — {x.remaining} g</option>)}</select></label>
     <label>Data e hora de revisão (opcional)<input aria-label="Data e hora de revisão" type="datetime-local" value={dueLocal} onChange={e=>setDueLocal(e.target.value)}/>
      <small>Uma data vencida apenas alerta. Nunca libera reserva. Deixe vazio para remover a data.</small></label>
-    <button type="button" disabled={busy||!dueReservation} onClick={()=>void updateReviewDue()}>Salvar prazo de revisão</button>
+
    </div>}
   </section>
   <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('confirm')} onClickCapture={()=>setActivePrimaryForm('confirm')}><h3>Confirmação incremental de impressão</h3>
@@ -364,7 +364,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>
 
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('other')} onClickCapture={()=>setActivePrimaryForm('other')} aria-label="Ocorrências físicas pendentes">
+  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('occurrence')} onClickCapture={()=>setActivePrimaryForm('occurrence')} aria-label="Ocorrências físicas pendentes">
    <h3>Ocorrência física pendente — GAP01</h3>
    <p className="footnote">Registre o que realmente aconteceu, mesmo quando a massa observada exceder o saldo cadastrado ou a bobina não for conhecida. Este registro NÃO é baixa de estoque, confirmação de consumo, regularização financeira ou aprovação.</p>
    <div className="product-save-fields">
@@ -387,8 +387,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      <small>Ex.: número do relatório, anotação ou foto já armazenada. Este campo não envia arquivos.</small></label>
     <label>Possível origem, ainda não comprovada (opcional)<input aria-label="Possível origem da ocorrência" maxLength={1000} value={occOrigin} onChange={e=>{setOccOrigin(e.target.value);occKey.current=newKey();}}/></label>
    </div>
-   <button type="button" className="primary-action" disabled={busy||!workspaceId||!occPrint}
-    onClick={()=>void recordOccurrence()}>{busy?'Registrando…':'Registrar ocorrência sem baixa'}</button>
+
    {occurrences.length>0&&<div>
     <h4>Ocorrências registradas para análise</h4>
     <ul aria-label="Ocorrências físicas registradas">
@@ -402,7 +401,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>}
    <h4>Investigação da ocorrência — sem regularização</h4>
    <p className="footnote">Cada investigação acrescenta um evento auditável. A causa selecionada continua sendo hipótese até conferência externa; não altera massa observada, saldo, reserva ou custo.</p>
-   <div className="product-save-fields">
+   <div className="product-save-fields" onFocusCapture={()=>setActivePrimaryForm('review')} onClickCapture={()=>setActivePrimaryForm('review')}>
     <label>Ocorrência para investigar<select aria-label="Ocorrência para investigar" value={reviewOccurrence}
      onChange={e=>{const id=e.target.value;setReviewOccurrence(id);const item=occurrences.find(x=>x.id===id);
       setReviewNext(item?.status==='under_review'?'pending_decision':'under_review');
@@ -433,8 +432,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      onChange={e=>{setReviewLot(e.target.value);reviewKey.current=newKey();}}>
      <option value="">Nenhuma bobina comprovada</option>{spools.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
    </div>
-   <button type="button" className="primary-action" disabled={busy||!reviewOccurrence}
-    onClick={()=>void submitOccurrenceReview()}>{busy?'Registrando…':'Registrar investigação sem ajuste'}</button>
+
    {reviews.length>0&&<div>
     <h4>Histórico de investigações</h4>
     <ul aria-label="Histórico de investigações GAP01">{reviews.map(r=><li key={r.id}>
@@ -445,7 +443,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     </li>)}</ul>
    </div>}
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('other')} onClickCapture={()=>setActivePrimaryForm('other')} aria-label="Propostas de ajuste de inventário GAP01">
+  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('proposal')} onClickCapture={()=>setActivePrimaryForm('proposal')} aria-label="Propostas de ajuste de inventário GAP01">
    <h3>Proposta de correção de inventário — GAP01-C</h3>
    <p className="footnote">Apenas uma proposta para análise humana. Quantidades positivas ou negativas não movimentam estoque, não corrigem saldos e não atribuem custo. Nenhuma aprovação extraordinária está habilitada.</p>
    <div className="product-save-fields">
@@ -476,8 +474,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      onChange={e=>{setProposalEvidence(e.target.value);proposalKey.current=newKey();}}/>
      <small>Referência verificável da pesagem, contagem ou documento. Este campo não envia arquivos.</small></label>
    </div>
-   <button type="button" className="primary-action" disabled={busy||!proposalOccurrence||!proposalLot}
-    onClick={()=>void submitInventoryProposal()}>{busy?'Registrando…':'Registrar proposta sem alterar estoque'}</button>
+
    {proposals.length>0&&<div><h4>Propostas pendentes de decisão</h4>
     <ul aria-label="Propostas de inventário pendentes">{proposals.map(p=><li key={p.id}>
      <strong>Pendente de decisão</strong> — {p.lot_label}, {p.proposed_delta_g>0?'+':''}{p.proposed_delta_g} g
@@ -486,7 +483,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     </li>)}</ul>
    </div>}
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('other')} onClickCapture={()=>setActivePrimaryForm('other')} aria-label="Dossiê de conciliação GAP01">
+  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('dossier')} onClickCapture={()=>setActivePrimaryForm('dossier')} aria-label="Dossiê de conciliação GAP01">
    <h3>Dossiê de conciliação — GAP01-D/E</h3>
    <p className="footnote">Consulta somente leitura do saldo atual, das reservas de todas as ordens e das linhas históricas de consumo relacionadas à impressão. Não verifica automaticamente a origem física nem autoriza estornos, ajustes ou compensações financeiras.</p>
    <div className="product-save-fields">
@@ -496,8 +493,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
       {o.material_name} — {o.quantity_g} g — {o.status}
      </option>)}</select></label>
    </div>
-   <button type="button" disabled={dossierBusy||!dossierTarget} onClick={()=>void fetchDossier()}>
-    {dossierBusy?'Consultando…':'Consultar dossiê (somente leitura)'}</button>
+
    {dossier&&<div aria-label="Resultado do dossiê GAP01">
     <p><strong>Consumo físico observado:</strong> {dossier.observed_quantity_g} g. Status: {dossier.status}.</p>
     <p><strong>Bobina indicada (não verificada):</strong> {dossier.possible_lot_label||'Origem não identificada'}.</p>
@@ -524,7 +520,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <p className="footnote">Somente análise. Não existe ação de aprovar, liberar reserva, estornar ou movimentar estoque neste dossiê.</p>
    </div>}
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('other')} onClickCapture={()=>setActivePrimaryForm('other')}><h3>Trocar bobina reservada</h3>
+  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('swap')} onClickCapture={()=>setActivePrimaryForm('swap')}><h3>Trocar bobina reservada</h3>
    <p className="footnote">A troca ajusta apenas as reservas lógicas. O filamento já consumido continua atribuído à bobina original, com o preço histórico original. A próxima confirmação deve indicar a bobina realmente consumida.</p>
    <div className="product-save-fields">
     <label>Reserva de origem<select aria-label="Reserva de origem para troca" value={swapReservation}
@@ -548,10 +544,9 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      onChange={e=>{setSwapReason(e.target.value);swapKey.current=newKey();}}/>
      <small>Motivo obrigatório, auditado e associado aos dois lotes.</small></label>
    </div>
-   <button className="primary-action" type="button" disabled={busy||!swapReservation||!swapNewLot}
-    onClick={()=>void submitSwap()}>{busy?'Registrando…':'Confirmar troca de reserva'}</button>
+
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('other')} onClickCapture={()=>setActivePrimaryForm('other')}><h3>Cancelar parcialmente o planejamento</h3>
+  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('reduction')} onClickCapture={()=>setActivePrimaryForm('reduction')}><h3>Cancelar parcialmente o planejamento</h3>
    <p className="footnote">Reduza somente peças ainda não produzidas. O material já extrudado e os resultados confirmados permanecem registrados. Informe explicitamente gramas a liberar por bobina: não presumimos consumo de material por peça.</p>
    <div className="product-save-fields">
     <label>Impressão para redução parcial<select aria-label="Impressão para redução parcial" value={reduceTarget}
@@ -574,10 +569,9 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      onChange={e=>{setReduceReason(e.target.value);reduceKey.current=newKey();}}/>
      <small>Justificativa auditada, de 10 a 1000 caracteres.</small></label>
    </div>
-   <button type="button" className="primary-action" disabled={busy||!reduceTarget||!reduceOutput}
-    onClick={()=>void submitReduction()}>{busy?'Registrando…':'Confirmar redução parcial'}</button>
+
   </section>
-  {cancelTarget&&<section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('other')} onClickCapture={()=>setActivePrimaryForm('other')} aria-label="Confirmar cancelamento de impressão">
+  {cancelTarget&&<section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('cancel')} onClickCapture={()=>setActivePrimaryForm('cancel')} aria-label="Confirmar cancelamento de impressão">
    <h3>Confirmar cancelamento</h3>
    <p>O cancelamento encerra a impressão e libera somente reservas ainda não consumidas.
     Peças produzidas, falhas, tempo e material consumido continuam registrados.</p>
@@ -585,9 +579,8 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <label>Justificativa do cancelamento<input aria-label="Justificativa do cancelamento" maxLength={1000}
     value={cancelReason} onChange={e=>{setCancelReason(e.target.value);cancelKey.current=newKey();}}/>
     <small>Obrigatória, de 10 a 1000 caracteres. Fica registrada na auditoria.</small></label>
-   <button type="button" disabled={busy} className="primary-action" onClick={()=>void submitCancel()}>
-    {busy?'Cancelando…':'Confirmar cancelamento e liberar reservas'}</button>
-   <button type="button" disabled={busy} onClick={()=>{setCancelTarget('');setCancelReason('');cancelKey.current=newKey();}}>Voltar sem cancelar</button>
+
+
   </section>}
   <h3>Execuções registradas</h3>
   {prints.length===0?<p>Nenhuma impressão registrada nesta oficina.</p>:<div className="materials-spool-grid">{prints.map(p=><article className="materials-spool-card" key={p.id}>
@@ -596,10 +589,35 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <small>Tempo previsto: {p.planned_hours===null?'não informado':p.planned_hours+' h'}. Tempo registrado: {p.actual_hours===null?'não informado':p.actual_hours+' h'}.</small>
    {(p.status==='draft'||p.status==='partial')&&
     <button type="button" disabled={busy} aria-label={'Cancelar impressão '+p.outputs.map(o=>o.name).join(' + ')}
-    onClick={()=>{setCancelTarget(p.id);setCancelReason('');cancelKey.current=newKey();setError('');}}>
+    onClick={()=>{setCancelTarget(p.id);setCancelReason('');cancelKey.current=newKey();setError('');setActivePrimaryForm('cancel');}}>
     Cancelar impressão</button>}
   </article>)}</div>}
 
+  {activePrimaryForm==='due'&&<FormActionDock title="Prazo da reserva" subtitle="Altera o prazo de revisão; não libera filamento">
+   <button type="button" disabled={busy||!dueReservation} onClick={()=>void updateReviewDue()}>Salvar prazo de revisão</button>
+  </FormActionDock>}
+  {activePrimaryForm==='occurrence'&&<FormActionDock title="Ocorrência física" subtitle="Registro auditável sem baixa de estoque ou efeito financeiro">
+   <button type="button" className="primary-action" disabled={busy||!workspaceId||!occPrint} onClick={()=>void recordOccurrence()}>{busy?'Registrando…':'Registrar ocorrência sem baixa'}</button>
+  </FormActionDock>}
+  {activePrimaryForm==='review'&&<FormActionDock title="Investigação da ocorrência" subtitle="Registra hipótese e evidências; não regulariza estoque">
+   <button type="button" className="primary-action" disabled={busy||!reviewOccurrence} onClick={()=>void submitOccurrenceReview()}>{busy?'Registrando…':'Registrar investigação sem ajuste'}</button>
+  </FormActionDock>}
+  {activePrimaryForm==='proposal'&&<FormActionDock title="Proposta de inventário" subtitle="Pendente de decisão; não altera saldos">
+   <button type="button" className="primary-action" disabled={busy||!proposalOccurrence||!proposalLot} onClick={()=>void submitInventoryProposal()}>{busy?'Registrando…':'Registrar proposta sem alterar estoque'}</button>
+  </FormActionDock>}
+  {activePrimaryForm==='dossier'&&<FormActionDock title="Dossiê de conciliação" subtitle="Consulta somente leitura, sem aprovação ou ajustes">
+   <button type="button" disabled={dossierBusy||!dossierTarget} onClick={()=>void fetchDossier()}>{dossierBusy?'Consultando…':'Consultar dossiê (somente leitura)'}</button>
+  </FormActionDock>}
+  {activePrimaryForm==='swap'&&<FormActionDock title="Trocar bobina reservada" subtitle="Somente reservas lógicas; consumo histórico intacto">
+   <button type="button" className="primary-action" disabled={busy||!swapReservation||!swapNewLot} onClick={()=>void submitSwap()}>{busy?'Registrando…':'Confirmar troca de reserva'}</button>
+  </FormActionDock>}
+  {activePrimaryForm==='reduction'&&<FormActionDock title="Redução parcial" subtitle="Preserva consumo e peças confirmadas">
+   <button type="button" className="primary-action" disabled={busy||!reduceTarget||!reduceOutput} onClick={()=>void submitReduction()}>{busy?'Registrando…':'Confirmar redução parcial'}</button>
+  </FormActionDock>}
+  {activePrimaryForm==='cancel'&&cancelTarget&&<FormActionDock title="Cancelar impressão" subtitle="Libera apenas reservas não consumidas; histórico preservado">
+   <button type="button" className="secondary-action" disabled={busy} onClick={()=>{setCancelTarget('');setCancelReason('');cancelKey.current=newKey();setActivePrimaryForm('new');}}>Voltar sem cancelar</button>
+   <button type="button" className="primary-action" disabled={busy} onClick={()=>void submitCancel()}>{busy?'Cancelando…':'Confirmar cancelamento e liberar reservas'}</button>
+  </FormActionDock>}
   {activePrimaryForm==='new'&&<FormActionDock title="Nova impressão" subtitle={outputs.length+' peça(s) na mesa · sem baixa de estoque'}>
    <button type="button" className="primary-action" disabled={busy||!workspaceId||outputs.length===0} onClick={()=>void save()}>{busy?'Salvando…':'Registrar impressão sem baixa'}</button>
   </FormActionDock>}
