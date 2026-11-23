@@ -332,7 +332,7 @@ export default function App(){
   {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
-  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'}/>} 
+  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCalculate={snapshot=>{applySavedCalculation(snapshot);setActiveSection('calculator');}}/>} 
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
