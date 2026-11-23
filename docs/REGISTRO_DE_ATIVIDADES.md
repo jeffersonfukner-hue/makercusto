@@ -498,3 +498,13 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** migração `supabase/migrations/20261122212500_print_execution_l2_l3.sql`, roteiro `supabase/tests/l2_l3_rollback.sql`, commits `c49cb6e26f67dedac7956d12daeab8cf61d79d7d` e `bf22c505fe7c6d394bd72beb7df5d1ffa69a13db`, consultas somente leitura ao Supabase.
 - **Pendências:** ambiente isolado para instalar migração, execução real com rollback, teste de concorrência multi-sessão e usuários reais, snapshots/concilição P01/P02, homologação de produção.
 - **Sem:** merge, deploy, SQL aplicado, manipulação de estoque ou consumo de créditos pagos.
+
+
+## 22/11/2026 — Fortalecimento da confirmação L3 e CI
+- **Projeto/cliente:** MakerCusto / próprio.
+- **Início/término e duração efetiva (Brasília):** não aferidos; não computar tempo de conversa ou de execução do GitHub Actions como horas trabalhadas.
+- **Atividades efetivas:** consulta do resultado anterior #45090668995 (success); verificação de que não há PostgreSQL local utilizável neste ambiente; leitura do código L3 e teste SQL isolado ainda não executado; validação preventiva da interface para rejeitar unidades fracionárias, unidades adicionais além do restante previsto e massas com mais de três casas decimais; testes Playwright de reenvio após erro com a mesma chave de idempotência e de impedimento de requisições com deltas inválidos.
+- **Resultados comprovados:** CI #45094382511 `success` no commit `9645a86e71314cfeac049fb5a065c4b84964742f`; TypeScript, motor unitário, build e **86/86 testes de interface desktop/mobile aprovados**.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45094382511 ; commits `3ba56cd6110567ae3b9714e56ff1eb2b2d6cb03a`, `9645a86e71314cfeac049fb5a065c4b84964742f`.
+- **Limites:** o CI usa REST simulado para o fluxo L3. A migração SQL `20261122212500_print_execution_l2_l3.sql` permanece sem execução transacional em PostgreSQL de teste e sem aplicação no Supabase MakerCusto. Conformidade de concorrência, saldo, RLS e autoria no banco ainda **não comprovada**.
+- **Sem merge, deploy, mudança no banco, dados reais de produção ou gastos pagos autorizados.**
