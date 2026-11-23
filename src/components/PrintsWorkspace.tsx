@@ -1,12 +1,12 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,
- type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation} from '../data/supabase';
+import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,
+ type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
 export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [printers,setPrinters]=useState<StoredPrinter[]>([]),[products,setProducts]=useState<ProductRecord[]>([]);
- const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]),[reservations,setReservations]=useState<PrintReservation[]>([]);
+ const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]),[reservations,setReservations]=useState<PrintReservation[]>([]),[occurrences,setOccurrences]=useState<PhysicalConsumptionOccurrence[]>([]);
  const [printer,setPrinter]=useState(''),[product,setProduct]=useState(''),[quantity,setQuantity]=useState('1');
  const [hours,setHours]=useState(''),[source,setSource]=useState<'slicer'|'measured'|'informed'|'estimated'>('slicer');
  const [notes,setNotes]=useState(''),[outputs,setOutputs]=useState<{product_id:string;quantity:number;name:string}[]>([]);
@@ -21,6 +21,11 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [swapRelease,setSwapRelease]=useState(''),[swapReserve,setSwapReserve]=useState('');
  const [swapReason,setSwapReason]=useState('');
  const swapKey=useRef(newKey());
+ const [occPrint,setOccPrint]=useState(''),[occMaterial,setOccMaterial]=useState(''),[occGrams,setOccGrams]=useState('');
+ const [occBasis,setOccBasis]=useState<'weighed'|'slicer'|'informed'|'other'>('weighed');
+ const [occAt,setOccAt]=useState(''),[occLot,setOccLot]=useState('');
+ const [occSource,setOccSource]=useState(''),[occEvidence,setOccEvidence]=useState(''),[occOrigin,setOccOrigin]=useState('');
+ const occKey=useRef(newKey());
  const [dueReservation,setDueReservation]=useState(''),[dueLocal,setDueLocal]=useState('');
  const [cancelTarget,setCancelTarget]=useState(''),[cancelReason,setCancelReason]=useState('');
  const cancelKey=useRef(newKey());
@@ -29,8 +34,8 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [reload,setReload]=useState(0),operation=useRef(newKey());
  useEffect(()=>{
   let live=true;if(!workspaceId)return;
-  Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId),listPrintReservations(workspaceId)])
-   .then(([p,pr,s,executions,held])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);setReservations(held);}})
+  Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId),listPrintReservations(workspaceId),listPhysicalOccurrences(workspaceId)])
+   .then(([p,pr,s,executions,held,pending])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);setReservations(held);setOccurrences(pending);}})
    .catch(e=>{if(live)setError('Falha ao consultar impressões: '+(e as Error).message);});
   return()=>{live=false};
  },[workspaceId,reload]);
@@ -166,6 +171,35 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Troca de bobina recusada: '+(e as Error).message)}
   finally{setBusy(false)}
  };
+ const recordOccurrence=async()=>{
+  if(!workspaceId||!occPrint||occMaterial.trim().length<2||occMaterial.trim().length>150
+    ||!valid(occGrams)||Number(occGrams)<=0||Number(occGrams)>1000000
+    ||Math.abs(Number(occGrams)*1000-Math.round(Number(occGrams)*1000))>0.000001){
+   setError('Informe impressão, material e massa observada positiva, com até três casas decimais.');return;
+  }
+  if(!occAt){setError('Informe a data e a hora efetivas da ocorrência física.');return;}
+  const date=new Date(occAt);
+  if(Number.isNaN(date.getTime())||date.getTime()>Date.now()+5*60000){
+   setError('Data da ocorrência inválida ou futura.');return;
+  }
+  if(occSource.trim().length<10||occSource.trim().length>1000
+    ||(occEvidence.trim()!==''&&(occEvidence.trim().length<3||occEvidence.trim().length>2000))
+    ||(occOrigin.trim()!==''&&(occOrigin.trim().length<3||occOrigin.trim().length>1000))){
+   setError('Explique como foi constatada a ocorrência (10 a 1000 caracteres); confira evidência e possível origem.');return;
+  }
+  setBusy(true);setError('');setMessage('');
+  try{
+   await recordPhysicalOccurrence(workspaceId,{productionId:occPrint,materialName:occMaterial.trim(),
+    quantityGrams:Number(occGrams),basis:occBasis,observedAt:date.toISOString(),
+    sourceNote:occSource.trim(),possibleLotId:occLot||null,
+    evidenceReference:occEvidence.trim()||null,possibleOriginNote:occOrigin.trim()||null,
+    key:occKey.current});
+   occKey.current=newKey();setOccGrams('');setOccSource('');setOccEvidence('');setOccOrigin('');
+   setMessage('Ocorrência física registrada como pendente. Nenhuma baixa, entrada ou custo foi lançado.');
+   setReload(n=>n+1);
+  }catch(e){setError('Ocorrência recusada: '+(e as Error).message)}
+  finally{setBusy(false)}
+ };
  const selectedPrint=prints.find(p=>p.id===selected);
  const confirm=async()=>{
   if(!workspaceId||!selectedPrint||!lot||!valid(mass)||!valid(purge)||!valid(loss)||Number(mass)+Number(purge)+Number(loss)<=0||!valid(good)||!valid(failed)){
@@ -257,6 +291,43 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Peças rejeitadas adicionais<input aria-label="Peças rejeitadas adicionais" type="number" min="0" step="1" value={failed} onChange={e=>setFailed(e.target.value)}/></label>
    </div>
    <button type="button" className="primary-action" disabled={busy||!selected||!lot||!workspaceId||!selectedOutput} onClick={()=>void confirm()}>{busy?'Confirmando…':'Confirmar consumo incremental'}</button>
+  </section>
+  <section className="panel materials-form" aria-label="Ocorrências físicas pendentes">
+   <h3>Ocorrência física pendente — GAP01</h3>
+   <p className="footnote">Registre o que realmente aconteceu, mesmo quando a massa observada exceder o saldo cadastrado ou a bobina não for conhecida. Este registro NÃO é baixa de estoque, confirmação de consumo, regularização financeira ou aprovação.</p>
+   <div className="product-save-fields">
+    <label>Impressão da ocorrência<select aria-label="Impressão da ocorrência" value={occPrint} onChange={e=>{setOccPrint(e.target.value);occKey.current=newKey();}}>
+     <option value="">Selecione</option>{prints.map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
+    <label>Material observado<input aria-label="Material observado" maxLength={150} value={occMaterial} onChange={e=>{setOccMaterial(e.target.value);occKey.current=newKey();}}/>
+     <small>Nome informado do material. Não cria cadastro de estoque nem filamento fictício.</small></label>
+    <label>Massa física observada (g)<input aria-label="Massa física observada" type="number" step=".001" min=".001" value={occGrams} onChange={e=>{setOccGrams(e.target.value);occKey.current=newKey();}}/>
+     <small>Informe a quantidade total da ocorrência, sem reduzir artificialmente para caber no saldo.</small></label>
+    <label>Fonte de aferição<select aria-label="Fonte da ocorrência física" value={occBasis} onChange={e=>{setOccBasis(e.target.value as typeof occBasis);occKey.current=newKey();}}>
+     <option value="weighed">Pesagem</option><option value="slicer">Fatiador</option><option value="informed">Relato</option><option value="other">Outra fonte</option></select></label>
+    <label>Data e hora observadas<input aria-label="Data e hora da ocorrência" type="datetime-local" value={occAt} onChange={e=>{setOccAt(e.target.value);occKey.current=newKey();}}/>
+     <small>Obrigatórias; informe quando ocorreu de fato, sem horário presumido.</small></label>
+    <label>Bobina possivelmente utilizada (opcional)<select aria-label="Bobina possivelmente utilizada" value={occLot} onChange={e=>{setOccLot(e.target.value);occKey.current=newKey();}}>
+     <option value="">Origem não identificada</option>{spools.map(l=><option key={l.id} value={l.id}>{l.label}</option>)}</select>
+     <small>Hipótese, não confirmação. Saldo insuficiente não impede registrar o ocorrido.</small></label>
+    <label>Como foi constatado<input aria-label="Como foi constatado" maxLength={1000} value={occSource} onChange={e=>{setOccSource(e.target.value);occKey.current=newKey();}}/>
+     <small>Descreva pesagem, relato ou outra fonte observada; 10 a 1000 caracteres.</small></label>
+    <label>Referência da evidência (opcional)<input aria-label="Referência da evidência" maxLength={2000} value={occEvidence} onChange={e=>{setOccEvidence(e.target.value);occKey.current=newKey();}}/>
+     <small>Ex.: número do relatório, anotação ou foto já armazenada. Este campo não envia arquivos.</small></label>
+    <label>Possível origem, ainda não comprovada (opcional)<input aria-label="Possível origem da ocorrência" maxLength={1000} value={occOrigin} onChange={e=>{setOccOrigin(e.target.value);occKey.current=newKey();}}/></label>
+   </div>
+   <button type="button" className="primary-action" disabled={busy||!workspaceId||!occPrint}
+    onClick={()=>void recordOccurrence()}>{busy?'Registrando…':'Registrar ocorrência sem baixa'}</button>
+   {occurrences.length>0&&<div>
+    <h4>Ocorrências registradas para análise</h4>
+    <ul aria-label="Ocorrências físicas registradas">
+     {occurrences.map(o=><li key={o.id}>
+      <strong>{o.status==='registered'?'Registrada, aguardando análise':o.status==='under_review'?'Em análise':'Pendente de decisão'}</strong>
+      {' — '}{o.material_name}, {o.quantity_g} g — {new Date(o.observed_at).toLocaleString('pt-BR')}
+      {o.possible_lot_label&&<> — possível bobina: {o.possible_lot_label}</>}
+      <small>Sem baixa e sem custo confirmado. Fonte: {o.source_note}</small>
+     </li>)}
+    </ul>
+   </div>}
   </section>
   <section className="panel materials-form"><h3>Trocar bobina reservada</h3>
    <p className="footnote">A troca ajusta apenas as reservas lógicas. O filamento já consumido continua atribuído à bobina original, com o preço histórico original. A próxima confirmação deve indicar a bobina realmente consumida.</p>
