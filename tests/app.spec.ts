@@ -1403,3 +1403,48 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
  await expect(page.getByTestId('salePrice')).toHaveValue('40');
  expect(readCalls).toContain('read');
 });
+
+
+test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const execution='66666666-6666-4666-8666-666666666666';
+ const writes:string[]=[];
+ const ids=['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','cccccccc-cccc-4ccc-8ccc-cccccccccccc'];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina L4',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return send([{id:execution,status:'partial',printer_id:null,
+   printer_name:'Impressora L4',planned_hours:2,actual_hours:1,notes:null,
+   created_at:'2026-11-23T10:00:00Z',outputs:[
+    {id:ids[0],product_id:ids[0],name:'Guirlanda',planned:1,good:1,failed:0},
+    {id:ids[1],product_id:ids[1],name:'Estrela grande',planned:1,good:1,failed:0},
+    {id:ids[2],product_id:ids[2],name:'Estrela pequena',planned:1,good:1,failed:0}
+   ]}]);
+  if(route.request().method()==='POST'&&!u.includes('mc_list'))writes.push(u);
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ const panel=page.getByRole('region',{name:'Prévia L4 de rateio'});
+ await expect(panel.getByText('SIMULAÇÃO NÃO SALVA.')).toBeVisible();
+ await panel.getByRole('combobox',{name:'Impressão para prévia de rateio'}).selectOption(execution);
+ await expect(page.getByRole('group',{name:'Ações de Prévia L4'})).toBeVisible();
+ await panel.getByRole('combobox',{name:'Categoria de custo L4'}).selectOption('energy');
+ await panel.getByRole('textbox',{name:'Valor da categoria L4'}).fill('10.00');
+ await panel.getByRole('textbox',{name:'Fonte do custo L4'}).fill('Medição total de energia na execução');
+ await panel.getByRole('combobox',{name:'Método de rateio L4'}).selectOption('shared');
+ await panel.getByRole('textbox',{name:'Justificativa do rateio L4'}).fill('Massa como base substituta declarada, sem medição individual');
+ for(const name of ['Guirlanda — boas','Estrela grande — boas','Estrela pequena — boas']){
+  await panel.getByRole('textbox',{name:'Base de rateio '+name}).fill('1');
+ }
+ await panel.getByRole('button',{name:'+ Incluir categoria na prévia'}).click();
+ await page.getByRole('button',{name:'Calcular prévia de rateio'}).click();
+ const result=page.getByRole('status',{name:'Resultado da prévia de rateio'});
+ await expect(result).toContainText('R$ 10,00');
+ await expect(result).toContainText('R$ 3,34');
+ await expect(result).toContainText('R$ 3,33');
+ expect(writes).toEqual([]);
+});
