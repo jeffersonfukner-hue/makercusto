@@ -1196,3 +1196,58 @@ test('GAP01-C: proposta de 50 g não baixa estoque e reenvio usa chave idempoten
  expect(requests[0].p_lot_id).toBe(lot);
  expect(requests[0].p_occurrence_id).toBe(occurrence);
 });
+
+
+test('GAP01-D/E: dossiê mostra reservas alheias e consumo histórico sem acionar ajustes',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const production='66666666-6666-4666-8666-666666666666';
+ const lot='77777777-7777-4777-8777-777777777777',occurrence='99999999-9999-4999-8999-999999999999';
+ const requests:string[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina GAP01',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'partial',printer_id:null,
+   printer_name:'Impressora',planned_hours:null,actual_hours:null,notes:null,
+   created_at:'2026-11-22T20:00:00Z',outputs:[{id:'55555555-5555-4555-8555-555555555555',
+   product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',name:'Peça',planned:2,good:0,failed:0}]}]);
+  if(u.includes('rpc/mc_list_physical_occurrences'))return send([{id:occurrence,
+   production_id:production,material_name:'PETG observado',quantity_g:100,
+   quantity_basis:'weighed',observed_at:'2026-11-21T10:00:00Z',
+   source_note:'Pesagem da produção na oficina.',possible_lot_id:lot,
+   possible_lot_label:'Bobina PETG',evidence_reference:null,possible_origin_note:null,
+   status:'under_review',reported_by:user,created_at:'2026-11-21T10:01:00Z'}]);
+  if(u.includes('rpc/mc_get_physical_occurrence_dossier')){
+   requests.push('dossier');
+   return send({occurrence_id:occurrence,production_id:production,status:'under_review',
+    observed_quantity_g:100,possible_lot_id:lot,possible_lot_label:'Bobina PETG',
+    lot_verification:'unverified',snapshot_type:'read_only_current_state',
+    physical_g:65,reserved_g:15,own_reserved_g:5,other_reserved_g:10,unreserved_g:50,
+    reservations:[],confirmed_consumption_lines:[{consumption_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+     confirmation_id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',lot_id:lot,lot_label:'Bobina PETG',
+     model_g:15,purge_g:0,loss_g:0,total_g:15,unit_cost_snapshot:0.064,
+     confirmed_at:'2026-11-21T10:00:00Z',confirmation_status:'confirmed',author_id:user}],
+    investigation_history:[],pending_adjustment_proposals:[{proposal_id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+     lot_id:lot,proposed_delta_g:20,status:'pending_decision',evidence_reference:'Anotação',
+     created_at:'2026-11-22T10:00:00Z'}],
+    possible_compensation_review:'manual_review_only',reversible_quantity_g:null,
+    financial_adjustment:null,inventory_effect:'none',approval:'not_available',warning:'sem aprovação'});
+  }
+  if(/mc_(confirm_print|reserve_print_lot|propose_inventory_adjustment|reduce_print_plan|cancel_print)/.test(u))
+   throw new Error('Consulta não deve executar transações');
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await page.getByRole('combobox',{name:'Ocorrência para dossiê'}).selectOption(occurrence);
+ await page.getByRole('button',{name:'Consultar dossiê (somente leitura)'}).click();
+ const result=page.getByRole('generic',{name:'Resultado do dossiê GAP01'});
+ await expect(result).toContainText('Reservas de outras ordens: 10 g');
+ await expect(result).toContainText('Saldo físico cadastrado atual: 65 g');
+ await expect(result.getByRole('list',{name:'Consumos históricos vinculados'})).toContainText('15 g');
+ await expect(result.getByRole('list',{name:'Propostas vinculadas ao dossiê'})).toContainText('pendente de decisão');
+ await expect(result).toContainText('Nenhuma quantidade reversível ou ajuste financeiro foi calculado');
+ expect(requests).toEqual(['dossier']);
+});
