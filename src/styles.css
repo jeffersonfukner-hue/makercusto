@@ -411,3 +411,36 @@
 .materials-spool-card dt{color:#aabdd4;font-size:11px}
 .materials-spool-card dd{margin:0;font-weight:650;font-size:12px;text-align:right}
 .materials-spool-card>small{color:#96abc5;font-size:11px;line-height:1.5}
+
+
+/* Ações do formulário ativo: um padrão global, independente da rolagem da ficha. */
+.system-shell:has(.form-action-dock) .system-content{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+.form-action-dock{position:fixed;left:226px;right:0;bottom:0;z-index:45;background:#121d30f5;border-top:1px solid #485b7d;box-shadow:0 -12px 32px #050b1966;padding:12px clamp(12px,2.4vw,36px) calc(12px + env(safe-area-inset-bottom))}
+.form-action-dock-inner{max-width:1480px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px;min-width:0}
+.form-action-dock-context{display:grid;gap:4px;min-width:0;flex:1}
+.form-action-dock-context strong{font-size:clamp(15px,1.6vw,21px);font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+.form-action-dock-context small{color:#aabed7;font-size:11px}
+.form-action-dock-buttons{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:9px;min-width:0}
+.form-action-dock-buttons button{min-height:44px;min-width:108px;border:1px solid #8267d9;border-radius:10px;background:#7053c6;color:#fff;font-size:13px;font-weight:700;padding:10px 15px;cursor:pointer}
+.form-action-dock-buttons button.primary-action{background:#805ee1;border-color:#9d80f7;color:#fff}
+.form-action-dock-buttons button.secondary-action{background:#263752;border-color:#586a87;color:#dce8f8}
+.form-action-dock-buttons button:disabled{opacity:.5;cursor:not-allowed}
+.form-action-dock-buttons button:focus-visible{outline:3px solid #8ed9ff;outline-offset:3px}
+.system-shell.is-collapsed .form-action-dock{left:74px}
+.product-name-feature{display:grid;gap:7px;padding:14px 18px;background:#263854;border:1px solid #50658b;border-radius:12px;min-width:0}
+.product-name-feature span{font-size:11px;color:#b9cbe4;letter-spacing:.03em}
+.product-name-feature strong{font-size:clamp(23px,2.6vw,36px);line-height:1.2;font-weight:800;overflow-wrap:anywhere}
+.product-name-input input{font-size:clamp(18px,1.7vw,23px);font-weight:650;min-height:52px}
+@media(max-width:760px){
+ .form-action-dock,.system-shell.is-collapsed .form-action-dock{left:0}
+ .system-shell:has(.form-action-dock) .system-content{padding-bottom:calc(180px + env(safe-area-inset-bottom))}
+ .form-action-dock-inner{flex-direction:column;align-items:stretch;gap:9px}
+ .form-action-dock-context strong{font-size:17px}
+ .form-action-dock-buttons{justify-content:stretch;flex-wrap:nowrap;overflow-x:auto}
+ .form-action-dock-buttons button{flex:1 0 auto;min-width:0;white-space:nowrap}
+}
+@media(max-width:390px){
+ .form-action-dock-buttons{gap:6px}
+ .form-action-dock-buttons button{font-size:11px;padding:10px 8px}
+ .form-action-dock-context small{font-size:10px}
+}
