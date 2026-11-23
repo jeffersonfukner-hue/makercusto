@@ -704,3 +704,86 @@ test('Impressões: registra L2 sem consumo e mostra a execução na oficina', as
  expect(payload.p_planned_hours).toBeNull();
  await expect(page.getByText('Hélice: planejadas 3, boas 0, rejeitadas 0')).toBeVisible();
 });
+
+
+test('Impressões L3: confirmação incremental mantém chave no retry e respeita deltas informados',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const printer='33333333-3333-4333-8333-333333333333',product='44444444-4444-4444-8444-444444444444';
+ const output='55555555-5555-4555-8555-555555555555',production='66666666-6666-4666-8666-666666666666';
+ const lot='77777777-7777-4777-8777-777777777777';
+ let attempts:Record<string,unknown>[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url();
+  const respond=(value:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(value)});
+  if(u.includes('mc_workspaces?'))return respond([{id:ws,name:'Oficina L3',owner_id:user}]);
+  if(u.includes('mc_printers?'))return respond([{id:printer,workspace_id:ws,name:'Impressora L3',model_id:null,purchase_price:null,average_watts:null,lifetime_hours:null,active:true}]);
+  if(u.includes('mc_products?'))return respond([{id:product,workspace_id:ws,name:'Hélice',sku:null,kind:'component',description:null,sale_price:null,active:true,created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_list_prints'))return respond([{id:production,status:'draft',printer_id:printer,printer_name:'Impressora L3',
+   planned_hours:null,actual_hours:null,notes:null,created_at:new Date().toISOString(),outputs:[{id:output,product_id:product,name:'Hélice',planned:3,good:0,failed:0}]}]);
+  if(u.includes('rpc/mc_list_existing_spools'))return respond([{id:lot,label:'Bobina L3',name:'PETG',
+   initial_grams:100,remaining_grams:100,remaining_cost_estimate:null,cost_status:'unknown',notes:null,created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_confirm_print')){
+   attempts.push(route.request().postDataJSON() as Record<string,unknown>);
+   if(attempts.length===1)return respond({message:'Falha de rede simulada'},503);
+   return respond('88888888-8888-4888-8888-888888888888');
+  }
+  if(u.includes('rpc/mc_list_assemblies')||u.includes('mc_catalog?'))return respond([]);
+  return respond([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await page.getByRole('combobox',{name:'Impressão para confirmar'}).selectOption(production);
+ await page.getByRole('combobox',{name:'Peça confirmada'}).selectOption(output);
+ await page.getByRole('combobox',{name:'Bobina consumida'}).selectOption(lot);
+ await page.getByRole('spinbutton',{name:'Consumo adicional'}).fill('5.125');
+ await page.getByRole('spinbutton',{name:'Purga adicional'}).fill('0.25');
+ await page.getByRole('spinbutton',{name:'Perda adicional'}).fill('0');
+ await page.getByRole('spinbutton',{name:'Peças boas adicionais'}).fill('1');
+ await page.getByRole('spinbutton',{name:'Peças rejeitadas adicionais'}).fill('0');
+ await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('Falha de rede simulada');
+ await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await expect(page.getByText('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.')).toBeVisible();
+ expect(attempts).toHaveLength(2);
+ expect(attempts[0].p_idempotency_key).toBe(attempts[1].p_idempotency_key);
+ expect(attempts[0].p_consumptions).toEqual([{lot_id:lot,model_g:5.125,purge_g:0.25,loss_g:0,basis:'slicer'}]);
+ expect(attempts[0].p_outputs).toEqual([{output_id:output,good:1,failed:0}]);
+});
+
+test('Impressões L3: bloqueia deltas fracionários e quantidade superior ao planejado',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const output='55555555-5555-4555-8555-555555555555',production='66666666-6666-4666-8666-666666666666';
+ const lot='77777777-7777-4777-8777-777777777777';
+ let called=false;
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),respond=(value:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(value)});
+  if(u.includes('mc_workspaces?'))return respond([{id:ws,name:'Oficina L3',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return respond([{id:production,status:'draft',printer_id:null,printer_name:'Impressora',planned_hours:null,
+   actual_hours:null,notes:null,created_at:new Date().toISOString(),outputs:[{id:output,product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',name:'Hélice',planned:3,good:1,failed:0}]}]);
+  if(u.includes('rpc/mc_list_existing_spools'))return respond([{id:lot,label:'Bobina L3',name:'PETG',initial_grams:100,
+   remaining_grams:100,remaining_cost_estimate:null,cost_status:'unknown',notes:null,created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_confirm_print')){called=true;return respond('unexpected');}
+  return respond([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await page.getByRole('combobox',{name:'Impressão para confirmar'}).selectOption(production);
+ await page.getByRole('combobox',{name:'Peça confirmada'}).selectOption(output);
+ await page.getByRole('combobox',{name:'Bobina consumida'}).selectOption(lot);
+ await page.getByRole('spinbutton',{name:'Consumo adicional'}).fill('1');
+ await page.getByRole('spinbutton',{name:'Purga adicional'}).fill('0');
+ await page.getByRole('spinbutton',{name:'Perda adicional'}).fill('0');
+ await page.getByRole('spinbutton',{name:'Peças boas adicionais'}).fill('2.5');
+ await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('números inteiros');
+ await page.getByRole('spinbutton',{name:'Peças boas adicionais'}).fill('3');
+ await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('excede as peças ainda pendentes');
+ expect(called).toBe(false);
+});
