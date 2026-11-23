@@ -67,6 +67,20 @@ begin
  select coalesce(sum(delta),0) into v_after from public.mc_stock_movements where workspace_id=v_ws and lot_id=v_lot;
  if v_after<>7.375 then raise exception 'Tentativa rejeitada alterou estoque'; end if;
 
+
+ -- FAL homologada: um insucesso real pode consumir material e tempo com zero unidades boas.
+ perform public.mc_confirm_print(v_ws,v_print,'l3-failure-'||gen_random_uuid()::text,
+  jsonb_build_array(jsonb_build_object('output_id',v_output,'good',0,'failed',1)),
+  jsonb_build_array(jsonb_build_object('lot_id',v_lot,'model_g',1,'purge_g',0,'loss_g',0,'basis','weighed')),
+  0.5,false);
+ if (select confirmed_good from public.mc_production_outputs where id=v_output)<>1
+    or (select confirmed_failed from public.mc_production_outputs where id=v_output)<>1 then
+   raise exception 'Falha L3 alterou incorretamente o placar de unidades'; end if;
+ if (select actual_hours from public.mc_productions where id=v_print)<>0.5 then
+   raise exception 'Tempo real de falha não acumulado'; end if;
+ select coalesce(sum(delta),0) into v_after from public.mc_stock_movements where workspace_id=v_ws and lot_id=v_lot;
+ if v_after<>6.375 then raise exception 'Falha L3 não consumiu somente 1 g: %',v_after; end if;
+
  perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
  v_denied:=false;
  begin perform public.mc_create_print(v_ws,v_printer,
