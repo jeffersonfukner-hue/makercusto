@@ -411,3 +411,12 @@
 - CI iniciado para commit funcional `1854af63bfc0fc4840e0034690f05dc57d99e7e6`; verificar resultado ao concluir. Sem merge/deploy.
 
 - **CI final desta correção:** #45085517877 `success`, commit `68258aed5bb1ead0b2fa82be72dcc9b29dfb2a22`: 11 unitários, 78 E2E desktop/mobile, build e TypeScript aprovados. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45085517877 . Faltam apenas deploy manual do usuário e homologação visual das três abas.
+
+
+## 22/11/2026 — Auditoria de 39 homologações e início da implementação operacional
+- **Solicitação:** proprietário identificou que muito do planejamento de oito horas não estava implementado; autorizou seguir com auditoria do contrato integral e implementação por lotes, sem merge/deploy.
+- **Fonte oficial:** criada `docs/MATRIZ_ADERENCIA_39_HOMOLOGACOES.md`, com uma linha por política (39 = 5+8+4+6+5+9+2) e evidência/lacuna, sem contar subitens como homologações separadas. Classificação após L1: **17 parciais, 22 sem fluxo demonstrado, zero completas**. Políticas P01–P09 e GAP preservadas, não reabrir decisões.
+- **Primeiro lote funcional L1:** `mc_register_existing_spool` registra bobina física inventariada, sem compra/fornecedor fictício, com massa em gramas, origem e custo opcional; evento + movimento + lote em transação única, sem criar saldo fictício. `mc_list_existing_spools` lista saldo; frontend `MaterialsWorkspace.tsx` habilitado no menu Materiais e usa as RPCs. Usuário precisa informar massa física real para cadastrar a própria bobina.
+- **Segurança:** bloqueadas operações diretas de escrita/truncamento dos clientes sobre eventos/movimentos/lotes, exigida identidade e papel proprietário/gestor; replay idempotente e divergente testados em transações com rollback; preservados os 4 registros reais de produto, nenhum filamento/evento/lote de teste persistido.
+- **Evidências:** migrações `supabase/migrations/20261122210500_initial_spool_inventory.sql` e `20261122211000_spool_inventory_hardening.sql`, documentos e testes E2E, branch `feat/fundacao-makercusto`. CI ainda deve ser conferido ao concluir.
+- **Próximos lotes:** L2 cadastro da impressão do lançador/hastes/hélices, L3 confirmação segura e idempotente, L4 custeio por lote/categoria conforme P05/P06. Proibido tratar P08 como completa pelo inventário inicial; não inventar pesagens, tempos, quantidades, compras ou preços.
