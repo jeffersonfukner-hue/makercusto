@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,
- type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence} from '../data/supabase';
+import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,
+ type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
@@ -25,6 +25,11 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [occBasis,setOccBasis]=useState<'weighed'|'slicer'|'informed'|'other'>('weighed');
  const [occAt,setOccAt]=useState(''),[occLot,setOccLot]=useState('');
  const [occSource,setOccSource]=useState(''),[occEvidence,setOccEvidence]=useState(''),[occOrigin,setOccOrigin]=useState('');
+ const [reviews,setReviews]=useState<PhysicalOccurrenceReview[]>([]);
+ const [reviewOccurrence,setReviewOccurrence]=useState(''),[reviewNext,setReviewNext]=useState<'under_review'|'pending_decision'>('under_review');
+ const [reviewCause,setReviewCause]=useState<PhysicalOccurrenceReview['cause_hypothesis']>('unknown');
+ const [reviewNote,setReviewNote]=useState(''),[reviewEvidence,setReviewEvidence]=useState(''),[reviewLot,setReviewLot]=useState('');
+ const reviewKey=useRef(newKey());
  const occKey=useRef(newKey());
  const [dueReservation,setDueReservation]=useState(''),[dueLocal,setDueLocal]=useState('');
  const [cancelTarget,setCancelTarget]=useState(''),[cancelReason,setCancelReason]=useState('');
@@ -34,8 +39,8 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [reload,setReload]=useState(0),operation=useRef(newKey());
  useEffect(()=>{
   let live=true;if(!workspaceId)return;
-  Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId),listPrintReservations(workspaceId),listPhysicalOccurrences(workspaceId)])
-   .then(([p,pr,s,executions,held,pending])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);setReservations(held);setOccurrences(pending);}})
+  Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId),listPrintReservations(workspaceId),listPhysicalOccurrences(workspaceId),listPhysicalOccurrenceReviews(workspaceId)])
+   .then(([p,pr,s,executions,held,pending,history])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);setReservations(held);setOccurrences(pending);setReviews(history);}})
    .catch(e=>{if(live)setError('Falha ao consultar impressões: '+(e as Error).message);});
   return()=>{live=false};
  },[workspaceId,reload]);
@@ -200,6 +205,28 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Ocorrência recusada: '+(e as Error).message)}
   finally{setBusy(false)}
  };
+ const submitOccurrenceReview=async()=>{
+  const occurrence=occurrences.find(x=>x.id===reviewOccurrence);
+  if(!workspaceId||!occurrence){setError('Selecione uma ocorrência registrada.');return;}
+  const permitted=occurrence.status==='registered'?reviewNext==='under_review':
+    occurrence.status==='under_review'?reviewNext==='pending_decision':reviewNext==='under_review';
+  if(!permitted){setError('Transição de acompanhamento inválida: não é permitido regularizar por investigação.');return;}
+  if(reviewNote.trim().length<10||reviewNote.trim().length>2000||
+    (reviewEvidence.trim()!==''&&(reviewEvidence.trim().length<3||reviewEvidence.trim().length>2000))){
+   setError('Descreva a investigação em 10 a 2000 caracteres; confira a referência de evidência.');return;
+  }
+  setBusy(true);setError('');setMessage('');
+  try{
+   await reviewPhysicalOccurrence(workspaceId,{occurrenceId:occurrence.id,nextStatus:reviewNext,
+    causeHypothesis:reviewCause,findingNote:reviewNote.trim(),
+    evidenceReference:reviewEvidence.trim()||null,possibleLotId:reviewLot||null,key:reviewKey.current});
+   reviewKey.current=newKey();setReviewOccurrence('');setReviewCause('unknown');
+   setReviewNote('');setReviewEvidence('');setReviewLot('');
+   setMessage('Investigação registrada no histórico. Nenhum ajuste de estoque, aprovação ou custo foi realizado.');
+   setReload(n=>n+1);
+  }catch(e){setError('Investigação recusada: '+(e as Error).message)}
+  finally{setBusy(false)}
+ };
  const selectedPrint=prints.find(p=>p.id===selected);
  const confirm=async()=>{
   if(!workspaceId||!selectedPrint||!lot||!valid(mass)||!valid(purge)||!valid(loss)||Number(mass)+Number(purge)+Number(loss)<=0||!valid(good)||!valid(failed)){
@@ -327,6 +354,50 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
       <small>Sem baixa e sem custo confirmado. Fonte: {o.source_note}</small>
      </li>)}
     </ul>
+   </div>}
+   <h4>Investigação da ocorrência — sem regularização</h4>
+   <p className="footnote">Cada investigação acrescenta um evento auditável. A causa selecionada continua sendo hipótese até conferência externa; não altera massa observada, saldo, reserva ou custo.</p>
+   <div className="product-save-fields">
+    <label>Ocorrência para investigar<select aria-label="Ocorrência para investigar" value={reviewOccurrence}
+     onChange={e=>{const id=e.target.value;setReviewOccurrence(id);const item=occurrences.find(x=>x.id===id);
+      setReviewNext(item?.status==='under_review'?'pending_decision':'under_review');
+      setReviewNote('');setReviewEvidence('');setReviewLot('');reviewKey.current=newKey();}}>
+     <option value="">Selecione</option>{occurrences.map(o=><option key={o.id} value={o.id}>{o.material_name} — {o.quantity_g} g — {o.status}</option>)}
+    </select></label>
+    <label>Próxima etapa do acompanhamento<select aria-label="Etapa de acompanhamento" value={reviewNext}
+     onChange={e=>{setReviewNext(e.target.value as typeof reviewNext);reviewKey.current=newKey();}}>
+     {occurrences.find(x=>x.id===reviewOccurrence)?.status==='under_review'?
+      <option value="pending_decision">Pendente de decisão (sem aprovação)</option>:
+      <option value="under_review">Em análise</option>}
+    </select><small>Não existe opção de regularizar ou autorizar movimento de estoque neste fluxo.</small></label>
+    <label>Hipótese investigada<select aria-label="Hipótese da divergência" value={reviewCause}
+     onChange={e=>{setReviewCause(e.target.value as typeof reviewCause);reviewKey.current=newKey();}}>
+     <option value="unknown">Origem ainda desconhecida</option>
+     <option value="unrecorded_input">Possível entrada não contabilizada</option>
+     <option value="lot_change">Possível troca de bobina</option>
+     <option value="quantity_error">Possível erro de contagem</option>
+     <option value="other">Outra hipótese</option></select>
+     <small>Uma hipótese não confirma entrada, compra ou novo custo.</small></label>
+    <label>Relato da investigação<textarea aria-label="Relato da investigação" maxLength={2000} rows={3}
+     value={reviewNote} onChange={e=>{setReviewNote(e.target.value);reviewKey.current=newKey();}}/>
+     <small>10 a 2000 caracteres. Preserve a observação original e detalhe o que foi apurado ou segue incerto.</small></label>
+    <label>Evidência adicional (opcional)<input aria-label="Evidência da investigação" maxLength={2000}
+     value={reviewEvidence} onChange={e=>{setReviewEvidence(e.target.value);reviewKey.current=newKey();}}/>
+     <small>Referência de documento ou foto existente, sem assumir prova suficiente ou enviar arquivo.</small></label>
+    <label>Bobina sob investigação (opcional)<select aria-label="Bobina sob investigação" value={reviewLot}
+     onChange={e=>{setReviewLot(e.target.value);reviewKey.current=newKey();}}>
+     <option value="">Nenhuma bobina comprovada</option>{spools.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
+   </div>
+   <button type="button" className="primary-action" disabled={busy||!reviewOccurrence}
+    onClick={()=>void submitOccurrenceReview()}>{busy?'Registrando…':'Registrar investigação sem ajuste'}</button>
+   {reviews.length>0&&<div>
+    <h4>Histórico de investigações</h4>
+    <ul aria-label="Histórico de investigações GAP01">{reviews.map(r=><li key={r.id}>
+     <strong>{r.next_status==='under_review'?'Em análise':'Pendente de decisão'}</strong>
+     {' — '}{new Date(r.created_at).toLocaleString('pt-BR')} — {r.finding_note}
+     <small>Hipótese: {r.cause_hypothesis}; responsável: {r.author_id}
+      {r.evidence_reference&&'; evidência: '+r.evidence_reference}. Nenhuma regularização aprovada.</small>
+    </li>)}</ul>
    </div>}
   </section>
   <section className="panel materials-form"><h3>Trocar bobina reservada</h3>
