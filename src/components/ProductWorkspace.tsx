@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useState} from 'react';
+import {FormActionDock} from './FormActionDock';
 import {
  createAssembly,listAssemblies,listProducts,saveProductRecord,updateAssembly,listComponentLibrary,saveAssemblyWithComponents,listSavedCalculations,
  type AssemblyPartDraft,type AssemblyRecord,type ProductRecord,type ComponentLibraryItem,type SavedCalculation
@@ -147,7 +148,6 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
    <div><h2>{mode==='catalog'?heading:mode==='view'?'Ficha do produto':mode==='edit'?'Editar produto':'Novo produto'}</h2>
     <p>{mode==='catalog'?'Selecione um cadastro para consultar, editar ou duplicar.':mode==='view'?'Detalhes registrados na oficina.':'Preencha somente os dados que você conhece.'}</p></div>
    <div className="product-workspace-buttons">
-    {mode!=='catalog'&&<button type="button" className="secondary-action" onClick={()=>{setMode('catalog');setSelected(null);setError('');}}>Voltar ao catálogo</button>}
     {mode==='catalog'&&<button type="button" className="primary-action" onClick={()=>reset(tab==='assemblies'?'kit':tab==='component'?'component':'product')}>{tab==='assemblies'?'+ Novo conjunto':tab==='component'?'+ Nova peça':'+ Novo produto'}</button>}
    </div>
   </div>
@@ -166,7 +166,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
   {mode==='view'&&product&&<section className="product-detail">
    <div className="product-detail-head"><div><span className="product-kind">{label(product)}</span><h3>{product.name}</h3>
     <p>{product.description||'Sem descrição cadastrada'}</p></div>
-    <div className="product-workspace-buttons">{product.kind!=='kit'&&onCalculate&&<button type="button" disabled={openingCalculation} onClick={()=>void calculateExisting()}>{openingCalculation?'Consultando cálculo…':'Reutilizar na calculadora'}</button>}<button type="button" onClick={edit}>Editar</button><button type="button" onClick={duplicate}>Duplicar</button></div>
+
    </div>
    <div className="product-detail-stats">
     <div><small>Referência</small><strong>{product.sku??'Não informada'}</strong></div>
@@ -180,10 +180,11 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
    <p className="footnote">Custos informados manualmente são estimativas, não medições auditadas. O total é apresentado somente quando todas as peças têm custo cadastrado.</p></>}
   </section>}
   {(mode==='new'||mode==='edit')&&<div className="product-editor">
+   <div className="product-name-feature"><span>{kind==='kit'?'Conjunto':kind==='component'?'Peça':'Produto'} {mode==='new'?'novo':'em edição'}</span><strong>{name.trim()||'Informe o nome do produto'}</strong></div>
    <div className="product-save-fields">
     <label>Tipo<select aria-label="Tipo de produto" value={kind} disabled={mode==='edit'} onChange={e=>{const next=e.target.value as typeof kind;setKind(next);if(next==='kit')setParts(template());}}>
      <option value="product">Produto</option><option value="component">Peça</option><option value="kit">Conjunto</option></select></label>
-    <label>Nome<input aria-label="Nome do produto" maxLength={150} value={name} onChange={e=>setName(e.target.value)}/></label>
+    <label className="product-name-input product-wide">Nome do produto<input aria-label="Nome do produto" maxLength={150} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex.: Guirlanda natalina"/></label>
     <label>Referência (opcional)<input aria-label="SKU do produto" maxLength={100} value={sku} onChange={e=>setSku(e.target.value)}/></label>
     <label>Preço de venda (opcional)<input aria-label="Preço de venda" type="number" min="0" step="0.01" value={salePrice} onChange={e=>setSalePrice(e.target.value)}/></label>
     <label className="product-wide">Descrição (opcional)<textarea aria-label="Descrição do produto" maxLength={2000} value={description} onChange={e=>setDescription(e.target.value)}/></label>
@@ -215,10 +216,15 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
     <p className="product-cost-preview">Custo do conjunto: <strong>{totalCost(parts)===null?'Não apurado — há peças sem custo':brl(totalCost(parts)!)+' (informado)'}</strong></p>
     <p className="footnote">Peças selecionadas do catálogo usam o custo da ficha original quando houver snapshot; custos desconhecidos continuam desconhecidos. Peças diferentes na mesma placa não recebem rateio automático de tempo ou energia. Não há baixa de estoque; revisões preservam o histórico.</p>
    </div>}
-   <div className="product-workspace-buttons">
-    <button type="button" className="secondary-action" onClick={()=>setMode(mode==='edit'?'view':'catalog')}>Cancelar</button>
-    <button type="button" className="primary-action" disabled={busy||!workspaceId} onClick={()=>void save()}>{busy?'Salvando…':mode==='edit'?'Salvar nova revisão':'Salvar produto'}</button>
-   </div>
   </div>}
+  {mode==='view'&&product&&<FormActionDock title={product.name} subtitle="Ficha do cadastro">
+    <button type="button" className="secondary-action" onClick={()=>{setMode('catalog');setSelected(null);setError('');}}>Voltar</button>
+    {product.kind!=='kit'&&onCalculate&&<button type="button" disabled={openingCalculation} onClick={()=>void calculateExisting()}>{openingCalculation?'Consultando…':'Reutilizar na calculadora'}</button>}
+    <button type="button" onClick={duplicate}>Duplicar</button><button type="button" className="primary-action" onClick={edit}>Editar</button>
+   </FormActionDock>}
+  {(mode==='new'||mode==='edit')&&<FormActionDock title={name.trim()||'Novo cadastro'} subtitle={mode==='edit'?'Editando ficha existente':'Cadastro de '+(kind==='kit'?'conjunto':kind==='component'?'peça':'produto')}>
+    <button type="button" className="secondary-action" onClick={()=>setMode(mode==='edit'?'view':'catalog')}>Cancelar</button>
+    <button type="button" className="primary-action" disabled={busy||!workspaceId||name.trim().length<2} onClick={()=>void save()}>{busy?'Salvando…':mode==='edit'?'Salvar nova revisão':'Salvar produto'}</button>
+   </FormActionDock>}
  </section>;
 }
