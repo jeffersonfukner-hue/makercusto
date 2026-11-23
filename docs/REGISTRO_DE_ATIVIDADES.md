@@ -723,3 +723,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades executadas:** consulta de CI #378 concluído com sucesso; inspeção do módulo `PrintsWorkspace`, padrões e testes; integração do rodapé fixo em oito operações adicionais com acionamento por formulário ativo e salvaguardas contextuais; extensão de testes Playwright sobre os principais fluxos e ausência de botões de outros formulários.
 - **Resultados versionados:** commits `63e36e4edcaf02e3b5d51797e17fdf3f6c38783c`, `24fd5f71c09ef667ff5db3cb2b112da1a444d5fe`, `cf94c4ed7de757c2c0ea1f27ded5928498ecc36c`. Verificação anterior: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45263293703
 - **Pendências e evidências:** CI novo ainda não confirmado; homologação visual pelo proprietário pendente. PR https://github.com/jeffersonfukner-hue/makercusto/pull/1. Não foi feita alteração no banco, merge nem deploy.
+
+## 23/11/2026 — Diagnóstico da CI e definição de responsabilidades
+
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horário efetivo de início e término (Brasília):** não aferidos; **duração efetiva:** não mensurada. Não houve inferência de jornada pelo intervalo das mensagens.
+- **Ações verificadas:** CI #378 `45263293703` aprovado; CI #382 `45264494581` concluído com falha E2E (testes de dock não ativado por seleção automatizada de campos, desktop e mobile). Logs e passos do CI consultados.
+- **Execução:** correção de eventos `onChange` na seleção de formulários do módulo Impressões, com preservação da ação correspondente à seção ativa. Commit `79817b0cfe64f79a09742430691ca054edd2f767`. Documentado contrato: CI/testes/correções são responsabilidades do agente, deploy manual e homologação visual são responsabilidades do proprietário.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45264494581 ; https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Pendências:** resultado final do CI sobre correção; revisão visual após aprovação. Sem merge, deploy, SQL em ambiente operacional ou outros gastos autorizados.
