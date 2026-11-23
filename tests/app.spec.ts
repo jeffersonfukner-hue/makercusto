@@ -847,3 +847,59 @@ test('Reserva P01: disponibilidade desconta reservas, valida saldo e reenvia a m
  expect(attempts[0].p_quantity_g).toBe(40);
  expect(attempts[0].p_lot_id).toBe(lot);
 });
+
+
+test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificativa e preserva chave no retry',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const production='66666666-6666-4666-8666-666666666666',lot='77777777-7777-4777-8777-777777777777';
+ const reservation='88888888-8888-4888-8888-888888888888',output='55555555-5555-4555-8555-555555555555';
+ const cancelAttempts:Record<string,unknown>[]=[];const dueAttempts:Record<string,unknown>[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina P01',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'partial',printer_id:null,
+   printer_name:'Impressora P01',planned_hours:2,actual_hours:0.5,notes:null,
+   created_at:new Date().toISOString(),outputs:[{id:output,product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   name:'Hélice',planned:2,good:1,failed:0}]}]);
+  if(u.includes('rpc/mc_list_existing_spools'))return send([{id:lot,label:'Bobina P01',name:'PETG',
+   initial_grams:100,remaining_grams:90,remaining_cost_estimate:null,cost_status:'unknown',notes:null,
+   created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_list_print_reservations'))return send([{id:reservation,production_id:production,
+   lot_id:lot,lot_label:'Bobina P01',quantity:40,remaining:30,status:'active',due_at:'2020-01-01T00:00:00Z',
+   review_overdue:true,created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_set_print_reservation_due')){
+   dueAttempts.push(route.request().postDataJSON() as Record<string,unknown>);
+   return send(reservation);
+  }
+  if(u.includes('rpc/mc_cancel_print')){
+   cancelAttempts.push(route.request().postDataJSON() as Record<string,unknown>);
+   if(cancelAttempts.length===1)return send({message:'Conexão indisponível'},503);
+   return send(production);
+  }
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await expect(page.getByText(/Revisão vencida \(reserva mantida\)/)).toBeVisible();
+ await page.getByRole('combobox',{name:'Reserva para revisar'}).selectOption(reservation);
+ await page.getByRole('button',{name:'Salvar prazo de revisão'}).click();
+ await expect(page.getByText('Prazo de revisão atualizado; nenhuma reserva foi liberada.')).toBeVisible();
+ expect(dueAttempts).toHaveLength(1);
+ expect(dueAttempts[0].p_due_at).toBe(null);
+ await page.getByRole('button',{name:'Cancelar impressão Hélice'}).click();
+ await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('10 a 1000 caracteres');
+ expect(cancelAttempts).toHaveLength(0);
+ await page.getByRole('textbox',{name:'Justificativa do cancelamento'}).fill('Pedido cancelado após produção parcial');
+ await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('Conexão indisponível');
+ await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
+ await expect(page.getByText('Impressão cancelada. Reservas não utilizadas liberadas; consumos e peças anteriores preservados.')).toBeVisible();
+ expect(cancelAttempts).toHaveLength(2);
+ expect(cancelAttempts[0].p_request_key).toBe(cancelAttempts[1].p_request_key);
+ expect(cancelAttempts[0].p_reason).toBe('Pedido cancelado após produção parcial');
+ expect(cancelAttempts[0].p_production_id).toBe(production);
+});
