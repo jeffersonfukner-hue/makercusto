@@ -466,7 +466,7 @@ test('catálogo abre antes do formulário e salva novo produto na oficina',async
  await page.getByRole('textbox',{name:'SKU do produto'}).fill('GAL-01');
  await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Ficha do produto'})).toBeVisible();
- await expect(page.getByText('Chaveiro Galo')).toBeVisible();
+ await expect(page.locator('.product-detail-head h3')).toHaveText('Chaveiro Galo');
  expect(posted?.p_workspace_id).toBe(workspace);
  expect(posted?.p_kind).toBe('product');
  expect(posted?.p_product_id).toBeNull();
