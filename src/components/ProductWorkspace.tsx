@@ -46,6 +46,13 @@ export function ProductWorkspace({workspaceId,tab}:Props){
    .catch(()=>{if(live)setLibrary([]);});
   return()=>{live=false;};
  },[workspaceId,reload]);
+ useEffect(()=>{
+  if(!library.length)return;
+  setParts(prev=>prev.map(p=>{
+   const source=library.find(x=>x.id===p.product_id);
+   return source?{...p,name:source.name,grams:source.grams,unit_cost:source.unit_cost}:p;
+  }));
+ },[library]);
  const kit=kits.find(x=>x.id===selected);
  const product=items.find(x=>x.id===selected);
  const visible=useMemo(()=>items.filter(x=>
