@@ -946,6 +946,7 @@ test('P01-E: redução parcial preserva peças confirmadas e exige liberação e
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
  await page.getByRole('combobox',{name:'Impressão para redução parcial'}).selectOption(production);
  await page.getByRole('combobox',{name:'Peça a reduzir'}).selectOption(output);
+ await expect(page.getByRole('group',{name:'Ações de Redução parcial'})).toBeVisible();
  await page.getByRole('spinbutton',{name:'Novo total após redução parcial'}).fill('2');
  await page.getByRole('button',{name:'Confirmar redução parcial'}).click();
  await expect(page.getByRole('alert').last()).toContainText('nunca inferior às peças já confirmadas');
@@ -1002,6 +1003,7 @@ test('P01-D: troca de bobina preserva preços antigos e reenvia mesma chave sem 
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
  await page.getByRole('combobox',{name:'Reserva de origem para troca'}).selectOption(reservation);
  await page.getByRole('combobox',{name:'Nova bobina para reservar'}).selectOption(lotB);
+ await expect(page.getByRole('group',{name:'Ações de Trocar bobina reservada'})).toBeVisible();
  await page.getByRole('spinbutton',{name:'Gramas a liberar na troca'}).fill('121');
  await page.getByRole('spinbutton',{name:'Gramas a reservar na nova bobina'}).fill('120');
  await page.getByRole('textbox',{name:'Motivo da troca de bobina'}).fill('Fim da bobina original, origem verificada');
@@ -1121,6 +1123,8 @@ test('GAP01-B/F: investigação mantém observação original, histórico e retr
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
  await expect(page.getByText('Ainda não há evidência de origem, aguardando inspeção.')).toBeVisible();
  await page.getByRole('combobox',{name:'Ocorrência para investigar'}).selectOption(occurrence);
+ await expect(page.getByRole('group',{name:'Ações de Investigação da ocorrência'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Registrar ocorrência sem baixa'})).toHaveCount(0);
  await expect(page.getByRole('combobox',{name:'Etapa de acompanhamento'})).toHaveValue('pending_decision');
  await page.getByRole('button',{name:'Registrar investigação sem ajuste'}).click();
  await expect(page.getByRole('alert').last()).toContainText('10 a 2000 caracteres');
