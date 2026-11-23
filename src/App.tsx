@@ -4,6 +4,7 @@ import {SmartField,formatCatalogName} from './components/SmartField';
 import {FilamentProfilePanel} from './components/FilamentProfilePanel';
 import {ProductSavePanel} from './components/ProductSavePanel';
 import {ProductWorkspace} from './components/ProductWorkspace';
+import {MaterialsWorkspace} from './components/MaterialsWorkspace';
 import {AssemblyPanel} from './components/AssemblyPanel';
 import {WorkshopDashboard} from './components/WorkshopDashboard';
 import {SystemNavigation,type ProductTab,type OverviewTab} from './components/SystemNavigation';
@@ -85,7 +86,7 @@ export default function App(){
  const [workspaceId,setWorkspaceId]=useState<string|null>(null);
  const [accountError,setAccountError]=useState('');
  const [workspaceName,setWorkspaceName]=useState('Minha oficina');
- const [activeSection,setActiveSection]=useState<'overview'|'products'|'assemblies'|'calculator'>('overview');
+ const [activeSection,setActiveSection]=useState<'overview'|'products'|'assemblies'|'materials'|'calculator'>('overview');
  const [productTab,setProductTab]=useState<ProductTab>('all');
  const [overviewTab,setOverviewTab]=useState<OverviewTab>('general');
  const [cloudBusy,setCloudBusy]=useState(false);
@@ -305,6 +306,7 @@ export default function App(){
   </>}
   {!session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} onLogin={()=>setAuthOpen(true)}/>}
   {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
+  {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'}/>} 
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>
