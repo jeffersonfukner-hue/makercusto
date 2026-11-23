@@ -810,3 +810,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** commits `691fb40d9488cad231bc827d120b14a9f26707f2`, `60ce53ddf6bc237e508932622d76952eac25ea5e`, `ad06a274a9da875e1a669528d3d4778fa29a9bfc`, `72290216ce05826407f60a8e279dac3fd841c9c3`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1. CI no momento de edição: aguardando verificação do commit final.
 - **Resultados:** integração adicionada à branch; nenhum merge, deploy ou alteração no Supabase operacional.
 - **Pendências:** aprovação integral CI no HEAD, migrações operacionais somente após autorização explícita, e fechamento imutável P05/P06/P07/P09 ainda não implementado.
+
+
+## 23/11/2026 — L4-G04: agrupamento exato de custos por categoria e peça
+
+- **Projeto:** MakerCusto. **Data:** 23/11/2026 (Brasília). **Horários de início/término:** não aferidos. **Duração efetiva:** não medida nem inferida pela conversa.
+- **Atividades executadas:** leitura de AGENTS.md, README, arquitetura, padrões, continuidade, contratos P05/P06/P09 e motores existentes; identificação do fechamento por linha como incompatível com fechamento agregado por categoria; implementação de conciliador puro por origem racional imutável, destino explicitamente atribuível e maior resto de centavos; teste unitário de subcentavos/multicor/perdas/custo desconhecido; conexão da consulta exata read-only com a tela de Impressões e teste de interface.
+- **Evidências:** commits `9bc331403b5b8432d5b3b47b0829870a1289234e`, `95e515476a79032ec0bdc0879454d217a65c705a`, `595080d8ef735b648313613197e8a7f375130cff`, `b74761278c0aa17ba89796077411f7e285ea474b`, `edcfd77d361dad300f5445f0b88f6a7613a57b13`, `7d76d663e80fc7d120a2a0440f778c55169c1005`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1. O CI final será verificado no HEAD após este registro.
+- **Resultados:** código, testes e integração em branch sem merge; não se gerou snapshot final nem migração nova. Nenhuma alteração de dados operacionais ou deploy.
+- **Pendências:** CI final, conciliação das demais categorias com fontes comprovadas, autorização/imutabilidade do fechamento e compensações P09, migrações separadamente autorizadas, homologação visual.
