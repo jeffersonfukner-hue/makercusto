@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
-import { listProducts, saveCalculatedProduct, type ProductRecord, type Session } from '../data/supabase';
+import { listProducts, saveCalculatedProduct, listSavedCalculations, type ProductRecord, type Session, type SavedCalculation } from '../data/supabase';
 import type { CostInput, CostResult } from '../domain/cost';
 
-type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:()=>void };
+type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:()=>void; onLoadCalculation?:(draft:SavedCalculation)=>void };
 const currency=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
-export function ProductSavePanel({session,workspaceId,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly}:Props){
+export function ProductSavePanel({session,workspaceId,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly,onLoadCalculation}:Props){
  const [name,setName]=useState('');
  const [sku,setSku]=useState('');
  const [description,setDescription]=useState('');
  const [kind,setKind]=useState<'product'|'component'>('product');
  const [lastSavedKind,setLastSavedKind]=useState<'product'|'component'>('product');
  const [items,setItems]=useState<ProductRecord[]>([]);
+ const [savedCalculations,setSavedCalculations]=useState<SavedCalculation[]>([]);
+ const [selectedCalculation,setSelectedCalculation]=useState('');
  const [busy,setBusy]=useState(false);
  const [loading,setLoading]=useState(false);
  const [message,setMessage]=useState('');
@@ -24,6 +26,13 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    .catch(e=>{if(live)setError('Não foi possível consultar produtos: '+(e as Error).message);})
    .finally(()=>{if(live)setLoading(false);});
   return ()=>{live=false;};
+ },[session?.user.id,workspaceId,refresh]);
+ useEffect(()=>{
+  let live=true;
+  if(!session||!workspaceId){setSavedCalculations([]);return;}
+  void listSavedCalculations(workspaceId).then(rows=>{if(live)setSavedCalculations(rows);})
+    .catch(()=>{if(live)setSavedCalculations([]);});
+  return()=>{live=false;};
  },[session?.user.id,workspaceId,refresh]);
  const visibleItems=filter==='component'?items.filter(item=>item.kind==='component'):items;
  const save=async()=>{
@@ -50,6 +59,21 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   {!session?<div><p className="footnote">Entre na sua conta para salvar e consultar os produtos na nuvem.</p>
    <button type="button" className="primary-action" onClick={onLogin}>Entrar para salvar produto</button></div>:
   <div className="product-save-content">
+   {savedCalculations.length>0&&onLoadCalculation&&<div className="product-reuse-panel" aria-label="Reutilizar cálculo salvo">
+    <h3>Reutilizar dados de uma peça ou produto</h3>
+    <div className="product-save-fields">
+     <label>Escolha um cálculo salvo<select aria-label="Cálculo salvo para reutilizar" value={selectedCalculation}
+      onChange={e=>setSelectedCalculation(e.target.value)}>
+      <option value="">Selecione</option>{savedCalculations.map(x=><option key={x.snapshot_id} value={x.snapshot_id}>
+       {x.kind==='component'?'Peça: ':'Produto: '}{x.name}
+      </option>)}</select></label>
+     <button type="button" disabled={!selectedCalculation} onClick={()=>{
+      const item=savedCalculations.find(x=>x.snapshot_id===selectedCalculation);
+      if(item)onLoadCalculation(item);
+     }}>Carregar dados na calculadora</button>
+    </div>
+    <p className="footnote">Reaproveita parâmetros do cálculo escolhido. A máquina atual pode alterar o novo resultado; o custo histórico salvo não é reescrito.</p>
+   </div>}
    <div className="product-save-fields">
     <label>Nome do produto <input aria-label="Nome do produto" maxLength={150} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex.: Chaveiro galo" /></label>
     <label>SKU / referência (opcional) <input aria-label="SKU do produto" maxLength={100} value={sku} onChange={e=>setSku(e.target.value)} placeholder="Ex.: CH-GALO-01" /></label>
