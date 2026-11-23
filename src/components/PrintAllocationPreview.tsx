@@ -5,7 +5,7 @@ import {FormActionDock} from './FormActionDock';
 
 type Props={prints:PrintRecord[];active:boolean;onActivate:()=>void};
 type OutputOption={id:string;name:string;outcome:'good'|'rejected';quantity:number};
-const formatCents=(cents:string)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(BigInt(cents))/100);
+const formatCents=(cents:string)=>{const value=BigInt(cents);return 'R$ '+new Intl.NumberFormat('pt-BR').format(value/100n)+','+(value%100n).toString().padStart(2,'0');};
 const categories: {id:AllocationCategory;label:string}[]=[
  {id:'model',label:'Filamento do modelo'},{id:'purge',label:'Purga separada'},
  {id:'energy',label:'Energia'},{id:'machine',label:'Máquina'},
