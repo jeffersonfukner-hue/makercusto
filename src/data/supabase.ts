@@ -171,3 +171,23 @@ export const recordPhysicalOccurrence=(workspaceId:string,draft:{
  p_evidence_reference:draft.evidenceReference,p_possible_origin_note:draft.possibleOriginNote,
  p_idempotency_key:draft.key
 });
+
+export type PhysicalOccurrenceReview={
+ id:string;occurrence_id:string;prior_status:'registered'|'under_review'|'pending_decision';
+ next_status:'under_review'|'pending_decision';
+ cause_hypothesis:'unrecorded_input'|'lot_change'|'quantity_error'|'other'|'unknown';
+ finding_note:string;evidence_reference:string|null;possible_lot_id:string|null;
+ possible_lot_label:string|null;author_id:string;created_at:string;
+};
+export const listPhysicalOccurrenceReviews=(workspaceId:string)=>
+ api<PhysicalOccurrenceReview[]>('rpc/mc_list_physical_occurrence_reviews','POST',{p_workspace_id:workspaceId});
+export const reviewPhysicalOccurrence=(workspaceId:string,draft:{
+ occurrenceId:string;nextStatus:'under_review'|'pending_decision';
+ causeHypothesis:PhysicalOccurrenceReview['cause_hypothesis'];
+ findingNote:string;evidenceReference:string|null;possibleLotId:string|null;key:string
+})=>api<string>('rpc/mc_review_physical_occurrence','POST',{
+ p_workspace_id:workspaceId,p_occurrence_id:draft.occurrenceId,
+ p_next_status:draft.nextStatus,p_cause_hypothesis:draft.causeHypothesis,
+ p_finding_note:draft.findingNote,p_evidence_reference:draft.evidenceReference,
+ p_possible_lot_id:draft.possibleLotId,p_request_key:draft.key
+});
