@@ -68,6 +68,13 @@ export const saveCalculatedProduct=(workspaceId:string,draft:CalculatedProductDr
  p_sale_price:draft.salePrice,p_quantity:draft.quantity,p_total_cost:draft.totalCost,p_parameters:draft.parameters
 });
 
+export const appendProductCalculation=(workspaceId:string,productId:string,requestKey:string,draft:CalculatedProductDraft)=>
+ api<string>('rpc/mc_append_product_calculation','POST',{
+  p_workspace_id:workspaceId,p_product_id:productId,p_request_key:requestKey,
+  p_sale_price:draft.salePrice,p_quantity:draft.quantity,p_total_cost:draft.totalCost,
+  p_parameters:draft.parameters
+ });
+
 export type AssemblyPart = {id:string;product_id?:string|null;name:string;quantity:number;notes:string|null;grams:string|null;unit_cost:number|null;cost_source?:'linked'|'manual'|'legacy'};
 export type AssemblyRecord = {id:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:AssemblyPart[];revision:number;total_cost:number|null;cost_status:'unknown'|'estimated'|'confirmed'};
 export type AssemblyPartDraft = {id?:string;product_id?:string|null;name:string;quantity:number;notes:string;grams:number|null;unit_cost?:number|null};
