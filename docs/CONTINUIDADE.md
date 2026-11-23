@@ -656,3 +656,9 @@
 - Diagnóstico do CI #382: E2E falhou em seis cenários duplicados desktop/mobile porque seleção programática nos campos não disparava foco/clique capturado; o dock não era ativado. A causa e o erro foram identificados pelos logs; não foi um erro de SQL ou build.
 - Correção: acionar o formulário ativo também via `onChange` nos seletores principais de Impressões e operações avançadas, mantendo foco/clique como alternativa de interação.
 - Referência da correção: commit `79817b0cfe64f79a09742430691ca054edd2f767`; CI correspondente #383 em andamento no momento deste registro. A aplicação de SQL no Supabase operacional e publicação permanecem não autorizadas.
+
+## 23/11/2026 — Contrato permanente inserido no AGENTS.md
+
+- Por solicitação expressa do proprietário, a divisão de responsabilidades e os dois comandos de deploy foram promovidos a **regra obrigatória de leitura em novos chats** em `AGENTS.md`, seção “Regra obrigatória de comunicação e responsabilidades”. Isto complementa o registro cronológico anterior e evita depender da memória da conversa.
+- Padrão de próxima ação: **“Minha ação (agente)”** e **“Sua ação (usuário)”**, sendo explícito **“Sua ação: nenhuma”** quando não houver intervenção requerida. Conferir CI, analisar logs, corrigir código e testar pertencem ao agente. Somente indicar deploy manual ao proprietário após CI integral aprovado no mesmo SHA, com link e itens de homologação.
+- Nenhuma autorização para deploy, merge, produção ou alteração de banco foi inferida desta solicitação documental.
