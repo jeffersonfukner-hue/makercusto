@@ -1408,7 +1408,7 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
 test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',async ({page})=>{
  const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
  const execution='66666666-6666-4666-8666-666666666666';
- const writes:string[]=[];
+ const writes:string[]=[];const reads:string[]=[];
  const ids=['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','cccccccc-cccc-4ccc-8ccc-cccccccccccc'];
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
@@ -1423,6 +1423,26 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
     {id:ids[1],product_id:ids[1],name:'Estrela grande',planned:1,good:1,failed:0},
     {id:ids[2],product_id:ids[2],name:'Estrela pequena',planned:1,good:1,failed:0}
    ]}]);
+  if(u.includes('rpc/mc_get_print_consumption_sources')){
+   reads.push(u);
+   return send({execution_id:execution,read_only:true,financially_final:false,
+    snapshot_precision:'unit_cost_snapshot:6dp',lines:[
+    {consumption_id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+     confirmation_id:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',lot_id:'ffffffff-ffff-4fff-8fff-ffffffffffff',
+     lot_label:'PETG branco',cost_status:'estimated',quantity_basis:'weighed',
+     model_g:'15',purge_g:'0',loss_g:'0',unit_cost_snapshot:'0.064000',
+     model_cost_brl:'0.960000',purge_cost_brl:'0',loss_cost_brl:'0',
+     author_id:user,confirmed_at:'2026-11-23T10:00:00Z',
+     precision_note:'Preço unitário histórico limitado a 6 casas decimais'},
+    {consumption_id:'99999999-9999-4999-8999-999999999999',
+     confirmation_id:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',lot_id:'abababab-abab-4aba-8aba-abababababab',
+     lot_label:'PETG sem preço',cost_status:'unknown',quantity_basis:'estimated',
+     model_g:'3',purge_g:'0',loss_g:'0',unit_cost_snapshot:null,
+     model_cost_brl:null,purge_cost_brl:null,loss_cost_brl:null,
+     author_id:user,confirmed_at:'2026-11-23T10:00:00Z',
+     precision_note:'Sem preço conhecido'}
+    ]});
+  }
   if(route.request().method()==='POST'&&!u.includes('mc_list'))writes.push(u);
   return send([]);
  });
@@ -1446,5 +1466,16 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
  await expect(result).toContainText('R$ 10,00');
  await expect(result).toContainText('R$ 3,34');
  await expect(result).toContainText('R$ 3,33');
+ await expect(panel.getByRole('list',{name:'Fontes de consumo L4'})).toContainText('PETG branco');
+ await expect(panel.getByRole('list',{name:'Fontes de consumo L4'})).toContainText('custo desconhecido');
+ await panel.getByRole('button',{name:'Usar modelo no rateio'}).click();
+ await expect(panel.getByRole('textbox',{name:'Valor da categoria L4'})).toHaveValue('0.960000');
+ await expect(panel.getByRole('textbox',{name:'Valor da categoria L4'})).toHaveAttribute('readonly','');
+ await panel.getByRole('combobox',{name:'Método de rateio L4'}).selectOption('direct');
+ await panel.getByRole('textbox',{name:'Base de rateio Guirlanda — boas'}).fill('1');
+ await panel.getByRole('button',{name:'+ Incluir categoria na prévia'}).click();
+ await page.getByRole('button',{name:'Calcular prévia de rateio'}).click();
+ await expect(result).toContainText('R$ 10,96');
+ expect(reads).toHaveLength(1);
  expect(writes).toEqual([]);
 });
