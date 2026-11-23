@@ -481,3 +481,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** arquivos gravados na branch `feat/fundacao-makercusto` em commits de `658e0875de3f47a8bc7cb5350fcd8cb1d1b73e7c` até os commits desta etapa. Nenhum dado de produção real foi gravado; sem merge ou deploy.
 - **Pendências:** conferir CI do HEAD, testar migração em ambiente isolado com rollback (idempotência, estoque, concorrência, acesso cruzado); aplicar SQL apenas após validação e autorização apropriadas; homologação visual; rateio e encerramento L4. Sem testes SQL executados até este registro.
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; migração `supabase/migrations/20261122212500_print_execution_l2_l3.sql`; teste `tests/app.spec.ts`; GitHub Actions da branch.
+
+
+### Resultado do CI do L2/L3 — 22/11/2026
+- **Observação final (Brasília):** 21:23. **Duração efetiva comprovada:** não aferida; não converter intervalo de observação em horas.
+- **Primeira execução:** #45087914358 falhou em quatro testes de interface (seletores/expectativa de Impressões ainda desabilitada), mantendo 78 testes aprovados; comportamento corrigido pelo commit `ca7ef53028f99795b4fc71d43f2d5af76b2dfbb6`.
+- **Execução final funcional:** #45088224296 **success**, commit `ca7ef53028f99795b4fc71d43f2d5af76b2dfbb6`, TypeScript, 11 testes unitários, build e **82/82 testes Playwright desktop/mobile** aprovados.
+- **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45088224296
+- **Limites:** frontend testado com REST simulado; migração L2/L3 não aplicada nem testada transacionalmente no Supabase; sem confirmação de estoque real, merge ou deploy. Nenhuma política das 39 pode ser reclassificada como integralmente comprovada por esse CI.
