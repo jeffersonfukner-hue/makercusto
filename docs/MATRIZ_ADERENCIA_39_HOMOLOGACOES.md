@@ -187,3 +187,9 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - CI #45113967113 `success` (SHA funcional `926ef0f9eb6da8a246867b7a28f968af18f76d15`): 98/98 Playwright desktop/mobile, PostgreSQL descartável com rollback, isolamento por oficina, concorrência, tipos, unitários e build. Investigação append-only com hipótese/evidência/autor, observação original preservada, estados `registered/under_review/pending_decision` e replay idempotente sem estoque, custo ou aprovação extraordinária.
 - **A GAP01 permanece P:** não inclui avaliação da suficiência da prova, proposta de ajuste/compensação, autorização de regularização, custo financeiro, estorno, nem aceite visual ou JWT real. **Matriz global permanece 22 P, 17 A, 0 C**; preservar integralmente as 39 homologações.
 - Migração GAP01-B/F ainda **não aplicada ao Supabase MakerCusto operacional**, sem merge ou deploy.
+
+
+## GAP01-C — proposta de correção sem execução — 23/11/2026
+- CI #45190758841 `success`, SHA funcional `edc9bd898422d476d152298c8654aa4e022b5110`: **100/100 Playwright**, SQL PostgreSQL efêmero com rollback, tipos, unitários, build, concorrência e isolamento por oficina. Proposta de delta em gramas, associada a ocorrência investigada, lote real, justificativa, origem e evidência, com auditoria/idempotência. Simulação +50 g em estoque 80 g permaneceu 80 g sem custo nem baixa.
+- GAP01 continua **P**, pois não há aprovação, critérios mínimos de evidência, correção efetiva, estornos GAP01-E, JWT real ou homologação visual; **22 P, 17 A, 0 C** no total de 39 decisões, sem mudanças nas homologações.
+- Migração GAP01-C apenas na branch e CI, não aplicada no Supabase operacional. Sem merge/deploy.
