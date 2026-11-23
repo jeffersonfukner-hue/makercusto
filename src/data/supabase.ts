@@ -191,3 +191,22 @@ export const reviewPhysicalOccurrence=(workspaceId:string,draft:{
  p_finding_note:draft.findingNote,p_evidence_reference:draft.evidenceReference,
  p_possible_lot_id:draft.possibleLotId,p_request_key:draft.key
 });
+
+export type InventoryAdjustmentProposal={
+ id:string;occurrence_id:string;lot_id:string;lot_label:string;
+ proposed_delta_g:number;cause:'unrecorded_physical_input'|'verified_count_error';
+ origin_note:string;justification:string;evidence_reference:string;
+ status:'pending_decision';proposed_by:string;created_at:string
+};
+export const listInventoryAdjustmentProposals=(workspaceId:string)=>
+ api<InventoryAdjustmentProposal[]>('rpc/mc_list_inventory_adjustment_proposals','POST',{p_workspace_id:workspaceId});
+export const proposeInventoryAdjustment=(workspaceId:string,draft:{
+ occurrenceId:string;lotId:string;deltaGrams:number;
+ cause:InventoryAdjustmentProposal['cause'];originNote:string;
+ justification:string;evidenceReference:string;key:string
+})=>api<string>('rpc/mc_propose_inventory_adjustment','POST',{
+ p_workspace_id:workspaceId,p_occurrence_id:draft.occurrenceId,p_lot_id:draft.lotId,
+ p_delta_g:draft.deltaGrams,p_cause:draft.cause,p_origin_note:draft.originNote,
+ p_justification:draft.justification,p_evidence_reference:draft.evidenceReference,
+ p_request_key:draft.key
+});
