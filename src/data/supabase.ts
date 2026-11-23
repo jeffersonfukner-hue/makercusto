@@ -245,3 +245,10 @@ export const getPhysicalOccurrenceDossier=(workspaceId:string,occurrenceId:strin
  api<PhysicalOccurrenceDossier>('rpc/mc_get_physical_occurrence_dossier','POST',{
  p_workspace_id:workspaceId,p_occurrence_id:occurrenceId
 });
+
+export type SavedCalculation={
+ product_id:string;name:string;kind:'component'|'product';sku:string|null;
+ snapshot_id:string;unit_cost:number|null;saved_input:Record<string,unknown>;saved_at:string
+};
+export const listSavedCalculations=(workspaceId:string)=>
+ api<SavedCalculation[]>('rpc/mc_list_saved_calculations','POST',{p_workspace_id:workspaceId});
