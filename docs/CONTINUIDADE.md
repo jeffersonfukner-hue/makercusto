@@ -638,3 +638,13 @@
 - `src/components/PrintsWorkspace.tsx`: ações principais Registrar impressão, Registrar reserva e Confirmar consumo incremental usam dock contextual ligado à seção ativa por foco/clique. Sem alterar chamadas RPC ou regras de estoque. Em operações avançadas da mesma tela o dock das três ações principais é ocultado ao receber foco/clique, evitando executar ação de outro formulário.
 - Limite conhecido: ações avançadas (GAP01, troca de bobina, redução, cancelamento, dossiê e revisão de prazo) ainda usam botões próximos aos próprios formulários. **Padronização global completa ainda pendente**; requer um controlador de ações por formulário e testes específicos de operações críticas.
 - CI posterior e verificação visual responsiva pendentes nesta edição. Sem merge, deploy ou alterações de banco.
+
+
+## 23/11/2026 — Barra de ações avançadas em Impressões
+
+- Verificação inicial: CI #378 (GitHub Actions run `45263293703`) concluída com **sucesso**; o conjunto anterior de componentes e testes E2E passou.
+- Implementação em `src/components/PrintsWorkspace.tsx`: a mesma barra reutilizável `FormActionDock` agora atende os formulários avançados de **prazo de revisão da reserva, ocorrência física GAP01, investigação de ocorrência, proposta de inventário, dossiê de conciliação, troca de bobina reservada, redução parcial e confirmação de cancelamento de impressão**, além das três operações já existentes.
+- Contexto ativado pelo foco/clique no formulário correspondente; seções compostas (reserva + prazo, ocorrência + investigação) distinguem ações do subformulário. Ao selecionar “Cancelar impressão”, contexto do rodapé passa explicitamente para confirmação de cancelamento, com opção de voltar sem cancelar.
+- Preservadas as condições de desabilitar cada ação, chamadas já existentes, chaves de idempotência, regras de estoque e impossibilidade de aprovação ou ajuste no dossiê. Sem refatoração de SQL/backend.
+- E2E reforçado em `tests/app.spec.ts` para presença do dock correto e ausência de ação alheia em fluxos de revisão de prazo, cancelamento, registro de ocorrência, investigação, proposta, dossiê, troca de bobina e redução.
+- **Pendente:** CI do HEAD atualizado e homologação visual nos tamanhos desktop/mobile; publicação/migração operacional continuam proibidas sem autorização específica.
