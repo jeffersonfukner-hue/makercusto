@@ -743,6 +743,7 @@ test('Impressões L3: confirmação incremental mantém chave no retry e respeit
  await page.getByRole('spinbutton',{name:'Perda adicional'}).fill('0');
  await page.getByRole('spinbutton',{name:'Peças boas adicionais'}).fill('1');
  await page.getByRole('spinbutton',{name:'Peças rejeitadas adicionais'}).fill('0');
+ await page.getByRole('spinbutton',{name:'Tempo real adicional'}).fill('1.25');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
  await expect(page.getByRole('alert').last()).toContainText('Falha de rede simulada');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
@@ -751,6 +752,7 @@ test('Impressões L3: confirmação incremental mantém chave no retry e respeit
  expect(attempts[0].p_idempotency_key).toBe(attempts[1].p_idempotency_key);
  expect(attempts[0].p_consumptions).toEqual([{lot_id:lot,model_g:5.125,purge_g:0.25,loss_g:0,basis:'slicer'}]);
  expect(attempts[0].p_outputs).toEqual([{output_id:output,good:1,failed:0}]);
+ expect(attempts[0].p_actual_hours).toBe(1.25);
 });
 
 test('Impressões L3: bloqueia deltas fracionários e quantidade superior ao planejado',async ({page})=>{
@@ -785,5 +787,10 @@ test('Impressões L3: bloqueia deltas fracionários e quantidade superior ao pla
  await page.getByRole('spinbutton',{name:'Peças boas adicionais'}).fill('3');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
  await expect(page.getByRole('alert').last()).toContainText('excede as peças ainda pendentes');
+ await page.getByRole('spinbutton',{name:'Peças boas adicionais'}).fill('0');
+ await page.getByRole('spinbutton',{name:'Peças rejeitadas adicionais'}).fill('1');
+ await page.getByRole('spinbutton',{name:'Tempo real adicional'}).fill('1.12345');
+ await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('até quatro casas decimais');
  expect(called).toBe(false);
 });
