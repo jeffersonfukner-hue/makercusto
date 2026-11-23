@@ -79,7 +79,7 @@ export function reconcileExactMaterialCategories(input:{
   const amount=origin.original_total_cost_brl===null?null:parseExactDecimal(origin.original_total_cost_brl);
   if((amount===null)!==(origin.status==='unknown'))throw new Error('Status e custo de origem inconsistentes.');
   for(const category of categories){
-   const mass=parseExactDecimal(origin[category+'_g']);
+   const mass=parseExactDecimal(category==='model'?origin.model_g:category==='purge'?origin.purge_g:origin.loss_g);
    if(mass.numerator===0n)continue;
    const sourceId=key(origin.consumption_id,category);
    expected.add(sourceId);
