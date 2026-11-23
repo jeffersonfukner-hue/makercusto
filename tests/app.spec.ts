@@ -615,3 +615,51 @@ test('login transforma a página em sistema com menu lateral e painel de oficina
   await expect(button).toBeVisible();
  }
 });
+
+test('bobina física: inventário na oficina sem criar compra fictícia',async({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111';
+ const user='22222222-2222-4222-8222-222222222222';
+ const spools:{id:string;name:string;label:string;initial_grams:number;remaining_grams:number;remaining_cost_estimate:number|null;cost_status:string;notes:string|null;created_at:string}[]=[];
+ let registered:Record<string,unknown>|null=null;
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user,email:'maker@example.test'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=route.request().url();
+  const respond=(data:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+  if(url.includes('/mc_workspaces?'))return respond([{id:workspace,name:'Oficina de testes',owner_id:user}]);
+  if(url.includes('/mc_catalog?')||url.includes('/mc_printers?')||url.includes('/mc_products?'))return respond([]);
+  if(url.includes('/rpc/mc_list_assemblies'))return respond([]);
+  if(url.includes('/rpc/mc_list_existing_spools'))return respond(spools);
+  if(url.includes('/rpc/mc_register_existing_spool')){
+   registered=route.request().postDataJSON() as Record<string,unknown>;
+   spools.push({id:'33333333-3333-4333-8333-333333333333',name:String(registered.p_filament_name),
+    label:String(registered.p_label),initial_grams:Number(registered.p_grams),
+    remaining_grams:Number(registered.p_grams),remaining_cost_estimate:null,cost_status:'unknown',
+    notes:'Origem da quantidade: measured',created_at:new Date().toISOString()});
+   return respond(spools[0].id);
+  }
+  return respond([]);
+ });
+ await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Materiais',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Filamentos e bobinas'})).toBeVisible();
+ await expect(page.getByText('Nenhuma bobina inventariada nesta oficina.')).toBeVisible();
+ await page.getByRole('button',{name:'+ Inventariar bobina'}).click();
+ await page.getByRole('textbox',{name:'Nome do filamento'}).fill('PETG Masterprint Branco');
+ await page.getByRole('textbox',{name:'Identificação da bobina'}).fill('Bobina PETG-01');
+ await page.getByRole('spinbutton',{name:'Saldo físico atual'}).fill('325.125');
+ await page.getByRole('combobox',{name:'Origem da quantidade'}).selectOption('measured');
+ await expect(page.getByRole('spinbutton',{name:'Valor estimado do saldo'})).toBeEmpty();
+ await page.getByRole('button',{name:'Registrar bobina existente'}).click();
+ await expect(page.getByRole('status')).toContainText('Bobina inventariada');
+ await expect(page.getByRole('heading',{name:'Bobina PETG-01'})).toBeVisible();
+ await expect(page.getByText('325,125 g').first()).toBeVisible();
+ expect(registered).not.toBeNull();
+ const sent=registered as unknown as Record<string,unknown>;
+ expect(sent.p_workspace_id).toBe(workspace);
+ expect(sent.p_remaining_cost).toBeNull();
+ expect(sent.p_quantity_basis).toBe('measured');
+ expect(String(sent.p_idempotency_key).length).toBeGreaterThanOrEqual(10);
+});
