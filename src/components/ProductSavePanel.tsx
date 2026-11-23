@@ -9,6 +9,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
  const [sku,setSku]=useState('');
  const [description,setDescription]=useState('');
  const [kind,setKind]=useState<'product'|'component'>('product');
+ const [lastSavedKind,setLastSavedKind]=useState<'product'|'component'>('product');
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [busy,setBusy]=useState(false);
  const [loading,setLoading]=useState(false);
@@ -37,7 +38,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     salePrice:input.salePrice,quantity:input.quantity,totalCost:result.lotCost,
     parameters:{origin:'calculator',source:'user-and-estimates',saved_input:input,calculated_result:result}
    });
-   setName('');setSku('');setDescription('');setKind('product');
+   setLastSavedKind(kind);setName('');setSku('');setDescription('');setKind('product');
    setMessage('Produto, versão inicial e custo estimado salvos na sua oficina.');
    setRefresh(n=>n+1);
   }catch(e){setError('Não foi possível salvar o produto: '+(e as Error).message);}
@@ -60,7 +61,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    <button className="primary-action" type="button" disabled={busy||!result||!workspaceId} onClick={()=>void save()}>{busy?'Salvando produto…':'Salvar produto e custo'}</button>
    <div aria-live="polite">{message&&<div><p className="product-success" role="status">{message}</p>
     <div className="product-workspace-buttons">
-     {onViewSaved&&<button type="button" onClick={()=>onViewSaved(kind)}>Ver cadastros da oficina</button>}
+     {onViewSaved&&<button type="button" onClick={()=>onViewSaved(lastSavedKind)}>Ver cadastros da oficina</button>}
      {onCreateAssembly&&<button type="button" onClick={onCreateAssembly}>Montar conjunto com peças</button>}
     </div></div>}{error&&<p className="error" role="alert">{error}</p>}</div>
    <div className="product-list"><h3>{filter==='component'?'Peças cadastradas':'Produtos da oficina'}</h3>{loading?<p role="status">Carregando produtos…</p>:visibleItems.length===0?<p className="footnote">Nenhum produto cadastrado nesta oficina.</p>:
