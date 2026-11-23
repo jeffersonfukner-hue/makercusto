@@ -10,7 +10,7 @@ import {AssemblyPanel} from './components/AssemblyPanel';
 import {WorkshopDashboard} from './components/WorkshopDashboard';
 import {SystemNavigation,type ProductTab,type OverviewTab} from './components/SystemNavigation';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
-import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
+import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,type SavedCalculation,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
 
 const money = (value:number) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value);
@@ -205,6 +205,25 @@ export default function App(){
    setAdvanced(false);setDetails(false);
    setDraft(newDraft());setEditId(null);setNextId(1);setErrorDraft('');
  };
+ const [loadedCalculation,setLoadedCalculation]=useState('');
+ const applySavedCalculation=(saved:SavedCalculation)=>{
+  const input=saved.saved_input as Partial<CostInput>|null;
+  if(!input||typeof input!=='object'){setAccountError('Cálculo salvo sem parâmetros válidos.');return;}
+  const restored:CostInput={...referenceCase,...input};
+  const data=Array.isArray(input.materials)?input.materials:undefined;
+  const testInput={...restored,materials:data,
+   printerPrice:activePrinter.printerPrice,averageWatts:activePrinter.averageWatts,
+   lifetimeHours:activePrinter.lifetimeHours,pricePerKwh:activePrinter.pricePerKwh};
+  try{calculateCost(testInput);}
+  catch(e){setAccountError('Este cálculo salvo não pode ser reutilizado: '+(e as Error).message);return;}
+  setForm({...restored,materials:undefined});
+  setSimple({quantity:Number(restored.grams),quantityUnit:'g',
+   price:Number(restored.pricePerKg),priceUnit:'kg'});
+  if(data&&data.length){setDetailedMaterials(data);setAdvanced(true);setDetails(true);}
+  else{setAdvanced(false);setDetails(false);}
+  setAccountError('');
+  setLoadedCalculation('Dados de "'+saved.name+'" carregados. Recalculando com a impressora selecionada; o histórico original foi preservado.');
+ };
  const activeInput:CostInput={
    ...form,
    printerPrice:activePrinter.printerPrice,
@@ -225,6 +244,7 @@ export default function App(){
  <main className={session?"app-main":"shell"}>
   {session&&activeSection==='overview'&&<WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
   {(!session||activeSection==='calculator')&&<>
+  {loadedCalculation&&<p role="status" className="product-success">{loadedCalculation}</p>}
   <section className={session?"intro app-calculator-intro":"intro"}><p className="eyebrow">{session?"FERRAMENTA DE CUSTOS":"IMPRESSÃO 3D SEM COMPLICAÇÃO"}</p><h1>{session?"Calculadora de produção":"Descubra seu custo. Venda com confiança."}</h1><p>{session?"Simule custos antes de registrar um produto. Valores ilustrativos permanecem identificados.":"Comece com o essencial. Precisa de mais controle? Ative o Avançado."}</p></section>
   <nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples <small>Direto ao resultado</small></button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado <small>Cores, impressora e custos extras</small></button></nav>
   <div className="workspace">
@@ -305,10 +325,10 @@ export default function App(){
    </>}</section>
   </div>
   </>}
-  <ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
-   onLogin={()=>setAuthOpen(true)}
+  {(!session||activeSection==='calculator')&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
+   onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
-   onCreateAssembly={()=>setActiveSection('assemblies')}/>
+   onCreateAssembly={()=>setActiveSection('assemblies')}/>} 
   {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
