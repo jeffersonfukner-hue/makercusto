@@ -960,3 +960,55 @@ test('P01-E: redução parcial preserva peças confirmadas e exige liberação e
  expect(attempts[0].p_reservation_releases).toEqual([{reservation_id:reservation,release_g:12}]);
  expect(attempts[0].p_reason).toBe('Redução de quantidade solicitada pelo cliente');
 });
+
+
+test('P01-D: troca de bobina preserva preços antigos e reenvia mesma chave sem baixa',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const production='66666666-6666-4666-8666-666666666666';
+ const lotA='77777777-7777-4777-8777-777777777777',lotB='99999999-9999-4999-8999-999999999999';
+ const reservation='88888888-8888-4888-8888-888888888888',output='55555555-5555-4555-8555-555555555555';
+ const attempts:Record<string,unknown>[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina P01',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'partial',printer_id:null,
+   printer_name:'Impressora 3D',planned_hours:2,actual_hours:0.5,notes:null,
+   created_at:new Date().toISOString(),outputs:[{id:output,product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   name:'Hélice',planned:5,good:1,failed:0}]}]);
+  if(u.includes('rpc/mc_list_existing_spools'))return send([
+   {id:lotA,label:'Bobina A',name:'PETG A',initial_grams:1000,remaining_grams:820,remaining_cost_estimate:55.76,cost_status:'estimated',notes:null,created_at:new Date().toISOString()},
+   {id:lotB,label:'Bobina B',name:'PETG B',initial_grams:1000,remaining_grams:1000,remaining_cost_estimate:73,cost_status:'estimated',notes:null,created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_list_print_reservations'))return send([{id:reservation,production_id:production,lot_id:lotA,lot_label:'Bobina A',
+   quantity:300,remaining:120,status:'active',due_at:null,review_overdue:false,created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_swap_print_reserved_lot')){
+   attempts.push(route.request().postDataJSON() as Record<string,unknown>);
+   if(attempts.length===1)return send({message:'Conexão temporariamente indisponível'},503);
+   return send('cccccccc-cccc-4ccc-8ccc-cccccccccccc');
+  }
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await page.getByRole('combobox',{name:'Reserva de origem para troca'}).selectOption(reservation);
+ await page.getByRole('combobox',{name:'Nova bobina para reservar'}).selectOption(lotB);
+ await page.getByRole('spinbutton',{name:'Gramas a liberar na troca'}).fill('121');
+ await page.getByRole('spinbutton',{name:'Gramas a reservar na nova bobina'}).fill('120');
+ await page.getByRole('textbox',{name:'Motivo da troca de bobina'}).fill('Fim da bobina original, origem verificada');
+ await page.getByRole('button',{name:'Confirmar troca de reserva'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('sem exceder a reserva de origem');
+ expect(attempts).toHaveLength(0);
+ await page.getByRole('spinbutton',{name:'Gramas a liberar na troca'}).fill('120');
+ await page.getByRole('button',{name:'Confirmar troca de reserva'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('Conexão temporariamente indisponível');
+ await page.getByRole('button',{name:'Confirmar troca de reserva'}).click();
+ await expect(page.getByText('Troca de reserva registrada. Nenhum filamento foi baixado nem houve alteração dos custos históricos.')).toBeVisible();
+ expect(attempts).toHaveLength(2);
+ expect(attempts[0].p_request_key).toBe(attempts[1].p_request_key);
+ expect(attempts[0].p_old_reservation_id).toBe(reservation);
+ expect(attempts[0].p_new_lot_id).toBe(lotB);
+ expect(attempts[0].p_release_g).toBe(120);
+ expect(attempts[0].p_new_reserve_g).toBe(120);
+});
