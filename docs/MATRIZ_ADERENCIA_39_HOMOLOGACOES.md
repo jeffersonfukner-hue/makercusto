@@ -19,7 +19,7 @@
 | E01 | [E] §2.1 | Referências globais protegidas; personalização por cópia independente, renomeável, versionada, sem alterar original | P | `App.tsx`, `FilamentProfilePanel.tsx` e `supabase.ts`: seleção global, clones locais e impressora da oficina; falta comprovar ciclo completo, versões e proteção de todas as entidades no servidor. |
 | E02 | [E] §2.2 | Compartilhado: publicação para Compartilhado/Full, leitura nesses planos; só autor/admin edita | A | `supabase.ts` não implementa publicação, permissões por assinatura nem leitura de fichas publicadas. |
 | E03 | [E] §2.3 | Full privado por padrão; publicação voluntária de cópia separada; leitura de Compartilhado | A | Não há fluxo Full/assinatura/publicação na UI/API inspecionada. |
-| E04 | [E] §2.4 | Estoque de matéria-prima, comprados e acabados com movimentos auditáveis | A | `mc_inventory_items`, `mc_stock_movements`, `mc_stock_events` existem, mas sem movimentos; `supabase.ts` não tem API de estoque. |
+| E04 | [E] §2.4 | Estoque de matéria-prima, comprados e acabados com movimentos auditáveis | P | L1 criou RPC para inventário inicial com lote, movimento e evento atômicos; ainda sem compra, consumo/baixa ou estoque de acabados. Teste reversível, nenhum saldo real lançado. |
 | E05 | [E] §2.5 | Kit com peças fabricadas, itens comprados, ferramentas e montagem | P | `ProductWorkspace.tsx` e `mc_product_components` cobrem peças fabricadas, revisão e custo informado; não incluem componentes comprados, ferramentas e serviços de montagem. |
 | D01 | [D] 1 | Rascunhos Compartilhado privados, publicação apenas mediante confirmação | A | Fluxo de rascunho/publicação Shared ausente. |
 | D02 | [D] 2 | Downgrade preserva dados/privacidade e bloqueia novas operações pagas | A | Transições e validação de assinatura não implementadas. |
@@ -51,7 +51,7 @@
 | P05 | [P05] A–F | Rateio por categoria (massa/cor/lote, purga, energia, máquina, trabalho, perdas) e conciliação | A | `calculateCost` soma categorias básicas; não recebe saídas múltiplas nem lotes reais, nem rateio auditado por categoria. |
 | P06 | [P06] A–F | Decimal exato, precisão intermediária, half-up, resíduos por partes fracionárias/ID, snapshot monetário reconciliado | A | `src/domain/cost.ts` usa `number`/operações binárias e não implementa algoritmo decimal de rateio monetário; snapshots atuais não comprovam reconciliação exigida. |
 | P07 | [P07] A–F | Aquecimento/ativo/pausas/retomada diferenciados, potência/energia por fase, sem dupla contagem | A | Motor atual usa `averageWatts × hours`; não há fases por execução. |
-| P08 | [P08] A–F | Bobina pré-existente inventariada sem compra fictícia; origem/medição, custo desconhecido e reconciliação | A | Sem fluxo de bobina física sem compra, origem de consumo/regularização. |
+| P08 | [P08] A–F | Bobina pré-existente inventariada sem compra fictícia; origem/medição, custo desconhecido e conciliação | P | `mc_register_existing_spool`, `mc_list_existing_spools`, `MaterialsWorkspace.tsx` cobrem inventário inicial com proveniência de massa e custo desconhecido; sem consumo, conciliação posterior ou fechamento financeiro. |
 | P09 | [P09] A–F | Estorno parcial referenciado com limites, material extrudado não volta, centavos históricos, idempotência e auditoria | A | Sem endpoint/fluxo de estorno parcial e compensações auditáveis. |
 | G01 | [G1] A–F | Ocorrência física pendente separada de baixa; evidência/investigação/regularização sem inventar origem | A | `mc_inventory_issues` existe vazia; sem fluxo de ocorrência/investigação/aprovação. |
 | G02 | [G2] A–F | Identidade/isolamento, capacidades por operação, autorizações especiais segregadas e auditoria | P | RPCs de cadastro consultadas verificam `auth.uid()`, membro ativo e papel básico; não cobrem matriz completa de solicitações/aprovações/estornos, nem testes cross-tenant. |
@@ -66,6 +66,14 @@
 4. **Catálogos e UX:** `src/components/FilamentProfilePanel.tsx` guarda cópias pessoais e `sourceId` localmente; `src/components/SmartField.tsx` ajuda com sugestões; são incrementos concretos, mas não equivalem a cadastro estruturado Full/Compartilhado.
 5. **Testes `tests/app.spec.ts`:** cobertura da calculadora e cadastros com REST simulado. Não há testes E2E de confirmação física, reserva, inventário, estorno, conciliação e separação por perfis/planos. CI verde não cobre tais processos.
 6. **Documento em descompasso:** `docs/ARQUITETURA.md` e parte de `docs/BACKLOG.md` mantêm informações antigas (Supabase como futuro, sem autenticação); não usar esses estados como verdade atual.
+
+## Avanço verificado do Lote L1 (22/11/2026)
+
+- **Banco:** instaladas funções `mc_register_existing_spool` e `mc_list_existing_spools`. Cadastro inicial cria definição de filamento, item de estoque, lote de origem `initial_inventory`, evento e movimento físico em transação única, sem inventar compra ou fornecedor.
+- **Segurança:** revogados `INSERT/UPDATE/DELETE/TRUNCATE/TRIGGER` diretos de `anon` e `authenticated` nas tabelas `mc_stock_events`, `mc_stock_movements` e `mc_stock_lots`. `has_table_privilege` verificou as negativas, com `anon` sem EXECUTE da RPC. A operação exige proprietário/gestor ativo na oficina.
+- **Testes reais de banco, sem persistir dados:** criação com quantidade 325,125 g e custo desconhecido, replay idempotente, recusa de replay com origem divergente e bloqueio de outra oficina; leitura do saldo. Após ROLLBACK, nenhum filamento, evento ou lote de teste permaneceu; 4 produtos reais foram preservados.
+- **Frontend:** módulo Materiais com registro de bobina física, proveniência `measured/informed/estimated`, custo opcional e consulta de saldos. Homologação visual e publicação manual ainda pendentes.
+- **Nova contagem:** **17 parciais; 22 ausentes nos fluxos examinados; 0 integralmente comprovadas.** L1 parcial não equivale à implementação completa de P08/E04.
 
 ## Prioridade de execução — primeiro caso real: Lançador de hélices
 
