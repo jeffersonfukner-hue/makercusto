@@ -128,3 +128,12 @@ export const cancelPrint=(workspaceId:string,productionId:string,requestKey:stri
  api<string>('rpc/mc_cancel_print','POST',{
  p_workspace_id:workspaceId,p_production_id:productionId,p_request_key:requestKey,p_reason:reason
 });
+
+export const reducePrintPlan=(workspaceId:string,draft:{
+ productionId:string;requestKey:string;outputChanges:{output_id:string;new_planned:number}[];
+ reservationReleases:{reservation_id:string;release_g:number}[];reason:string
+})=>api<string>('rpc/mc_reduce_print_plan','POST',{
+ p_workspace_id:workspaceId,p_production_id:draft.productionId,
+ p_request_key:draft.requestKey,p_output_changes:draft.outputChanges,
+ p_reservation_releases:draft.reservationReleases,p_reason:draft.reason
+});
