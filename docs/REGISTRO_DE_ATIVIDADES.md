@@ -782,3 +782,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Pendências:** verificação final de CI, agregação em snapshots financeiros imutáveis e fechamento transacional seguro com fontes P07, validação de autorização e homologação visual.
 
 - **Evidência complementar:** CI #424 (`45285101720`) do commit `3bc75c41b4feb2c8d3be71543a1d347542d888d4` aprovado integralmente. Testados os novos contratos de captura de origem imutável, idempotência, proteção por oficina, origem desconhecida, aritmética racional P06, build e interface desktop/mobile. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45285101720 . Nenhuma atuação no banco operacional ou deploy.
+
+## 23/11/2026 — L4-G01: protocolo de revisão auditável e testes concorrentes
+
+- **Projeto/cliente:** MakerCusto, desenvolvimento próprio.
+- **Início/término/duração efetiva:** não mensurados; não inferidos pelo intervalo entre mensagens.
+- **Atividades realizadas:** revisão de documentação e esquema financeiro; criação da migração de revisão L4 com chave idempotente, lock, RLS restritiva, checklist de evidências, relatório de origens e auditoria append-only; criação de teste SQL rollback, teste de concorrência por duas sessões e atualização de GitHub Actions. Nenhum snapshot financeiro final ou alteração de estoque incluídos.
+- **Evidências:** commits `61bbbcc7c67e399f88de3177a72a0b1b0bafdf23`, `9358b7af44e495b40d7140023642fba46101fa04`, `939892a1d89baa0ac4eded5efa701ed756f11597`, `7f95d006c2de849967a134c6133c9d14af18ba10`, `6c9403a964ef26b17ff791c10136c86565c458b2`, `301d3623488ca56fc7726b8c25a7e7bbd88d42b1`, `b337b1705644d3359365018f55359bcecd03a441`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Resultados:** código e testes submetidos à branch de desenvolvimento; CI do HEAD a verificar após este registro. Revisão permanece pendente; nenhuma função publica custo final, nenhum banco operacional foi modificado.
+- **Pendências:** CI final, fontes P07 e demais categorias verificadas, snapshots finais e testes P09 antes de fechar custos, homologação visual do usuário.
