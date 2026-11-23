@@ -1,12 +1,13 @@
 import {useEffect,useRef,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
+import {PrintAllocationPreview} from './PrintAllocationPreview';
 import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,proposeInventoryAdjustment,listInventoryAdjustmentProposals,getPhysicalOccurrenceDossier,
  type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview,type InventoryAdjustmentProposal,type PhysicalOccurrenceDossier} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
 export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
- const [activePrimaryForm,setActivePrimaryForm]=useState<'new'|'reserve'|'confirm'|'due'|'occurrence'|'review'|'proposal'|'dossier'|'swap'|'reduction'|'cancel'|'other'>('new');
+ const [activePrimaryForm,setActivePrimaryForm]=useState<'new'|'reserve'|'confirm'|'due'|'occurrence'|'review'|'proposal'|'dossier'|'swap'|'reduction'|'cancel'|'allocation'|'other'>('new');
  const [printers,setPrinters]=useState<StoredPrinter[]>([]),[products,setProducts]=useState<ProductRecord[]>([]);
  const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]),[reservations,setReservations]=useState<PrintReservation[]>([]),[occurrences,setOccurrences]=useState<PhysicalConsumptionOccurrence[]>([]);
  const [printer,setPrinter]=useState(''),[product,setProduct]=useState(''),[quantity,setQuantity]=useState('1');
@@ -582,6 +583,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
 
 
   </section>}
+  <PrintAllocationPreview prints={prints} active={activePrimaryForm==='allocation'} onActivate={()=>setActivePrimaryForm('allocation')}/>
   <h3>Execuções registradas</h3>
   {prints.length===0?<p>Nenhuma impressão registrada nesta oficina.</p>:<div className="materials-spool-grid">{prints.map(p=><article className="materials-spool-card" key={p.id}>
    <h4>{p.printer_name||'Impressora sem nome'}</h4><p>Status: {p.status} · {new Date(p.created_at).toLocaleString('pt-BR')}</p>
