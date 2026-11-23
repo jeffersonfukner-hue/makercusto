@@ -11,7 +11,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [hours,setHours]=useState(''),[source,setSource]=useState<'slicer'|'measured'|'informed'|'estimated'>('slicer');
  const [notes,setNotes]=useState(''),[outputs,setOutputs]=useState<{product_id:string;quantity:number;name:string}[]>([]);
  const [selected,setSelected]=useState(''),[selectedOutput,setSelectedOutput]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[purge,setPurge]=useState(''),[loss,setLoss]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
- const [basis,setBasis]=useState<'weighed'|'slicer'|'estimated'>('slicer');
+ const [basis,setBasis]=useState<'weighed'|'slicer'|'estimated'>('slicer'),[actualHours,setActualHours]=useState('');
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const [reload,setReload]=useState(0),operation=useRef(newKey());
  useEffect(()=>{
@@ -42,6 +42,9 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    setError('Informe impressão, bobina, consumo positivo e peças novas boas/rejeitadas.');return;
   }
   if(!Number.isInteger(Number(good))||!Number.isInteger(Number(failed))){setError('As peças devem ser números inteiros.');return;}
+  if(actualHours!==''&&(!valid(actualHours)||Number(actualHours)>100000||Math.abs(Number(actualHours)*10000-Math.round(Number(actualHours)*10000))>0.000001)){
+   setError('Informe tempo real adicional válido, em horas, com até quatro casas decimais, ou deixe vazio.');return;
+  }
   if(!selectedPrint.outputs.some(o=>o.id===selectedOutput)){setError('Selecione a peça à qual pertencem as unidades confirmadas. Material compartilhado permanece sem rateio financeiro até L4.');return;}
   const output=selectedPrint.outputs.find(o=>o.id===selectedOutput)!;
   if(Number(good)+Number(failed)>Number(output.planned)-Number(output.good)-Number(output.failed)){
@@ -54,10 +57,10 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   try{
    await confirmPrint(workspaceId,{id:selectedPrint.id,key:operation.current,
     outputs:Number(good)+Number(failed)>0?[{output_id:output.id,good:Number(good),failed:Number(failed)}]:[],
-    consumptions:[{lot_id:lot,model_g:Number(mass),purge_g:Number(purge),loss_g:Number(loss),basis}],actualHours:null});
+    consumptions:[{lot_id:lot,model_g:Number(mass),purge_g:Number(purge),loss_g:Number(loss),basis}],actualHours:actualHours===''?null:Number(actualHours)});
    operation.current=newKey();
    setMessage('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.');
-   setMass('');setPurge('');setLoss('');setGood('');setFailed('0');setReload(v=>v+1);
+   setMass('');setPurge('');setLoss('');setGood('');setFailed('0');setActualHours('');setReload(v=>v+1);
   }catch(e){setError('Confirmação recusada: '+(e as Error).message)}finally{setBusy(false)}
  };
  return <section className="materials-workspace" aria-label="Registro real de impressões">
@@ -83,7 +86,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <button type="button" className="primary-action" disabled={busy||!workspaceId||outputs.length===0} onClick={()=>void save()}>{busy?'Salvando…':'Registrar impressão sem baixa'}</button>
   </section>
   <section className="panel materials-form"><h3>Confirmação incremental de impressão</h3>
-   <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo informado é da mesa e não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
+   <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo e o tempo informados são incrementais; registre falhas mesmo sem peças boas. O material da mesa não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
    <div className="product-save-fields">
     <label>Impressão<select aria-label="Impressão para confirmar" value={selected} onChange={e=>{setSelected(e.target.value);setSelectedOutput('');operation.current=newKey();}}>
      <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
@@ -94,6 +97,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Purga adicional (g)<input aria-label="Purga adicional" type="number" step=".001" min="0" value={purge} onChange={e=>setPurge(e.target.value)}/><small>Informe 0 se já estiver incluída no peso do modelo.</small></label>
     <label>Perda adicional (g)<input aria-label="Perda adicional" type="number" step=".001" min="0" value={loss} onChange={e=>setLoss(e.target.value)}/><small>Informe 0 quando não houver perda adicional; nunca conte a mesma massa duas vezes.</small></label>
     <label>Fonte do consumo<select aria-label="Fonte do consumo" value={basis} onChange={e=>setBasis(e.target.value as typeof basis)}><option value="weighed">Pesado</option><option value="slicer">Fatiador</option><option value="estimated">Estimado</option></select></label>
+    <label>Tempo real adicional (h, opcional)<input aria-label="Tempo real adicional" type="number" step=".0001" min="0" value={actualHours} onChange={e=>setActualHours(e.target.value)}/><small>Informe somente o tempo novo desta confirmação. Em falha, registre o tempo efetivo mesmo com zero peças boas. Deixe vazio se desconhecido; nunca repetimos períodos anteriores.</small></label>
     <label>Peças boas adicionais<input aria-label="Peças boas adicionais" type="number" min="0" step="1" value={good} onChange={e=>setGood(e.target.value)}/></label>
     <label>Peças rejeitadas adicionais<input aria-label="Peças rejeitadas adicionais" type="number" min="0" step="1" value={failed} onChange={e=>setFailed(e.target.value)}/></label>
    </div>
