@@ -191,3 +191,19 @@ end $$;
 revoke all on function public.mc_confirm_print(uuid,uuid,text,jsonb,jsonb,numeric,boolean) from public,anon;
 grant execute on function public.mc_confirm_print(uuid,uuid,text,jsonb,jsonb,numeric,boolean) to authenticated;
 
+
+
+-- UI de reserva: apenas leitura das reservas da própria oficina.
+create or replace function public.mc_list_print_reservations(p_workspace_id uuid)
+returns jsonb language sql stable security definer set search_path='' as $$
+ select case when exists(select 1 from public.mc_members m where m.workspace_id=p_workspace_id
+  and m.user_id=auth.uid() and m.active and m.role in ('owner','manager')) then
+ coalesce((select jsonb_agg(jsonb_build_object(
+  'id',r.id,'production_id',r.production_id,'lot_id',r.lot_id,'lot_label',l.label,
+  'quantity',r.quantity,'remaining',r.remaining,'status',r.status,'created_at',r.created_at)
+  order by r.created_at desc) from public.mc_production_reservations r
+  left join public.mc_stock_lots l on l.workspace_id=r.workspace_id and l.id=r.lot_id
+  where r.workspace_id=p_workspace_id),'[]'::jsonb) else '[]'::jsonb end
+$$;
+revoke all on function public.mc_list_print_reservations(uuid) from public,anon;
+grant execute on function public.mc_list_print_reservations(uuid) to authenticated;
