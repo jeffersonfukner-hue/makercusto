@@ -305,7 +305,10 @@ export default function App(){
    </>}</section>
   </div>
   </>}
-  <ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result} onLogin={()=>setAuthOpen(true)}/>
+  <ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
+   onLogin={()=>setAuthOpen(true)}
+   onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
+   onCreateAssembly={()=>setActiveSection('assemblies')}/>
   {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
