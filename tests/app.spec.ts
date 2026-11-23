@@ -793,4 +793,8 @@ test('Impressões L3: bloqueia deltas fracionários e quantidade superior ao pla
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
  await expect(page.getByRole('alert').last()).toContainText('até quatro casas decimais');
  expect(called).toBe(false);
+ await page.getByRole('spinbutton',{name:'Tempo real adicional'}).fill('0.5');
+ await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await expect(page.getByText('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.')).toBeVisible();
+ expect(called).toBe(true);
 });
