@@ -1,23 +1,25 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,
- type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool} from '../data/supabase';
+import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,
+ type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
 export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [printers,setPrinters]=useState<StoredPrinter[]>([]),[products,setProducts]=useState<ProductRecord[]>([]);
- const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]);
+ const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]),[reservations,setReservations]=useState<PrintReservation[]>([]);
  const [printer,setPrinter]=useState(''),[product,setProduct]=useState(''),[quantity,setQuantity]=useState('1');
  const [hours,setHours]=useState(''),[source,setSource]=useState<'slicer'|'measured'|'informed'|'estimated'>('slicer');
  const [notes,setNotes]=useState(''),[outputs,setOutputs]=useState<{product_id:string;quantity:number;name:string}[]>([]);
  const [selected,setSelected]=useState(''),[selectedOutput,setSelectedOutput]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[purge,setPurge]=useState(''),[loss,setLoss]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
+ const [reservePrintId,setReservePrintId]=useState(''),[reserveLot,setReserveLot]=useState(''),[reserveGrams,setReserveGrams]=useState('');
+ const reservationKey=useRef(newKey());
  const [basis,setBasis]=useState<'weighed'|'slicer'|'estimated'>('slicer'),[actualHours,setActualHours]=useState('');
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const [reload,setReload]=useState(0),operation=useRef(newKey());
  useEffect(()=>{
   let live=true;if(!workspaceId)return;
-  Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId)])
-   .then(([p,pr,s,executions])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);}})
+  Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId),listPrintReservations(workspaceId)])
+   .then(([p,pr,s,executions,held])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);setReservations(held);}})
    .catch(e=>{if(live)setError('Falha ao consultar impressões: '+(e as Error).message);});
   return()=>{live=false};
  },[workspaceId,reload]);
@@ -35,6 +37,27 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    setMessage('Impressão registrada como rascunho. Nenhuma bobina foi consumida.');
    setOutputs([]);setNotes('');setHours('');setReload(x=>x+1);
   }catch(e){setError((e as Error).message)}finally{setBusy(false)}
+ };
+ const remainingReserved=(lotId:string)=>reservations.filter(x=>x.lot_id===lotId&&x.status==='active').reduce((sum,x)=>sum+Number(x.remaining),0);
+ const reserve=async()=>{
+  if(!workspaceId||!reservePrintId||!reserveLot||!valid(reserveGrams)||Number(reserveGrams)<=0||
+   Number(reserveGrams)>1000000||Math.abs(Number(reserveGrams)*1000-Math.round(Number(reserveGrams)*1000))>0.000001){
+   setError('Selecione impressão, bobina e uma quantidade de reserva em gramas com até três casas decimais.');return;
+  }
+  const spool=spools.find(x=>x.id===reserveLot);
+  const available=spool?Number(spool.remaining_grams)-remainingReserved(reserveLot):0;
+  if(!spool||Number(reserveGrams)>available+0.000001){
+   setError('Reserva excede a disponibilidade informada desta bobina; atualize os saldos antes de reservar.');return;
+  }
+  setBusy(true);setError('');setMessage('');
+  try{
+   await reservePrintLot(workspaceId,{productionId:reservePrintId,lotId:reserveLot,
+    quantityGrams:Number(reserveGrams),key:reservationKey.current});
+   reservationKey.current=newKey();
+   setReserveGrams('');setMessage('Reserva lógica registrada sem movimentar o estoque físico.');
+   setReload(x=>x+1);
+  }catch(e){setError('Reserva recusada: '+(e as Error).message)}
+  finally{setBusy(false)}
  };
  const selectedPrint=prints.find(p=>p.id===selected);
  const confirm=async()=>{
@@ -84,6 +107,22 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <button type="button" onClick={addOutput} disabled={busy}>+ Adicionar peça à mesa</button>
    <ul>{outputs.map(o=><li key={o.product_id}>{o.name}: {o.quantity} <button type="button" aria-label={'Remover '+o.name} onClick={()=>setOutputs(v=>v.filter(x=>x.product_id!==o.product_id))}>Remover</button></li>)}</ul>
    <button type="button" className="primary-action" disabled={busy||!workspaceId||outputs.length===0} onClick={()=>void save()}>{busy?'Salvando…':'Registrar impressão sem baixa'}</button>
+  </section>
+  <section className="panel materials-form"><h3>Reserva opcional de filamento</h3>
+   <p className="footnote">A reserva apenas compromete gramas da bobina para esta impressão. Não retira material físico nem gera custo. O saldo reservado é abatido somente durante confirmações reais.</p>
+   <div className="product-save-fields">
+    <label>Impressão para reservar<select aria-label="Impressão para reservar" value={reservePrintId} onChange={e=>{setReservePrintId(e.target.value);reservationKey.current=newKey();}}>
+     <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
+    <label>Bobina para reservar<select aria-label="Bobina para reservar" value={reserveLot} onChange={e=>{setReserveLot(e.target.value);reservationKey.current=newKey();}}>
+     <option value="">Selecione</option>{spools.map(x=><option key={x.id} value={x.id}>{x.label} — disponíveis {(Number(x.remaining_grams)-remainingReserved(x.id)).toFixed(3)} g</option>)}</select>
+     <small>Disponível = físico menos reservas ativas da oficina.</small></label>
+    <label>Quantidade a reservar (g)<input aria-label="Quantidade a reservar" type="number" min=".001" step=".001" value={reserveGrams} onChange={e=>{setReserveGrams(e.target.value);reservationKey.current=newKey();}}/>
+     <small>Reserva opcional, por bobina. Não libera sobra em uma confirmação parcial.</small></label>
+   </div>
+   <button type="button" className="primary-action" disabled={busy||!workspaceId||!reservePrintId||!reserveLot} onClick={()=>void reserve()}>{busy?'Registrando…':'Registrar reserva sem baixa'}</button>
+   {reservations.filter(x=>x.status==='active').length>0&&<ul aria-label="Reservas ativas da oficina">
+    {reservations.filter(x=>x.status==='active').map(x=><li key={x.id}>{x.lot_label||'Bobina'} — reservado {x.remaining} g de {x.quantity} g para {prints.find(p=>p.id===x.production_id)?.outputs.map(o=>o.name).join(' + ')||'impressão registrada'}</li>)}
+   </ul>}
   </section>
   <section className="panel materials-form"><h3>Confirmação incremental de impressão</h3>
    <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo e o tempo informados são incrementais; registre falhas mesmo sem peças boas. O material da mesa não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
