@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,
+import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,
  type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
@@ -17,6 +17,10 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [reducePlanned,setReducePlanned]=useState(''),[reduceReservation,setReduceReservation]=useState('');
  const [reduceGrams,setReduceGrams]=useState(''),[reduceReason,setReduceReason]=useState('');
  const reduceKey=useRef(newKey());
+ const [swapReservation,setSwapReservation]=useState(''),[swapNewLot,setSwapNewLot]=useState('');
+ const [swapRelease,setSwapRelease]=useState(''),[swapReserve,setSwapReserve]=useState('');
+ const [swapReason,setSwapReason]=useState('');
+ const swapKey=useRef(newKey());
  const [dueReservation,setDueReservation]=useState(''),[dueLocal,setDueLocal]=useState('');
  const [cancelTarget,setCancelTarget]=useState(''),[cancelReason,setCancelReason]=useState('');
  const cancelKey=useRef(newKey());
@@ -130,6 +134,38 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Redução parcial recusada: '+(e as Error).message)}
   finally{setBusy(false)}
  };
+ const submitSwap=async()=>{
+  const old=reservations.find(x=>x.id===swapReservation&&x.status==='active');
+  const nextLot=spools.find(x=>x.id===swapNewLot);
+  if(!workspaceId||!old||!nextLot||old.lot_id===swapNewLot){
+   setError('Selecione reserva ativa e bobina substituta diferente da origem.');return;
+  }
+  const release=Number(swapRelease),held=Number(swapReserve);
+  if(!valid(swapRelease)||!valid(swapReserve)||release<=0||held<=0||
+    Math.abs(release*1000-Math.round(release*1000))>0.000001||
+    Math.abs(held*1000-Math.round(held*1000))>0.000001||
+    release>Number(old.remaining)||held>1000000){
+   setError('Informe gramas positivos, até três casas, sem exceder a reserva de origem.');return;
+  }
+  const available=Number(nextLot.remaining_grams)-remainingReserved(swapNewLot);
+  if(held>available+0.000001){
+   setError('A bobina substituta não tem saldo disponível após outras reservas.');return;
+  }
+  if(swapReason.trim().length<10||swapReason.trim().length>1000){
+   setError('Informe justificativa da troca de 10 a 1000 caracteres.');return;
+  }
+  setBusy(true);setError('');setMessage('');
+  try{
+   await swapPrintReservedLot(workspaceId,{productionId:old.production_id,oldReservationId:old.id,
+    newLotId:swapNewLot,releaseGrams:release,newReserveGrams:held,
+    requestKey:swapKey.current,reason:swapReason.trim()});
+   swapKey.current=newKey();setSwapReservation('');setSwapNewLot('');setSwapRelease('');
+   setSwapReserve('');setSwapReason('');
+   setMessage('Troca de reserva registrada. Nenhum filamento foi baixado nem houve alteração dos custos históricos.');
+   setReload(n=>n+1);
+  }catch(e){setError('Troca de bobina recusada: '+(e as Error).message)}
+  finally{setBusy(false)}
+ };
  const selectedPrint=prints.find(p=>p.id===selected);
  const confirm=async()=>{
   if(!workspaceId||!selectedPrint||!lot||!valid(mass)||!valid(purge)||!valid(loss)||Number(mass)+Number(purge)+Number(loss)<=0||!valid(good)||!valid(failed)){
@@ -221,6 +257,33 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Peças rejeitadas adicionais<input aria-label="Peças rejeitadas adicionais" type="number" min="0" step="1" value={failed} onChange={e=>setFailed(e.target.value)}/></label>
    </div>
    <button type="button" className="primary-action" disabled={busy||!selected||!lot||!workspaceId||!selectedOutput} onClick={()=>void confirm()}>{busy?'Confirmando…':'Confirmar consumo incremental'}</button>
+  </section>
+  <section className="panel materials-form"><h3>Trocar bobina reservada</h3>
+   <p className="footnote">A troca ajusta apenas as reservas lógicas. O filamento já consumido continua atribuído à bobina original, com o preço histórico original. A próxima confirmação deve indicar a bobina realmente consumida.</p>
+   <div className="product-save-fields">
+    <label>Reserva de origem<select aria-label="Reserva de origem para troca" value={swapReservation}
+     onChange={e=>{setSwapReservation(e.target.value);setSwapNewLot('');setSwapRelease('');setSwapReserve('');swapKey.current=newKey();}}>
+     <option value="">Selecione</option>
+     {reservations.filter(r=>r.status==='active').map(r=><option value={r.id} key={r.id}>{r.lot_label||'Bobina'} — {r.remaining} g reservados</option>)}
+    </select><small>Somente gramas ainda reservados podem ser liberados; nada retorna fisicamente à bobina.</small></label>
+    <label>Nova bobina para reservar<select aria-label="Nova bobina para reservar" value={swapNewLot}
+     onChange={e=>{setSwapNewLot(e.target.value);swapKey.current=newKey();}}>
+     <option value="">Selecione</option>
+     {spools.filter(x=>x.id!==reservations.find(r=>r.id===swapReservation)?.lot_id).map(x=><option value={x.id} key={x.id}>
+      {x.label} — disponíveis {(Number(x.remaining_grams)-remainingReserved(x.id)).toFixed(3)} g
+     </option>)}</select></label>
+    <label>Gramas a liberar da origem<input aria-label="Gramas a liberar na troca" type="number" step=".001" min=".001"
+     value={swapRelease} onChange={e=>{setSwapRelease(e.target.value);swapKey.current=newKey();}}/>
+     <small>Pode liberar só parte do restante; o restante continua reservado na origem.</small></label>
+    <label>Gramas a reservar na nova bobina<input aria-label="Gramas a reservar na nova bobina" type="number" step=".001" min=".001"
+     value={swapReserve} onChange={e=>{setSwapReserve(e.target.value);swapKey.current=newKey();}}/>
+     <small>Quantidade explicitamente informada; não presumimos igualdade nem conversão entre bobinas.</small></label>
+    <label>Motivo da troca<input aria-label="Motivo da troca de bobina" value={swapReason} maxLength={1000}
+     onChange={e=>{setSwapReason(e.target.value);swapKey.current=newKey();}}/>
+     <small>Motivo obrigatório, auditado e associado aos dois lotes.</small></label>
+   </div>
+   <button className="primary-action" type="button" disabled={busy||!swapReservation||!swapNewLot}
+    onClick={()=>void submitSwap()}>{busy?'Registrando…':'Confirmar troca de reserva'}</button>
   </section>
   <section className="panel materials-form"><h3>Cancelar parcialmente o planejamento</h3>
    <p className="footnote">Reduza somente peças ainda não produzidas. O material já extrudado e os resultados confirmados permanecem registrados. Informe explicitamente gramas a liberar por bobina: não presumimos consumo de material por peça.</p>
