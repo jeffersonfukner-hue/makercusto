@@ -10,7 +10,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [printer,setPrinter]=useState(''),[product,setProduct]=useState(''),[quantity,setQuantity]=useState('1');
  const [hours,setHours]=useState(''),[source,setSource]=useState<'slicer'|'measured'|'informed'|'estimated'>('slicer');
  const [notes,setNotes]=useState(''),[outputs,setOutputs]=useState<{product_id:string;quantity:number;name:string}[]>([]);
- const [selected,setSelected]=useState(''),[selectedOutput,setSelectedOutput]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
+ const [selected,setSelected]=useState(''),[selectedOutput,setSelectedOutput]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[purge,setPurge]=useState(''),[loss,setLoss]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
  const [basis,setBasis]=useState<'weighed'|'slicer'|'estimated'>('slicer');
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const [reload,setReload]=useState(0),operation=useRef(newKey());
@@ -38,7 +38,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  };
  const selectedPrint=prints.find(p=>p.id===selected);
  const confirm=async()=>{
-  if(!workspaceId||!selectedPrint||!lot||!valid(mass)||Number(mass)<=0||!valid(good)||!valid(failed)){
+  if(!workspaceId||!selectedPrint||!lot||!valid(mass)||!valid(purge)||!valid(loss)||Number(mass)+Number(purge)+Number(loss)<=0||!valid(good)||!valid(failed)){
    setError('Informe impressão, bobina, consumo positivo e peças novas boas/rejeitadas.');return;
   }
   if(Number(good)+Number(failed)>0&&!Number.isInteger(Number(good)+Number(failed))){setError('As peças devem ser números inteiros.');return;}
@@ -48,10 +48,10 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   try{
    await confirmPrint(workspaceId,{id:selectedPrint.id,key:operation.current,
     outputs:Number(good)+Number(failed)>0?[{output_id:output.id,good:Number(good),failed:Number(failed)}]:[],
-    consumptions:[{lot_id:lot,model_g:Number(mass),purge_g:0,loss_g:0,basis}],actualHours:null});
+    consumptions:[{lot_id:lot,model_g:Number(mass),purge_g:Number(purge),loss_g:Number(loss),basis}],actualHours:null});
    operation.current=newKey();
    setMessage('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.');
-   setMass('');setGood('');setFailed('0');setReload(v=>v+1);
+   setMass('');setPurge('');setLoss('');setGood('');setFailed('0');setReload(v=>v+1);
   }catch(e){setError('Confirmação recusada: '+(e as Error).message)}finally{setBusy(false)}
  };
  return <section className="materials-workspace" aria-label="Registro real de impressões">
@@ -85,6 +85,8 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Bobina<select aria-label="Bobina consumida" value={lot} onChange={e=>setLot(e.target.value)}>
      <option value="">Selecione</option>{spools.map(s=><option key={s.id} value={s.id}>{s.label} — {s.remaining_grams} g</option>)}</select></label>
     <label>Consumo adicional de modelo (g)<input type="number" min=".001" step=".001" aria-label="Consumo adicional" value={mass} onChange={e=>setMass(e.target.value)}/><small>Somente gramas novas, sem repetir purga/perdas já incluídas. Origem obrigatória.</small></label>
+    <label>Purga adicional (g)<input aria-label="Purga adicional" type="number" step=".001" min="0" value={purge} onChange={e=>setPurge(e.target.value)}/><small>Informe 0 se já estiver incluída no peso do modelo.</small></label>
+    <label>Perda adicional (g)<input aria-label="Perda adicional" type="number" step=".001" min="0" value={loss} onChange={e=>setLoss(e.target.value)}/><small>Informe 0 quando não houver perda adicional; nunca conte a mesma massa duas vezes.</small></label>
     <label>Fonte do consumo<select aria-label="Fonte do consumo" value={basis} onChange={e=>setBasis(e.target.value as typeof basis)}><option value="weighed">Pesado</option><option value="slicer">Fatiador</option><option value="estimated">Estimado</option></select></label>
     <label>Peças boas adicionais<input aria-label="Peças boas adicionais" type="number" min="0" step="1" value={good} onChange={e=>setGood(e.target.value)}/></label>
     <label>Peças rejeitadas adicionais<input aria-label="Peças rejeitadas adicionais" type="number" min="0" step="1" value={failed} onChange={e=>setFailed(e.target.value)}/></label>
