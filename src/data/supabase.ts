@@ -68,9 +68,22 @@ export const saveCalculatedProduct=(workspaceId:string,draft:CalculatedProductDr
  p_sale_price:draft.salePrice,p_quantity:draft.quantity,p_total_cost:draft.totalCost,p_parameters:draft.parameters
 });
 
-export type AssemblyPart = {id:string;name:string;quantity:number;notes:string|null;grams:string|null;unit_cost:number|null};
+export type AssemblyPart = {id:string;product_id?:string|null;name:string;quantity:number;notes:string|null;grams:string|null;unit_cost:number|null;cost_source?:'linked'|'manual'|'legacy'};
 export type AssemblyRecord = {id:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:AssemblyPart[];revision:number;total_cost:number|null;cost_status:'unknown'|'estimated'|'confirmed'};
-export type AssemblyPartDraft = {id?:string;name:string;quantity:number;notes:string;grams:number|null;unit_cost?:number|null};
+export type AssemblyPartDraft = {id?:string;product_id?:string|null;name:string;quantity:number;notes:string;grams:number|null;unit_cost?:number|null};
+export type ComponentLibraryItem={id:string;name:string;sku:string|null;
+ grams:number|null;unit_cost:number|null;cost_source:'snapshot'|'unknown'};
+export const listComponentLibrary=(workspaceId:string)=>api<ComponentLibraryItem[]>('rpc/mc_list_component_library','POST',{p_workspace_id:workspaceId});
+export const saveAssemblyWithComponents=(workspaceId:string,productId:string|null,draft:{
+ name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]
+})=>api<string>('rpc/mc_save_assembly_linked','POST',{
+ p_workspace_id:workspaceId,p_product_id:productId,
+ p_name:draft.name,p_sku:draft.sku,p_description:draft.description,
+ p_sale_price:draft.salePrice,p_parts:draft.parts.map(p=>({
+  product_id:p.product_id??null,name:p.name,quantity:p.quantity,notes:p.notes,
+  grams:p.grams,unit_cost:p.unit_cost??null
+ }))
+});
 export const listAssemblies=(workspaceId:string)=>api<AssemblyRecord[]>('rpc/mc_list_assemblies','POST',{p_workspace_id:workspaceId});
 export const createAssembly=(workspaceId:string,draft:{name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]})=>
  api<string>('rpc/mc_create_assembly','POST',{
