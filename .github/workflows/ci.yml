@@ -10,6 +10,20 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: makercusto_ci_only
+          POSTGRES_DB: makercusto_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d makercusto_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +37,24 @@ jobs:
         run: npm run test
       - name: Build estático
         run: npm run build
+      - name: Regressão SQL transacional no PostgreSQL efêmero (rollback obrigatório)
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap_ci_auth.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261121015442_makercusto_foundation_v1.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122210500_initial_spool_inventory.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122211000_spool_inventory_hardening.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122212500_print_execution_l2_l3.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/fixture_ci_l2_l3.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_rollback.sql
+          remaining="$(psql -v ON_ERROR_STOP=1 -Atc "select count(*) from public.mc_productions")"
+          test "$remaining" = "0" || { echo "ROLLBACK não preservou o banco limpo"; exit 1; }
       - name: Instalar navegador de testes
         run: npx playwright install --with-deps chromium
       - name: Testes de interface desktop e mobile
