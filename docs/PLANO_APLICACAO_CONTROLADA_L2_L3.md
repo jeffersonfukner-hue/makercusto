@@ -40,3 +40,8 @@ L2 oferece registro descritivo de impressões sem movimentação de estoque. L3 
 ## Critérios de aceite
 
 Migração aplicada uma única vez e documentada **somente após autorização**, preflight/postflight aprovados, tabela de deltas com RLS, anon sem RPCs de produção, authenticated sem INSERT/UPDATE/DELETE direto nas tabelas de execução, owner/manager autorizados por contexto real da oficina, não membros sem leitura/execução, saldo e idempotência protegidos. Até todas essas provas, manter L3 classificado **parcial** e não homologado para uso operacional.
+
+## Resultado da preparação — 22/11/2026
+- `supabase/tests/l2_l3_preflight_readonly.sql` executado em leitura no Supabase MakerCusto sem erro; não gerou dados nem alterou esquema.
+- `supabase/tests/l2_l3_postflight_readonly.sql` executado **somente em PostgreSQL descartável** via CI #45099111748 com `success`. O mesmo pipeline comprovou rollback, concorrência, RLS sintético, tipos, unitários, build e 86/86 Playwright. Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45099111748 .
+- A instalação no Supabase operacional **não aconteceu**. A aplicação demanda autorização específica nova e confirmação de recursos/backup; não interpretar este plano como autorização.

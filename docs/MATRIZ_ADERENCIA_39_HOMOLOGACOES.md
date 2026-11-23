@@ -129,3 +129,9 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - **CI #45095841121** (`success`, `20dac01db2c3b7889f8586da237bf8f6357d8dac`): PostgreSQL 17 descartável com duas sessões simultâneas consumindo a mesma bobina, duas ordens distintas e 10 g de saldo. Uma baixa de 7 g aprovada, segunda recusada, saldo físico final de 3 g e somente uma confirmação persistente. Verificados isolamento de leitura de produção/movimentos e rejeição de confirmação por identidade sintética não membro.
 - Esta evidência amplia a cobertura **parcial** de S02, R02, P02 e G02. **A contagem mantém 20 parciais, 19 ausentes e 0 completas**, preservando as 39 homologações.
 - **Limitações:** testes executados no container PostgreSQL do GitHub Actions com identidade simulada e sem Supabase Auth real. Não comprovam autorização efetiva com JWT de usuários reais; confirmação com reservas ativas, produção em estoque acabado, snapshots monetários, estornos, rateio e encerramento permanecem pendentes. Nenhuma migração L2/L3 foi aplicada no Supabase operacional.
+
+## Preparação de aplicação real L2/L3 — 22/11/2026
+- Verificados por leitura os objetos reais no Supabase MakerCusto: L2/L3 ausentes, zero produções/confirmações/lotes/movimentos, PostgreSQL 17.12. Preflight de leitura executado sem erros; não houve aplicação DDL.
+- **CI #45099111748 (`success`)** validou preflight e postflight SQL no PostgreSQL 17 efêmero, após executar a migração. Também passou regressão de rollback, duas confirmações concorrentes, isolamento sob identidade simulada, tipagem, unitários, build e **86/86 Playwright**.
+- Plano de implantação com gates e recuperação documentado em `docs/PLANO_APLICACAO_CONTROLADA_L2_L3.md`; sem execução operacional autorizada. **Contagem preservada: 20 P, 19 A, 0 C.**
+- Requisitos ainda não cobertos: JWT real e RLS com usuários Supabase reais, reservas ativas, snapshots financeiros, estoque de acabados, estornos e fechamento definitivo.
