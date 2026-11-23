@@ -620,3 +620,13 @@
 - Teste SQL `supabase/tests/product_calculation_revision_rollback.sql`, incluído no workflow de PostgreSQL efêmero. Cobre cadastro único, histórico, tentativa duplicada, permissões, dados inválidos e seleção da revisão mais recente.
 - Atenção: o **Preview existente não tem a nova RPC**; NÃO publicar frontend enquanto migração ainda não aplicada e validação não autorizada. Executar CI e homologar antes de definir aplicação ao banco de teste e deploy manual.
 - Ainda pendentes: CI do novo HEAD, E2E autenticado em navegador, rateio de peças distintas na mesma placa e conexão completa ao conjunto; nenhuma mudança física de banco ou deploy nesta etapa.
+
+
+## 23/11/2026 — Padrão de ação fixa e destaque do nome do produto (UX)
+
+- Requisito do proprietário: em cada área do sistema, ações vinculadas ao formulário ativo devem permanecer visíveis mesmo com rolagem. Preferência definida para **rodapé contextual fixo**, com comportamento responsivo, sem repetir botões dispersos.
+- Implementado componente reutilizável `src/components/FormActionDock.tsx`. Primeira aplicação nos formulários `ProductWorkspace` (ficha, criação, edição) e `ProductSavePanel` (calculadora autenticada).
+- Nome do produto/peça/conjunto aparece em destaque grande na ficha em edição, com atualização durante digitação; na calculadora autenticada, campo Nome do produto foi movido à barra fixa para permitir nomear e salvar sem procurar formulário distante.
+- Barra considera menu lateral expandido/recolhido, mobile, safe-area e reserva espaço inferior. Modal continua sobre a barra. Não foi adotado `position:fixed` diretamente para botões de linha de composição ou ações secundárias internas (adicionar/remover peça), que permanecem contextualizados na linha.
+- Testes E2E existentes ampliados para presença da barra fixa e nome destacado; **CI do HEAD precisa ser confirmado**. Homologação visual desktop/mobile pelo proprietário pendente.
+- Próxima aplicação do padrão: fluxos de Impressões, Materiais e outros formulários operacionais, sem mudar automaticamente ações de linha/lista nem publicar sem validação. Sem merge/deploy ou banco.
