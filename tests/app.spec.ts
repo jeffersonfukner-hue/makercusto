@@ -1012,3 +1012,60 @@ test('P01-D: troca de bobina preserva preços antigos e reenvia mesma chave sem 
  expect(attempts[0].p_release_g).toBe(120);
  expect(attempts[0].p_new_reserve_g).toBe(120);
 });
+
+
+test('GAP01: ocorrência acima do saldo não cria baixa e retry mantém idempotência',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const production='66666666-6666-4666-8666-666666666666';
+ const lot='77777777-7777-4777-8777-777777777777',output='55555555-5555-4555-8555-555555555555';
+ const attempts:Record<string,unknown>[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina GAP01',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'partial',printer_id:null,
+   printer_name:'Impressora GAP01',planned_hours:null,actual_hours:null,notes:null,
+   created_at:new Date().toISOString(),outputs:[{id:output,product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   name:'Peça observada',planned:2,good:0,failed:0}]}]);
+  if(u.includes('rpc/mc_list_existing_spools'))return send([{id:lot,label:'Bobina 80g',name:'PETG',
+   initial_grams:80,remaining_grams:80,remaining_cost_estimate:null,cost_status:'unknown',notes:null,
+   created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_list_physical_occurrences'))return send([{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   production_id:production,material_name:'PETG',quantity_g:99.5,
+   quantity_basis:'weighed',observed_at:'2026-11-21T10:00:00Z',source_note:'Massa observada em balança.',
+   possible_lot_id:null,possible_lot_label:null,evidence_reference:null,possible_origin_note:null,
+   status:'registered',reported_by:user,created_at:new Date().toISOString()}]);
+  if(u.includes('rpc/mc_record_physical_occurrence')){
+   attempts.push(route.request().postDataJSON() as Record<string,unknown>);
+   if(attempts.length===1)return send({message:'Falha temporária simulada'},503);
+   return send('99999999-9999-4999-8999-999999999999');
+  }
+  if(u.includes('rpc/mc_confirm_print'))throw new Error('Confirmação física não deve ser solicitada no GAP01');
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await expect(page.getByText('Registrada, aguardando análise')).toBeVisible();
+ await page.getByRole('combobox',{name:'Impressão da ocorrência'}).selectOption(production);
+ await page.getByRole('textbox',{name:'Material observado'}).fill('PETG branco');
+ await page.getByRole('spinbutton',{name:'Massa física observada'}).fill('100');
+ await page.getByRole('textbox',{name:'Como foi constatado'}).fill('Pesagem física feita pelo operador e relatada na oficina.');
+ await page.getByRole('button',{name:'Registrar ocorrência sem baixa'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('Data e hora efetivas');
+ expect(attempts).toHaveLength(0);
+ await page.getByRole('textbox',{name:'Data e hora da ocorrência'}).fill('2026-11-21T10:00');
+ await page.getByRole('combobox',{name:'Bobina possivelmente utilizada'}).selectOption(lot);
+ await page.getByRole('textbox',{name:'Referência da evidência'}).fill('Pesagem em caderno da oficina');
+ await page.getByRole('button',{name:'Registrar ocorrência sem baixa'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('Falha temporária simulada');
+ await page.getByRole('button',{name:'Registrar ocorrência sem baixa'}).click();
+ await expect(page.getByText('Ocorrência física registrada como pendente. Nenhuma baixa, entrada ou custo foi lançado.')).toBeVisible();
+ expect(attempts).toHaveLength(2);
+ expect(attempts[0].p_idempotency_key).toBe(attempts[1].p_idempotency_key);
+ expect(attempts[0].p_quantity_g).toBe(100);
+ expect(attempts[0].p_possible_lot_id).toBe(lot);
+ expect(attempts[0].p_evidence_reference).toBe('Pesagem em caderno da oficina');
+ expect(attempts[0].p_quantity_basis).toBe('weighed');
+});
