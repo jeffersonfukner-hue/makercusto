@@ -231,7 +231,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Peça a reduzir<select aria-label="Peça a reduzir" value={reduceOutput}
      onChange={e=>{setReduceOutput(e.target.value);setReducePlanned('');reduceKey.current=newKey();}}>
      <option value="">Selecione</option>{prints.find(p=>p.id===reduceTarget)?.outputs.map(o=><option key={o.id} value={o.id}>{o.name} — previstas {o.planned}, confirmadas {Number(o.good)+Number(o.failed)}</option>)}</select></label>
-    <label>Nova quantidade planejada<input aria-label="Nova quantidade planejada" type="number" min="0" step="1" value={reducePlanned}
+    <label>Nova quantidade planejada<input aria-label="Novo total após redução parcial" type="number" min="0" step="1" value={reducePlanned}
      onChange={e=>{setReducePlanned(e.target.value);reduceKey.current=newKey();}}/>
      <small>Nunca inferior à soma de peças boas e rejeitadas já confirmadas.</small></label>
     <label>Reserva para liberação parcial (opcional)<select aria-label="Reserva para liberação parcial" value={reduceReservation}
