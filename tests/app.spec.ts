@@ -1346,3 +1346,41 @@ test('conjunto vincula guirlanda, estrela grande e pequena sem duplicar cadastro
  );
  expect(products.filter(p=>p.kind==='component')).toHaveLength(3);
 });
+
+
+test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const savedInput={...{
+  hours:5,quantity:1,grams:90,pricePerKg:120,printerPrice:1000,
+  averageWatts:120,lifetimeHours:1000,pricePerKwh:0.9,salePrice:40,
+  accessoryPerUnit:0,assemblyMinutesPerUnit:0,laborPerHour:0
+ }};
+ const readCalls:string[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=route.request().url(),send=(data:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+  if(url.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina Maker',owner_id:user}]);
+  if(url.includes('mc_printers?')||url.includes('mc_catalog?')||url.includes('mc_products?'))return send([]);
+  if(url.includes('rpc/mc_list_saved_calculations')){
+   readCalls.push('read');
+   return send([{product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    snapshot_id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',name:'Guirlanda',
+    kind:'component',sku:'GRD-01',unit_cost:16.7,saved_at:'2026-11-23T12:00:00Z',
+    saved_input:savedInput}]);
+  }
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Custos',exact:true}).click();
+ await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toBeVisible();
+ await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+ await page.getByRole('button',{name:'Carregar dados na calculadora'}).click();
+ await expect(page.getByRole('status').filter({hasText:'Dados de "Guirlanda" carregados'})).toBeVisible();
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('90');
+ await expect(page.getByTestId('simplePrice')).toHaveValue('120');
+ await expect(page.getByTestId('hours')).toHaveValue('5');
+ await expect(page.getByTestId('salePrice')).toHaveValue('40');
+ expect(readCalls).toContain('read');
+});
