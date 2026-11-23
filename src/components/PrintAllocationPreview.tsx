@@ -30,6 +30,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
  const [basis,setBasis]=useState<Record<string,string>>({});
  const [lines,setLines]=useState<AllocationLine[]>([]);
  const sequence=useRef(0);
+ const sourceRequest=useRef(0);
  const [preview,setPreview]=useState<AllocationSnapshot|null>(null);
  const [error,setError]=useState('');
  const print=prints.find(x=>x.id===printId);
@@ -41,12 +42,17 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
   setPrintId(id);setLines([]);setPreview(null);setError('');setBasis({});
   setSources(null);setSourcesError('');setSourceVersion('entrada-local-1');
   setAmount('');setSource('');setRationale('');
+  const request=++sourceRequest.current;
+  setSourcesBusy(Boolean(workspaceId&&id));
   if(!workspaceId||!id)return;
-  setSourcesBusy(true);
   void getPrintConsumptionSources(workspaceId,id).then(data=>{
-   setSources(current=>current?.execution_id===id?current:data);
-  }).catch(e=>setSourcesError('Fontes não disponíveis: '+(e as Error).message))
-   .finally(()=>setSourcesBusy(false));
+   if(request!==sourceRequest.current)return;
+   if(data.execution_id!==id||!Array.isArray(data.lines)||data.read_only!==true){
+    throw new Error('Resposta de fontes de custo inválida.');
+   }
+   setSources(data);
+  }).catch(e=>{if(request===sourceRequest.current)setSourcesError('Fontes não disponíveis: '+(e as Error).message);})
+   .finally(()=>{if(request===sourceRequest.current)setSourcesBusy(false);});
  };
  const importCost=(row:PrintConsumptionSource,costCategory:'model'|'purge'|'loss')=>{
   const value=costCategory==='model'?row.model_cost_brl:
