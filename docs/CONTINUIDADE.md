@@ -427,3 +427,14 @@
 - Dados reais do Lançador de hélices preservados; `mc_filaments` e `mc_stock_events` continuam sem dados reais. O usuário precisa cadastrar a bobina física com o peso observado, sem criar exemplos falsos.
 - Supabase Security Advisor identificou advertências (11 SECURITY DEFINER chamáveis por authenticated, proteção de senhas vazadas desabilitada); não afirmar auditoria de segurança concluída. Nenhuma mudança na configuração Auth.
 - Próxima etapa é L2/L3 de impressão real e confirmação idempotente; não ativar baixa sem validação transacional e segurança de papéis. Sem merge/deploy.
+
+
+## 22/11/2026 — L2/L3, implementação na branch (ainda não aplicada ao banco)
+- Base: L1 confirmado pelo CI #45086849957. Consultados AGENTS, padrões, arquitetura, continuidade, matriz de 39 e homologações RES/PAR/P01/P02.
+- Foram versionados `supabase/migrations/20261122212500_print_execution_l2_l3.sql`, `src/components/PrintsWorkspace.tsx`, cliente REST e integração com navegação autenticada. Teste Playwright de L2 com REST simulado adicionado.
+- L2: rascunho vincula impressora física e peças diferentes com quantidades e tempo/fonte opcionais, sem baixa.
+- L3 (implementação inicial restrita): incrementos idempotentes por chave/payload, eventos por saída, lotes individualizados, autenticação por proprietário/gestor, lock transacional por oficina, rejeição de saldo físico menos reservas insuficiente, trilha e snapshots de custo unitário de lote conhecido. A tela exige identificação de saída, bobina e origem da massa. Sem lançamento financeiro conciliado.
+- Bloqueios deliberados: encerramento definitivo até rateio e snapshot conciliado de L4; confirmações quando há reserva ativa da mesma execução (a conciliação de reserva de P01 não está concluída); sem alegar suporte integral a falhas/retrabalho/estornos. Isto não converte P01/P02/G02 em comprovadas.
+- **Estado dos testes:** CI da nova branch em andamento ao registrar esta nota; SQL ainda não aplicado nem validado em Supabase. Operações reais L3 indisponíveis até aplicação controlada da migração, testes transacionais de replay/concorrência/isolamento e validação manual.
+- **Sem merge, deploy, aplicação de SQL no banco ou operações pagas.**
+- Evidências: commits da branch a partir de `658e0875de3f47a8bc7cb5350fcd8cb1d1b73e7c`; PR #1 e arquivo de migração citado.
