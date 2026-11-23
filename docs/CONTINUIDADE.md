@@ -463,3 +463,10 @@
 - Os dados usados são **inteiramente sintéticos**; ambiente descartado após CI. Banco Supabase MakerCusto não foi alterado.
 - **Limites:** `auth.uid()` foi simulado no banco de testes para chamadas SQL sob administrador; não houve teste E2E com JWT real, matriz RLS entre duas oficinas reais, corrida multi-sessão, confirmação com reserva ativa, produção de estoque acabado ou fechamento/rateio financeiro. L3 permanece implementação parcial, não homologação integral.
 - Matriz: S02, R02 e P02 agora classificados **P** por evidência efetiva do fluxo inicial (20 P, 19 A, 0 C), sem alterar as decisões homologadas.
+
+## 22/11/2026 — Regressão de concorrência L3 e isolamento no CI
+- Incluído `supabase/tests/l2_l3_concurrency.sh` no CI existente (PostgreSQL 17 descartável), sem acesso ao Supabase operacional.
+- **Resultado real:** CI #45095841121 `success` para commit `20dac01db2c3b7889f8586da237bf8f6357d8dac`. Duas sessões confirmaram concorrentemente 7 g cada contra saldo físico de 10 g: **uma confirmou, a outra foi recusada, saldo final 3 g, apenas uma confirmação persistida**.
+- Sob identidade sintética diferente, leitura de execuções e de movimentos foi bloqueada (RLS/autorização na simulação PostgreSQL), assim como tentativa de confirmação RPC. O teste SQL reversível anterior continuou aprovado; TypeScript, unitários, build e **86/86 Playwright desktop/mobile** aprovados.
+- Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45095841121 ; script `supabase/tests/l2_l3_concurrency.sh`.
+- **Limites remanescentes:** Supabase real sem migração L2/L3 aplicada; testes não equivalem a login/token JWT reais, nem resolvem reservas ativas, snapshots monetários, estoque de acabados ou encerramento da produção. A classificação continua 20 P, 19 A, 0 C; 39 decisões preservadas.

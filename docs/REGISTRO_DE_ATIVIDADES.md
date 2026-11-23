@@ -517,3 +517,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45095409926 ; commits `933abd48e40d904247fb2859c8a46607309dba4e`, `72549f7038b62ede716491fbfde97c7774db68d0`, `cd1f58729587c279e822d5b972ab9f998ab2bc03`.
 - **Pendências/limites:** concorrência simultânea, JWT real/RLS, cenários multioficina e reservas; custos financeiros e movimentação de produto acabado permanecem pendentes. Teste SQL usa identidade simulada em banco descartável, não garante segurança operacional integral.
 - **Sem alterações no Supabase real, merge, deploy ou contratação de serviço externo pago.**
+
+## 22/11/2026 — Concorrência L3 e isolamento RLS, execução no CI
+- **Projeto/cliente:** MakerCusto (desenvolvimento próprio).
+- **Início/término/duração efetiva em Brasília:** não aferidos; não calcular tempo efetivo a partir das mensagens nem do runtime de CI.
+- **Atividades executadas:** criação do script `supabase/tests/l2_l3_concurrency.sh`, configuração do CI para iniciar duas sessões PostgreSQL concorrentes contra a mesma bobina sintética e verificar resultado, saldo e isolamento de identidade por RPC e SELECT sob papel `authenticated`.
+- **Resultados comprovados:** GitHub Actions #45095841121 `success`, commit `20dac01db2c3b7889f8586da237bf8f6357d8dac`; uma confirmação de 7 g aprovada e a segunda de 7 g rejeitada contra saldo de 10 g, saldo final 3 g; uma confirmação registrada; outra identidade sem leitura de execuções/movimentos e sem permissão para confirmar. Regressão SQL anterior e 86/86 E2E desktop/mobile aprovados, tipagem, unitários e build aprovados.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45095841121 ; commits `1ee8c318b96349e4108ad76ad3adc2aa23a45222` e `20dac01db2c3b7889f8586da237bf8f6357d8dac`.
+- **Pendências:** autenticação JWT real, RLS no Supabase remoto, reserva ativa e reconciliação P01, lançamento de estoque acabado e snapshots conciliados, fechamento seguro L3/L4. Sem merge, deploy ou alteração de dados no Supabase MakerCusto.
