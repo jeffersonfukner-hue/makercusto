@@ -136,7 +136,7 @@ export default function App(){
   setStored(prev=>[...prev.filter(p=>p.id!==saved.id),saved]);
   setPrinters(prev=>[...prev.filter(p=>p.id!==saved.id),profileFromDb(saved)]);setPrinterId(saved.id);
  };
- const logout=async()=>{await signOut();setActiveSection('overview');setSession(null);setWorkspaceId(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));};
+ const logout=async()=>{await signOut();setActiveSection('overview');setSession(null);setWorkspaceId(null);setRevisionTarget(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));};
  const activePrinter=printers.find(p=>p.id===printerId)??printers[0];
  const addPrinter=()=>setPrinterModal('new');
  const isReferencePrinter=printerId==='example'||printerId.startsWith('reference:');
@@ -206,6 +206,7 @@ export default function App(){
    setDraft(newDraft());setEditId(null);setNextId(1);setErrorDraft('');
  };
  const [loadedCalculation,setLoadedCalculation]=useState('');
+ const [revisionTarget,setRevisionTarget]=useState<SavedCalculation|null>(null);
  const applySavedCalculation=(saved:SavedCalculation)=>{
   const input=saved.saved_input as Partial<CostInput>|null;
   if(!input||typeof input!=='object'){setAccountError('Cálculo salvo sem parâmetros válidos.');return false;}
@@ -223,6 +224,7 @@ export default function App(){
   else{setAdvanced(false);setDetails(false);}
   setAccountError('');
   setLoadedCalculation('Dados de "'+saved.name+'" carregados. Recalculando com a impressora selecionada; o histórico original foi preservado.');
+  setRevisionTarget(saved);
   return true;
  };
  const activeInput:CostInput={
@@ -327,7 +329,8 @@ export default function App(){
   </div>
   </>}
   {(!session||activeSection==='calculator')&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
-   onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation}
+   onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
+   onClearRevisionTarget={()=>setRevisionTarget(null)}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
    onCreateAssembly={()=>setActiveSection('assemblies')}/>} 
   {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
