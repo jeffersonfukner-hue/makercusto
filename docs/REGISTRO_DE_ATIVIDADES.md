@@ -771,3 +771,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** commits `8926ce4e1259f92df81ba337dc4f6a0e2937ba4e`, `e96d015a1002c84c7ca3eb32033843d6f592d20c`, `424af42780e6ec80fe64d6477e0b1a0741365b56`, `5f0708bca71526212fbd5d3f533d5ffffa00cf26`, `d4af4a12ffb8baf93477b519e935be70edcf1301`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
 - **Resultados:** código/documento/testes registrados em branch; novo CI deve ser conferido no HEAD antes de liberar qualquer etapa. Nenhum backend financeiro foi ativado, nenhum banco operacional alterado, nenhum merge/deploy realizado.
 - **Pendências:** origem financeira exata P06, fechamento transacional auditável, autorização/RLS, estorno e homologação visual.
+
+## 23/11/2026 — Origem financeira exata P06, domínio racional e testes L4
+
+- **Projeto/cliente:** MakerCusto — produto próprio.
+- **Início/término (Brasília):** não medidos; **duração efetiva:** não registrada. Não inferir jornada por troca de mensagens.
+- **Atividades comprovadas:** leitura dos contratos técnicos e políticas P05/P06/P09, inspeção das colunas L3/estoque; implementação de tabela de origem financeira congelada por confirmação, trigger append-only, RPC segura read-only, cálculo racional compartilhado e custo por categorias; criação de testes SQL com rollback e unitários; atualização do CI em PostgreSQL efêmero.
+- **Evidências (commits):** `7281b64e7e6f32dc0b1c17e10c12c27dac39e505`, `2c266b90288b0a505e86dce31457b1d4197d046d`, `89e287a1f2efd8d75cf60e13f1e1fec02afa6965`, `7eb3df03707526be07e02df0e31a5d7eff2ee8e7`, `dd868e1cf675078e2ef53203599b3dde5a0ce294`, `eab6c059236624c541c0edef483691857eaea37f`, `ade6abf7674f459ffee65e8195de32b177b109d1`, `ddfcd58c0844e62060f8658144a12367c67add29`, `c81e84953e54143dc0b5dbc419793efdb45a233b`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Resultado:** alterações no GitHub na branch de desenvolvimento, sem migração operacional/merge/deploy. Novos registros são preservados com precisão original. CI completo do HEAD não estava concluído no momento deste registro.
+- **Pendências:** verificação final de CI, agregação em snapshots financeiros imutáveis e fechamento transacional seguro com fontes P07, validação de autorização e homologação visual.
