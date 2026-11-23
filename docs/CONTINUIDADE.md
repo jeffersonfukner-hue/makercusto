@@ -673,3 +673,5 @@
 - Criado teste Playwright para selecionar impressão com guirlanda + estrela grande + estrela pequena, distribuir R$10,00 por três bases declaradas e exigir ausência de RPC transacional.
 - **Limites deliberados:** não há leitura automática de custos reais de lotes e energia para L4, não há snapshot imutável financeiro persistido, custo de tempo/máquina ainda depende de dados de origem. Não considerar L4 fechada nem permitir encerramento definitivo da execução. O mecanismo puro é base para ligação posterior com snapshots/consumos reconciliados.
 - **Pendências:** CI do HEAD, demais fluxos integrados, testes JWT reais, política operacional de snapshots e homologação visual. Sem merge, deploy ou aplicação de SQL em banco operacional.
+
+- **CI após implementação L4:** run #396 (`45273610045`) **concluído com sucesso** no commit `a15ce4c6d9c08c0b1744be0a8a009bc818ffce3e`: tipagem, Vitest, build, regressões SQL isoladas, concorrência/RLS e Playwright desktop/mobile. Link: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45273610045 . Esta verificação não é homologação visual nem autoriza fechamento financeiro L4.
