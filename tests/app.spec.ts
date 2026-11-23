@@ -889,11 +889,15 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
  await expect(page.getByText(/Revisão vencida \(reserva mantida\)/)).toBeVisible();
  await page.getByRole('combobox',{name:'Reserva para revisar'}).selectOption(reservation);
+ await expect(page.getByRole('group',{name:'Ações de Prazo da reserva'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Registrar reserva sem baixa'})).toHaveCount(0);
  await page.getByRole('button',{name:'Salvar prazo de revisão'}).click();
  await expect(page.getByText('Prazo de revisão atualizado; nenhuma reserva foi liberada.')).toBeVisible();
  expect(dueAttempts).toHaveLength(1);
  expect(dueAttempts[0].p_due_at).toBe(null);
  await page.getByRole('button',{name:'Cancelar impressão Hélice'}).click();
+ await expect(page.getByRole('group',{name:'Ações de Cancelar impressão'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Registrar reserva sem baixa'})).toHaveCount(0);
  await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
  await expect(page.getByRole('alert').last()).toContainText('10 a 1000 caracteres');
  expect(cancelAttempts).toHaveLength(0);
@@ -1054,6 +1058,8 @@ test('GAP01: ocorrência acima do saldo não cria baixa e retry mantém idempot�
  await expect(page.getByText('Registrada, aguardando análise')).toBeVisible();
  await page.getByRole('combobox',{name:'Impressão da ocorrência'}).selectOption(production);
  await page.getByRole('textbox',{name:'Material observado'}).fill('PETG branco');
+ await expect(page.getByRole('group',{name:'Ações de Ocorrência física'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Confirmar consumo incremental'})).toHaveCount(0);
  await page.getByRole('spinbutton',{name:'Massa física observada'}).fill('100');
  await page.getByRole('textbox',{name:'Como foi constatado'}).fill('Pesagem física feita pelo operador e relatada na oficina.');
  await page.getByRole('button',{name:'Registrar ocorrência sem baixa'}).click();
@@ -1181,6 +1187,7 @@ test('GAP01-C: proposta de 50 g não baixa estoque e reenvio usa chave idempoten
  await expect(page.getByRole('list',{name:'Propostas de inventário pendentes'})).toContainText('Pendente de decisão');
  await page.getByRole('combobox',{name:'Ocorrência para proposta de inventário'}).selectOption(occurrence);
  await page.getByRole('combobox',{name:'Bobina da proposta de ajuste'}).selectOption(lot);
+ await expect(page.getByRole('group',{name:'Ações de Proposta de inventário'})).toBeVisible();
  await page.getByRole('spinbutton',{name:'Diferença proposta em gramas'}).fill('0');
  await page.getByRole('button',{name:'Registrar proposta sem alterar estoque'}).click();
  await expect(page.getByRole('alert').last()).toContainText('diferente de zero');
@@ -1246,6 +1253,8 @@ test('GAP01-D/E: dossiê mostra reservas alheias e consumo histórico sem aciona
  await page.goto('/');await openSystemMenuIfMobile(page);
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
  await page.getByRole('combobox',{name:'Ocorrência para dossiê'}).selectOption(occurrence);
+ await expect(page.getByRole('group',{name:'Ações de Dossiê de conciliação'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Registrar proposta sem alterar estoque'})).toHaveCount(0);
  await page.getByRole('button',{name:'Consultar dossiê (somente leitura)'}).click();
  const result=page.locator('[aria-label="Resultado do dossiê GAP01"]');
  await expect(result).toContainText('Reservas de outras ordens: 10 g');
