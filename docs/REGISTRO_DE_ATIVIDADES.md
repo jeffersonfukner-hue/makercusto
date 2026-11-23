@@ -732,3 +732,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Execução:** correção de eventos `onChange` na seleção de formulários do módulo Impressões, com preservação da ação correspondente à seção ativa. Commit `79817b0cfe64f79a09742430691ca054edd2f767`. Documentado contrato: CI/testes/correções são responsabilidades do agente, deploy manual e homologação visual são responsabilidades do proprietário.
 - **Evidência:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45264494581 ; https://github.com/jeffersonfukner-hue/makercusto/pull/1.
 - **Pendências:** resultado final do CI sobre correção; revisão visual após aprovação. Sem merge, deploy, SQL em ambiente operacional ou outros gastos autorizados.
+
+## 23/11/2026 — Persistência do contrato de responsabilidades
+
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Início, término e duração efetiva (Brasília):** não mensurados; não houve inferência de horas pelo intervalo de mensagens.
+- **Atividade executada:** conferência do contrato já existente em `docs/CONTINUIDADE.md` e promoção para o arquivo normativo `AGENTS.md`, lido em novos chats. Formalizados os responsáveis por CI, correções, deploy manual e homologação, além de linguagem explícita para “NÃO FAÇA O DEPLOY AINDA” e “PODE FAZER O DEPLOY MANUAL”.
+- **Evidência:** commit `d78a8dd5faf391d65314eeffa2e31751819e176a`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Pendência:** CI do HEAD e homologação visual somente quando a versão estiver pronta. Sem merge/deploy/SQL operacional.
