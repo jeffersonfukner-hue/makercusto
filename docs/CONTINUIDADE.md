@@ -420,3 +420,10 @@
 - **Segurança:** bloqueadas operações diretas de escrita/truncamento dos clientes sobre eventos/movimentos/lotes, exigida identidade e papel proprietário/gestor; replay idempotente e divergente testados em transações com rollback; preservados os 4 registros reais de produto, nenhum filamento/evento/lote de teste persistido.
 - **Evidências:** migrações `supabase/migrations/20261122210500_initial_spool_inventory.sql` e `20261122211000_spool_inventory_hardening.sql`, documentos e testes E2E, branch `feat/fundacao-makercusto`. CI ainda deve ser conferido ao concluir.
 - **Próximos lotes:** L2 cadastro da impressão do lançador/hastes/hélices, L3 confirmação segura e idempotente, L4 custeio por lote/categoria conforme P05/P06. Proibido tratar P08 como completa pelo inventário inicial; não inventar pesagens, tempos, quantidades, compras ou preços.
+
+
+### Fechamento do Lote L1 — 22/11/2026
+- GitHub Actions #45086849957 `success`, commit validado `1713872b871783a681b5b9b03d82687546e04c67`, 11 testes unitários + 80 E2E desktop/mobile; TypeScript/build aprovados. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45086849957
+- Dados reais do Lançador de hélices preservados; `mc_filaments` e `mc_stock_events` continuam sem dados reais. O usuário precisa cadastrar a bobina física com o peso observado, sem criar exemplos falsos.
+- Supabase Security Advisor identificou advertências (11 SECURITY DEFINER chamáveis por authenticated, proteção de senhas vazadas desabilitada); não afirmar auditoria de segurança concluída. Nenhuma mudança na configuração Auth.
+- Próxima etapa é L2/L3 de impressão real e confirmação idempotente; não ativar baixa sem validação transacional e segurança de papéis. Sem merge/deploy.
