@@ -729,3 +729,12 @@
 - Segurança: RPC `SECURITY DEFINER` com `search_path` restrito, autenticação e papel ativo `owner/manager`, verificação da execução e da revisão na mesma oficina, revogação de EXECUTE para anon/public. Nenhum movimento, snapshot, alteração de produção ou evento de auditoria é escrito pela consulta.
 - Regressão de banco `supabase/tests/l4_readiness_dossier_rollback.sql`, rodada após a migração em PostgreSQL **descartável** no workflow: execução ainda sem produção, duas bobinas (estimada e desconhecida), revisão pendente, bloqueios, RLS, seleção explícita de revisão e comparação de contadores de tabelas antes/depois da consulta.
 - **Ainda pendente:** conciliação exata de categorias e destinos no servidor, fontes P07 de energia/máquina, P09 de compensações e confirmação financeira imutável. **NÃO FAZER DEPLOY** nem aplicar migração operacional.
+
+
+## 23/11/2026 — L4-G03: dossiê de impedimentos integrado à interface de Impressões
+
+- **Implementado em branch:** `src/data/supabase.ts` expõe `getL4CloseReadiness`, com tipo estrito do contrato RPC `mc_get_l4_close_readiness` (migração G02 ainda **não aplicada** ao Supabase operacional). `src/components/PrintReadinessPanel.tsx` apresenta consulta explícita por impressão, lista motivos do bloqueio traduzidos, quantidade de origens ausentes, custo desconhecido/estimado, categorias pendentes, reservas e estornos. O componente verifica na resposta `posting_allowed=false`, `financially_final=false` e `computed_live=true`, além de IDs da oficina/execução. Respostas defasadas são ignoradas; falhas aparecem ao operador sem preencher valores fictícios.
+- `PrintAllocationPreview.tsx`: dossiê vinculado à impressão selecionada, com estado isolado por `key` da execução. A simulação de rateio permanece independente da consulta, sem novas chamadas que lancem ou alterem custos.
+- `tests/app.spec.ts`: teste Playwright da mesa com guirlanda + estrela grande + estrela pequena ampliado para consultar explicitamente o dossiê, verificar motivos P05/P06/P09 e confirmar ausência de escritas financeiras.
+- **Dependência conhecida:** a tela só obtém dados reais após implantação **separadamente autorizada** das migrações G02 e anteriores. Sem autorização, retorna erro visível; não considera ausência de dossiê como prontidão.
+- **Sem liberação de fechamento:** consulta apenas, operação `posting_allowed=false`, snapshots definitivos P07/P09 pendentes. Nenhum merge, deploy, crédito ou migração operacional realizada.
