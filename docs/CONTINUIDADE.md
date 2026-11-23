@@ -720,3 +720,12 @@
 - Sem merge, deploy, migração operacional ou gasto de créditos.
 
 - **CI integral aprovado para o L4-G01:** #433 / run `45287099185` no commit `98f55e814e3bf032540ba5a6f7d337defb9dce28`: tipos, Vitest, build, regressão SQL e rollback da revisão financeira, concorrência em duas sessões, RLS/isolamento e Playwright desktop/mobile. Evidência: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45287099185 . O CI comprova a **revisão pendente auditável**, NÃO fechamento financeiro final.
+
+## 23/11/2026 — L4-G02: dossiê dinâmico de impedimentos financeiros, sem postagem
+
+- Relidos os contratos de trabalho, P05/P06/P09 e as migrações de origem exata e de revisão L4 já aprovadas em CI #434. A revisão anterior é uma fotografia histórica **pendente**; não pode ser tratada como autorização atual para fechar custos.
+- Nova migração no **GitHub somente**: `supabase/migrations/20261123223000_l4_readiness_dossier.sql`, função `mc_get_l4_close_readiness(workspace,execution,review?)`, exclusivamente **consulta**. O dossiê calcula na hora e retorna origem exata ausente, custo desconhecido/estimado, fonte dita conhecida mas sem referência de compra, saídas/consumos confirmados, reservas ativas, confirmações estornadas e estado do checklist de categorias. Retorna fontes/justificativas e bloqueios nomeados para auditoria do usuário.
+- **Não há autorização implícita para lançar custos:** `status=pending`, `posting_allowed=false`, `financially_final=false` são invariáveis, inclusive quando todas as categorias declaradas são consideradas atendidas. Sem conciliação P05/P06 final e mecanismo P09 de compensação, o dossiê bloqueia contabilização.
+- Segurança: RPC `SECURITY DEFINER` com `search_path` restrito, autenticação e papel ativo `owner/manager`, verificação da execução e da revisão na mesma oficina, revogação de EXECUTE para anon/public. Nenhum movimento, snapshot, alteração de produção ou evento de auditoria é escrito pela consulta.
+- Regressão de banco `supabase/tests/l4_readiness_dossier_rollback.sql`, rodada após a migração em PostgreSQL **descartável** no workflow: execução ainda sem produção, duas bobinas (estimada e desconhecida), revisão pendente, bloqueios, RLS, seleção explícita de revisão e comparação de contadores de tabelas antes/depois da consulta.
+- **Ainda pendente:** conciliação exata de categorias e destinos no servidor, fontes P07 de energia/máquina, P09 de compensações e confirmação financeira imutável. **NÃO FAZER DEPLOY** nem aplicar migração operacional.
