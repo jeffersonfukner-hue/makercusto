@@ -56,6 +56,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    setLastSavedKind(kind);setName('');setSku('');setDescription('');setKind('product');
    setMessage(revisionTarget?'Nova revisão de custo salva na mesma ficha. O histórico anterior foi preservado.':'Produto, versão inicial e custo estimado salvos na sua oficina.');
    setRequestKey(null);
+   if(revisionTarget)onClearRevisionTarget?.();
    setRefresh(n=>n+1);
   }catch(e){setError('Não foi possível salvar o produto: '+(e as Error).message);}
   finally{setBusy(false);}
