@@ -56,7 +56,7 @@ returns jsonb language sql stable security definer set search_path='' as $$
   and x.total_cost is not null
   order by x.confirmed_at desc,x.id desc limit 1
  ) s on true
- where p.workspace_id=p_workspace_id and p.kind='component' and p.active),'[]'::jsonb)
+ where p.workspace_id=p_workspace_id and p.kind in ('component','product') and p.active),'[]'::jsonb)
  else '[]'::jsonb end
 $$;
 revoke all on function public.mc_list_component_library(uuid) from public,anon;
