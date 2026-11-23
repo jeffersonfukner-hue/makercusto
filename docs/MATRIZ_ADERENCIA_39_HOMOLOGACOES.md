@@ -111,3 +111,9 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - Leitura do banco confirmou migrações L1 presentes, mas funções e tabela de eventos L2/L3 **ainda não instaladas**; sem migração de teste aplicada.
 - Existe roteiro de regressão transacional reversível em `supabase/tests/l2_l3_rollback.sql`, versionado e **não executado**. Até execução isolada real, não reclassificar P02, S02, S03 ou G02 como completas.
 - Revisão do código incluiu restrição explícita de lote de filamento em gramas e identificação não nula de peça. Concorrência entre sessões e autorização por login real não foram testadas.
+
+
+## Complemento de evidência L3 — 22/11/2026
+- O frontend agora rejeita deltas fracionários por saída, excesso acima das peças planejadas pendentes e massa com precisão superior a 0,001 g.
+- Testes de retry da confirmação com mesma chave de idempotência e rejeições locais aprovados em ambiente REST simulado; CI #45094382511: 86 Playwright desktop/mobile, tipos, unitários e build, `success`.
+- **Sem mudança de classificação** das 39 políticas: o backend L3 permanece como migração não aplicada; testes reais transacionais, isolamento entre usuários, concorrência, reservas e snapshot conciliado continuam ausentes.
