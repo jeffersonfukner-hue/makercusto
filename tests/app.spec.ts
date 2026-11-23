@@ -525,6 +525,8 @@ test('conjunto de três peças: catálogo, criação, custos, edição e duplica
  await page.getByRole('button',{name:'+ Novo conjunto'}).click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toBeEmpty();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Brinquedo lançador de hélices');
+ await expect(page.locator('.product-name-feature strong')).toHaveText('Brinquedo lançador de hélices');
+ await expect(page.locator('.form-action-dock')).toHaveCSS('position','fixed');
  await page.getByRole('textbox',{name:'Nome da peça 1'}).fill('Lançador');
  await page.getByRole('textbox',{name:'Nome da peça 2'}).fill('Haste');
  await page.getByRole('button',{name:'+ Adicionar peça'}).click();
@@ -535,7 +537,9 @@ test('conjunto de três peças: catálogo, criação, custos, edição e duplica
  await expect(page.getByText('R$ 4,50 (informado)')).toBeVisible();
  await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Ficha do produto'})).toBeVisible();
- await expect(page.getByText('Brinquedo lançador de hélices')).toBeVisible();
+ await expect(page.locator('.product-detail-head h3')).toHaveText('Brinquedo lançador de hélices');
+ await expect(page.locator('.form-action-dock')).toBeVisible();
+ await expect(page.locator('.form-action-dock')).toHaveCSS('position','fixed');
  await expect(page.getByText('R$ 4,50 (informado)')).toBeVisible();
  expect((payload?.p_parts as unknown[])).toHaveLength(3);
  await page.getByRole('button',{name:'Editar',exact:true}).click();
@@ -1275,6 +1279,8 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  await page.getByRole('button',{name:'Custos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Estrela grande');
+ await expect(page.locator('.product-name-feature strong')).toHaveText('Estrela grande');
+ await expect(page.locator('.form-action-dock')).toHaveCSS('position','fixed');
  await page.getByRole('combobox',{name:'Tipo de produto'}).selectOption('component');
  await page.getByRole('button',{name:'Salvar produto e custo'}).click();
  await expect(page.getByText('Produto, versão inicial e custo estimado salvos na sua oficina.')).toBeVisible();
