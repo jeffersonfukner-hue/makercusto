@@ -695,3 +695,14 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Evidências:** PR https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; migração `supabase/migrations/20261123152000_append_product_calculation.sql` e teste `supabase/tests/product_calculation_revision_rollback.sql`; CI #354 previamente aprovado https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45212942492.
 - **Pendências:** conclusão da CI do HEAD, aplicação futura da RPC apenas mediante autorização específica, E2E visual/autenticado e integração das placas mistas.
 - **Restrições cumpridas:** sem alteração direta do Supabase, merge ou deploy; tempo trabalhado não estimado.
+
+
+## 23/11/2026 — Barra de ações fixa e nome de produto em destaque
+
+- **Projeto/cliente:** MakerCusto — desenvolvimento próprio.
+- **Horários de início/término (Brasília):** não aferidos. **Duração efetiva:** não mensurada; não inferir trabalho pelo intervalo entre mensagens.
+- **Atividades executadas:** inspeção dos componentes `ProductWorkspace`, `ProductSavePanel`, `SystemNavigation`, CSS responsivo e testes Playwright; criação do `FormActionDock`; substituição das ações principais dispersas nas fichas por rodapé fixo; nome exibido em destaque e campo Nome do produto acessível no rodapé da calculadora; ajustes mobile/sidebar e asserções E2E.
+- **Resultados versionados:** `src/components/FormActionDock.tsx`, `src/components/ProductWorkspace.tsx`, `src/components/ProductSavePanel.tsx`, `src/styles.css` e `tests/app.spec.ts`. Commits da implementação: `df665ac`, `594153f`, `390b08e`, `aa44e2f`, `e4482b9`, `f042cf5`, `bd628d2`.
+- **Pendências:** confirmação da CI do HEAD, homologação visual nos dois tamanhos, aplicar padrão a outros formulários em etapas apropriadas. Não declarar revisão visual aprovada.
+- **Evidências:** PR https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; histórico dos commits na branch `feat/fundacao-makercusto`.
+- **Restrições cumpridas:** sem SQL aplicado, merge ou deploy; nenhum tempo de execução presumido.
