@@ -1053,7 +1053,7 @@ test('GAP01: ocorrência acima do saldo não cria baixa e retry mantém idempot�
  await page.getByRole('spinbutton',{name:'Massa física observada'}).fill('100');
  await page.getByRole('textbox',{name:'Como foi constatado'}).fill('Pesagem física feita pelo operador e relatada na oficina.');
  await page.getByRole('button',{name:'Registrar ocorrência sem baixa'}).click();
- await expect(page.getByRole('alert').last()).toContainText('Data e hora efetivas');
+ await expect(page.getByRole('alert').last()).toContainText('data e a hora efetivas');
  expect(attempts).toHaveLength(0);
  await page.getByRole('textbox',{name:'Data e hora da ocorrência'}).fill('2026-11-21T10:00');
  await page.getByRole('combobox',{name:'Bobina possivelmente utilizada'}).selectOption(lot);
