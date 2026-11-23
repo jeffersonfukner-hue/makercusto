@@ -762,3 +762,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Pendências:** CI completo, vínculo financeiro exato e snapshots finais, migração separadamente autorizada e homologação visual. Nenhum merge/deploy ou alteração no Supabase operacional.
 
 - **CI confirmado após implementação:** GitHub Actions #406, run `45276261898`, commit `576dd4bede1b3f46966efde1da2889ecf2aec9d1` — **sucesso integral**, com testes SQL read-only, tipos, Vitest, build, concorrência/RLS e Playwright desktop/mobile. https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45276261898 . Nenhum merge/deploy ou aplicação operacional de migração foi executado.
+
+## 23/11/2026 — L4-F, preparação de snapshot pendente e diagnóstico de origem
+
+- **Projeto/cliente:** MakerCusto — produto próprio.
+- **Data:** 23/11/2026 (Brasília). **Início/término:** não aferidos. **Duração efetiva:** não medida; não calculada pelo intervalo entre mensagens.
+- **Atividades efetivamente executadas:** consulta de AGENTS.md, README, arquitetura, padrões, homologações P05/P06/P09 e continuidade; confirmação do CI #408 anterior; implementação de preparação financeira read-only com status necessariamente pendente, checagens por confirmação/categoria, origem duplicada, preço desconhecido/estimado e falta de precisão; testes unitários e ampliação da prova Playwright; diagnóstico exibido na prévia L4; contrato de snapshot futuro documentado.
+- **Evidências:** commits `8926ce4e1259f92df81ba337dc4f6a0e2937ba4e`, `e96d015a1002c84c7ca3eb32033843d6f592d20c`, `424af42780e6ec80fe64d6477e0b1a0741365b56`, `5f0708bca71526212fbd5d3f533d5ffffa00cf26`, `d4af4a12ffb8baf93477b519e935be70edcf1301`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- **Resultados:** código/documento/testes registrados em branch; novo CI deve ser conferido no HEAD antes de liberar qualquer etapa. Nenhum backend financeiro foi ativado, nenhum banco operacional alterado, nenhum merge/deploy realizado.
+- **Pendências:** origem financeira exata P06, fechamento transacional auditável, autorização/RLS, estorno e homologação visual.
