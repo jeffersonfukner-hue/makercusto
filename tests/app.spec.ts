@@ -1069,3 +1069,63 @@ test('GAP01: ocorrência acima do saldo não cria baixa e retry mantém idempot�
  expect(attempts[0].p_evidence_reference).toBe('Pesagem em caderno da oficina');
  expect(attempts[0].p_quantity_basis).toBe('weighed');
 });
+
+
+test('GAP01-B/F: investigação mantém observação original, histórico e retry sem ajuste',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const production='66666666-6666-4666-8666-666666666666',lot='77777777-7777-4777-8777-777777777777';
+ const occurrence='99999999-9999-4999-8999-999999999999';
+ const requests:Record<string,unknown>[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina GAP01',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'partial',printer_id:null,
+   printer_name:'Impressora GAP01',planned_hours:null,actual_hours:null,notes:null,
+   created_at:'2026-11-22T20:00:00Z',outputs:[{id:'55555555-5555-4555-8555-555555555555',
+   product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',name:'Peça teste',planned:2,good:0,failed:0}]}]);
+  if(u.includes('rpc/mc_list_existing_spools'))return send([{id:lot,label:'Bobina de teste',name:'PETG',
+   initial_grams:80,remaining_grams:80,remaining_cost_estimate:null,cost_status:'unknown',notes:null,
+   created_at:'2026-11-22T20:00:00Z'}]);
+  if(u.includes('rpc/mc_list_physical_occurrence_reviews'))return send([{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   occurrence_id:occurrence,prior_status:'registered',next_status:'under_review',cause_hypothesis:'unknown',
+   finding_note:'Ainda não há evidência de origem, aguardando inspeção.',evidence_reference:null,
+   possible_lot_id:null,possible_lot_label:null,author_id:user,created_at:'2026-11-22T21:00:00Z'}]);
+  if(u.includes('rpc/mc_list_physical_occurrences'))return send([{id:occurrence,production_id:production,
+   material_name:'PETG físico observado',quantity_g:100,quantity_basis:'weighed',
+   observed_at:'2026-11-21T10:00:00Z',source_note:'Pesagem física observada em oficina.',
+   possible_lot_id:lot,possible_lot_label:'Bobina de teste',evidence_reference:'Anotação original',
+   possible_origin_note:null,status:'under_review',reported_by:user,created_at:'2026-11-21T10:01:00Z'}]);
+  if(u.includes('rpc/mc_review_physical_occurrence')){
+   requests.push(route.request().postDataJSON() as Record<string,unknown>);
+   if(requests.length===1)return send({message:'Falha de comunicação simulada'},503);
+   return send('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+  }
+  if(u.includes('rpc/mc_confirm_print')||u.includes('rpc/mc_register_existing_spool'))
+   throw new Error('Investigação não pode provocar movimentação ou confirmação');
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await expect(page.getByText('Ainda não há evidência de origem, aguardando inspeção.')).toBeVisible();
+ await page.getByRole('combobox',{name:'Ocorrência para investigar'}).selectOption(occurrence);
+ await expect(page.getByRole('combobox',{name:'Etapa de acompanhamento'})).toHaveValue('pending_decision');
+ await page.getByRole('button',{name:'Registrar investigação sem ajuste'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('10 a 2000 caracteres');
+ expect(requests).toHaveLength(0);
+ await page.getByRole('combobox',{name:'Hipótese da divergência'}).selectOption('lot_change');
+ await page.getByRole('textbox',{name:'Relato da investigação'}).fill('Possível troca de bobina em análise; não existe prova suficiente.');
+ await page.getByRole('textbox',{name:'Evidência da investigação'}).fill('Anotação de pesagem da oficina');
+ await page.getByRole('combobox',{name:'Bobina sob investigação'}).selectOption(lot);
+ await page.getByRole('button',{name:'Registrar investigação sem ajuste'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('Falha de comunicação simulada');
+ await page.getByRole('button',{name:'Registrar investigação sem ajuste'}).click();
+ await expect(page.getByText('Investigação registrada no histórico. Nenhum ajuste de estoque, aprovação ou custo foi realizado.')).toBeVisible();
+ expect(requests).toHaveLength(2);
+ expect(requests[0].p_request_key).toBe(requests[1].p_request_key);
+ expect(requests[0].p_next_status).toBe('pending_decision');
+ expect(requests[0].p_cause_hypothesis).toBe('lot_change');
+ expect(requests[0].p_possible_lot_id).toBe(lot);
+});
