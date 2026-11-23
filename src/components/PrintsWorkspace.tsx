@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,proposeInventoryAdjustment,listInventoryAdjustmentProposals,
- type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview,type InventoryAdjustmentProposal} from '../data/supabase';
+import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,proposeInventoryAdjustment,listInventoryAdjustmentProposals,getPhysicalOccurrenceDossier,
+ type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview,type InventoryAdjustmentProposal,type PhysicalOccurrenceDossier} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
@@ -34,6 +34,8 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [proposalOccurrence,setProposalOccurrence]=useState(''),[proposalLot,setProposalLot]=useState('');
  const [proposalGrams,setProposalGrams]=useState(''),[proposalCause,setProposalCause]=useState<InventoryAdjustmentProposal['cause']>('verified_count_error');
  const [proposalOrigin,setProposalOrigin]=useState(''),[proposalReason,setProposalReason]=useState(''),[proposalEvidence,setProposalEvidence]=useState('');
+ const [dossierTarget,setDossierTarget]=useState(''),[dossier,setDossier]=useState<PhysicalOccurrenceDossier|null>(null);
+ const [dossierBusy,setDossierBusy]=useState(false);
  const proposalKey=useRef(newKey());
  const occKey=useRef(newKey());
  const [dueReservation,setDueReservation]=useState(''),[dueLocal,setDueLocal]=useState('');
@@ -261,6 +263,13 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Proposta de inventário recusada: '+(e as Error).message)}
   finally{setBusy(false)}
  };
+ const fetchDossier=async()=>{
+  if(!workspaceId||!dossierTarget){setError('Selecione uma ocorrência para consultar.');return;}
+  setDossierBusy(true);setDossier(null);setError('');
+  try{setDossier(await getPhysicalOccurrenceDossier(workspaceId,dossierTarget));}
+  catch(e){setError('Consulta de conciliação recusada: '+(e as Error).message);}
+  finally{setDossierBusy(false)}
+ };
  const selectedPrint=prints.find(p=>p.id===selected);
  const confirm=async()=>{
   if(!workspaceId||!selectedPrint||!lot||!valid(mass)||!valid(purge)||!valid(loss)||Number(mass)+Number(purge)+Number(loss)<=0||!valid(good)||!valid(failed)){
@@ -473,6 +482,44 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      {' — '}{p.justification}
      <small>Evidência: {p.evidence_reference}. Nenhuma baixa, entrada, aprovação ou custo confirmado.</small>
     </li>)}</ul>
+   </div>}
+  </section>
+  <section className="panel materials-form" aria-label="Dossiê de conciliação GAP01">
+   <h3>Dossiê de conciliação — GAP01-D/E</h3>
+   <p className="footnote">Consulta somente leitura do saldo atual, das reservas de todas as ordens e das linhas históricas de consumo relacionadas à impressão. Não verifica automaticamente a origem física nem autoriza estornos, ajustes ou compensações financeiras.</p>
+   <div className="product-save-fields">
+    <label>Ocorrência para dossiê<select aria-label="Ocorrência para dossiê" value={dossierTarget}
+     onChange={e=>{setDossierTarget(e.target.value);setDossier(null);}}>
+     <option value="">Selecione</option>{occurrences.map(o=><option key={o.id} value={o.id}>
+      {o.material_name} — {o.quantity_g} g — {o.status}
+     </option>)}</select></label>
+   </div>
+   <button type="button" disabled={dossierBusy||!dossierTarget} onClick={()=>void fetchDossier()}>
+    {dossierBusy?'Consultando…':'Consultar dossiê (somente leitura)'}</button>
+   {dossier&&<div aria-label="Resultado do dossiê GAP01">
+    <p><strong>Consumo físico observado:</strong> {dossier.observed_quantity_g} g. Status: {dossier.status}.</p>
+    <p><strong>Bobina indicada (não verificada):</strong> {dossier.possible_lot_label||'Origem não identificada'}.</p>
+    <p><strong>Saldo físico cadastrado atual:</strong> {dossier.physical_g===null?'Desconhecido':dossier.physical_g+' g'}.
+     {' '}<strong>Reservas ativas:</strong> {dossier.reserved_g===null?'Desconhecido':dossier.reserved_g+' g'}.
+     {' '}<strong>Disponível não reservado:</strong> {dossier.unreserved_g===null?'Desconhecido':dossier.unreserved_g+' g'}.</p>
+    <p><strong>Reservas de outras ordens:</strong> {dossier.other_reserved_g===null?'Desconhecido':dossier.other_reserved_g+' g'}.
+     {' '}Essas reservas não podem ser usadas nesta conciliação.</p>
+    <p className="footnote">Os saldos são uma fotografia da consulta, não uma autorização de consumo. A disponibilidade pode mudar.</p>
+    <h4>Consumos históricos da impressão</h4>
+    {dossier.confirmed_consumption_lines.length===0?<p>Sem consumo confirmado.</p>:
+    <ul aria-label="Consumos históricos vinculados">
+     {dossier.confirmed_consumption_lines.map(c=><li key={c.consumption_id}>
+      {c.lot_label||'Lote não identificado'} — {c.total_g} g; confirmação {c.confirmation_id}.
+      <small>Snapshot de preço: {c.unit_cost_snapshot===null?'não conhecido':c.unit_cost_snapshot+' por g'}.
+       Linha de origem: {c.consumption_id}. Não presumir quantidade reversível.</small>
+     </li>)}</ul>}
+    <h4>Propostas de inventário ainda pendentes</h4>
+    {dossier.pending_adjustment_proposals.length===0?<p>Nenhuma proposta vinculada.</p>:
+    <ul aria-label="Propostas vinculadas ao dossiê">{dossier.pending_adjustment_proposals.map(p=>
+     <li key={p.proposal_id}>{p.proposed_delta_g>0?'+':''}{p.proposed_delta_g} g — pendente de decisão.
+      <small>Proposta {p.proposal_id}; nenhuma aprovação.</small></li>)}</ul>}
+    <p><strong>Compensação e estorno:</strong> exigem conferência de origem, consumo efetivamente extrudado, reservas e dependências posteriores. Nenhuma quantidade reversível ou ajuste financeiro foi calculado.</p>
+    <p className="footnote">Somente análise. Não existe ação de aprovar, liberar reserva, estornar ou movimentar estoque neste dossiê.</p>
    </div>}
   </section>
   <section className="panel materials-form"><h3>Trocar bobina reservada</h3>
