@@ -147,6 +147,28 @@ export const getL4ExactOrigins=(workspaceId:string,productionId:string)=>
   p_workspace_id:workspaceId,p_production_id:productionId
  });
 
+/** L4-G02: diagnóstico do servidor, apenas leitura. Nunca é autorização de fechamento. */
+export type L4ReadinessSource = {
+ consumption_id:string;confirmation_id:string;lot_id:string|null;
+ origin_captured:boolean;source_status:'known'|'estimated'|'unknown'|'missing';
+ purchase_reference:string|null;model_g:string;purge_g:string;loss_g:string;
+};
+export type L4CloseReadiness = {
+ schema_version:'l4-readiness-v1';workspace_id:string;execution_id:string;
+ review_id:string|null;production_status:string;
+ confirmed_output_groups:number;consumption_rows:number;exact_origin_missing:number;
+ cost_unknown:number;cost_estimated:number;cost_known_without_purchase_reference:number;
+ active_reservations:number;reversed_confirmations:number;
+ categories_pending:number;categories_supported_claimed:number;
+ categories_not_applicable_declared:number;pending_categories:string[];
+ sources:L4ReadinessSource[];blockers:string[];
+ status:'pending';posting_allowed:false;financially_final:false;computed_live:true;
+};
+export const getL4CloseReadiness=(workspaceId:string,productionId:string)=>
+ api<L4CloseReadiness>('rpc/mc_get_l4_close_readiness','POST',{
+  p_workspace_id:workspaceId,p_production_id:productionId,p_review_id:null
+ });
+
 export const getPrintConsumptionSources=(workspaceId:string,productionId:string)=>
  api<PrintConsumptionSources>('rpc/mc_get_print_consumption_sources','POST',{
   p_workspace_id:workspaceId,p_production_id:productionId
