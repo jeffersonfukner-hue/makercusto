@@ -630,3 +630,11 @@
 - Barra considera menu lateral expandido/recolhido, mobile, safe-area e reserva espaço inferior. Modal continua sobre a barra. Não foi adotado `position:fixed` diretamente para botões de linha de composição ou ações secundárias internas (adicionar/remover peça), que permanecem contextualizados na linha.
 - Testes E2E existentes ampliados para presença da barra fixa e nome destacado; **CI do HEAD precisa ser confirmado**. Homologação visual desktop/mobile pelo proprietário pendente.
 - Próxima aplicação do padrão: fluxos de Impressões, Materiais e outros formulários operacionais, sem mudar automaticamente ações de linha/lista nem publicar sem validação. Sem merge/deploy ou banco.
+
+## 23/11/2026 — Continuidade da padronização de ações
+
+- CI #373 do HEAD anterior falhou exclusivamente em E2E por ambiguidade de seletor: o texto “Chaveiro Galo” passou a aparecer na ficha e no dock, conforme UX solicitado. O seletor do teste foi corrigido para o título da ficha (commit `91082fea`); não é evidência de falha funcional.
+- `src/components/MaterialsWorkspace.tsx`: ações Inventariar/Cancelar transferidas para `FormActionDock` somente quando o formulário está aberto; mantidos validação e idempotência da gravação.
+- `src/components/PrintsWorkspace.tsx`: ações principais Registrar impressão, Registrar reserva e Confirmar consumo incremental usam dock contextual ligado à seção ativa por foco/clique. Sem alterar chamadas RPC ou regras de estoque. Em operações avançadas da mesma tela o dock das três ações principais é ocultado ao receber foco/clique, evitando executar ação de outro formulário.
+- Limite conhecido: ações avançadas (GAP01, troca de bobina, redução, cancelamento, dossiê e revisão de prazo) ainda usam botões próximos aos próprios formulários. **Padronização global completa ainda pendente**; requer um controlador de ações por formulário e testes específicos de operações críticas.
+- CI posterior e verificação visual responsiva pendentes nesta edição. Sem merge, deploy ou alterações de banco.
