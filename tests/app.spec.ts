@@ -1129,3 +1129,70 @@ test('GAP01-B/F: investigação mantém observação original, histórico e retr
  expect(requests[0].p_cause_hypothesis).toBe('lot_change');
  expect(requests[0].p_possible_lot_id).toBe(lot);
 });
+
+
+test('GAP01-C: proposta de 50 g não baixa estoque e reenvio usa chave idempotente',async ({page})=>{
+ const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
+ const production='66666666-6666-4666-8666-666666666666';
+ const lot='77777777-7777-4777-8777-777777777777',occurrence='99999999-9999-4999-8999-999999999999';
+ const requests:Record<string,unknown>[]=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
+  if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina GAP01',owner_id:user}]);
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'partial',printer_id:null,
+   printer_name:'Impressora GAP01',planned_hours:null,actual_hours:null,notes:null,
+   created_at:'2026-11-22T20:00:00Z',outputs:[{id:'55555555-5555-4555-8555-555555555555',
+   product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',name:'Peça teste',planned:2,good:0,failed:0}]}]);
+  if(u.includes('rpc/mc_list_existing_spools'))return send([{id:lot,label:'Bobina 80 g',name:'PETG',
+   initial_grams:80,remaining_grams:80,remaining_cost_estimate:null,cost_status:'unknown',notes:null,
+   created_at:'2026-11-22T20:00:00Z'}]);
+  if(u.includes('rpc/mc_list_inventory_adjustment_proposals'))return send([{
+   id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',occurrence_id:occurrence,lot_id:lot,
+   lot_label:'Bobina 80 g',proposed_delta_g:20,cause:'verified_count_error',
+   origin_note:'Pesagem física ainda sob análise',justification:'Proposta anterior não aprovada',
+   evidence_reference:'Caderno de inventário',status:'pending_decision',
+   proposed_by:user,created_at:'2026-11-22T21:00:00Z'
+  }]);
+  if(u.includes('rpc/mc_list_physical_occurrences'))return send([{
+   id:occurrence,production_id:production,material_name:'PETG observado',quantity_g:100,
+   quantity_basis:'weighed',observed_at:'2026-11-21T10:00:00Z',
+   source_note:'Pesagem física relatada pela oficina',possible_lot_id:lot,
+   possible_lot_label:'Bobina 80 g',evidence_reference:'Caderno',possible_origin_note:null,
+   status:'under_review',reported_by:user,created_at:'2026-11-21T10:01:00Z'
+  }]);
+  if(u.includes('rpc/mc_propose_inventory_adjustment')){
+   requests.push(route.request().postDataJSON() as Record<string,unknown>);
+   if(requests.length===1)return send({message:'Falha temporária de conexão'},503);
+   return send('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+  }
+  if(u.includes('rpc/mc_confirm_print')||u.includes('rpc/mc_register_existing_spool'))
+   throw new Error('Proposta não deve movimentar estoque ou confirmar consumo');
+  return send([]);
+ });
+ await page.goto('/');await openSystemMenuIfMobile(page);
+ await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await expect(page.getByRole('list',{name:'Propostas de inventário pendentes'})).toContainText('Pendente de decisão');
+ await page.getByRole('combobox',{name:'Ocorrência para proposta de inventário'}).selectOption(occurrence);
+ await page.getByRole('combobox',{name:'Bobina da proposta de ajuste'}).selectOption(lot);
+ await page.getByRole('spinbutton',{name:'Diferença proposta em gramas'}).fill('0');
+ await page.getByRole('button',{name:'Registrar proposta sem alterar estoque'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('diferente de zero');
+ expect(requests).toHaveLength(0);
+ await page.getByRole('spinbutton',{name:'Diferença proposta em gramas'}).fill('50');
+ await page.getByRole('combobox',{name:'Causa da proposta de inventário'}).selectOption('unrecorded_physical_input');
+ await page.getByRole('textbox',{name:'Origem material a conferir'}).fill('Entrada de material físico ainda não contabilizada');
+ await page.getByRole('textbox',{name:'Justificativa da proposta'}).fill('Proposta de cinquenta gramas para conferência humana');
+ await page.getByRole('textbox',{name:'Evidência da proposta'}).fill('Registro de pesagem e caderno da oficina');
+ await page.getByRole('button',{name:'Registrar proposta sem alterar estoque'}).click();
+ await expect(page.getByRole('alert').last()).toContainText('Falha temporária de conexão');
+ await page.getByRole('button',{name:'Registrar proposta sem alterar estoque'}).click();
+ await expect(page.getByText('Proposta registrada como pendente de decisão. Nenhum ajuste de estoque, custo ou aprovação foi executado.')).toBeVisible();
+ expect(requests).toHaveLength(2);
+ expect(requests[0].p_request_key).toBe(requests[1].p_request_key);
+ expect(requests[0].p_delta_g).toBe(50);
+ expect(requests[0].p_lot_id).toBe(lot);
+ expect(requests[0].p_occurrence_id).toBe(occurrence);
+});
