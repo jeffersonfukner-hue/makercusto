@@ -94,3 +94,16 @@ export const registerExistingSpool=(workspaceId:string,draft:ExistingSpoolDraft)
  p_workspace_id:workspaceId,p_idempotency_key:draft.idempotencyKey,p_filament_name:draft.name,p_label:draft.label,
  p_grams:draft.grams,p_quantity_basis:draft.basis,p_remaining_cost:draft.remainingCost,p_notes:draft.notes
 });
+
+export type PrintOutput={id:string;product_id:string;name:string;planned:number;good:number;failed:number};
+export type PrintRecord={id:string;status:'draft'|'partial'|'reserved'|'running'|'completed'|'failed'|'cancelled';printer_id:string;printer_name:string|null;planned_hours:number|null;actual_hours:number|null;notes:string|null;created_at:string;outputs:PrintOutput[]};
+export const listPrints=(workspaceId:string)=>api<PrintRecord[]>('rpc/mc_list_prints','POST',{p_workspace_id:workspaceId});
+export const createPrint=(workspaceId:string,draft:{printerId:string;outputs:{product_id:string;quantity:number}[];plannedHours:number|null;notes:string;source:'slicer'|'measured'|'informed'|'estimated'})=>
+ api<string>('rpc/mc_create_print','POST',{p_workspace_id:workspaceId,p_printer_id:draft.printerId,
+ p_outputs:draft.outputs.map(({product_id,quantity})=>({product_id,quantity})),
+ p_planned_hours:draft.plannedHours,p_notes:draft.notes,p_source:draft.source});
+export const confirmPrint=(workspaceId:string,draft:{id:string;key:string;outputs:{output_id:string;good:number;failed:number}[];
+ consumptions:{lot_id:string;model_g:number;purge_g:number;loss_g:number;basis:'weighed'|'slicer'|'estimated'}[];
+ actualHours:number|null})=>api<string>('rpc/mc_confirm_print','POST',{p_workspace_id:workspaceId,p_production_id:draft.id,
+ p_idempotency_key:draft.key,p_outputs:draft.outputs,p_consumptions:draft.consumptions,
+ p_actual_hours:draft.actualHours,p_finish:false});
