@@ -146,3 +146,8 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - CI #45101156582 **success** (SHA `00e79a1c1612cab8eaba0fb6da1102776a99604e`). Regressão SQL passou com duas oficinas contendo impressões distintas. Cada proprietário fictício viu os dados da própria oficina e **não** viu os da outra, tanto por `mc_list_prints` quanto por RLS em `mc_productions`.
 - Supabase MakerCusto real: grants de três RPCs validados, `anon` sem EXECUTE; tabela de deltas com RLS ativo e `authenticated` sem INSERT. Base operacional ainda sem impressões/confirmacões/movimentos.
 - Limite: isolamento de duas oficinas foi comprovado **somente no PostgreSQL descartável com identidades simuladas**, não com JWT real de Supabase Auth. Nenhuma política reclassificada; permanecem **20 P, 19 A, 0 C** e as 39 homologações preservadas.
+
+## Evidência L3 para FAL e tempo incremental — 22/11/2026
+- Interface permite tempo físico incremental (h, até 4 casas) **opcional**, enviado à RPC sem valores presumidos; suporta falha com zero peças boas e unidades rejeitadas.
+- CI #45101704098 `success`: teste SQL de falha com 0 boas, 1 rejeitada, 1 g e 0,5 h, preservando saldo e resultado do produto; teste Playwright de tempo, retry idempotente e precisão; 86/86 E2E e demais verificações aprovadas.
+- Implementação permanece **parcial**, sem alterar a contagem **20 P, 19 A, 0 C**, pois as regras FAL/RAT/RET e demais diretrizes exigem ainda conciliação, snapshots, autorizações JWT reais e validação de fluxo completo. Nenhum deploy ou migração adicional ocorreu.
