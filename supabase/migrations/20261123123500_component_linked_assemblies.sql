@@ -124,7 +124,7 @@ begin
    begin v_component:=(v_entry->>'product_id')::uuid;
    exception when others then raise exception 'ID da peça inválido';end;
    select name into v_component_name from public.mc_products
-   where id=v_component and workspace_id=p_workspace_id and active and kind='component';
+   where id=v_component and workspace_id=p_workspace_id and active and kind in ('component','product');
    if not found then raise exception 'Peça inexistente, não ativa ou de outra oficina';end if;
    select * into v_snapshot from public.mc_cost_snapshots x
    where x.workspace_id=p_workspace_id and x.product_id=v_component
