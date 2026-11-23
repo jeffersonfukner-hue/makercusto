@@ -1275,7 +1275,7 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  await page.getByRole('button',{name:'Custos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Estrela grande');
- await page.getByRole('combobox',{name:'Tipo'}).selectOption('component');
+ await page.getByRole('combobox',{name:'Tipo de produto'}).selectOption('component');
  await page.getByRole('button',{name:'Salvar produto e custo'}).click();
  await expect(page.getByText('Produto, versão inicial e custo estimado salvos na sua oficina.')).toBeVisible();
  expect(saved).not.toBeNull();
