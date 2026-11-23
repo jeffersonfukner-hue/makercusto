@@ -648,3 +648,11 @@
 - Preservadas as condições de desabilitar cada ação, chamadas já existentes, chaves de idempotência, regras de estoque e impossibilidade de aprovação ou ajuste no dossiê. Sem refatoração de SQL/backend.
 - E2E reforçado em `tests/app.spec.ts` para presença do dock correto e ausência de ação alheia em fluxos de revisão de prazo, cancelamento, registro de ocorrência, investigação, proposta, dossiê, troca de bobina e redução.
 - **Pendente:** CI do HEAD atualizado e homologação visual nos tamanhos desktop/mobile; publicação/migração operacional continuam proibidas sem autorização específica.
+
+## 23/11/2026 — Contrato explícito de responsabilidades na entrega
+
+- O usuário pediu remover ambiguidades de “próxima ação”: tarefas de implementação, CI, diagnóstico, correção, testes, documentação e conferência do repositório pertencem ao agente; o usuário **somente executa deploy manual e homologação visual**, quando o agente indicar expressamente que a versão está pronta.
+- Toda resposta técnica termina com instrução inequívoca **“NÃO FAÇA O DEPLOY AINDA”** (pendências técnicas) ou **“PODE FAZER O DEPLOY MANUAL”** (CI completo aprovado, commit exato indicado e lista objetiva do que verificar). Nunca transferir a verificação do CI ao usuário.
+- Diagnóstico do CI #382: E2E falhou em seis cenários duplicados desktop/mobile porque seleção programática nos campos não disparava foco/clique capturado; o dock não era ativado. A causa e o erro foram identificados pelos logs; não foi um erro de SQL ou build.
+- Correção: acionar o formulário ativo também via `onChange` nos seletores principais de Impressões e operações avançadas, mantendo foco/clique como alternativa de interação.
+- Referência da correção: commit `79817b0cfe64f79a09742430691ca054edd2f767`; CI correspondente #383 em andamento no momento deste registro. A aplicação de SQL no Supabase operacional e publicação permanecem não autorizadas.
