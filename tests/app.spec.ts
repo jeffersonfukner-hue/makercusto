@@ -832,7 +832,7 @@ test('Reserva P01: disponibilidade desconta reservas, valida saldo e reenvia a m
  await page.getByRole('button',{name:'Impressões',exact:true}).click();
  await expect(page.getByRole('combobox',{name:'Bobina para reservar',exact:true}).getByRole('option',{name:/Bobina PETG — disponíveis 40.000 g/})).toHaveCount(1);
  await page.getByRole('combobox',{name:'Impressão para reservar'}).selectOption(production);
- await page.getByRole('combobox',{name:'Bobina para reservar'}).selectOption(lot);
+ await page.getByRole('combobox',{name:'Bobina para reservar',exact:true}).selectOption(lot);
  await page.getByRole('spinbutton',{name:'Quantidade a reservar'}).fill('41');
  await page.getByRole('button',{name:'Registrar reserva sem baixa'}).click();
  await expect(page.getByRole('alert').last()).toContainText('excede a disponibilidade');
