@@ -1476,6 +1476,12 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
  await panel.getByRole('button',{name:'+ Incluir categoria na prévia'}).click();
  await page.getByRole('button',{name:'Calcular prévia de rateio'}).click();
  await expect(result).toContainText('R$ 10,96');
+ const pending=result.getByRole('region',{name:'Pendências de fechamento financeiro L4'});
+ await expect(pending).toContainText('Fechamento financeiro: PENDENTE');
+ await expect(pending).toContainText('Fontes históricas associadas: 1 de 2');
+ await expect(pending).toContainText('custo histórico desconhecido');
+ await expect(pending).toContainText('seis casas decimais');
+ await expect(pending).toContainText('Massa confirmada sem categoria correspondente');
  expect(reads).toHaveLength(1);
  expect(writes).toEqual([]);
 });
