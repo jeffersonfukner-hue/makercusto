@@ -10,7 +10,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [printer,setPrinter]=useState(''),[product,setProduct]=useState(''),[quantity,setQuantity]=useState('1');
  const [hours,setHours]=useState(''),[source,setSource]=useState<'slicer'|'measured'|'informed'|'estimated'>('slicer');
  const [notes,setNotes]=useState(''),[outputs,setOutputs]=useState<{product_id:string;quantity:number;name:string}[]>([]);
- const [selected,setSelected]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
+ const [selected,setSelected]=useState(''),[selectedOutput,setSelectedOutput]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
  const [basis,setBasis]=useState<'weighed'|'slicer'|'estimated'>('slicer');
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const [reload,setReload]=useState(0),operation=useRef(newKey());
@@ -42,8 +42,8 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    setError('Informe impressão, bobina, consumo positivo e peças novas boas/rejeitadas.');return;
   }
   if(Number(good)+Number(failed)>0&&!Number.isInteger(Number(good)+Number(failed))){setError('As peças devem ser números inteiros.');return;}
-  if(selectedPrint.outputs.length!==1){setError('Mesa mista: confirmação por saída requer distribuição identificada; escolha uma impressão de saída única nesta interface.');return;}
-  const output=selectedPrint.outputs[0];
+  if(!selectedPrint.outputs.some(o=>o.id===selectedOutput)){setError('Selecione a peça à qual pertencem as unidades confirmadas. Material compartilhado permanece sem rateio financeiro até L4.');return;}
+  const output=selectedPrint.outputs.find(o=>o.id===selectedOutput)!;
   setBusy(true);setError('');setMessage('');
   try{
    await confirmPrint(workspaceId,{id:selectedPrint.id,key:operation.current,
@@ -77,10 +77,11 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <button type="button" className="primary-action" disabled={busy||!workspaceId||outputs.length===0} onClick={()=>void save()}>{busy?'Salvando…':'Registrar impressão sem baixa'}</button>
   </section>
   <section className="panel materials-form"><h3>Confirmação incremental de impressão</h3>
-   <p className="footnote">O registro L3 está limitado a uma saída por impressão nesta tela. Para mesas mistas, aguarde a distribuição por peça e o rateio de L4. O encerramento definitivo também permanece bloqueado.</p>
+   <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo informado é da mesa e não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
    <div className="product-save-fields">
-    <label>Impressão<select aria-label="Impressão para confirmar" value={selected} onChange={e=>{setSelected(e.target.value);operation.current=newKey();}}>
+    <label>Impressão<select aria-label="Impressão para confirmar" value={selected} onChange={e=>{setSelected(e.target.value);setSelectedOutput('');operation.current=newKey();}}>
      <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
+    <label>Peça confirmada<select aria-label="Peça confirmada" value={selectedOutput} onChange={e=>setSelectedOutput(e.target.value)}><option value="">Selecione</option>{selectedPrint?.outputs.map(o=><option key={o.id} value={o.id}>{o.name} — pendentes {Number(o.planned)-Number(o.good)-Number(o.failed)}</option>)}</select></label>
     <label>Bobina<select aria-label="Bobina consumida" value={lot} onChange={e=>setLot(e.target.value)}>
      <option value="">Selecione</option>{spools.map(s=><option key={s.id} value={s.id}>{s.label} — {s.remaining_grams} g</option>)}</select></label>
     <label>Consumo adicional de modelo (g)<input type="number" min=".001" step=".001" aria-label="Consumo adicional" value={mass} onChange={e=>setMass(e.target.value)}/><small>Somente gramas novas, sem repetir purga/perdas já incluídas. Origem obrigatória.</small></label>
@@ -88,7 +89,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Peças boas adicionais<input aria-label="Peças boas adicionais" type="number" min="0" step="1" value={good} onChange={e=>setGood(e.target.value)}/></label>
     <label>Peças rejeitadas adicionais<input aria-label="Peças rejeitadas adicionais" type="number" min="0" step="1" value={failed} onChange={e=>setFailed(e.target.value)}/></label>
    </div>
-   <button type="button" className="primary-action" disabled={busy||!selected||!lot||!workspaceId||selectedPrint?.outputs.length!==1} onClick={()=>void confirm()}>{busy?'Confirmando…':'Confirmar consumo incremental'}</button>
+   <button type="button" className="primary-action" disabled={busy||!selected||!lot||!workspaceId||!selectedOutput} onClick={()=>void confirm()}>{busy?'Confirmando…':'Confirmar consumo incremental'}</button>
   </section>
   <h3>Execuções registradas</h3>
   {prints.length===0?<p>Nenhuma impressão registrada nesta oficina.</p>:<div className="materials-spool-grid">{prints.map(p=><article className="materials-spool-card" key={p.id}>
