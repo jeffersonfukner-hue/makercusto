@@ -19,7 +19,7 @@ SQL
 export PGOPTIONS="-c request.jwt.claim.sub=$user_b"
 psql -X -v ON_ERROR_STOP=1 -Atc "select public.mc_create_print('$ws_b','$printer_b',jsonb_build_array(jsonb_build_object('product_id','$product_b','quantity',1)),null,'Oficina B','slicer')" >/dev/null
 check_access() {
- local caller="$1",my_ws="$2",other_ws="$3"
+ local caller="$1" my_ws="$2" other_ws="$3"
  PGOPTIONS="-c request.jwt.claim.sub=$caller" psql -X -v ON_ERROR_STOP=1 -At <<SQL
 begin transaction read only;
 set local role authenticated;
