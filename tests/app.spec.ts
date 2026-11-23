@@ -1423,6 +1423,21 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
     {id:ids[1],product_id:ids[1],name:'Estrela grande',planned:1,good:1,failed:0},
     {id:ids[2],product_id:ids[2],name:'Estrela pequena',planned:1,good:1,failed:0}
    ]}]);
+  if(u.includes('rpc/mc_get_l4_close_readiness')){
+   reads.push(u);
+   return send({
+    schema_version:'l4-readiness-v1',workspace_id:ws,execution_id:execution,
+    review_id:null,production_status:'partial',
+    confirmed_output_groups:3,consumption_rows:2,exact_origin_missing:1,
+    cost_unknown:1,cost_estimated:1,cost_known_without_purchase_reference:0,
+    active_reservations:0,reversed_confirmations:0,
+    categories_pending:6,categories_supported_claimed:0,categories_not_applicable_declared:0,
+    pending_categories:[],sources:[],
+    blockers:['NO_REVIEW','MISSING_EXACT_ORIGINS','UNKNOWN_SOURCE_COST','ESTIMATED_SOURCE_COST',
+      'UNREVIEWED_COST_CATEGORIES','FINAL_ALLOCATION_NOT_IMPLEMENTED','P09_REVERSAL_NOT_IMPLEMENTED'],
+    status:'pending',posting_allowed:false,financially_final:false,computed_live:true
+   });
+  }
   if(u.includes('rpc/mc_get_print_consumption_sources')){
    reads.push(u);
    return send({execution_id:execution,read_only:true,financially_final:false,
@@ -1483,5 +1498,16 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
  await expect(pending).toContainText('seis casas decimais');
  await expect(pending).toContainText('Massa confirmada sem categoria correspondente');
  expect(reads).toHaveLength(1);
+ const dossier=panel.getByRole('region',{name:'Dossiê de prontidão financeira L4'});
+ await dossier.getByRole('button',{name:'Consultar impedimentos'}).click();
+ const current=dossier.getByRole('status',{name:'Resultado do dossiê financeiro L4'});
+ await expect(current).toContainText('Fechamento financeiro: PENDENTE');
+ await expect(current).toContainText('Origens exatas ausentes: 1');
+ await expect(current).toContainText('Custos desconhecidos: 1');
+ await expect(current).toContainText('Categorias pendentes: 6');
+ await expect(current).toContainText('A conciliação financeira integral ainda não foi implementada.');
+ await expect(current).toContainText('A compensação financeira histórica P09 ainda não foi implementada.');
+ expect(reads).toHaveLength(2);
+ expect(reads.filter(u=>u.includes('mc_get_l4_close_readiness'))).toHaveLength(1);
  expect(writes).toEqual([]);
 });
