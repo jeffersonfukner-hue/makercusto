@@ -105,3 +105,9 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - Confirmações incrementais foram implementadas **em SQL versionado** com chave idempotente, conferência de payload, bloqueio transacional, validação de saldos e registros de saída/consumo. Nenhuma execução real foi contabilizada.
 - L3 tem limites explícitos: não encerra produção nem concilia reserva ativa; não realiza rateio financeiro nem cria snapshot monetário completo de confirmação. Fluxos de exceção, reversão e perdas completas permanecem pendentes.
 - Não alterar contagem de 17 P / 22 A / 0 C até a migração ser aplicada e os testes de banco e autorização comprovarem os novos comportamentos. O CI com REST simulado valida somente o frontend.
+
+
+## Pré-validação complementar L2/L3 (22/11/2026)
+- Leitura do banco confirmou migrações L1 presentes, mas funções e tabela de eventos L2/L3 **ainda não instaladas**; sem migração de teste aplicada.
+- Existe roteiro de regressão transacional reversível em `supabase/tests/l2_l3_rollback.sql`, versionado e **não executado**. Até execução isolada real, não reclassificar P02, S02, S03 ou G02 como completas.
+- Revisão do código incluiu restrição explícita de lote de filamento em gramas e identificação não nula de peça. Concorrência entre sessões e autorização por login real não foram testadas.
