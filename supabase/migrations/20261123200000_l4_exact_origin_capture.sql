@@ -17,7 +17,7 @@ create table public.mc_l4_exact_consumption_origins (
  captured_at timestamptz not null default transaction_timestamp(),
  source_version text not null default 'l4-exact-origin-v1',
  unique(consumption_id,workspace_id),
- foreign key(consumption_id,workspace_id) references public.mc_production_consumption(id,workspace_id),
+ foreign key(consumption_id) references public.mc_production_consumption(id),
  foreign key(confirmation_id,workspace_id) references public.mc_production_confirmations(id,workspace_id),
  foreign key(lot_id,workspace_id) references public.mc_stock_lots(id,workspace_id),
  check((source_cost_status='unknown' and original_total_cost_brl is null) or
