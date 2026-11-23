@@ -137,3 +137,13 @@ export const reducePrintPlan=(workspaceId:string,draft:{
  p_request_key:draft.requestKey,p_output_changes:draft.outputChanges,
  p_reservation_releases:draft.reservationReleases,p_reason:draft.reason
 });
+
+export const swapPrintReservedLot=(workspaceId:string,draft:{
+ productionId:string;oldReservationId:string;newLotId:string;
+ releaseGrams:number;newReserveGrams:number;requestKey:string;reason:string
+})=>api<string>('rpc/mc_swap_print_reserved_lot','POST',{
+ p_workspace_id:workspaceId,p_production_id:draft.productionId,
+ p_old_reservation_id:draft.oldReservationId,p_new_lot_id:draft.newLotId,
+ p_release_g:draft.releaseGrams,p_new_reserve_g:draft.newReserveGrams,
+ p_request_key:draft.requestKey,p_reason:draft.reason
+});
