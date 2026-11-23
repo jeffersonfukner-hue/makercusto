@@ -193,3 +193,9 @@ Esta é uma **matriz de aderência a partir dos arquivos consultados**, não uma
 - CI #45190758841 `success`, SHA funcional `edc9bd898422d476d152298c8654aa4e022b5110`: **100/100 Playwright**, SQL PostgreSQL efêmero com rollback, tipos, unitários, build, concorrência e isolamento por oficina. Proposta de delta em gramas, associada a ocorrência investigada, lote real, justificativa, origem e evidência, com auditoria/idempotência. Simulação +50 g em estoque 80 g permaneceu 80 g sem custo nem baixa.
 - GAP01 continua **P**, pois não há aprovação, critérios mínimos de evidência, correção efetiva, estornos GAP01-E, JWT real ou homologação visual; **22 P, 17 A, 0 C** no total de 39 decisões, sem mudanças nas homologações.
 - Migração GAP01-C apenas na branch e CI, não aplicada no Supabase operacional. Sem merge/deploy.
+
+
+## GAP01-D/E — dossiê consultivo sem operações extraordinárias, 23/11/2026
+- **CI #45194048555 `success`**, commit `f030c58467ccbc2189f94555b142ee77474c6fb3`: 102/102 Playwright, SQL PostgreSQL 17 efêmero com rollback, concorrência, isolamento, TypeScript, unitários e build. Dossiê exibe saldo físico atual, reservas da ordem e de outras ordens, linhas originais com ID e preço histórico, investigações e propostas ainda não aprovadas. Nenhuma ação de estorno, aprovação, liberação de reserva ou movimentação física foi habilitada.
+- **GAP01 e P09 continuam parciais:** sem prova de reversibilidade/condição física, dependências posteriores, suficiência de evidência, perfis de aprovação ou conciliação excepcional efetiva. Não supor que a consulta autorize estoque disponível futuro. **Matriz global 22 P, 17 A, 0 C**, mantendo as 39 decisões.
+- Migração complementar somente na branch; não aplicada no Supabase operacional. Sem merge/deploy ou homologação visual/JWT real.
