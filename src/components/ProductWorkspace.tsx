@@ -88,7 +88,7 @@ export function ProductWorkspace({workspaceId,tab}:Props){
  const changePart=(i:number,patch:Partial<AssemblyPartDraft>)=>setParts(prev=>prev.map((p,n)=>n===i?{...p,...patch}:p));
  const chooseComponent=(i:number,id:string)=>{
   const source=library.find(x=>x.id===id);
-  const fallback=items.find(x=>x.id===id&&x.kind==='component');
+  const fallback=items.find(x=>x.id===id&&(x.kind==='component'||x.kind==='product'));
   if(!id){changePart(i,{product_id:null,id:undefined,name:'',grams:null,unit_cost:null,notes:''});return;}
   if(!source&&!fallback)return;
   changePart(i,{product_id:id,id:undefined,name:source?.name??fallback!.name,
