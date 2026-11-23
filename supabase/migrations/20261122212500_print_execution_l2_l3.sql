@@ -43,7 +43,7 @@ begin
   raise exception 'Informe de 1 a 30 saídas'; end if;
  if p_planned_hours is not null and (p_planned_hours<0 or p_planned_hours>100000 or p_planned_hours<>round(p_planned_hours,4)) then
   raise exception 'Tempo planejado inválido'; end if;
- if length(coalesce(p_notes,''))>2000 or p_source not in ('slicer','measured','informed','estimated') then
+ if length(coalesce(p_notes,''))>2000 or p_source is null or p_source not in ('slicer','measured','informed','estimated') then
   raise exception 'Fonte ou observação inválida'; end if;
  if (select count(distinct elem->>'product_id') from jsonb_array_elements(p_outputs) elem)<>jsonb_array_length(p_outputs) then
   raise exception 'Não repita a mesma peça; agrupe as quantidades'; end if;
@@ -84,7 +84,7 @@ begin
  and user_id=auth.uid() and active and role in ('owner','manager')) then
   raise exception 'Sem autorização para confirmar produção'; end if;
  if length(coalesce(p_idempotency_key,'')) not between 10 and 100 then raise exception 'Chave idempotente inválida'; end if;
- if jsonb_typeof(p_outputs) <> 'array' or jsonb_typeof(p_consumptions)<>'array'
+ if p_outputs is null or p_consumptions is null or jsonb_typeof(p_outputs) <> 'array' or jsonb_typeof(p_consumptions)<>'array'
   or jsonb_array_length(p_outputs)>30 or jsonb_array_length(p_consumptions)>30 then
   raise exception 'Deltas de saída/consumo inválidos'; end if;
  if jsonb_array_length(p_outputs)=0 and jsonb_array_length(p_consumptions)=0 then raise exception 'Confirmação vazia'; end if;
@@ -137,7 +137,7 @@ begin
    v_model:=(v_row->>'model_g')::numeric;v_purge:=(v_row->>'purge_g')::numeric;
    v_loss:=(v_row->>'loss_g')::numeric;v_basis:=v_row->>'basis';
   exception when others then raise exception 'Bobina ou quantidade inválida'; end;
-  if not found or v_lot.item_id is null or v_basis not in ('weighed','slicer','estimated')
+  if not found or v_lot.item_id is null or v_basis is null or v_basis not in ('weighed','slicer','estimated')
    or v_model is null or v_purge is null or v_loss is null
    or v_model<0 or v_purge<0 or v_loss<0
    or v_model<>round(v_model,3) or v_purge<>round(v_purge,3) or v_loss<>round(v_loss,3)
@@ -160,7 +160,7 @@ begin
   values(p_workspace_id,v_event,v_lot.item_id,v_lot.id,-v_total,v_cost);
  end loop;
  update public.mc_productions set status='partial',
-  actual_hours=coalesce(actual_hours,0)+coalesce(p_actual_hours,0)
+  actual_hours=case when p_actual_hours is null then actual_hours else coalesce(actual_hours,0)+p_actual_hours end
  where id=p_production_id;
  insert into public.mc_audit_events(workspace_id,entity,entity_id,action,actor_id,details)
  values(p_workspace_id,'production_confirmation',v_id,'confirm_incremental',auth.uid(),v_payload);
