@@ -65,6 +65,14 @@ jobs:
           PGDATABASE: makercusto_ci
           PGPASSWORD: makercusto_ci_only
         run: bash supabase/tests/l2_l3_concurrency.sh
+      - name: Isolamento entre duas oficinas com dados no PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/l2_l3_cross_workspace.sh
       - name: Instalar navegador de testes
         run: npx playwright install --with-deps chromium
       - name: Testes de interface desktop e mobile
