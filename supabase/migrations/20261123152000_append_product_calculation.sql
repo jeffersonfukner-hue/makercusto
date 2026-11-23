@@ -43,7 +43,8 @@ begin
   p_workspace_id,p_product_id,v_rev,'maker-v1','BRL',
   p_quantity,round(p_total_cost,2),'estimated',
   (p_parameters-'append_request_key')||jsonb_build_object(
-   'append_request_key',p_request_key::text,'origin','calculator-revision',
+   'append_request_key',p_request_key::text,'origin','calculator',
+   'calculation_action','revision',
    'revision',v_version)
  );
  update public.mc_products set sale_price=round(p_sale_price,2)
