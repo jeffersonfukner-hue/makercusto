@@ -41,9 +41,15 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   if(!workspaceId||!selectedPrint||!lot||!valid(mass)||!valid(purge)||!valid(loss)||Number(mass)+Number(purge)+Number(loss)<=0||!valid(good)||!valid(failed)){
    setError('Informe impressão, bobina, consumo positivo e peças novas boas/rejeitadas.');return;
   }
-  if(Number(good)+Number(failed)>0&&!Number.isInteger(Number(good)+Number(failed))){setError('As peças devem ser números inteiros.');return;}
+  if(!Number.isInteger(Number(good))||!Number.isInteger(Number(failed))){setError('As peças devem ser números inteiros.');return;}
   if(!selectedPrint.outputs.some(o=>o.id===selectedOutput)){setError('Selecione a peça à qual pertencem as unidades confirmadas. Material compartilhado permanece sem rateio financeiro até L4.');return;}
   const output=selectedPrint.outputs.find(o=>o.id===selectedOutput)!;
+  if(Number(good)+Number(failed)>Number(output.planned)-Number(output.good)-Number(output.failed)){
+   setError('A quantidade adicional excede as peças ainda pendentes desta impressão.');return;
+  }
+  if([mass,purge,loss].some(v=>Math.abs(Number(v)*1000-Math.round(Number(v)*1000))>0.000001)){
+   setError('Informe massas em gramas com até três casas decimais.');return;
+  }
   setBusy(true);setError('');setMessage('');
   try{
    await confirmPrint(workspaceId,{id:selectedPrint.id,key:operation.current,
