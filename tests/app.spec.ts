@@ -653,7 +653,7 @@ test('bobina física: inventário na oficina sem criar compra fictícia',async({
  await page.getByRole('combobox',{name:'Origem da quantidade'}).selectOption('measured');
  await expect(page.getByRole('spinbutton',{name:'Valor estimado do saldo'})).toBeEmpty();
  await page.getByRole('button',{name:'Registrar bobina existente'}).click();
- await expect(page.getByRole('status')).toContainText('Bobina inventariada');
+ await expect(page.locator('.materials-workspace .product-success')).toContainText('Bobina inventariada');
  await expect(page.getByRole('heading',{name:'Bobina PETG-01'})).toBeVisible();
  await expect(page.getByText('325,125 g').first()).toBeVisible();
  expect(registered).not.toBeNull();
