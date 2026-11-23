@@ -1423,6 +1423,23 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
     {id:ids[1],product_id:ids[1],name:'Estrela grande',planned:1,good:1,failed:0},
     {id:ids[2],product_id:ids[2],name:'Estrela pequena',planned:1,good:1,failed:0}
    ]}]);
+  if(u.includes('rpc/mc_get_l4_exact_origins')){
+   reads.push(u);
+   return send({execution_id:execution,read_only:true,financially_final:false,
+    exact_source_version:'l4-exact-origin-v1',historical_rows_without_capture:0,
+    origins:[
+     {consumption_id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+      confirmation_id:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',lot_id:'ffffffff-ffff-4fff-8fff-ffffffffffff',
+      status:'estimated',original_quantity_g:'1000.0000',original_total_cost_brl:'64.0000',
+      model_g:'15.0000',purge_g:'0',loss_g:'0',
+      quantity_basis:'weighed',purchase_line_id:null,source_version:'l4-exact-origin-v1',captured_at:'2026-11-23T10:00:00Z'},
+     {consumption_id:'99999999-9999-4999-8999-999999999999',
+      confirmation_id:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',lot_id:'abababab-abab-4aba-8aba-abababababab',
+      status:'unknown',original_quantity_g:'1000.0000',original_total_cost_brl:null,
+      model_g:'3.0000',purge_g:'0',loss_g:'0',
+      quantity_basis:'estimated',purchase_line_id:null,source_version:'l4-exact-origin-v1',captured_at:'2026-11-23T10:00:00Z'}
+    ]});
+  }
   if(u.includes('rpc/mc_get_l4_close_readiness')){
    reads.push(u);
    return send({
@@ -1509,5 +1526,15 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
  await expect(current).toContainText('A compensação financeira histórica P09 ainda não foi implementada.');
  expect(reads).toHaveLength(2);
  expect(reads.filter(u=>u.includes('mc_get_l4_close_readiness'))).toHaveLength(1);
+ const exactPanel=panel.getByRole('region',{name:'Conciliação exata de material L4'});
+ await exactPanel.getByRole('button',{name:'Conferir valores exatos do material'}).click();
+ const exact=exactPanel.getByRole('status',{name:'Diagnóstico de material exato L4'});
+ await expect(exact).toContainText('Fontes congeladas: 2');
+ await expect(exact).toContainText('Atribuições verificadas: 1 de 2');
+ await expect(exact).toContainText('Modelo: R$ 0,96');
+ await expect(exact).toContainText('Custo de origem desconhecido.');
+ await expect(exact).toContainText('Material ainda não integralmente conciliado.');
+ await expect(exact).toContainText('Fechamento financeiro: PENDENTE.');
+ expect(reads.filter(u=>u.includes('mc_get_l4_exact_origins'))).toHaveLength(1);
  expect(writes).toEqual([]);
 });
