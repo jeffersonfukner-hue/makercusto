@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {
- createAssembly,listAssemblies,listProducts,saveProductRecord,updateAssembly,
- type AssemblyPartDraft,type AssemblyRecord,type ProductRecord
+ createAssembly,listAssemblies,listProducts,saveProductRecord,updateAssembly,listComponentLibrary,saveAssemblyWithComponents,
+ type AssemblyPartDraft,type AssemblyRecord,type ProductRecord,type ComponentLibraryItem
 } from '../data/supabase';
 
 type Tab='all'|'component'|'assemblies';
@@ -11,10 +11,11 @@ const brl=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'
 const blank=():AssemblyPartDraft=>({name:'',quantity:1,grams:null,unit_cost:null,notes:''});
 const template=()=>[blank(),blank()];
 const moneyValue=(s:string):number|null=>s.trim()===''?null:Number(s);
-const partDraft=(p:AssemblyRecord['parts'][number]):AssemblyPartDraft=>({id:p.id,name:p.name,quantity:Number(p.quantity),notes:p.notes??'',grams:p.grams===null?null:Number(p.grams),unit_cost:p.unit_cost});
+const partDraft=(p:AssemblyRecord['parts'][number]):AssemblyPartDraft=>({id:p.id,product_id:p.product_id??null,name:p.name,quantity:Number(p.quantity),notes:p.notes??'',grams:p.grams===null?null:Number(p.grams),unit_cost:p.unit_cost});
 export function ProductWorkspace({workspaceId,tab}:Props){
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [kits,setKits]=useState<AssemblyRecord[]>([]);
+ const [library,setLibrary]=useState<ComponentLibraryItem[]>([]);
  const [mode,setMode]=useState<Mode>('catalog');
  const [selected,setSelected]=useState<string|null>(null);
  const [kind,setKind]=useState<'product'|'component'|'kit'>('product');
@@ -37,6 +38,13 @@ export function ProductWorkspace({workspaceId,tab}:Props){
   }).catch(e=>{if(active)setError('Erro ao consultar a oficina: '+(e as Error).message);})
     .finally(()=>{if(active)setLoading(false);});
   return()=>{active=false;};
+ },[workspaceId,reload]);
+ useEffect(()=>{
+  let live=true;
+  if(!workspaceId){setLibrary([]);return;}
+  void listComponentLibrary(workspaceId).then(rows=>{if(live)setLibrary(rows);})
+   .catch(()=>{if(live)setLibrary([]);});
+  return()=>{live=false;};
  },[workspaceId,reload]);
  const kit=kits.find(x=>x.id===selected);
  const product=items.find(x=>x.id===selected);
@@ -67,10 +75,19 @@ export function ProductWorkspace({workspaceId,tab}:Props){
   if(!record)return;
   setName(record.name+' — cópia');setSku('');setDescription(record.description??'');
   setSalePrice(record.sale_price===null?'':String(record.sale_price));setKind(kit?'kit':product?.kind??'product');
-  if(kit)setParts(kit.parts.map(p=>({...partDraft(p),id:undefined,unit_cost:null})));
+  if(kit)setParts(kit.parts.map(p=>({...partDraft(p),id:undefined,unit_cost:p.product_id?p.unit_cost:null})));
   setSelected(null);setMode('new');setError('');setFeedback('A cópia receberá novos registros e não herdará os custos históricos.');
  };
  const changePart=(i:number,patch:Partial<AssemblyPartDraft>)=>setParts(prev=>prev.map((p,n)=>n===i?{...p,...patch}:p));
+ const chooseComponent=(i:number,id:string)=>{
+  const source=library.find(x=>x.id===id);
+  const fallback=items.find(x=>x.id===id&&x.kind==='component');
+  if(!id){changePart(i,{product_id:null,id:undefined,name:'',grams:null,unit_cost:null,notes:''});return;}
+  if(!source&&!fallback)return;
+  changePart(i,{product_id:id,id:undefined,name:source?.name??fallback!.name,
+   grams:source?.grams??null,unit_cost:source?.unit_cost??null});
+ };
+ const componentChoices=items.filter(p=>p.kind==='component');
  const save=async()=>{
   setError('');setFeedback('');
   if(!workspaceId){setError('A oficina não está conectada.');return;}
@@ -88,11 +105,12 @@ export function ProductWorkspace({workspaceId,tab}:Props){
    let id:string;
    if(kind==='kit'){
     const cleanParts=parts.map(p=>({...p,name:p.name.trim(),notes:p.notes.trim()}));
-    if(mode==='edit'&&selected){
+    if(cleanParts.some(p=>p.product_id)){
+     id=await saveAssemblyWithComponents(workspaceId,mode==='edit'?selected:null,{...basic,parts:cleanParts});
+    }else if(mode==='edit'&&selected){
      await updateAssembly(workspaceId,selected,{...basic,parts:cleanParts});id=selected;
     }else{
      id=await createAssembly(workspaceId,{...basic,parts:cleanParts});
-     // A RPC registra custos informados já na primeira revisão, preservando o snapshot.
     }
    }else{
     id=await saveProductRecord(workspaceId,mode==='edit'?selected:null,{...basic,kind});
@@ -156,16 +174,26 @@ export function ProductWorkspace({workspaceId,tab}:Props){
     {parts.map((p,i)=><fieldset key={p.id??'new-'+i} className="assembly-part">
      <legend>Peça {i+1}</legend>
      <div className="assembly-part-fields">
-      <label>Nome da peça<input aria-label={'Nome da peça '+(i+1)} maxLength={150} value={p.name} onChange={e=>changePart(i,{name:e.target.value})}/></label>
+      <label className="product-wide">Usar peça já cadastrada
+       <select aria-label={'Selecionar peça cadastrada '+(i+1)} value={p.product_id??''}
+        onChange={e=>chooseComponent(i,e.target.value)}>
+        <option value="">Cadastrar peça nova neste conjunto</option>
+        {componentChoices.map(item=><option key={item.id} value={item.id}>{item.name}{item.sku?' — '+item.sku:''}</option>)}
+       </select><small className="smart-hint">{p.product_id
+        ?'Vínculo à peça original. Nome, peso e custo são referências; o servidor congela o custo na revisão do conjunto.'
+        :'Ou selecione uma peça já criada para evitar duplicação e redigitação.'}</small>
+      </label>
+      <label>Nome da peça<input aria-label={'Nome da peça '+(i+1)} maxLength={150} value={p.name}
+       disabled={Boolean(p.product_id)} onChange={e=>changePart(i,{name:e.target.value})}/></label>
       <label>Quantidade<input aria-label={'Quantidade da peça '+(i+1)} type="number" min="1" step="1" value={p.quantity} onChange={e=>changePart(i,{quantity:Number(e.target.value)})}/></label>
-      <label>Peso/un. (g, opcional)<input aria-label={'Peso da peça '+(i+1)} type="number" min="0" step=".001" value={p.grams??''} onChange={e=>changePart(i,{grams:e.target.value===''?null:Number(e.target.value)})}/></label>
-      <label>Custo/un. informado (R$, opcional)<input aria-label={'Custo da peça '+(i+1)} type="number" min="0" step=".01" value={p.unit_cost??''} onChange={e=>changePart(i,{unit_cost:e.target.value===''?null:Number(e.target.value)})}/></label>
+      <label>Peso/un. (g, opcional)<input aria-label={'Peso da peça '+(i+1)} type="number" min="0" step=".001" disabled={Boolean(p.product_id)} value={p.grams??''} onChange={e=>changePart(i,{grams:e.target.value===''?null:Number(e.target.value)})}/></label>
+      <label>Custo/un. informado (R$, opcional)<input aria-label={'Custo da peça '+(i+1)} type="number" min="0" step=".01" disabled={Boolean(p.product_id)} value={p.unit_cost??''} onChange={e=>changePart(i,{unit_cost:e.target.value===''?null:Number(e.target.value)})}/></label>
       <label className="product-wide">Observações<input aria-label={'Observações da peça '+(i+1)} value={p.notes} maxLength={1000} onChange={e=>changePart(i,{notes:e.target.value})}/></label>
      </div>
      <button type="button" className="secondary-action remove-part-action" disabled={parts.length<=2} onClick={()=>setParts(prev=>prev.filter((_,n)=>n!==i))}>Remover peça {i+1}</button>
     </fieldset>)}
     <p className="product-cost-preview">Custo do conjunto: <strong>{totalCost(parts)===null?'Não apurado — há peças sem custo':brl(totalCost(parts)!)+' (informado)'}</strong></p>
-    <p className="footnote">O custo é informado por peça. Não há baixa automática de estoque. Edições geram uma nova revisão, sem apagar o custo histórico.</p>
+    <p className="footnote">Peças selecionadas do catálogo usam o custo da ficha original quando houver snapshot; custos desconhecidos continuam desconhecidos. Peças diferentes na mesma placa não recebem rateio automático de tempo ou energia. Não há baixa de estoque; revisões preservam o histórico.</p>
    </div>}
    <div className="product-workspace-buttons">
     <button type="button" className="secondary-action" onClick={()=>setMode(mode==='edit'?'view':'catalog')}>Cancelar</button>
