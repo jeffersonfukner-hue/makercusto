@@ -444,3 +444,15 @@
  .form-action-dock-buttons button{font-size:11px;padding:10px 8px}
  .form-action-dock-context small{font-size:10px}
 }
+
+
+.form-action-dock-name{display:grid;gap:4px;min-width:190px;color:#c0cde1;font-size:10px;font-weight:650}
+.form-action-dock-name input{width:clamp(190px,19vw,290px);max-width:100%;min-height:44px;border:1px solid #637499;border-radius:9px;padding:9px 11px;background:#0d192b;color:#fff;font-size:17px;font-weight:700}
+.form-action-dock-name input:focus-visible{outline:3px solid #8ed9ff;outline-offset:2px}
+@media(max-width:760px){
+ .form-action-dock-buttons{flex-wrap:wrap}
+ .form-action-dock-name{flex:1 0 100%;width:100%}
+ .form-action-dock-name input{width:100%;max-width:none}
+ .form-action-dock-buttons button{flex:1 1 100px}
+ .system-shell:has(.form-action-dock) .system-content{padding-bottom:calc(230px + env(safe-area-inset-bottom))}
+}
