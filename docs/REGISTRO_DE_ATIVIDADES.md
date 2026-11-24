@@ -842,3 +842,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades comprovadas:** leitura de AGENTS, continuidade, padrões, motores P05/P06/P07 e componentes; criação de adaptador de fonte energética; ligação explícita ao formulário de rateio; bloqueio de duplicação; elaboração de quatro testes unitários.
 - **Resultados:** alterações de código e testes na branch `feat/fundacao-makercusto`, PR #1; commits verificáveis `430ef037228f18409ad78ac16c1edf098e1fd073`, `cc72080850a1e1b65c006afb71628ef358c814fb`, `ad2397c4e1016b77edc323dddca9fabe675df993`, `179862351c6eed23e24fd38f0f6533f66d9c2e9a`.
 - **Pendências:** CI/testes do HEAD não confirmados, migração P07 operacional não aplicada, homologação e fechamento financeiro bloqueados. Nenhum merge/deploy ou ação no banco.
+
+
+## 23/11/2026 — MakerCusto L4-G08A: medição integral na prévia
+- Início/término/duração efetiva: não aferidos.
+- Atividades comprovadas: conexão do parâmetro de medição integral ao motor P07, controles explícitos de medidor na interface de Impressões, preservação de referência no rateio P05, três regressões unitárias adicionadas.
+- Evidências: commits `9002fb1a13ae2580c2fcf12efe90662e70fe2a04`, `64256c4a73cf769ca8e91ca59a7bbfa38326b93c`, `153e06d4f621bd6d2a6955d27613719332fba25f`, `167503d62b558d9672159c2e6ded8736f97914a4`; PR #1. CI #466 anterior cancelado; execução das novas regressões não confirmada. Sem merge, deploy ou alteração operacional.
+- Pendências: persistência auditável da medição, correção/compensação de evidências e CI integral.
