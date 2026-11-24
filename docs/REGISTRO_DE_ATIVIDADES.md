@@ -827,3 +827,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - Atividades: leitura de AGENTS, README, arquitetura, padrões, continuidade e homologação P07; implementação do motor racional de energia e cinco testes Vitest.
 - Evidências: commits `524e720407fa5eb6e8efca7cb2f28bd4602417e9`, `77986504db93c8d1dc3ef12bcae743a0626052af`; PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
 - Resultado: código e testes registrados na branch. CI ainda não confirmado; integração com fontes persistidas, interface, rateio e fechamento pendentes. Sem merge, deploy ou alteração operacional.
+
+
+## 23/11/2026 — L4-G06: integração de tarifas e fases P07
+
+- Projeto: MakerCusto. Início, término e duração efetiva não aferidos; intervalo entre mensagens não contabilizado.
+- Atividades: revisão da estrutura existente de tarifas, impressão e autenticação; migração versionada de evidências; cliente tipado, adaptador de domínio, painel de tarifas/intervalos e integração à impressão selecionada; testes de regressão SQL rollback e Vitest; workflow atualizado.
+- Evidências: commits `553afc68bca26a3006254c890efdc6c79910d08a`, `45ae8e35d3fae7220c668dee8703fced5d5d5dba`, `ffa936a16e146b2ec66738f359d9286b9b3b8a10`, `c9f6a3baf849cd89ee11e4d930ba922b80a4d3ca`, `12d89e048d68a04341fc7303941092c7f5a62eb8`, `68ec125cac7be712fe0f7c123e915932cd03377b`, `974134127c936de797e850c18dcfd83c3395bf88`, `a5643f55c434dbf0a7a86d81796dfac408b04e2f`. PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
+- Resultado: implementação no GitHub, CI novo ainda não confirmado; CI anterior #455 aprovado. Pendências: regressão integral, homologação visual, medição integral independente, correção auditável, rateio P05 e fechamento P09. Sem merge, deploy ou migração operacional.
