@@ -802,3 +802,9 @@
 - Fontes P07 permanecem prévias não verificadas, ainda que possuam referência; nenhuma dessas verificações transforma simulação em fechamento financeiro.
 - Acrescentados três testes unitários de regressão. Execução local e CI deste commit não confirmados; sem snapshot, migração operacional, merge ou deploy.
 - Próximas etapas: validar pipeline de forma econômica e ampliar comprovação das outras fontes financeiras, revisões de evidências e P09.
+
+
+## L4-G10B — revisão explícita de categorias financeiras
+- CI do G10A (SHA 11cb3ff35a4a5c8fe86c27007639acb3186ae311), execução #487, conclusão success: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45315304809 .
+- Implementadas declarações locais de categoria desconhecida, não aplicável e zero com referência; divergência entre declaração e linha de custo fica explícita. Interface exige revisão das categorias adicionais e não presume ausência como zero. Origem histórica incompatível não conta como cobertura válida.
+- Três regressões acrescentadas; CI deste lote ainda não verificado. Declarações não persistidas nem verificadas pelo servidor. Nenhum fechamento, migração operacional, merge ou deploy.

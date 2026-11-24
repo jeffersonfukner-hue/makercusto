@@ -98,6 +98,27 @@ describe('L4 — diagnóstico de fechamento financeiro, não persistido',()=>{
   const result=preparePrintFinancialDraft({allocationRequest:r,historicalSources:[]});
   expect(result.issues.map(x=>x.code)).toContain('SOURCE_CATEGORY_MISMATCH');
  });
+ it('não conta categoria histórica trocada como cobertura válida',()=>{
+  const r=request([model]);r.lines[0].category='energy';
+  const result=preparePrintFinancialDraft({allocationRequest:r,historicalSources:[source()]});
+  expect(result.assignedConsumptionCount).toBe(0);
+ });
+ it('distingue categoria não aplicável de zero sem comprovante e desconhecido',()=>{
+  const result=preparePrintFinancialDraft({allocationRequest:request([model]),historicalSources:[source()],
+   categoriesToReview:['machine','energy','labor'],categoryReviews:[
+    {category:'machine',state:'not_applicable',reason:'Equipamento externo'},
+    {category:'energy',state:'zero',reason:'Sem cobrança'},
+    {category:'labor',state:'unknown',reason:''}
+   ]});
+  expect(result.issues.filter(x=>x.code==='COST_CATEGORY_UNREVIEWED').map(x=>x.category)).toEqual(['energy','labor']);
+  expect(result.issues.filter(x=>x.code==='CATEGORY_REVIEW_UNVERIFIED')).toHaveLength(2);
+  expect(result.financialSnapshot).toBeNull();
+ });
+ it('detecta declaração contraditória de categoria com custo',()=>{
+  const result=preparePrintFinancialDraft({allocationRequest:request([model]),historicalSources:[source()],
+   categoryReviews:[{category:'model',state:'zero',reason:'Alegado',reference:'doc-1'}]});
+  expect(result.issues.map(x=>x.code)).toContain('CATEGORY_REVIEW_CONFLICT');
+ });
  it('não inventa massa em campos de origem inválidos',()=>{
   expect(()=>preparePrintFinancialDraft({allocationRequest:request([model]),
    historicalSources:[source({model_g:'NaN'})]})).toThrow(/Massa histórica inválida/);

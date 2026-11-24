@@ -18,11 +18,12 @@ export type HistoricConsumptionSource = {
 export type FinancialDraftIssue = {
  code:'SOURCE_NOT_LOADED'|'UNKNOWN_LOT_COST'|'ESTIMATED_LOT_COST'|'HISTORICAL_PRECISION'
  |'UNALLOCATED_CONSUMPTION'|'DUPLICATE_CONSUMPTION'|'UNVERIFIED_MANUAL_SOURCE'|'COST_CATEGORY_UNREVIEWED'
- |'SOURCE_CATEGORY_MISMATCH'|'DUPLICATE_ENERGY_SOURCE';
+ |'SOURCE_CATEGORY_MISMATCH'|'DUPLICATE_ENERGY_SOURCE'|'CATEGORY_REVIEW_CONFLICT'|'CATEGORY_REVIEW_UNVERIFIED';
  sourceId?:string;
  category?:AllocationCategory;
  description:string;
 };
+export type CategoryReview = {category:AllocationCategory;state:'unknown'|'not_applicable'|'zero';reason:string;reference?:string};
 export type FinancialDraft = {
  schemaVersion:'l4-financial-draft-v1';
  executionId:string;
@@ -53,11 +54,14 @@ export function preparePrintFinancialDraft(input:{
  historicalSources:HistoricConsumptionSource[]|null;
  /** Categorias adicionais a revisar; a oficina informa o que se aplica. */
  categoriesToReview?:AllocationCategory[];
+ /** Declarações locais, nunca comprovação financeira do servidor. */
+ categoryReviews?:CategoryReview[];
 }):FinancialDraft{
  const allocation=reconcilePrintAllocation(input.allocationRequest);
  const issues:FinancialDraftIssue[]=[];
  const sources=input.historicalSources;
  const included=new Set<string>();
+ const validIncluded=new Set<string>();
  const energyLines=new Set<string>();
  for(const line of input.allocationRequest.lines){
   const version=line.sourceVersion;
@@ -74,6 +78,7 @@ export function preparePrintFinancialDraft(input:{
      description:'Origem histórica repetida na mesma categoria; verifique dupla apropriação.'});
    }
    included.add(version);
+   if(match&&match[2]===line.category)validIncluded.add(version);
   }else{
    // Uma prévia P07 não é evidência financeira verificada pelo servidor.
    // Preservar o bloqueio de fechamento mesmo quando a prévia traz referência.
@@ -110,7 +115,7 @@ export function preparePrintFinancialDraft(input:{
    hasMass=true;
    const key=historicKey(source.consumption_id,category);
    expected.add(key);
-   if(!included.has(key)){
+   if(!validIncluded.has(key)){
     issues.push({code:'UNALLOCATED_CONSUMPTION',sourceId:key,category,
      description:'Massa confirmada sem categoria correspondente na prévia.'});
    }
@@ -134,8 +139,23 @@ export function preparePrintFinancialDraft(input:{
   }
  }
  const required=new Set(input.categoriesToReview??[]);
+ const reviews=new Map<AllocationCategory,CategoryReview>();
+ for(const review of input.categoryReviews??[]){
+  if(reviews.has(review.category))throw new Error('Declaração de categoria repetida.');
+  if(!['unknown','not_applicable','zero'].includes(review.state))throw new Error('Estado de revisão inválido.');
+  reviews.set(review.category,review);
+  const hasCost=input.allocationRequest.lines.some(l=>l.category===review.category);
+  if(hasCost&&review.state!=='unknown'){
+   issues.push({code:'CATEGORY_REVIEW_CONFLICT',category:review.category,description:'Categoria declarada sem custo possui lançamento na prévia.'});
+  }
+  if(review.state!=='unknown'){
+   issues.push({code:'CATEGORY_REVIEW_UNVERIFIED',category:review.category,description:!review.reason.trim()||(review.state==='zero'&&!review.reference?.trim())?'Declaração sem justificativa ou evidência de valor zero.':'Declaração local sem verificação financeira pelo servidor.'});
+  }
+ }
  for(const category of required){
-  if(!input.allocationRequest.lines.some(l=>l.category===category)){
+  const review=reviews.get(category);
+  const declared=review&&review.state!=='unknown'&&review.reason.trim()&&(review.state!=='zero'||review.reference?.trim());
+  if(!input.allocationRequest.lines.some(l=>l.category===category)&&!declared){
    issues.push({code:'COST_CATEGORY_UNREVIEWED',category,
     description:'Categoria declarada como relevante ainda não foi informada.'});
   }
@@ -144,7 +164,7 @@ export function preparePrintFinancialDraft(input:{
   schemaVersion:'l4-financial-draft-v1',executionId:input.allocationRequest.executionId,
   status:'pending_financial_close',currency:'BRL',
   allocation,historicSourcesLoaded:sources!==null,expectedConsumptionCount:expected.size,
-  assignedConsumptionCount:[...expected].filter(k=>included.has(k)).length,
+  assignedConsumptionCount:[...expected].filter(k=>validIncluded.has(k)).length,
   issues,financialSnapshot:null
  };
 }

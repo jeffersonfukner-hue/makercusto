@@ -1,7 +1,7 @@
 import {useRef,useState} from 'react';
 import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource} from '../data/supabase';
 import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory} from '../domain/print-allocation';
-import {preparePrintFinancialDraft,type FinancialDraft} from '../domain/print-financial-draft';
+import {preparePrintFinancialDraft,type FinancialDraft,type CategoryReview} from '../domain/print-financial-draft';
 import {FormActionDock} from './FormActionDock';
 import {PrintReadinessPanel} from './PrintReadinessPanel';
 import {PrintEnergyPanel} from './PrintEnergyPanel';
@@ -33,6 +33,11 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
  const [separate,setSeparate]=useState(false);
  const [basis,setBasis]=useState<Record<string,string>>({});
  const [lines,setLines]=useState<AllocationLine[]>([]);
+ const [reviews,setReviews]=useState<Partial<Record<AllocationCategory,CategoryReview>>>({});
+ const reviewCategories=categories.filter(c=>!['model','purge','loss'].includes(c.id));
+ const updateReview=(category:AllocationCategory,patch:Partial<CategoryReview>)=>{
+  setReviews(v=>({...v,[category]:{category,state:'unknown',reason:'',...v[category],...patch}}));setPreview(null);
+ };
  const sequence=useRef(0);
  const sourceRequest=useRef(0);
  const [preview,setPreview]=useState<FinancialDraft|null>(null);
@@ -43,7 +48,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
   ...(Number(o.failed)>0?[{id:o.id+':rejected',name:o.name+' — rejeitadas',quantity:Number(o.failed),outcome:'rejected' as const}]:[])
  ])??[];
  const changePrint=(id:string)=>{
-  setPrintId(id);setLines([]);setPreview(null);setError('');setBasis({});
+  setPrintId(id);setLines([]);setReviews({});setPreview(null);setError('');setBasis({});
   setSources(null);setSourcesError('');setSourceVersion('entrada-local-1');
   setAmount('');setSource('');setRationale('');
   const request=++sourceRequest.current;
@@ -111,7 +116,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
   setError('');setPreview(null);
   if(!print||!destinations.length||!lines.length){setError('Selecione uma impressão com saídas confirmadas e inclua categorias de custo.');return;}
   try{setPreview(preparePrintFinancialDraft({allocationRequest:{executionId:print.id,outputs:destinations,lines},
-   historicalSources:sources?.lines??null}));}
+   historicalSources:sources?.lines??null,categoriesToReview:reviewCategories.map(c=>c.id),categoryReviews:Object.values(reviews).filter((x):x is CategoryReview=>Boolean(x))}));}
   catch(e){setError((e as Error).message);}
  };
  return <section className="panel materials-form" aria-label="Prévia L4 de rateio" onFocusCapture={onActivate} onClickCapture={onActivate}>
@@ -170,6 +175,22 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
     </label>)}</div>
     <p className="footnote">Direto: preencha somente um destino com base 1. Compartilhado: preencha pelo menos dois destinos com pesos positivos. Não envie custo de peças rejeitadas automaticamente às boas.</p>
     <button type="button" onClick={addLine}>+ Incluir categoria na prévia</button>
+    <h4>Revisão das demais categorias de custo</h4>
+    <p className="footnote">Ausência de lançamento não significa custo zero. Declarações locais exigem confirmação futura e não encerram a impressão.</p>
+    <div className="materials-spool-grid">{reviewCategories.map(c=>{
+     const review=reviews[c.id];
+     const hasCost=lines.some(l=>l.category===c.id);
+     return <div key={c.id}>
+      <label>{c.label}<select aria-label={'Revisão de '+c.label} value={review?.state??'unknown'} onChange={e=>updateReview(c.id,{state:e.target.value as CategoryReview['state']})}>
+       <option value="unknown">{hasCost?'Custo informado na prévia':'Não revisado / desconhecido'}</option>
+       <option value="not_applicable">Não se aplica</option><option value="zero">Zero declarado</option>
+      </select></label>
+      {review&&review.state!=='unknown'&&<>
+       <label>Justificativa<input value={review.reason} onChange={e=>updateReview(c.id,{reason:e.target.value})}/></label>
+       {review.state==='zero'&&<label>Referência da evidência<input value={review.reference??''} onChange={e=>updateReview(c.id,{reference:e.target.value})}/></label>}
+      </>}
+     </div>;
+    })}</div>
     <h4>Categorias informadas ({lines.length})</h4>
     {lines.length===0?<p>Nenhuma categoria informada. Não é possível conciliar a mesa sem custos de origem.</p>:<ul>
      {lines.map(l=><li key={l.id}>{categories.find(c=>c.id===l.category)?.label}: R$ {l.amountBrl} — {l.method==='direct'?'direto':'compartilhado'} — {l.source}

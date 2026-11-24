@@ -874,3 +874,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultado:** alterações de código e testes preparadas na branch, sem fechamento financeiro ou alterações operacionais. Commit identificado no histórico desta atualização.
 - **Pendências:** teste local e CI deste commit ainda não comprovados; homologação visual e integrações financeiras restantes.
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; arquivo src/domain/print-financial-draft.test.ts.
+
+
+## 24/11/2026 — L4-G10B (MakerCusto)
+- Início/término/duração efetiva: não aferidos.
+- Atividades: consulta do CI G10A (#487 success), revisão do contrato L4, implementação de diagnóstico e controles de revisão de categorias, três regressões, atualização documental.
+- Evidências: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45315304809 ; PR #1 e commit desta alteração.
+- Pendências: CI do novo lote, comprovação de origens no servidor e fechamento P09; nenhuma alteração operacional, merge ou deploy.
