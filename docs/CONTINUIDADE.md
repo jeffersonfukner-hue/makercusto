@@ -875,3 +875,8 @@
 - Autorizado editar e commitar código e documentação na branch existente, sem nova homologação das decisões acima. Prioridade: SystemNavigation, WorkshopDashboard, ProductSavePanel e App; preservar cadastros. Sem merge, deploy, novas migrações operacionais ou gastos.
 - CONTINUIDADE-01: ao encerrar com pendências, indicar ação do agente e ação necessária do usuário; quando depender apenas de retomada, escrever Sua ação: digite Continue. Nunca indicar nenhuma nesse estado. Regra registrada no AGENTS.md, commit 13e48ea479af53ecac766e76253da933d556c8aa.
 - Evidência das 20 migrações: o proprietário informa execução anterior; a documentação versionada anterior registra plano de 20 scripts e CI #500 aprovado no SHA d51bb995a262cc3f32b3ccf94e8280445523409e em PostgreSQL efêmero. Aplicação operacional individual ainda não comprovada nesta sessão; recuperar recibos e catálogo antes de declarar confirmação. Não reaplicar scripts por presunção.
+
+
+## 24/11/2026 — Visão geral homologada novamente
+- Proprietário aprovou a reconstrução visual: menu lateral ordenado, quatro indicadores (Produtos, Impressões, Custos, Resultados), gráfico de evolução dos custos e seis atalhos (Calculadora, Produtos, Impressoras, Filamentos, Biblioteca STL, Dicas). Prioridade visual antes das integrações restantes.
+- Implementação: navegação c802511d37a130302d077523b3307a62acaf91b8; painel 0f56fca84860c50062cfafd547e2c7df233c6a5e; destinos 1a15867a7348112f98236248a4e0b2b8a90f90a5; CSS f149a0cd1a63579477881d563a624c63db09b7a7. Indicadores sem fonte permanecem indisponíveis; oficina, biblioteca e dicas são áreas provisórias. Testes não executados; CI evitado por skip ci. Não liberar deploy até validação técnica. Sem merge, deploy ou banco operacional. Duração não aferida.
