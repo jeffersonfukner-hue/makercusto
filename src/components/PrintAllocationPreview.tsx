@@ -4,6 +4,7 @@ import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory} fr
 import {preparePrintFinancialDraft,type FinancialDraft} from '../domain/print-financial-draft';
 import {FormActionDock} from './FormActionDock';
 import {PrintReadinessPanel} from './PrintReadinessPanel';
+import {PrintEnergyPanel} from './PrintEnergyPanel';
 import {PrintExactMaterialDraft} from './PrintExactMaterialDraft';
 
 type Props={workspaceId:string|null;prints:PrintRecord[];active:boolean;onActivate:()=>void};
@@ -102,6 +103,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
    </select><small>Somente saídas com quantidades já confirmadas aparecem como destinos.</small></label>
   </div>
   {print&&<div>
+   <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id}/>
    <PrintReadinessPanel key={print.id} workspaceId={workspaceId} executionId={print.id}/>
    <PrintExactMaterialDraft workspaceId={workspaceId} executionId={print.id} outputs={destinations} lines={lines}/>
    <h4>Consumos confirmados vinculados à impressão</h4>
