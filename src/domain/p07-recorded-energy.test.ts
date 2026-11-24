@@ -21,3 +21,22 @@ describe('persisted P07 evidence',()=>{
   expect(prepareRecordedEnergy({...evidence,intervals:[]},start,end).categoryCents).toBeNull();
  });
 });
+
+describe('medição integral P07',()=>{
+ it('substitui o consumo por fase sem somar duas vezes',()=>{
+  const result=prepareRecordedEnergy(evidence,start,end,{start,end,kwh:'0.91',reference:'medidor integral'});
+  expect(result.categoryCents).toBe('94');
+  expect(result.energySource).toBe('measured_integral');
+  expect(result.postingAllowed).toBe(false);
+  expect(result.intervals).toHaveLength(1);
+ });
+ it('rejeita período divergente e referência ausente',()=>{
+  expect(()=>prepareRecordedEnergy(evidence,start,end,{start,end:'2026-11-23T10:59:00-03:00',kwh:'0.91',reference:'medidor'})).toThrow();
+  expect(()=>prepareRecordedEnergy(evidence,start,end,{start,end,kwh:'0.91',reference:' '})).toThrow();
+ });
+ it('conserva lacunas de classificação mesmo quando existe medição integral',()=>{
+  const result=prepareRecordedEnergy({...evidence,intervals:[]},start,end,{start,end,kwh:'0.91',reference:'medidor'});
+  expect(result.categoryCents).toBe('94');
+  expect(result.issues).toContain('UNCOVERED_INTERVAL');
+ });
+});
