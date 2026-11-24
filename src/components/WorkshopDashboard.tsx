@@ -1,10 +1,10 @@
 import {useEffect,useState} from 'react';
 import {listProducts,listAssemblies,type ProductRecord,type AssemblyRecord} from '../data/supabase';
-import type {OverviewTab} from './SystemNavigation';
+import type {OverviewTab,SystemSection} from './SystemNavigation';
 
-type View='overview'|'products'|'assemblies'|'calculator';
+type View=SystemSection;
 type Props={tab:OverviewTab;workspaceId:string|null;workspaceName:string;printersCount:number;busy:boolean;onNavigate:(view:View)=>void};
-export function WorkshopDashboard({tab,workspaceId,workspaceName,printersCount,busy,onNavigate}:Props){
+export function WorkshopDashboard({tab,workspaceId,workspaceName,busy,onNavigate}:Props){
  const [products,setProducts]=useState<ProductRecord[]>([]);
  const [kits,setKits]=useState<AssemblyRecord[]>([]);
  const [loading,setLoading]=useState(false);
@@ -21,7 +21,6 @@ export function WorkshopDashboard({tab,workspaceId,workspaceName,printersCount,b
    .finally(()=>{if(alive)setLoading(false);});
   return()=>{alive=false;};
  },[workspaceId,refresh]);
- const parts=products.filter(p=>p.kind==='component').length;
  const productCount=products.filter(p=>p.kind==='product').length;
  const recent=products.slice().sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
  const pendingKits=kits.filter(k=>k.total_cost===null || k.sale_price===null);
@@ -36,28 +35,15 @@ export function WorkshopDashboard({tab,workspaceId,workspaceName,printersCount,b
   {busy&&<p role="status" className="footnote">Conectando à sua oficina…</p>}
   {error&&<p className="error" role="alert">{error}</p>}
   {tab==='general'&&<><div className="dashboard-metrics" aria-label="Indicadores da oficina">
-   <div className="dashboard-metric"><span>Produtos simples</span><strong>{loading?'…':productCount}</strong><small>Cadastros ativos</small></div>
-   <div className="dashboard-metric"><span>Conjuntos</span><strong>{loading?'…':kits.length}</strong><small>Produtos com composição</small></div>
-   <div className="dashboard-metric"><span>Peças</span><strong>{loading?'…':parts}</strong><small>Componentes cadastrados</small></div>
-   <div className="dashboard-metric"><span>Impressoras</span><strong>{busy?'…':printersCount}</strong><small>Equipamentos da oficina</small></div>
+   <div className="dashboard-metric"><span>Produtos</span><strong>{loading||busy||error||!workspaceId?'—':productCount}</strong><small>Produtos simples cadastrados</small></div>
+   <div className="dashboard-metric"><span>Impressões</span><strong>—</strong><small>Indicador a integrar</small></div>
+   <div className="dashboard-metric"><span>Custos</span><strong>R$ —</strong><small>Dados financeiros a integrar</small></div>
+   <div className="dashboard-metric"><span>Resultados</span><strong>R$ —</strong><small>Dados financeiros a integrar</small></div>
   </div>
-  <div className="dashboard-columns">
-   <section className="panel dashboard-card">
-    <h2>Ações rápidas</h2>
-    <p>Escolha a operação sem precisar voltar à calculadora pública.</p>
-    <div className="dashboard-actions">
-     <button type="button" onClick={()=>onNavigate('assemblies')}><strong>Montar um conjunto</strong><span>Combine peças fabricadas</span></button>
-     <button type="button" onClick={()=>onNavigate('products')}><strong>Meus produtos</strong><span>Cadastre e consulte produtos</span></button>
-     <button type="button" onClick={()=>onNavigate('calculator')}><strong>Calcular um custo</strong><span>Abra o simulador completo</span></button>
-    </div>
-   </section>
-   <section className="panel dashboard-card">
-    <h2>Conjuntos recentes</h2>
-    {loading?<p role="status">Buscando conjuntos…</p>:kits.length===0?<p>Nenhum conjunto cadastrado. Comece pelo primeiro produto composto.</p>:
-     <ul className="dashboard-recent">{kits.slice(0,5).map(kit=><li key={kit.id}><div><strong>{kit.name}</strong><small>{kit.parts.length} tipos de peças</small></div><button type="button" onClick={()=>onNavigate('assemblies')}>Abrir</button></li>)}</ul>}
-    {kits.length>0&&<button type="button" className="dashboard-text-link" onClick={()=>onNavigate('assemblies')}>Ver todos os conjuntos</button>}
-   </section>
-  </div>
+  <section className="panel dashboard-card dashboard-chart"><h2>Evolução dos custos</h2><div className="dashboard-chart-empty"><span>Sem série financeira disponível</span></div><p>O gráfico será preenchido com custos comprovados da oficina.</p></section>
+  <section className="dashboard-card"><h2>Acesso rápido</h2><div className="dashboard-actions dashboard-shortcuts">
+   {([{label:'Calculadora de custos',symbol:'◷',view:'calculator'},{label:'Produtos',symbol:'▣',view:'products'},{label:'Impressoras',symbol:'▤',view:'printers'},{label:'Filamentos',symbol:'◈',view:'materials'},{label:'Biblioteca STL',symbol:'▥',view:'library'},{label:'Dicas de impressão',symbol:'◇',view:'tips'}] as const).map(item=><button key={item.view} type="button" onClick={()=>onNavigate(item.view)}><span className="dashboard-shortcut-icon" aria-hidden="true">{item.symbol}</span><strong>{item.label}</strong></button>)}
+  </div></section>
   </>}
   {tab==='activities'&&<section className="panel dashboard-card dashboard-tab-panel" aria-label="Atividades da oficina">
    <h2>Cadastros recentes</h2><p>Registros de produtos cadastrados na oficina, ordenados pela data de criação. Esta lista não é um log de alterações ou impressões.</p>
