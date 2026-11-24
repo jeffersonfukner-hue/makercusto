@@ -1,6 +1,6 @@
 import {useEffect,useState,type ReactNode} from 'react';
 
-export type SystemSection='overview'|'products'|'assemblies'|'materials'|'prints'|'calculator';
+export type SystemSection='overview'|'products'|'assemblies'|'materials'|'prints'|'calculator'|'printers'|'workshop'|'library'|'tips';
 export type ProductTab='all'|'parts';
 export type OverviewTab='general'|'activities'|'pending';
 type Props={
@@ -10,14 +10,15 @@ type Props={
  onNavigate:(section:SystemSection)=>void;onLogout:()=>void;children:ReactNode
 };
 const menu=[
- {label:'Início',symbol:'▦',section:'overview'},
+ {label:'Visão geral',symbol:'▦',section:'overview'},
+ {label:'Calculadora de custos',symbol:'◷',section:'calculator'},
  {label:'Produtos',symbol:'▣',section:'products'},
- {label:'Impressões',symbol:'▤',section:'prints'},
- {label:'Materiais',symbol:'◈',section:'materials'},
- {label:'Estoque',symbol:'▥',section:null},
- {label:'Custos',symbol:'◷',section:'calculator'},
- {label:'Relatórios',symbol:'▧',section:null},
- {label:'Configurações',symbol:'⚙',section:null}
+ {label:'Impressoras',symbol:'▤',section:'printers'},
+ {label:'Filamentos',symbol:'◈',section:'materials'},
+ {label:'Impressões',symbol:'▧',section:'prints'},
+ {label:'Oficina',symbol:'⚙',section:'workshop'},
+ {label:'Biblioteca STL',symbol:'▥',section:'library'},
+ {label:'Dicas de impressão',symbol:'◇',section:'tips'}
 ] as const;
 export function SystemNavigation({authenticated,workspaceName,email,section,productTab,onProductTab,overviewTab,onOverviewTab,onNavigate,onLogout,children}:Props){
  const [open,setOpen]=useState(false);
@@ -30,7 +31,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
   return()=>window.removeEventListener('keydown',close);
  },[open]);
  if(!authenticated)return <>{children}</>;
- const title=section==='overview'?'Visão geral da oficina':section==='calculator'?'Custos e precificação':section==='prints'?'Impressões da oficina':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
+ const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Custos e precificação':section==='prints'?'Impressões da oficina':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
  const navigate=(next:SystemSection)=>{onNavigate(next);setOpen(false);};
  return <div className={'system-shell'+(collapsed?' is-collapsed':'')}>
   <header className="system-topbar">
@@ -44,16 +45,16 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
    <aside className={'system-sidebar'+(open?' mobile-open':'')} aria-label="Menu lateral do MakerCusto">
     <div className="system-sidebar-top"><span>MENU PRINCIPAL</span><button type="button" className="system-collapse-button" aria-label={collapsed?'Expandir menu lateral':'Recolher menu lateral'} onClick={()=>setCollapsed(v=>!v)}>{collapsed?'»':'«'}</button></div>
     <nav aria-label="Módulos do MakerCusto">
-     {menu.map(item=><button key={item.label} type="button" disabled={!item.section} title={!item.section?'Módulo em desenvolvimento':item.label} className={item.section===section?'system-nav-active':''} aria-current={item.section===section?'page':undefined}
-      onClick={()=>item.section&&navigate(item.section)}><span className="system-nav-icon" aria-hidden="true">{item.symbol}</span><span className="system-nav-text">{item.label}</span>{!item.section&&<span className="system-soon">Em breve</span>}</button>)}
+     {menu.map(item=><button key={item.label} type="button" title={item.label} className={item.section===section?'system-nav-active':''} aria-current={item.section===section?'page':undefined}
+      onClick={()=>item.section&&navigate(item.section)}><span className="system-nav-icon" aria-hidden="true">{item.symbol}</span><span className="system-nav-text">{item.label}</span></button>)}
     </nav>
     <div className="system-sidebar-bottom"><span className="system-nav-icon" aria-hidden="true">◈</span><span className="system-nav-text">Oficina conectada</span></div>
    </aside>
    <div className="system-content">
     <div className="system-section-header">
-     <div><p className="system-breadcrumb">MakerCusto / {section==='overview'?'Início':section==='calculator'?'Custos':section==='materials'?'Materiais':section==='prints'?'Impressões':'Produtos'}</p><h1>{title}</h1>
-      <p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='calculator'?'Simule custos e confira os parâmetros de produção.':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':'Produtos fabricados, peças e conjuntos da sua oficina.'}</p></div>
-     {section==='overview'&&<button className="system-primary-link" type="button" onClick={()=>navigate('assemblies')}>+ Novo conjunto</button>}
+     <div><p className="system-breadcrumb">MakerCusto / {section==='overview'?'Visão geral':section==='calculator'?'Custos':section==='materials'?'Materiais':section==='prints'?'Impressões':title}</p><h1>{title}</h1>
+      <p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='calculator'?'Simule custos e confira os parâmetros de produção.':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p></div>
+     
     </div>
     <div className="system-tabs" role="navigation" aria-label={'Abas de '+title}>
      {section==='overview'&&([
