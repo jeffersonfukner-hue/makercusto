@@ -330,3 +330,6 @@ export const getIntegralEnergy=(workspaceId:string,executionId:string)=>api<Inte
 export const recordIntegralEnergy=(workspaceId:string,executionId:string,draft:{start:string;end:string;kwh:string;reference:string})=>api<string>('rpc/mc_record_integral_energy','POST',{p_workspace_id:workspaceId,p_production_id:executionId,p_start:draft.start,p_end:draft.end,p_kwh:draft.kwh,p_reference:draft.reference});
 
 export const reviseIntegralEnergy=(workspaceId:string,executionId:string,draft:{priorId:string;key:string;kwh:string;reference:string;reason:string})=>api<string>('rpc/mc_revise_integral_energy','POST',{p_workspace_id:workspaceId,p_production_id:executionId,p_prior_id:draft.priorId,p_request_key:draft.key,p_kwh:draft.kwh,p_reference:draft.reference,p_reason:draft.reason});
+
+export type MachineOriginEvidence={schema_version:'l4-machine-origin-v1';workspace_id:string;execution_id:string;actual_hours:string|null;posting_allowed:false;printer_matches:boolean;origin:{printer_id:string;printer_name:string;purchase_price:string|null;lifetime_hours:string|null;maintenance_per_hour:string;captured_at:string;author_id:string|null}|null};
+export const getL4MachineOrigin=(workspaceId:string,executionId:string)=>api<MachineOriginEvidence>('rpc/mc_get_l4_machine_origin','POST',{p_workspace_id:workspaceId,p_production_id:executionId});

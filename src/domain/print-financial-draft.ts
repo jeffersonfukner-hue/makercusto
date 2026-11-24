@@ -1,3 +1,4 @@
+import {isMachineSource} from './l4-machine-origin';
 import {reconcilePrintAllocation, type AllocationRequest, type AllocationSnapshot, type AllocationCategory} from './print-allocation';
 
 /**
@@ -18,7 +19,7 @@ export type HistoricConsumptionSource = {
 export type FinancialDraftIssue = {
  code:'SOURCE_NOT_LOADED'|'UNKNOWN_LOT_COST'|'ESTIMATED_LOT_COST'|'HISTORICAL_PRECISION'
  |'UNALLOCATED_CONSUMPTION'|'DUPLICATE_CONSUMPTION'|'UNVERIFIED_MANUAL_SOURCE'|'COST_CATEGORY_UNREVIEWED'
- |'SOURCE_CATEGORY_MISMATCH'|'DUPLICATE_ENERGY_SOURCE'|'CATEGORY_REVIEW_CONFLICT'|'CATEGORY_REVIEW_UNVERIFIED';
+ |'SOURCE_CATEGORY_MISMATCH'|'DUPLICATE_ENERGY_SOURCE'|'DUPLICATE_MACHINE_SOURCE'|'CATEGORY_REVIEW_CONFLICT'|'CATEGORY_REVIEW_UNVERIFIED';
  sourceId?:string;
  category?:AllocationCategory;
  description:string;
@@ -86,6 +87,9 @@ export function preparePrintFinancialDraft(input:{
     description:version.startsWith('p07:')?
      'Prévia energética P07 ainda não foi verificada para fechamento financeiro.':
      'Custo manual precisa de comprovação de origem antes de fechar.'});
+   if(isMachineSource(version)&&line.category!=='machine'){
+    issues.push({code:'SOURCE_CATEGORY_MISMATCH',sourceId:version,category:line.category,description:'Origem da máquina incompatível com categoria.'});
+   }
    if(version.startsWith('p07:')&&line.category!=='energy'){
     issues.push({code:'SOURCE_CATEGORY_MISMATCH',sourceId:version,category:line.category,
      description:'Origem P07 só pode representar a categoria energia.'});
@@ -98,6 +102,10 @@ export function preparePrintFinancialDraft(input:{
  if(energyLines.size>1){
   issues.push({code:'DUPLICATE_ENERGY_SOURCE',category:'energy',
    description:'Mais de uma linha de energia na execução: risco de contabilização duplicada.'});
+ }
+ const machineLines=input.allocationRequest.lines.filter(l=>l.category==='machine');
+ if(machineLines.length>1&&machineLines.some(l=>isMachineSource(l.sourceVersion))){
+  issues.push({code:'DUPLICATE_MACHINE_SOURCE',category:'machine',description:'Custo integral da máquina somado a outra linha de máquina.'});
  }
  if(sources===null){
   issues.push({code:'SOURCE_NOT_LOADED',description:'Histórico de consumo não foi consultado ou falhou.'});

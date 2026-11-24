@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource,type StoredPrinter} from '../data/supabase';
+import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource,type StoredPrinter,getL4MachineOrigin,type MachineOriginEvidence} from '../data/supabase';
 import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory} from '../domain/print-allocation';
 import {preparePrintFinancialDraft,type FinancialDraft,type CategoryReview} from '../domain/print-financial-draft';
 import {FormActionDock} from './FormActionDock';
@@ -8,6 +8,7 @@ import {PrintEnergyPanel} from './PrintEnergyPanel';
 import {PrintExactMaterialDraft} from './PrintExactMaterialDraft';
 
 import {machineCostCandidate} from '../domain/l4-machine-estimate';
+import {historicalMachineCandidate,isMachineSource} from '../domain/l4-machine-origin';
 type Props={workspaceId:string|null;prints:PrintRecord[];printers:StoredPrinter[];active:boolean;onActivate:()=>void};
 type OutputOption={id:string;name:string;outcome:'good'|'rejected';quantity:number};
 const formatCents=(cents:string)=>{const value=BigInt(cents);return 'R$ '+new Intl.NumberFormat('pt-BR').format(value/100n)+','+(value%100n).toString().padStart(2,'0');};
@@ -45,15 +46,36 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
  const [error,setError]=useState('');
  const print=prints.find(x=>x.id===printId);
  const machine=print?machineCostCandidate(print,printers.find(p=>p.id===print.printer_id&&p.workspace_id===workspaceId)??null):null;
+ const [machineOrigin,setMachineOrigin]=useState<MachineOriginEvidence|null>(null);
+ const [machineError,setMachineError]=useState('');
+ const [machineBusy,setMachineBusy]=useState(false);
+ const machineRequest=useRef(0);
+ const historical=machineOrigin&&workspaceId&&print?historicalMachineCandidate(machineOrigin,workspaceId,print.id):null;
  const machineVersion=machine?.sourceVersion??null;
+ const historicalVersion=historical?.sourceVersion??null;
  useEffect(()=>{
-  setLines(previous=>previous.some(l=>l.sourceVersion.startsWith('machine-estimate:')&&l.sourceVersion!==machineVersion)?
-   previous.filter(l=>!l.sourceVersion.startsWith('machine-estimate:')||l.sourceVersion===machineVersion):previous);
-  if(sourceVersion.startsWith('machine-estimate:')&&sourceVersion!==machineVersion){
+  ++machineRequest.current;setMachineOrigin(null);setMachineBusy(false);setMachineError('');
+ },[workspaceId,printId,print?.actual_hours,print?.printer_id]);
+ const loadMachineOrigin=()=>{
+  if(!workspaceId||!print)return;
+  const id=++machineRequest.current;
+  setMachineBusy(true);setMachineError('');setMachineOrigin(null);
+  setLines(v=>v.filter(l=>!l.sourceVersion.startsWith('machine-origin:')));setPreview(null);
+  void getL4MachineOrigin(workspaceId,print.id).then(data=>{
+   if(id!==machineRequest.current)return;
+   if(data.workspace_id!==workspaceId||data.execution_id!==print.id||data.schema_version!=='l4-machine-origin-v1'||data.posting_allowed!==false)throw new Error('Resposta histórica inválida.');
+   setMachineOrigin(data);
+  }).catch(e=>{if(id===machineRequest.current)setMachineError((e as Error).message);})
+  .finally(()=>{if(id===machineRequest.current)setMachineBusy(false);});
+ };
+ useEffect(()=>{
+  const stale=(v:string)=>isMachineSource(v)&&v!==machineVersion&&v!==historicalVersion;
+  setLines(previous=>previous.some(l=>stale(l.sourceVersion))?previous.filter(l=>!stale(l.sourceVersion)):previous);
+  if(stale(sourceVersion)){
    setSourceVersion('entrada-local-1');setAmount('');setSource('');setBasis({});setRationale('');
   }
   setPreview(null);
- },[machineVersion,sourceVersion]);
+ },[machineVersion,historicalVersion,sourceVersion]);
  const destinations:OutputOption[]=print?.outputs.flatMap(o=>[
   ...(Number(o.good)>0?[{id:o.id+':good',name:o.name+' — boas',quantity:Number(o.good),outcome:'good' as const}]:[]),
   ...(Number(o.failed)>0?[{id:o.id+':rejected',name:o.name+' — rejeitadas',quantity:Number(o.failed),outcome:'rejected' as const}]:[])
@@ -111,6 +133,12 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
   setSourceVersion(machine.sourceVersion);setBasis({});setSeparate(false);
   setRationale('Estimativa a partir da ficha atual, sem comprovação histórica.');setPreview(null);setError('');
  };
+ const importHistoricalMachine=()=>{
+  if(!historical?.importable)return;
+  if(lines.some(l=>l.category==='machine')){setError('Remova o custo de máquina anterior antes de importar a origem congelada.');return;}
+  setCategory('machine');setAmount(historical.amountBrl);setSource(historical.source);
+  setSourceVersion(historical.sourceVersion);setBasis({});setSeparate(false);setRationale('Parâmetros históricos; manutenção parametrizada, sem comprovação financeira.');setPreview(null);setError('');
+ };
  const addLine=()=>{
   setError('');setPreview(null);
   if(!print||!destinations.length){setError('Selecione uma impressão com peças confirmadas.');return;}
@@ -119,7 +147,7 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
   if(category==='energy'&&lines.some(l=>l.category==='energy')){
    setError('Energia já consta na prévia: remova a categoria antiga antes de incluir uma nova.');return;
   }
-  if(category==='machine'&&lines.some(l=>l.category==='machine'&&(l.sourceVersion.startsWith('machine-estimate:')||sourceVersion.startsWith('machine-estimate:')))){
+  if(category==='machine'&&lines.some(l=>l.category==='machine'&&(isMachineSource(l.sourceVersion)||isMachineSource(sourceVersion)))){
    setError('Não some a estimativa integral da máquina a outro custo de máquina.');return;
   }
   if(sourceVersion!=='entrada-local-1'&&lines.some(l=>l.sourceVersion===sourceVersion)){
@@ -151,7 +179,16 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
   {print&&<div>
    <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onUseForAllocation={useP07Energy} onInvalidateAllocation={invalidateP07Energy}/>
    <section className="panel" aria-label="Estimativa de utilização da máquina">
-    <h4>Máquina — estimativa de utilização</h4>
+    <h4>Máquina — origem histórica e estimativa</h4>
+    <button type="button" disabled={machineBusy||!workspaceId} onClick={loadMachineOrigin}>{machineBusy?'Consultando…':'Consultar parâmetros congelados'}</button>
+    {machineError&&<p role="alert">Origem histórica indisponível: {machineError}</p>}
+    {machineOrigin&&!historical&&<p>Origem congelada inexistente, incompleta ou incompatível. Não reconstruir histórico com a ficha atual.</p>}
+    {historical&&<div>
+     <p>Depreciação indicativa: R$ {historical.depreciationBrl} · manutenção parametrizada: R$ {historical.maintenanceBrl}.</p>
+     <p>Total da categoria (arredondado uma vez): R$ {historical.amountBrl}. Os componentes exibidos podem diferir por centavo.</p>
+     <small>Manutenção parametrizada não é despesa comprovada. Não acrescente novamente a mesma manutenção.</small>
+     <button type="button" disabled={!historical.importable} onClick={importHistoricalMachine}>Usar origem congelada no rateio</button>
+    </div>}
     <p className="footnote">Usa valor de aquisição e vida útil atuais da impressora vinculada, multiplicados pelas horas registradas da impressão. Não substitui custo histórico comprovado.</p>
     {machine?<><p>Estimativa: R$ {machine.amountBrl} · {machine.source}</p><button type="button" onClick={importMachine}>Usar estimativa da máquina no rateio</button></>:<p>Estimativa indisponível: confira equipamento, valor, vida útil e horas registradas. Nenhum custo presumido.</p>}
    </section>

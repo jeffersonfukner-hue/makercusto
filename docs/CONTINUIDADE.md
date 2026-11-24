@@ -819,3 +819,8 @@
 ## 24/11/2026 — L4-G11B: origem histórica da máquina (banco versionado)
 - Migração captura parâmetros da impressora na criação de novas execuções, sem reconstruir as antigas. Preserva preço, vida útil, manutenção, identificação, autor e instante; não presume comprovação de compra. UPDATE/DELETE bloqueados. Consulta financeira isolada por oficina retorna horas registradas, indicador de vínculo e bloqueio de postagem.
 - Teste SQL de imutabilidade, alteração posterior da ficha, autorização e tempo ausente integrado ao CI efêmero. CI G11A #489 observado em execução; novos testes não confirmados. Próxima etapa: cliente e interface da origem congelada, cálculo exato e revisão de manutenção sem dupla contagem. Sem aplicação operacional, merge ou deploy.
+
+
+## 24/11/2026 — L4-G11C: origem congelada da máquina na prévia
+- RPC versionada conectada ao cliente; cálculo racional de depreciação e manutenção parametrizada somados antes do arredondamento da categoria. Exibição separada, importação explícita e descarte de fontes obsoletas. Não reconstruir impressões antigas nem tratar manutenção parametrizada como despesa comprovada. Prevenção de dupla apropriação no formulário e diagnóstico.
+- Quatro regressões unitárias adicionadas. CI G11B #490 observado em execução; novos testes não confirmados. Sem migração operacional, merge, deploy ou fechamento.
