@@ -933,3 +933,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades executadas:** inspecionada captura do Preview com erro de RPC para lista de cálculos; conferida migração `20261123125000_reuse_saved_calculations.sql` no GitHub; consultado CI #382 e seus logs (12 falhas E2E desktop/mobile); consultados AGENTS, arquitetura, padrões e continuidade; corrigida ativação de 11 seções/formulários contextuais de Impressões via onChangeCapture.
 - **Evidências:** commit `f13a7ff3065f64664060730e1d3083b5d657cee7`; CI com falha https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45264494581 ; revalidação #499 https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45441294720 (em andamento na última consulta).
 - **Pendências:** confirmar resultado integral do CI atual; se necessário corrigir regressões. Migração dos cálculos existe no repositório, mas não está comprovada no banco conectado ao Preview. Sem merge, deploy, migração operacional ou gasto autorizado.
+
+
+## 24/11/2026 — Conferência de CI e catálogo do banco MakerCusto
+- **Início/término/duração:** não medidos.
+- **Atividades:** confirmado CI #500 aprovado para `d51bb995a262cc3f32b3ccf94e8280445523409e`; executadas consultas somente leitura em `pg_proc` e `supabase_migrations.schema_migrations` do projeto MakerCusto, confirmando ausência das duas RPCs de cálculos e última migração aplicada `20261123022622`.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45441395716 ; migrações no PR #1. Consultas não alteraram banco nem produziram novas RPCs.
+- **Pendências:** eventual CI do commit documental, homologação visual e plano de atualização ordenada do banco sob autorização separada. Nenhum merge, deploy ou SQL de escrita.
