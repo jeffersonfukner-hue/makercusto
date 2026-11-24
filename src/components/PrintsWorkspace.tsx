@@ -304,7 +304,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   <div className="product-workspace-heading"><div><h2>Impressões da oficina</h2>
    <p>L2 registra a impressão sem baixar estoque. L3 confirma apenas os incrementos físicos.</p></div></div>
   {error&&<p role="alert" className="error">{error}</p>}{message&&<p role="status" className="product-success">{message}</p>}
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('new')} onClickCapture={()=>setActivePrimaryForm('new')}><h3>Nova impressão</h3>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('new')} onClickCapture={()=>setActivePrimaryForm('new')}><h3>Nova impressão</h3>
    <div className="product-save-fields">
     <label>Impressora física<select aria-label="Impressora física" value={printer} onChange={e=>setPrinter(e.target.value)}>
      <option value="">Selecione</option>{printers.map(x=><option value={x.id} key={x.id}>{x.name}</option>)}</select>
@@ -322,7 +322,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <ul>{outputs.map(o=><li key={o.product_id}>{o.name}: {o.quantity} <button type="button" aria-label={'Remover '+o.name} onClick={()=>setOutputs(v=>v.filter(x=>x.product_id!==o.product_id))}>Remover</button></li>)}</ul>
 
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('reserve')} onClickCapture={()=>setActivePrimaryForm('reserve')}><h3>Reserva opcional de filamento</h3>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('reserve')} onClickCapture={()=>setActivePrimaryForm('reserve')}><h3>Reserva opcional de filamento</h3>
    <p className="footnote">A reserva apenas compromete gramas da bobina para esta impressão. Não retira material físico nem gera custo. O saldo reservado é abatido somente durante confirmações reais.</p>
    <div className="product-save-fields">
     <label>Impressão para reservar<select aria-label="Impressão para reservar" value={reservePrintId} onChange={e=>{setActivePrimaryForm('reserve');setReservePrintId(e.target.value);reservationKey.current=newKey();}}>
@@ -339,7 +339,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      {x.due_at&&<> · Revisão: {new Date(x.due_at).toLocaleString('pt-BR')}{x.review_overdue&&<strong> · Revisão vencida (reserva mantida)</strong>}</>}
     </li>)}
    </ul>}
-   {reservations.some(x=>x.status==='active')&&<div className="product-save-fields" onFocusCapture={()=>setActivePrimaryForm('due')} onClickCapture={()=>setActivePrimaryForm('due')}>
+   {reservations.some(x=>x.status==='active')&&<div className="product-save-fields" onChangeCapture={()=>setActivePrimaryForm('due')} onClickCapture={()=>setActivePrimaryForm('due')}>
     <label>Reserva para revisar<select aria-label="Reserva para revisar" value={dueReservation} onChange={e=>{setActivePrimaryForm('due');setDueReservation(e.target.value);setDueLocal('');}}>
      <option value="">Selecione</option>{reservations.filter(x=>x.status==='active').map(x=><option key={x.id} value={x.id}>{x.lot_label||'Bobina'} — {x.remaining} g</option>)}</select></label>
     <label>Data e hora de revisão (opcional)<input aria-label="Data e hora de revisão" type="datetime-local" value={dueLocal} onChange={e=>setDueLocal(e.target.value)}/>
@@ -347,7 +347,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
 
    </div>}
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('confirm')} onClickCapture={()=>setActivePrimaryForm('confirm')}><h3>Confirmação incremental de impressão</h3>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('confirm')} onClickCapture={()=>setActivePrimaryForm('confirm')}><h3>Confirmação incremental de impressão</h3>
    <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo e o tempo informados são incrementais; registre falhas mesmo sem peças boas. O material da mesa não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
    <div className="product-save-fields">
     <label>Impressão<select aria-label="Impressão para confirmar" value={selected} onChange={e=>{setActivePrimaryForm('confirm');setSelected(e.target.value);setSelectedOutput('');operation.current=newKey();}}>
@@ -365,7 +365,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>
 
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('occurrence')} onClickCapture={()=>setActivePrimaryForm('occurrence')} aria-label="Ocorrências físicas pendentes">
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('occurrence')} onClickCapture={()=>setActivePrimaryForm('occurrence')} aria-label="Ocorrências físicas pendentes">
    <h3>Ocorrência física pendente — GAP01</h3>
    <p className="footnote">Registre o que realmente aconteceu, mesmo quando a massa observada exceder o saldo cadastrado ou a bobina não for conhecida. Este registro NÃO é baixa de estoque, confirmação de consumo, regularização financeira ou aprovação.</p>
    <div className="product-save-fields">
@@ -402,7 +402,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>}
    <h4>Investigação da ocorrência — sem regularização</h4>
    <p className="footnote">Cada investigação acrescenta um evento auditável. A causa selecionada continua sendo hipótese até conferência externa; não altera massa observada, saldo, reserva ou custo.</p>
-   <div className="product-save-fields" onFocusCapture={()=>setActivePrimaryForm('review')} onClickCapture={()=>setActivePrimaryForm('review')}>
+   <div className="product-save-fields" onChangeCapture={()=>setActivePrimaryForm('review')} onClickCapture={()=>setActivePrimaryForm('review')}>
     <label>Ocorrência para investigar<select aria-label="Ocorrência para investigar" value={reviewOccurrence}
      onChange={e=>{setActivePrimaryForm('review');const id=e.target.value;setReviewOccurrence(id);const item=occurrences.find(x=>x.id===id);
       setReviewNext(item?.status==='under_review'?'pending_decision':'under_review');
@@ -444,7 +444,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     </li>)}</ul>
    </div>}
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('proposal')} onClickCapture={()=>setActivePrimaryForm('proposal')} aria-label="Propostas de ajuste de inventário GAP01">
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('proposal')} onClickCapture={()=>setActivePrimaryForm('proposal')} aria-label="Propostas de ajuste de inventário GAP01">
    <h3>Proposta de correção de inventário — GAP01-C</h3>
    <p className="footnote">Apenas uma proposta para análise humana. Quantidades positivas ou negativas não movimentam estoque, não corrigem saldos e não atribuem custo. Nenhuma aprovação extraordinária está habilitada.</p>
    <div className="product-save-fields">
@@ -484,7 +484,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     </li>)}</ul>
    </div>}
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('dossier')} onClickCapture={()=>setActivePrimaryForm('dossier')} aria-label="Dossiê de conciliação GAP01">
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('dossier')} onClickCapture={()=>setActivePrimaryForm('dossier')} aria-label="Dossiê de conciliação GAP01">
    <h3>Dossiê de conciliação — GAP01-D/E</h3>
    <p className="footnote">Consulta somente leitura do saldo atual, das reservas de todas as ordens e das linhas históricas de consumo relacionadas à impressão. Não verifica automaticamente a origem física nem autoriza estornos, ajustes ou compensações financeiras.</p>
    <div className="product-save-fields">
@@ -521,7 +521,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <p className="footnote">Somente análise. Não existe ação de aprovar, liberar reserva, estornar ou movimentar estoque neste dossiê.</p>
    </div>}
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('swap')} onClickCapture={()=>setActivePrimaryForm('swap')}><h3>Trocar bobina reservada</h3>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('swap')} onClickCapture={()=>setActivePrimaryForm('swap')}><h3>Trocar bobina reservada</h3>
    <p className="footnote">A troca ajusta apenas as reservas lógicas. O filamento já consumido continua atribuído à bobina original, com o preço histórico original. A próxima confirmação deve indicar a bobina realmente consumida.</p>
    <div className="product-save-fields">
     <label>Reserva de origem<select aria-label="Reserva de origem para troca" value={swapReservation}
@@ -547,7 +547,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>
 
   </section>
-  <section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('reduction')} onClickCapture={()=>setActivePrimaryForm('reduction')}><h3>Cancelar parcialmente o planejamento</h3>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('reduction')} onClickCapture={()=>setActivePrimaryForm('reduction')}><h3>Cancelar parcialmente o planejamento</h3>
    <p className="footnote">Reduza somente peças ainda não produzidas. O material já extrudado e os resultados confirmados permanecem registrados. Informe explicitamente gramas a liberar por bobina: não presumimos consumo de material por peça.</p>
    <div className="product-save-fields">
     <label>Impressão para redução parcial<select aria-label="Impressão para redução parcial" value={reduceTarget}
@@ -572,7 +572,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>
 
   </section>
-  {cancelTarget&&<section className="panel materials-form" onFocusCapture={()=>setActivePrimaryForm('cancel')} onClickCapture={()=>setActivePrimaryForm('cancel')} aria-label="Confirmar cancelamento de impressão">
+  {cancelTarget&&<section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('cancel')} onClickCapture={()=>setActivePrimaryForm('cancel')} aria-label="Confirmar cancelamento de impressão">
    <h3>Confirmar cancelamento</h3>
    <p>O cancelamento encerra a impressão e libera somente reservas ainda não consumidas.
     Peças produzidas, falhas, tempo e material consumido continuam registrados.</p>
