@@ -71,6 +71,14 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
  const resetImportedSource=()=>{
   setSourceVersion('entrada-local-1');setSource('');setAmount('');setSeparate(false);
  };
+ const invalidateP07Energy=()=>{
+  const imported=sourceVersion.startsWith('p07:');
+  const hasEnergy=lines.some(l=>l.category==='energy'&&l.sourceVersion.startsWith('p07:'));
+  if(!imported&&!hasEnergy)return;
+  setLines(v=>v.filter(l=>!(l.category==='energy'&&l.sourceVersion.startsWith('p07:'))));
+  if(imported){resetImportedSource();setRationale('');setBasis({});}
+  setPreview(null);setError('Fonte P07 atualizada. Recalcule e importe novamente a energia antes de conciliar.');
+ };
  const useP07Energy=(candidate:{amountBrl:string;source:string;sourceVersion:string;estimated:boolean})=>{
   setPreview(null);setError('');
   if(lines.some(l=>l.category==='energy')){
@@ -115,7 +123,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
    </select><small>Somente saídas com quantidades já confirmadas aparecem como destinos.</small></label>
   </div>
   {print&&<div>
-   <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onUseForAllocation={useP07Energy}/>
+   <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onUseForAllocation={useP07Energy} onInvalidateAllocation={invalidateP07Energy}/>
    <PrintReadinessPanel key={print.id} workspaceId={workspaceId} executionId={print.id}/>
    <PrintExactMaterialDraft workspaceId={workspaceId} executionId={print.id} outputs={destinations} lines={lines}/>
    <h4>Consumos confirmados vinculados à impressão</h4>
