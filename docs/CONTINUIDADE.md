@@ -859,3 +859,9 @@
 - Projeto Supabase MakerCusto conferido por consultas SQL exclusivamente de catálogo: `public.mc_list_saved_calculations(uuid)` e `public.mc_append_product_calculation(...)` inexistentes; schema `supabase_migrations.schema_migrations` disponível, com última versão registrada `20261123022622` (`print_execution_l2_l3`). Há migrações posteriores versionadas no GitHub, portanto aplicar isoladamente a função de cálculo não foi autorizado nem considerado seguro sem conferir dependências.
 - CI #500 **aprovado integralmente** para commit `d51bb995a262cc3f32b3ccf94e8280445523409e`: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45441395716 . Inclui tipagem, build, testes de motor, SQL e E2E desktop/mobile. CI #499 foi cancelado por commits posteriores.
 - Pendem homologação visual, planejamento/aprovação explícita de aplicação ordenada de migrações ao banco MakerCusto e continuidade das demais funcionalidades. Não houve escrita no banco, merge ou deploy.
+
+
+## 24/11/2026 — Plano de migrações pendentes, sem execução operacional
+- Inventário read-only: GitHub contém 20 migrações após `print_execution_l2_l3`; Supabase MakerCusto registra dez migrations até `20261123022622`, com timestamps/nomenclatura distintos dos scripts versionados no repositório. Confirmadas tabelas-base `mc_energy_tariffs`, `mc_services`, `mc_production_reservations`, `mc_cost_snapshots` e `mc_printers`. RPCs de cálculos ausentes.
+- Criado `docs/PLANO_MIGRACOES_PENDENTES_2026-11-24.md`, com quatro lotes ordenados: P01 (4), GAP01 (4), ficha/calculadora (3), L4/P07/mão de obra (9), riscos, pré-condições, cenários de validação e restrição de autorização. Nenhum SQL operacional aplicado.
+- CI #500 do código anterior aprovado; novos commits são exclusivamente documentais. Permanecem testes de replay sobre cópia estrutural fiel, backup verificável, revisão de dependências e autorização explícita separada para banco. **NÃO FAÇA O DEPLOY AINDA.**
