@@ -127,3 +127,31 @@ create or replace function public.mc_get_integral_energy(p_workspace_id uuid,p_p
  'measurement',case when v_latest is null then v_result else v_result||v_latest end,
  'original',v_result,'revisions',coalesce(v_history,'[]'::jsonb),'posting_allowed',false);
  end $$;
+
+-- Enforce the same execution boundary regardless of which evidence is recorded first.
+create function public.mc_p07_guard_interval_period() returns trigger
+ language plpgsql security definer set search_path='' as $$
+ begin
+ perform pg_advisory_xact_lock(hashtextextended('p07-phase:'||new.production_id::text,0));
+ if exists(select 1 from public.mc_p07_integral_measurements m
+ where m.workspace_id=new.workspace_id and m.production_id=new.production_id
+ and (new.start_at<m.start_at or new.end_at>m.end_at))
+ then raise exception 'Fase fora do período integral registrado';end if;
+ if exists(select 1 from public.mc_productions p where p.id=new.production_id and p.workspace_id=new.workspace_id
+ and ((p.start_at is not null and new.start_at<p.start_at) or (p.end_at is not null and new.end_at>p.end_at)))
+ then raise exception 'Fase fora do período da impressão';end if;
+ return new;
+ end $$;
+revoke all on function public.mc_p07_guard_interval_period() from public,anon,authenticated;
+create trigger mc_p07_guard_interval_period before insert on public.mc_p07_energy_intervals
+ for each row execute function public.mc_p07_guard_interval_period();
+-- Evidence remains append-only, including for privileged accidental writes.
+create function public.mc_p07_deny_evidence_mutation() returns trigger language plpgsql set search_path='' as $$
+ begin raise exception 'Evidência energética imutável; utilize revisão auditável';end $$;
+revoke all on function public.mc_p07_deny_evidence_mutation() from public,anon,authenticated;
+create trigger mc_p07_integral_immutable before update or delete on public.mc_p07_integral_measurements
+ for each row execute function public.mc_p07_deny_evidence_mutation();
+create trigger mc_p07_revision_immutable before update or delete on public.mc_p07_integral_revisions
+ for each row execute function public.mc_p07_deny_evidence_mutation();
+create trigger mc_p07_interval_immutable before update or delete on public.mc_p07_energy_intervals
+ for each row execute function public.mc_p07_deny_evidence_mutation();
