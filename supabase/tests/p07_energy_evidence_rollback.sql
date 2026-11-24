@@ -45,6 +45,15 @@ begin
  denied:=false;
  begin perform public.mc_revise_integral_energy(w,p,revision,revision_key,0.99,'medidor','chave divergente');exception when others then denied:=true;end;
  if not denied then raise exception 'Reutilização divergente aceita';end if;
+ denied:=false;
+ begin perform public.mc_record_energy_interval(w,p,'2026-11-23 10:30-03','2026-11-23 10:31-03','printing',null,'measured','teste',0.01,null);exception when others then denied:=true;end;
+ if not denied then raise exception 'Fase fora do período integral aceita';end if;
+ denied:=false;
+ begin update public.mc_p07_integral_measurements set kwh=7 where id=measurement;exception when others then denied:=true;end;
+ if not denied then raise exception 'Alteração direta da medição aceita';end if;
+ denied:=false;
+ begin delete from public.mc_p07_integral_revisions where id=revision;exception when others then denied:=true;end;
+ if not denied then raise exception 'Exclusão de revisão aceita';end if;
  if stock_before<>(select count(*) from public.mc_stock_movements) or cost_before<>(select count(*) from public.mc_cost_snapshots) then raise exception 'P07 alterou financeiro ou estoque';end if;
  perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
  denied:=false;
