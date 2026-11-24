@@ -888,3 +888,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - Revisão dos contratos, equipamentos e impressões; consulta CI #488; motor de estimativa de máquina, integração à prévia, quatro regressões e documentação.
 - Evidência: PR #1 e commit desta atualização. CI anterior https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45317459563 ; execução dos novos testes não confirmada.
 - Sem merge, deploy ou alteração operacional.
+
+
+## 24/11/2026 — L4-G11B
+- Projeto MakerCusto; início/término/duração efetiva não aferidos.
+- Atividades: revisão do esquema SQL, captura histórica de parâmetros da máquina, consulta autorizada, teste rollback e inclusão no CI, documentação.
+- Evidências: PR #1; commit desta alteração; CI G11A https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45317573710 observado em execução. Testes novos não confirmados.
+- Pendências: conexão com interface, revisão financeira, CI e homologação. Nenhuma alteração operacional, merge ou deploy.

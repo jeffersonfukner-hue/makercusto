@@ -814,3 +814,8 @@
 - Conectada ficha atual da impressora física vinculada à execução e horas registradas ao rateio L4. Motor puro P06 calcula estimativa, sem substituir tempo ausente pelo planejado. Dados atuais não comprovam origem histórica; bloqueio financeiro mantido.
 - Importação explícita, prevenção de dupla apropriação integral e invalidação quando parâmetros mudam. Quatro regressões adicionadas. CI G10B #488 observado em execução; CI G11A não confirmado.
 - Sem migração operacional, merge ou deploy. Pendentes: origem congelada da máquina, demais custos, P09 e validação integral.
+
+
+## 24/11/2026 — L4-G11B: origem histórica da máquina (banco versionado)
+- Migração captura parâmetros da impressora na criação de novas execuções, sem reconstruir as antigas. Preserva preço, vida útil, manutenção, identificação, autor e instante; não presume comprovação de compra. UPDATE/DELETE bloqueados. Consulta financeira isolada por oficina retorna horas registradas, indicador de vínculo e bloqueio de postagem.
+- Teste SQL de imutabilidade, alteração posterior da ficha, autorização e tempo ausente integrado ao CI efêmero. CI G11A #489 observado em execução; novos testes não confirmados. Próxima etapa: cliente e interface da origem congelada, cálculo exato e revisão de manutenção sem dupla contagem. Sem aplicação operacional, merge ou deploy.
