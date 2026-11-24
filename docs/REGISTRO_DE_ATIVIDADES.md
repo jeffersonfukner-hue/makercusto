@@ -881,3 +881,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - Atividades: consulta do CI G10A (#487 success), revisão do contrato L4, implementação de diagnóstico e controles de revisão de categorias, três regressões, atualização documental.
 - Evidências: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45315304809 ; PR #1 e commit desta alteração.
 - Pendências: CI do novo lote, comprovação de origens no servidor e fechamento P09; nenhuma alteração operacional, merge ou deploy.
+
+
+## 24/11/2026 — L4-G11A
+- Projeto MakerCusto; início/término/duração não aferidos.
+- Revisão dos contratos, equipamentos e impressões; consulta CI #488; motor de estimativa de máquina, integração à prévia, quatro regressões e documentação.
+- Evidência: PR #1 e commit desta atualização. CI anterior https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45317459563 ; execução dos novos testes não confirmada.
+- Sem merge, deploy ou alteração operacional.

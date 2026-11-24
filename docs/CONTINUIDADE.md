@@ -808,3 +808,9 @@
 - CI do G10A (SHA 11cb3ff35a4a5c8fe86c27007639acb3186ae311), execução #487, conclusão success: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45315304809 .
 - Implementadas declarações locais de categoria desconhecida, não aplicável e zero com referência; divergência entre declaração e linha de custo fica explícita. Interface exige revisão das categorias adicionais e não presume ausência como zero. Origem histórica incompatível não conta como cobertura válida.
 - Três regressões acrescentadas; CI deste lote ainda não verificado. Declarações não persistidas nem verificadas pelo servidor. Nenhum fechamento, migração operacional, merge ou deploy.
+
+
+## 24/11/2026 — L4-G11A: estimativa de utilização da máquina
+- Conectada ficha atual da impressora física vinculada à execução e horas registradas ao rateio L4. Motor puro P06 calcula estimativa, sem substituir tempo ausente pelo planejado. Dados atuais não comprovam origem histórica; bloqueio financeiro mantido.
+- Importação explícita, prevenção de dupla apropriação integral e invalidação quando parâmetros mudam. Quatro regressões adicionadas. CI G10B #488 observado em execução; CI G11A não confirmado.
+- Sem migração operacional, merge ou deploy. Pendentes: origem congelada da máquina, demais custos, P09 e validação integral.

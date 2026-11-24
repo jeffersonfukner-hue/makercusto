@@ -1,5 +1,5 @@
-import {useRef,useState} from 'react';
-import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource} from '../data/supabase';
+import {useEffect,useRef,useState} from 'react';
+import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource,type StoredPrinter} from '../data/supabase';
 import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory} from '../domain/print-allocation';
 import {preparePrintFinancialDraft,type FinancialDraft,type CategoryReview} from '../domain/print-financial-draft';
 import {FormActionDock} from './FormActionDock';
@@ -7,7 +7,8 @@ import {PrintReadinessPanel} from './PrintReadinessPanel';
 import {PrintEnergyPanel} from './PrintEnergyPanel';
 import {PrintExactMaterialDraft} from './PrintExactMaterialDraft';
 
-type Props={workspaceId:string|null;prints:PrintRecord[];active:boolean;onActivate:()=>void};
+import {machineCostCandidate} from '../domain/l4-machine-estimate';
+type Props={workspaceId:string|null;prints:PrintRecord[];printers:StoredPrinter[];active:boolean;onActivate:()=>void};
 type OutputOption={id:string;name:string;outcome:'good'|'rejected';quantity:number};
 const formatCents=(cents:string)=>{const value=BigInt(cents);return 'R$ '+new Intl.NumberFormat('pt-BR').format(value/100n)+','+(value%100n).toString().padStart(2,'0');};
 const categories: {id:AllocationCategory;label:string}[]=[
@@ -19,7 +20,7 @@ const categories: {id:AllocationCategory;label:string}[]=[
 ];
 
 /** Apenas estudo local de distribuição: nunca salva custo, snapshot ou estoque. */
-export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Props){
+export function PrintAllocationPreview({workspaceId,prints,printers,active,onActivate}:Props){
  const [printId,setPrintId]=useState('');
  const [category,setCategory]=useState<AllocationCategory>('model');
  const [method,setMethod]=useState<'direct'|'shared'>('direct');
@@ -43,6 +44,16 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
  const [preview,setPreview]=useState<FinancialDraft|null>(null);
  const [error,setError]=useState('');
  const print=prints.find(x=>x.id===printId);
+ const machine=print?machineCostCandidate(print,printers.find(p=>p.id===print.printer_id&&p.workspace_id===workspaceId)??null):null;
+ const machineVersion=machine?.sourceVersion??null;
+ useEffect(()=>{
+  setLines(previous=>previous.some(l=>l.sourceVersion.startsWith('machine-estimate:')&&l.sourceVersion!==machineVersion)?
+   previous.filter(l=>!l.sourceVersion.startsWith('machine-estimate:')||l.sourceVersion===machineVersion):previous);
+  if(sourceVersion.startsWith('machine-estimate:')&&sourceVersion!==machineVersion){
+   setSourceVersion('entrada-local-1');setAmount('');setSource('');setBasis({});setRationale('');
+  }
+  setPreview(null);
+ },[machineVersion,sourceVersion]);
  const destinations:OutputOption[]=print?.outputs.flatMap(o=>[
   ...(Number(o.good)>0?[{id:o.id+':good',name:o.name+' — boas',quantity:Number(o.good),outcome:'good' as const}]:[]),
   ...(Number(o.failed)>0?[{id:o.id+':rejected',name:o.name+' — rejeitadas',quantity:Number(o.failed),outcome:'rejected' as const}]:[])
@@ -93,6 +104,13 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
   setSourceVersion(candidate.sourceVersion);setSeparate(false);setBasis({});
   setRationale(candidate.estimated?'Rateio provisório: energia contém estimativas explícitas.':'');
  };
+ const importMachine=()=>{
+  if(!machine)return;
+  if(lines.some(l=>l.category==='machine')){setError('Remova a linha de máquina anterior antes de importar a estimativa.');return;}
+  setCategory('machine');setAmount(machine.amountBrl);setSource(machine.source);
+  setSourceVersion(machine.sourceVersion);setBasis({});setSeparate(false);
+  setRationale('Estimativa a partir da ficha atual, sem comprovação histórica.');setPreview(null);setError('');
+ };
  const addLine=()=>{
   setError('');setPreview(null);
   if(!print||!destinations.length){setError('Selecione uma impressão com peças confirmadas.');return;}
@@ -100,6 +118,9 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
    .map(o=>({outputId:o.id,basis:basis[o.id]}));
   if(category==='energy'&&lines.some(l=>l.category==='energy')){
    setError('Energia já consta na prévia: remova a categoria antiga antes de incluir uma nova.');return;
+  }
+  if(category==='machine'&&lines.some(l=>l.category==='machine'&&(l.sourceVersion.startsWith('machine-estimate:')||sourceVersion.startsWith('machine-estimate:')))){
+   setError('Não some a estimativa integral da máquina a outro custo de máquina.');return;
   }
   if(sourceVersion!=='entrada-local-1'&&lines.some(l=>l.sourceVersion===sourceVersion)){
    setError('Esta categoria de consumo já está na prévia. Remova a anterior antes de reutilizar.');return;
@@ -129,6 +150,11 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
   </div>
   {print&&<div>
    <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onUseForAllocation={useP07Energy} onInvalidateAllocation={invalidateP07Energy}/>
+   <section className="panel" aria-label="Estimativa de utilização da máquina">
+    <h4>Máquina — estimativa de utilização</h4>
+    <p className="footnote">Usa valor de aquisição e vida útil atuais da impressora vinculada, multiplicados pelas horas registradas da impressão. Não substitui custo histórico comprovado.</p>
+    {machine?<><p>Estimativa: R$ {machine.amountBrl} · {machine.source}</p><button type="button" onClick={importMachine}>Usar estimativa da máquina no rateio</button></>:<p>Estimativa indisponível: confira equipamento, valor, vida útil e horas registradas. Nenhum custo presumido.</p>}
+   </section>
    <PrintReadinessPanel key={print.id} workspaceId={workspaceId} executionId={print.id}/>
    <PrintExactMaterialDraft workspaceId={workspaceId} executionId={print.id} outputs={destinations} lines={lines}/>
    <h4>Consumos confirmados vinculados à impressão</h4>
