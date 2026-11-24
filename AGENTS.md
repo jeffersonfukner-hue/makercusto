@@ -34,3 +34,7 @@ Este contrato deve ser lido em **todo novo chat** antes de retomar o MakerCusto.
 - Ao encerrar com trabalho pendente, indicar Minha ação (ChatGPT) e Sua ação (usuário). Se a retomada depender apenas de nova mensagem, escrever **Sua ação: digite Continue**. Se depender de teste, autorização ou intervenção, especificar exatamente o necessário. Nunca escrever Sua ação: nenhuma nesse estado.
 - Somente durante execução efetiva não é necessária intervenção. Não prometer execução após encerrar a resposta sem ferramenta adequada. Se tudo estiver concluído, informar Trabalho concluído.
 - Continue avança trabalho já autorizado, sem nova homologação nem autorização de merge, deploy, migração operacional ou gastos.
+
+
+## BUILD-MANUAL-01 — 24/11/2026
+Durante a implementação, por decisão expressa do proprietário, esta regra prevalece sobre exigências anteriores de CI prévio à entrega para Preview. Implementar, revisar estaticamente e commitar com [skip ci]. Não disparar GitHub Actions para duplicar o build do Cloudflare. O proprietário executa o build/deploy manual de teste e envia logs de falhas ou evidências visuais; corrigir diretamente na branch. Não bloquear entrega para Preview por ausência de CI, nem declarar compilação aprovada sem evidência. Testes adicionais quando necessários e com recursos disponíveis, sem gastos não autorizados. Não autoriza merge, deploy pelo agente, produção ou migração operacional.
