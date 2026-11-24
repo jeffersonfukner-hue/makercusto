@@ -315,3 +315,10 @@ export type SavedCalculation={
 };
 export const listSavedCalculations=(workspaceId:string)=>
  api<SavedCalculation[]>('rpc/mc_list_saved_calculations','POST',{p_workspace_id:workspaceId});
+
+export type EnergyTariff={id:string;name:string;price:string;valid_from:string;valid_until:string;reference:string};
+export type EnergyEvidenceInterval={id:string;start_at:string;end_at:string;phase:import('../domain/l4-energy-draft').EnergyInterval['phase'];pause_condition:NonNullable<import('../domain/l4-energy-draft').EnergyInterval['pauseCondition']>|null;source_kind:import('../domain/l4-energy-draft').EnergyInterval['source']['kind'];reference:string|null;kwh:string|null;watts:string|null};
+export type EnergyEvidence={workspace_id:string;execution_id:string;printer_id:string|null;current_average_watts:string|null;start_at:string|null;end_at:string|null;intervals:EnergyEvidenceInterval[];tariffs:EnergyTariff[];posting_allowed:false};
+export const getEnergyEvidence=(workspaceId:string,executionId:string)=>api<EnergyEvidence>('rpc/mc_get_energy_evidence','POST',{p_workspace_id:workspaceId,p_production_id:executionId});
+export const registerEnergyTariff=(workspaceId:string,draft:{name:string;price:string;from:string;until:string;reference:string})=>api<string>('rpc/mc_register_energy_tariff','POST',{p_workspace_id:workspaceId,p_name:draft.name,p_price:draft.price,p_from:draft.from,p_until:draft.until,p_reference:draft.reference});
+export const recordEnergyInterval=(workspaceId:string,executionId:string,draft:{start:string;end:string;phase:EnergyEvidenceInterval['phase'];condition:EnergyEvidenceInterval['pause_condition'];kind:EnergyEvidenceInterval['source_kind'];reference:string|null;kwh:string|null;watts:string|null})=>api<string>('rpc/mc_record_energy_interval','POST',{p_workspace_id:workspaceId,p_production_id:executionId,p_start:draft.start,p_end:draft.end,p_phase:draft.phase,p_condition:draft.condition,p_kind:draft.kind,p_reference:draft.reference,p_kwh:draft.kwh,p_watts:draft.watts});
