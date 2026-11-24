@@ -755,3 +755,12 @@
 - Implementado domínio puro `src/domain/l4-energy-draft.ts` com intervalos em milissegundos, cobertura não sobreposta, fontes medidas/estimadas/desconhecidas, condição de pausa, tarifa vigente e aritmética racional P06. Medição integral substitui estimativas sem somá-las. Lacunas sem cobertura energética mantêm custo nulo; lacunas de classificação permanecem diagnosticadas. Não infere depreciação durante pausas.
 - Cinco testes em `src/domain/l4-energy-draft.test.ts`, incluindo exemplos homologados de 0,84 kWh/R$0,87 e 0,91 kWh medidos, sem dupla contagem.
 - Commits: `524e720407fa5eb6e8efca7cb2f28bd4602417e9`, `77986504db93c8d1dc3ef12bcae743a0626052af`. CI ainda a verificar. Motor local, sem integração persistente de fases/tarifas nem interface; próximo lote deve conectar fontes existentes e rateio P05 sem inferir dados ausentes. Sem merge/deploy/migração operacional.
+
+
+## 23/11/2026 — L4-G06: evidências de energia P07 vinculadas a Impressões
+
+- CI #455 anterior aprovado no commit `0f4db8ad56c09e0ee29a8a899d695e1ad00a2553`, https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45293012698.
+- Reutilizada tabela existente `mc_energy_tariffs`: vigência final exclusiva e referência da conta, sem preencher evidências históricas inexistentes. RPC de registro restrita a owner/manager, bloqueio por oficina contra sobreposição, sem edição direta pelo cliente autenticado.
+- Migração `20261123233000_p07_energy_evidence.sql`: registros de fases por impressão com referência, autor, condição de pausa, consumo medido ou potência estimada explícita, sem sobreposições, RLS e RPCs autorizadas. Consulta retorna tarifa vigente e potência atual apenas como referência, não histórico. Nenhuma migração aplicada ao operacional.
+- `PrintEnergyPanel` integrado a Impressões; `p07-recorded-energy.ts` conecta dados à aritmética exata existente. Tarifa deve abranger toda execução; datas de vigência em horário de Brasília UTC-03:00, fim exclusivo. Período total vem de início/fim existentes ou explicitamente informado na prévia. Não deduz início pelo horário de cadastro, nem preenche lacunas com potência atual.
+- Testes: `p07_energy_evidence_rollback.sql` no PostgreSQL efêmero e `p07-recorded-energy.test.ts`. CI novo pendente de confirmação. Ainda faltam medição integral independente das fases, persistência do período observado quando inexistente, revisão/compensação de evidências incorretas, rateio exato P05 de energia e fechamento P09. Não confundir prévia com contabilização. Sem merge/deploy/migração operacional.
