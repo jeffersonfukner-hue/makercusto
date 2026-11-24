@@ -940,3 +940,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Atividades:** confirmado CI #500 aprovado para `d51bb995a262cc3f32b3ccf94e8280445523409e`; executadas consultas somente leitura em `pg_proc` e `supabase_migrations.schema_migrations` do projeto MakerCusto, confirmando ausência das duas RPCs de cálculos e última migração aplicada `20261123022622`.
 - **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45441395716 ; migrações no PR #1. Consultas não alteraram banco nem produziram novas RPCs.
 - **Pendências:** eventual CI do commit documental, homologação visual e plano de atualização ordenada do banco sob autorização separada. Nenhum merge, deploy ou SQL de escrita.
+
+
+## 24/11/2026 — Planejamento de atualização controlada do Supabase MakerCusto
+- **Início/término/duração efetiva:** não registrados.
+- **Atividades:** inventariadas 29 migrações versionadas na branch, das quais 20 seguem a etapa `print_execution_l2_l3`; consultado histórico do banco em modo leitura; conferida existência de objetos de base; analisados nomes, dependências e operações dos 19 scripts intermediários disponíveis no GitHub; documentado plano ordenado em quatro lotes e salvaguardas, sem executar alterações operacionais.
+- **Evidências:** `docs/PLANO_MIGRACOES_PENDENTES_2026-11-24.md`, commit `c9a6db502b825acec22709f4c4ff44e4152330fe`, CI prévio aprovado https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45441395716 .
+- **Pendências:** análise detalhada de replay com esquema e dados representativos, verificação de backup e autorização explícita para futuras migrações. Sem merge, deploy, alterações de banco ou gastos.
