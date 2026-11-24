@@ -1,8 +1,9 @@
 import {useEffect,useRef,useState} from 'react';
 import {getEnergyEvidence,registerEnergyTariff,recordEnergyInterval,type EnergyEvidence,type EnergyEvidenceInterval} from '../data/supabase';
 import {prepareRecordedEnergy} from '../domain/p07-recorded-energy';
+import {energyAllocationCandidate} from '../domain/p07-energy-allocation';
 
-export function PrintEnergyPanel({workspaceId,executionId}:{workspaceId:string|null;executionId:string}){
+export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation}:{workspaceId:string|null;executionId:string;onUseForAllocation?:(candidate:NonNullable<ReturnType<typeof energyAllocationCandidate>>)=>void}){
  const [data,setData]=useState<EnergyEvidence|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [name,setName]=useState(''),[price,setPrice]=useState(''),[from,setFrom]=useState(''),[until,setUntil]=useState(''),[tariffRef,setTariffRef]=useState('');
  const [start,setStart]=useState(''),[end,setEnd]=useState(''),[phase,setPhase]=useState<EnergyEvidenceInterval['phase']>('heating');
@@ -66,7 +67,10 @@ export function PrintEnergyPanel({workspaceId,executionId}:{workspaceId:string|n
     {!data.end_at&&<label>Fim total observado<input type="datetime-local" value={periodEnd} onChange={e=>{setPeriodEnd(e.target.value);setDraft(null);}}/></label>}
    </div>
    <button type="button" disabled={busy||!(data.start_at||periodStart)||!(data.end_at||periodEnd)} onClick={calculate}>Calcular energia registrada</button>
-   {draft&&<div role="status"><p>Fechamento financeiro: PENDENTE.</p><p>{draft.categoryCents===null?'Custo energético desconhecido': 'Energia: '+draft.categoryCents+' centavos (prévia)'}</p><p>Fonte: {draft.energySource}. Pendências: {draft.issues.join(', ')||'nenhuma no cálculo energético'}</p></div>}
+   {draft&&<div role="status"><p>Fechamento financeiro: PENDENTE.</p><p>{draft.categoryCents===null?'Custo energético desconhecido': 'Energia: '+draft.categoryCents+' centavos (prévia)'}</p><p>Fonte: {draft.energySource}. Pendências: {draft.issues.join(', ')||'nenhuma no cálculo energético'}</p>
+    {onUseForAllocation&&energyAllocationCandidate(draft)&&<button type="button" onClick={()=>{const candidate=energyAllocationCandidate(draft);if(candidate)onUseForAllocation(candidate);}}>Usar energia na prévia de rateio P05</button>}
+    {onUseForAllocation&&!energyAllocationCandidate(draft)&&<small>Energia não importável: corrija as pendências ou informe medição e tarifa completas. Valores nulos não são zero.</small>}
+   </div>}
   </>}
  </section>;
 }
