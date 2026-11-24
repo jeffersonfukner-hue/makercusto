@@ -835,3 +835,10 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - Atividades: revisão da estrutura existente de tarifas, impressão e autenticação; migração versionada de evidências; cliente tipado, adaptador de domínio, painel de tarifas/intervalos e integração à impressão selecionada; testes de regressão SQL rollback e Vitest; workflow atualizado.
 - Evidências: commits `553afc68bca26a3006254c890efdc6c79910d08a`, `45ae8e35d3fae7220c668dee8703fced5d5d5dba`, `ffa936a16e146b2ec66738f359d9286b9b3b8a10`, `c9f6a3baf849cd89ee11e4d930ba922b80a4d3ca`, `12d89e048d68a04341fc7303941092c7f5a62eb8`, `68ec125cac7be712fe0f7c123e915932cd03377b`, `974134127c936de797e850c18dcfd83c3395bf88`, `a5643f55c434dbf0a7a86d81796dfac408b04e2f`. PR https://github.com/jeffersonfukner-hue/makercusto/pull/1.
 - Resultado: implementação no GitHub, CI novo ainda não confirmado; CI anterior #455 aprovado. Pendências: regressão integral, homologação visual, medição integral independente, correção auditável, rateio P05 e fechamento P09. Sem merge, deploy ou migração operacional.
+
+
+## 23/11/2026 — MakerCusto, integração L4-G07
+- **Início/término/duração:** não aferidos; não imputar intervalo entre mensagens como tempo trabalhado.
+- **Atividades comprovadas:** leitura de AGENTS, continuidade, padrões, motores P05/P06/P07 e componentes; criação de adaptador de fonte energética; ligação explícita ao formulário de rateio; bloqueio de duplicação; elaboração de quatro testes unitários.
+- **Resultados:** alterações de código e testes na branch `feat/fundacao-makercusto`, PR #1; commits verificáveis `430ef037228f18409ad78ac16c1edf098e1fd073`, `cc72080850a1e1b65c006afb71628ef358c814fb`, `ad2397c4e1016b77edc323dddca9fabe675df993`, `179862351c6eed23e24fd38f0f6533f66d9c2e9a`.
+- **Pendências:** CI/testes do HEAD não confirmados, migração P07 operacional não aplicada, homologação e fechamento financeiro bloqueados. Nenhum merge/deploy ou ação no banco.
