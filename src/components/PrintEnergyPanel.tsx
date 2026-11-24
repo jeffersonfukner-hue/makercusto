@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {getEnergyEvidence,registerEnergyTariff,recordEnergyInterval,getIntegralEnergy,recordIntegralEnergy,type IntegralEnergyEvidence,type EnergyEvidence,type EnergyEvidenceInterval} from '../data/supabase';
+import {getEnergyEvidence,registerEnergyTariff,recordEnergyInterval,getIntegralEnergy,recordIntegralEnergy,reviseIntegralEnergy,type IntegralEnergyRevision,type IntegralEnergyEvidence,type EnergyEvidence,type EnergyEvidenceInterval} from '../data/supabase';
 import {prepareRecordedEnergy} from '../domain/p07-recorded-energy';
 import {energyAllocationCandidate} from '../domain/p07-energy-allocation';
 
@@ -14,6 +14,10 @@ export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation}:{w
  const [integralEnabled,setIntegralEnabled]=useState(false);
  const [integralKwh,setIntegralKwh]=useState(''),[integralRef,setIntegralRef]=useState('');
  const [savedIntegral,setSavedIntegral]=useState<IntegralEnergyEvidence|null>(null);
+ const [originalIntegral,setOriginalIntegral]=useState<IntegralEnergyEvidence|null>(null);
+ const [revisions,setRevisions]=useState<IntegralEnergyRevision[]>([]);
+ const [revisionKwh,setRevisionKwh]=useState(''),[revisionReference,setRevisionReference]=useState(''),[revisionReason,setRevisionReason]=useState('');
+ const revisionRequest=useRef<{fingerprint:string;key:string}|null>(null);
  const seq=useRef(0);
  useEffect(()=>()=>{++seq.current;},[]);
  const load=async(action?:()=>Promise<string>)=>{
@@ -24,17 +28,27 @@ export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation}:{w
    const [result,integral]=await Promise.all([getEnergyEvidence(workspaceId,executionId),getIntegralEnergy(workspaceId,executionId)]);
    if(integral.workspace_id!==workspaceId||integral.execution_id!==executionId||integral.posting_allowed!==false)throw new Error('Resposta de medição integral inválida.');
    if(result.workspace_id!==workspaceId||result.execution_id!==executionId||result.posting_allowed!==false||!Array.isArray(result.intervals)||!Array.isArray(result.tariffs))throw new Error('Resposta P07 inválida.');
-   if(request===seq.current){setData(result);setSavedIntegral(integral.measurement);if(integral.measurement){setIntegralEnabled(true);setIntegralKwh(integral.measurement.kwh);setIntegralRef(integral.measurement.reference);}}
+   if(request===seq.current){setData(result);setSavedIntegral(integral.measurement);setOriginalIntegral(integral.original??integral.measurement);setRevisions(integral.revisions??[]);if(integral.measurement){setIntegralEnabled(true);setIntegralKwh(integral.measurement.kwh);setIntegralRef(integral.measurement.reference);}}
   }catch(e){if(request===seq.current)setError((e as Error).message);}
   finally{if(request===seq.current)setBusy(false);}
  };
  const iso=(v:string)=>new Date(v+'-03:00').toISOString();
+ const revise=()=>{
+  if(!workspaceId||!savedIntegral||!revisionKwh.trim()||!revisionReference.trim()||!revisionReason.trim())return;
+  const fingerprint=JSON.stringify([savedIntegral.id,revisionKwh,revisionReference,revisionReason]);
+  if(revisionRequest.current?.fingerprint!==fingerprint)revisionRequest.current={fingerprint,key:crypto.randomUUID()};
+  const key=revisionRequest.current.key;
+  void load(async()=>{
+   const id=await reviseIntegralEnergy(workspaceId,executionId,{priorId:savedIntegral.id,key,kwh:revisionKwh,reference:revisionReference,reason:revisionReason});
+   setRevisionKwh('');setRevisionReference('');setRevisionReason('');revisionRequest.current=null;return id;
+  });
+ };
  const calculate=()=>{
   setDraft(null);setError('');
   if(!data)return;
   try{
    const observedStart=data.start_at??savedIntegral?.start_at??iso(periodStart),observedEnd=data.end_at??savedIntegral?.end_at??iso(periodEnd);
-   setDraft(prepareRecordedEnergy(data,observedStart,observedEnd,savedIntegral?{start:savedIntegral.start_at,end:savedIntegral.end_at,kwh:savedIntegral.kwh,reference:savedIntegral.reference}:integralEnabled?{start:observedStart,end:observedEnd,kwh:integralKwh,reference:integralRef}:undefined));
+   setDraft(prepareRecordedEnergy(data,observedStart,observedEnd,savedIntegral?{start:savedIntegral.start_at,end:savedIntegral.end_at,kwh:savedIntegral.kwh,reference:savedIntegral.id+' — '+savedIntegral.reference}:integralEnabled?{start:observedStart,end:observedEnd,kwh:integralKwh,reference:integralRef}:undefined));
   }
   catch(e){setError((e as Error).message);}
  };
@@ -81,6 +95,17 @@ export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation}:{w
      <label>Referência do medidor<input readOnly={!!savedIntegral} value={integralRef} onChange={e=>{setIntegralRef(e.target.value);setDraft(null);}}/></label>
     </div>}
     {savedIntegral?<p>Registro preservado: {savedIntegral.reference} · {savedIntegral.kwh} kWh · {savedIntegral.start_at} — {savedIntegral.end_at}. Correções exigem revisão auditável.</p>:integralEnabled&&<button type="button" disabled={busy||!(data.start_at||periodStart)||!(data.end_at||periodEnd)||!integralKwh.trim()||!integralRef.trim()} onClick={()=>void load(()=>recordIntegralEnergy(workspaceId,executionId,{start:data.start_at??iso(periodStart),end:data.end_at??iso(periodEnd),kwh:integralKwh,reference:integralRef}))}>Registrar medição integral</button>}
+    {savedIntegral&&<details><summary>Histórico e correção da medição</summary>
+     {originalIntegral&&<p>Original: {originalIntegral.kwh} kWh · {originalIntegral.reference} · Autor: {originalIntegral.author_id} · {originalIntegral.created_at}</p>}
+     <ul>{revisions.map(r=><li key={r.id}>{r.kwh} kWh · {r.reference} · {r.reason} · Autor: {r.author_id} · {r.created_at}</li>)}</ul>
+     <div className="product-save-fields">
+      <label>Consumo corrigido (kWh)<input inputMode="decimal" value={revisionKwh} onChange={e=>setRevisionKwh(e.target.value)}/></label>
+      <label>Referência corrigida<input value={revisionReference} onChange={e=>setRevisionReference(e.target.value)}/></label>
+      <label>Justificativa da correção<input value={revisionReason} onChange={e=>setRevisionReason(e.target.value)}/></label>
+     </div>
+     <p className="footnote">O registro original será preservado. A revisão não altera estoque, snapshots financeiros ou período observado.</p>
+     <button type="button" disabled={busy||!revisionKwh.trim()||!revisionReference.trim()||!revisionReason.trim()} onClick={revise}>Registrar revisão auditável</button>
+    </details>}
    </details>
    <button type="button" disabled={busy||!(data.start_at||savedIntegral?.start_at||periodStart)||!(data.end_at||savedIntegral?.end_at||periodEnd)||(integralEnabled&&(!integralKwh.trim()||!integralRef.trim()))} onClick={calculate}>Calcular energia registrada</button>
    {draft&&<div role="status"><p>Fechamento financeiro: PENDENTE.</p><p>{draft.categoryCents===null?'Custo energético desconhecido': 'Energia: '+draft.categoryCents+' centavos (prévia)'}</p><p>Fonte: {draft.energySource}. Pendências: {draft.issues.join(', ')||'nenhuma no cálculo energético'}</p>
