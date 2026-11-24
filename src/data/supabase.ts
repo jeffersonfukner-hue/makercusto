@@ -337,7 +337,11 @@ export const getL4MachineOrigin=(workspaceId:string,executionId:string)=>api<Mac
 export type WorkshopService={id:string;name:string;unit:'hour'|'minute'|'unit';rate:number};
 export const listWorkshopServices=(workspaceId:string)=>api<WorkshopService[]>('mc_services?workspace_id=eq.'+encodeURIComponent(workspaceId)+'&select=id,name,unit,rate&order=name.asc');
 
-export type StoredLaborActivity=import('../domain/l4-labor-draft').LaborActivity&{rateSource:'manual'|'catalog_at_registration';authorId:string;createdAt:string};
+export type LaborRevisionVersion={id:string;minutes:string;hourlyRate:string;basis:'measured'|'estimated';authorId:string;createdAt:string};
+export type StoredLaborActivity=import('../domain/l4-labor-draft').LaborActivity&{rateSource:'manual'|'catalog_at_registration';authorId:string;createdAt:string;versionId?:string;original?:LaborRevisionVersion;revisions?:Array<LaborRevisionVersion&{priorId:string;reason:string}>};
+export type LaborRevisionDraft={evidenceId:string;priorId:string;key:string;minutes:string;hourlyRate:string;basis:'measured'|'estimated';reason:string};
+export const reviseL4Labor=(workspaceId:string,executionId:string,draft:LaborRevisionDraft)=>api<string>('rpc/mc_revise_l4_labor','POST',{
+ p_workspace_id:workspaceId,p_production_id:executionId,p_evidence_id:draft.evidenceId,p_prior_id:draft.priorId,p_request_key:draft.key,p_minutes:draft.minutes,p_hourly_rate:draft.hourlyRate,p_basis:draft.basis,p_reason:draft.reason});
 export type LaborEvidenceResponse={workspace_id:string;execution_id:string;posting_allowed:false;activities:StoredLaborActivity[]};
 export const getL4Labor=(workspaceId:string,executionId:string)=>api<LaborEvidenceResponse>('rpc/mc_get_l4_labor','POST',{p_workspace_id:workspaceId,p_production_id:executionId});
 export const recordL4Labor=(workspaceId:string,executionId:string,a:import('../domain/l4-labor-draft').LaborActivity)=>api<string>('rpc/mc_record_l4_labor','POST',{

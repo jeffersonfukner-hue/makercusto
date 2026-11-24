@@ -843,3 +843,7 @@
 - Commits criados: `f413484b60977f12abda03a6ed9d1ec76cab51cd`, `4257367978d21b0f302bb01f7d6ab6023a647586`, `6f8d10780cc6a1ce0779eaa0c34387ba70fe4f51`. CI do lote G12C ainda pendente de confirmação após atualizações; não declarar testes aprovados até consulta à execução efetiva.
 - Limites: revisão não renomeia atividade/referência, não altera período histórico, não gera pagamento, estoque ou lançamento financeiro e não oferece UI de revisão nesta etapa; revisão feita por RPC, ainda sem integração visual. Pendem integração de ferramentas/acessórios, P09 e evidências para fechamento.
 - Sem merge, deploy, migração operacional ou gastos autorizados. **NÃO FAÇA O DEPLOY AINDA.**
+
+
+## 24/11/2026 — L4-G12D: cliente e interface de revisão da mão de obra
+- RPC G12C integrada ao painel de Impressões; revisão explícita com motivo, versão consultada, chave idempotente, histórico original e versões. Prévia invalidada ao editar/revisar; bloqueio de importação enquanto revisão aberta. Sem lançamento financeiro. Quatro regressões unitárias acrescentadas. CI #497 anterior observado em execução; CI deste lote ainda não confirmado. Sem merge, deploy ou migração operacional.

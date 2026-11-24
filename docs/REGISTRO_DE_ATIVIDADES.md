@@ -922,3 +922,7 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - **Resultados:** commits `f413484b60977f12abda03a6ed9d1ec76cab51cd`, `4257367978d21b0f302bb01f7d6ab6023a647586`, `6f8d10780cc6a1ce0779eaa0c34387ba70fe4f51`. **CI G12C:** ainda não confirmado neste registro.
 - **Pendências:** validar CI do HEAD, corrigir eventuais falhas, integrar cliente/UI de revisão, fontes restantes e fechamento P09; migração ainda não aplicada ao banco operacional.
 - **Evidência:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; CI anterior https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45319086048 . Sem merge ou deploy.
+
+
+## 24/11/2026 — L4-G12D: integração visual de revisão de mão de obra
+- Início/término e duração efetiva não aferidos. Consultados contrato e continuidade; implementados cliente RPC, painel de revisão e histórico, invalidação de rateio e validação pura com quatro regressões. Evidência: commit atômico deste registro na branch feat/fundacao-makercusto, PR #1. CI #497 anterior em execução na consulta; testes do novo lote ainda não confirmados. Pendentes validação integral, ferramentas/acessórios e P09. Sem merge, deploy ou migração operacional.

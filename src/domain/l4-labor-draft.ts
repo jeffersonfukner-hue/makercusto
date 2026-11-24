@@ -21,3 +21,13 @@ export function laborCandidate(executionId:string,activities:LaborActivity[]){
   importable:cents>0n,sourceVersion:'labor-draft:'+JSON.stringify([executionId,activities]),
   source:'Mão de obra: '+activities.map(a=>a.activity+' ('+a.minutes+' min × R$ '+a.hourlyRate+'/h; '+a.basis+'; '+a.reference+')').join(' | ')+' · declaração local, não comprovante financeiro'};
 }
+
+/** A revisão utiliza a versão efetivamente consultada; nunca reconstitui evidência antiga. */
+export function validateLaborRevision(draft:{evidenceId:string;priorId:string;key:string;minutes:string;hourlyRate:string;basis:LaborActivity['basis'];reason:string}){
+ if(!draft.evidenceId.trim()||!draft.priorId.trim()||!draft.key.trim()||!['measured','estimated'].includes(draft.basis)||draft.reason.trim().length<3||draft.reason.trim().length>1000)throw new Error('Informe uma versão válida e o motivo da revisão (3 a 1000 caracteres).');
+ for(const value of [draft.minutes,draft.hourlyRate]){
+  const n=parseExactDecimal(value);
+  if(n.numerator<=0n||n.numerator>1000000n*n.denominator||(n.numerator*1000000n)%n.denominator!==0n)throw new Error('Minutos e tarifa devem ser positivos, até 1.000.000 e com no máximo seis casas decimais.');
+ }
+ return {...draft,reason:draft.reason.trim()};
+}
