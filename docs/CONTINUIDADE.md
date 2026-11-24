@@ -847,3 +847,9 @@
 
 ## 24/11/2026 — L4-G12D: cliente e interface de revisão da mão de obra
 - RPC G12C integrada ao painel de Impressões; revisão explícita com motivo, versão consultada, chave idempotente, histórico original e versões. Prévia invalidada ao editar/revisar; bloqueio de importação enquanto revisão aberta. Sem lançamento financeiro. Quatro regressões unitárias acrescentadas. CI #497 anterior observado em execução; CI deste lote ainda não confirmado. Sem merge, deploy ou migração operacional.
+
+
+## 24/11/2026 — Diagnóstico de cálculo salvo e barra contextual
+- Evidência visual do Preview: ficha “Porta Vinho – Urso Deitado” indica cadastro salvo, mas mostra erro de schema cache ao chamar `public.mc_list_saved_calculations(p_workspace_id)`. A função consta na migração versionada `supabase/migrations/20261123125000_reuse_saved_calculations.sql`; disponibilidade no Supabase operacional não foi verificada diretamente. Não executar SQL nem supor perda de histórico.
+- CI #382 https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45264494581 falhou em 12 E2E de ações contextuais em Impressões (desktop/mobile). Corrigida ativação do formulário por eventos de alteração em elementos select/input, preservando evento de clique, commit `f13a7ff3065f64664060730e1d3083b5d657cee7`.
+- CI #499 https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45441294720 em execução na consulta. Sem homologação ou liberação para deploy; não foi aplicado SQL, merge ou deploy.
