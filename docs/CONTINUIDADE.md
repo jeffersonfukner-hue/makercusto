@@ -853,3 +853,9 @@
 - Evidência visual do Preview: ficha “Porta Vinho – Urso Deitado” indica cadastro salvo, mas mostra erro de schema cache ao chamar `public.mc_list_saved_calculations(p_workspace_id)`. A função consta na migração versionada `supabase/migrations/20261123125000_reuse_saved_calculations.sql`; disponibilidade no Supabase operacional não foi verificada diretamente. Não executar SQL nem supor perda de histórico.
 - CI #382 https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45264494581 falhou em 12 E2E de ações contextuais em Impressões (desktop/mobile). Corrigida ativação do formulário por eventos de alteração em elementos select/input, preservando evento de clique, commit `f13a7ff3065f64664060730e1d3083b5d657cee7`.
 - CI #499 https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45441294720 em execução na consulta. Sem homologação ou liberação para deploy; não foi aplicado SQL, merge ou deploy.
+
+
+## 24/11/2026 — Verificação somente leitura do Supabase e CI #500
+- Projeto Supabase MakerCusto conferido por consultas SQL exclusivamente de catálogo: `public.mc_list_saved_calculations(uuid)` e `public.mc_append_product_calculation(...)` inexistentes; schema `supabase_migrations.schema_migrations` disponível, com última versão registrada `20261123022622` (`print_execution_l2_l3`). Há migrações posteriores versionadas no GitHub, portanto aplicar isoladamente a função de cálculo não foi autorizado nem considerado seguro sem conferir dependências.
+- CI #500 **aprovado integralmente** para commit `d51bb995a262cc3f32b3ccf94e8280445523409e`: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45441395716 . Inclui tipagem, build, testes de motor, SQL e E2E desktop/mobile. CI #499 foi cancelado por commits posteriores.
+- Pendem homologação visual, planejamento/aprovação explícita de aplicação ordenada de migrações ao banco MakerCusto e continuidade das demais funcionalidades. Não houve escrita no banco, merge ou deploy.
