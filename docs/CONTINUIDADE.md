@@ -829,3 +829,8 @@
 ## 24/11/2026 — L4-G12A: mão de obra na prévia de impressão
 - Consulta serviços por oficina (tarifas horárias atuais), entrada manual alternativa, atividades com minutos humanos, tarifa, origem e base medida/estimada. Soma racional por categoria antes do arredondamento. Importação explícita e invalidação em alteração; bloqueio de duplicidade. Dados locais, sem comprovação histórica ou persistência de atividades.
 - Quatro regressões adicionadas; CI G11C #491 observado em execução: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45318426525 . Novos testes não confirmados. Próxima etapa: evidências persistidas e revisão auditável. Sem merge, deploy ou migração operacional.
+
+
+## 24/11/2026 — L4-G12B: evidências históricas de mão de obra
+- Migração append-only com autoria, referência única por impressão, replay idempotente, tarifa congelada e distinção entre tarifa manual e catálogo vigente. Consulta financeira isolada por oficina; UPDATE/DELETE bloqueados. Painel registra explicitamente e consulta histórico; importação separada de rascunhos e evidências, sem somar ambos. Não há comprovação financeira definitiva.
+- Teste SQL rollback incluído no CI. CI anterior #492 observado em execução; novos testes não confirmados. Pendências: revisão/compensação auditável de evidências, integração de ferramentas e acessórios, fechamento P09. Sem migração operacional, merge ou deploy.

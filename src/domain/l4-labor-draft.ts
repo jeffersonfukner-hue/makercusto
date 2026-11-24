@@ -1,6 +1,6 @@
 import {parseExactDecimal,multiplyDivide,reduceRational,roundPositiveCentsHalfUp,type Rational} from './decimal-exact';
 export type LaborActivity={id:string;activity:string;minutes:string;hourlyRate:string;reference:string;basis:'measured'|'estimated';serviceId?:string};
-export const isLaborSource=(v:string)=>v.startsWith('labor-draft:');
+export const isLaborSource=(v:string)=>v.startsWith('labor-draft:')||v.startsWith('labor-evidence:');
 /** Uma categoria por execução: soma as atividades antes de arredondar. */
 export function laborCandidate(executionId:string,activities:LaborActivity[]){
  if(!executionId.trim()||activities.length===0)throw new Error('Informe execução e atividades.');
