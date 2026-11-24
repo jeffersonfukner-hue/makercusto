@@ -8,7 +8,7 @@ import {MaterialsWorkspace} from './components/MaterialsWorkspace';
 import {PrintsWorkspace} from './components/PrintsWorkspace';
 import {AssemblyPanel} from './components/AssemblyPanel';
 import {WorkshopDashboard} from './components/WorkshopDashboard';
-import {SystemNavigation,type ProductTab,type OverviewTab} from './components/SystemNavigation';
+import {SystemNavigation,type ProductTab,type OverviewTab,type SystemSection} from './components/SystemNavigation';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,type SavedCalculation,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
@@ -87,7 +87,7 @@ export default function App(){
  const [workspaceId,setWorkspaceId]=useState<string|null>(null);
  const [accountError,setAccountError]=useState('');
  const [workspaceName,setWorkspaceName]=useState('Minha oficina');
- const [activeSection,setActiveSection]=useState<'overview'|'products'|'assemblies'|'materials'|'prints'|'calculator'>('overview');
+ const [activeSection,setActiveSection]=useState<SystemSection>('overview');
  const [productTab,setProductTab]=useState<ProductTab>('all');
  const [overviewTab,setOverviewTab]=useState<OverviewTab>('general');
  const [cloudBusy,setCloudBusy]=useState(false);
@@ -335,6 +335,10 @@ export default function App(){
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
    onCreateAssembly={()=>setActiveSection('assemblies')}/>} 
   {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
+  {session&&activeSection==='printers'&&<section className="panel"><h2>Minhas impressoras</h2><button type="button" onClick={addPrinter}>Nova impressora</button>{stored.length===0?<p>Nenhuma impressora cadastrada.</p>:<ul className="dashboard-activity-list">{stored.map(p=><li key={p.id}><strong>{p.name}</strong><button type="button" onClick={()=>{setPrinterId(p.id);setPrinterModal('edit');}}>Editar</button></li>)}</ul>}</section>}
+  {session&&activeSection==='workshop'&&<section className="panel"><h2>{workspaceName}</h2><p>Configurações e tarifas da oficina: integração pendente.</p></section>}
+  {session&&activeSection==='library'&&<section className="panel"><h2>Biblioteca STL</h2><p>Biblioteca em desenvolvimento.</p></section>}
+  {session&&activeSection==='tips'&&<section className="panel"><h2>Dicas de impressão</h2><p>Conteúdo em desenvolvimento.</p></section>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
   {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCalculate={snapshot=>{if(applySavedCalculation(snapshot))setActiveSection('calculator');}}/>} 
