@@ -6,6 +6,8 @@ import {FormActionDock} from './FormActionDock';
 import {PrintReadinessPanel} from './PrintReadinessPanel';
 import {PrintEnergyPanel} from './PrintEnergyPanel';
 import {PrintExactMaterialDraft} from './PrintExactMaterialDraft';
+import {PrintLaborPanel} from './PrintLaborPanel';
+import {isLaborSource} from '../domain/l4-labor-draft';
 
 import {machineCostCandidate} from '../domain/l4-machine-estimate';
 import {historicalMachineCandidate,isMachineSource} from '../domain/l4-machine-origin';
@@ -139,6 +141,15 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
   setCategory('machine');setAmount(historical.amountBrl);setSource(historical.source);
   setSourceVersion(historical.sourceVersion);setBasis({});setSeparate(false);setRationale('Parâmetros históricos; manutenção parametrizada, sem comprovação financeira.');setPreview(null);setError('');
  };
+ const invalidateLabor=()=>{
+  setLines(v=>v.filter(l=>!isLaborSource(l.sourceVersion)));setPreview(null);
+  if(isLaborSource(sourceVersion)){resetImportedSource();setBasis({});setRationale('');}
+ };
+ const importLabor=(candidate:{amountBrl:string;source:string;sourceVersion:string})=>{
+  if(lines.some(l=>l.category==='labor')){setError('Remova a mão de obra anterior para evitar dupla contagem.');return;}
+  setCategory('labor');setAmount(candidate.amountBrl);setSource(candidate.source);setSourceVersion(candidate.sourceVersion);
+  setBasis({});setSeparate(false);setRationale('Atividades de trabalho humano declaradas; rateio provisório.');setPreview(null);setError('');
+ };
  const addLine=()=>{
   setError('');setPreview(null);
   if(!print||!destinations.length){setError('Selecione uma impressão com peças confirmadas.');return;}
@@ -146,6 +157,9 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
    .map(o=>({outputId:o.id,basis:basis[o.id]}));
   if(category==='energy'&&lines.some(l=>l.category==='energy')){
    setError('Energia já consta na prévia: remova a categoria antiga antes de incluir uma nova.');return;
+  }
+  if(category==='labor'&&lines.some(l=>l.category==='labor'&&(isLaborSource(l.sourceVersion)||isLaborSource(sourceVersion)))){
+   setError('Não some a categoria integral de mão de obra a outro lançamento de mão de obra.');return;
   }
   if(category==='machine'&&lines.some(l=>l.category==='machine'&&(isMachineSource(l.sourceVersion)||isMachineSource(sourceVersion)))){
    setError('Não some a estimativa integral da máquina a outro custo de máquina.');return;
@@ -192,6 +206,7 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
     <p className="footnote">Usa valor de aquisição e vida útil atuais da impressora vinculada, multiplicados pelas horas registradas da impressão. Não substitui custo histórico comprovado.</p>
     {machine?<><p>Estimativa: R$ {machine.amountBrl} · {machine.source}</p><button type="button" onClick={importMachine}>Usar estimativa da máquina no rateio</button></>:<p>Estimativa indisponível: confira equipamento, valor, vida útil e horas registradas. Nenhum custo presumido.</p>}
    </section>
+   <PrintLaborPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onImport={importLabor} onInvalidate={invalidateLabor}/>
    <PrintReadinessPanel key={print.id} workspaceId={workspaceId} executionId={print.id}/>
    <PrintExactMaterialDraft workspaceId={workspaceId} executionId={print.id} outputs={destinations} lines={lines}/>
    <h4>Consumos confirmados vinculados à impressão</h4>

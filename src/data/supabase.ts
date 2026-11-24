@@ -333,3 +333,6 @@ export const reviseIntegralEnergy=(workspaceId:string,executionId:string,draft:{
 
 export type MachineOriginEvidence={schema_version:'l4-machine-origin-v1';workspace_id:string;execution_id:string;actual_hours:string|null;posting_allowed:false;printer_matches:boolean;origin:{printer_id:string;printer_name:string;purchase_price:string|null;lifetime_hours:string|null;maintenance_per_hour:string;captured_at:string;author_id:string|null}|null};
 export const getL4MachineOrigin=(workspaceId:string,executionId:string)=>api<MachineOriginEvidence>('rpc/mc_get_l4_machine_origin','POST',{p_workspace_id:workspaceId,p_production_id:executionId});
+
+export type WorkshopService={id:string;name:string;unit:'hour'|'minute'|'unit';rate:number};
+export const listWorkshopServices=(workspaceId:string)=>api<WorkshopService[]>('mc_services?workspace_id=eq.'+encodeURIComponent(workspaceId)+'&select=id,name,unit,rate&order=name.asc');

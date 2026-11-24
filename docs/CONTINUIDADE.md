@@ -824,3 +824,8 @@
 ## 24/11/2026 — L4-G11C: origem congelada da máquina na prévia
 - RPC versionada conectada ao cliente; cálculo racional de depreciação e manutenção parametrizada somados antes do arredondamento da categoria. Exibição separada, importação explícita e descarte de fontes obsoletas. Não reconstruir impressões antigas nem tratar manutenção parametrizada como despesa comprovada. Prevenção de dupla apropriação no formulário e diagnóstico.
 - Quatro regressões unitárias adicionadas. CI G11B #490 observado em execução; novos testes não confirmados. Sem migração operacional, merge, deploy ou fechamento.
+
+
+## 24/11/2026 — L4-G12A: mão de obra na prévia de impressão
+- Consulta serviços por oficina (tarifas horárias atuais), entrada manual alternativa, atividades com minutos humanos, tarifa, origem e base medida/estimada. Soma racional por categoria antes do arredondamento. Importação explícita e invalidação em alteração; bloqueio de duplicidade. Dados locais, sem comprovação histórica ou persistência de atividades.
+- Quatro regressões adicionadas; CI G11C #491 observado em execução: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45318426525 . Novos testes não confirmados. Próxima etapa: evidências persistidas e revisão auditável. Sem merge, deploy ou migração operacional.

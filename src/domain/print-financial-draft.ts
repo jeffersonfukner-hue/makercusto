@@ -1,3 +1,4 @@
+import {isLaborSource} from './l4-labor-draft';
 import {isMachineSource} from './l4-machine-origin';
 import {reconcilePrintAllocation, type AllocationRequest, type AllocationSnapshot, type AllocationCategory} from './print-allocation';
 
@@ -19,7 +20,7 @@ export type HistoricConsumptionSource = {
 export type FinancialDraftIssue = {
  code:'SOURCE_NOT_LOADED'|'UNKNOWN_LOT_COST'|'ESTIMATED_LOT_COST'|'HISTORICAL_PRECISION'
  |'UNALLOCATED_CONSUMPTION'|'DUPLICATE_CONSUMPTION'|'UNVERIFIED_MANUAL_SOURCE'|'COST_CATEGORY_UNREVIEWED'
- |'SOURCE_CATEGORY_MISMATCH'|'DUPLICATE_ENERGY_SOURCE'|'DUPLICATE_MACHINE_SOURCE'|'CATEGORY_REVIEW_CONFLICT'|'CATEGORY_REVIEW_UNVERIFIED';
+ |'SOURCE_CATEGORY_MISMATCH'|'DUPLICATE_ENERGY_SOURCE'|'DUPLICATE_MACHINE_SOURCE'|'DUPLICATE_LABOR_SOURCE'|'CATEGORY_REVIEW_CONFLICT'|'CATEGORY_REVIEW_UNVERIFIED';
  sourceId?:string;
  category?:AllocationCategory;
  description:string;
@@ -87,6 +88,7 @@ export function preparePrintFinancialDraft(input:{
     description:version.startsWith('p07:')?
      'Prévia energética P07 ainda não foi verificada para fechamento financeiro.':
      'Custo manual precisa de comprovação de origem antes de fechar.'});
+   if(isLaborSource(version)&&line.category!=='labor')issues.push({code:'SOURCE_CATEGORY_MISMATCH',sourceId:version,category:line.category,description:'Origem de trabalho humano incompatível com categoria.'});
    if(isMachineSource(version)&&line.category!=='machine'){
     issues.push({code:'SOURCE_CATEGORY_MISMATCH',sourceId:version,category:line.category,description:'Origem da máquina incompatível com categoria.'});
    }
@@ -107,6 +109,8 @@ export function preparePrintFinancialDraft(input:{
  if(machineLines.length>1&&machineLines.some(l=>isMachineSource(l.sourceVersion))){
   issues.push({code:'DUPLICATE_MACHINE_SOURCE',category:'machine',description:'Custo integral da máquina somado a outra linha de máquina.'});
  }
+ const laborLines=input.allocationRequest.lines.filter(l=>l.category==='labor');
+ if(laborLines.length>1&&laborLines.some(l=>isLaborSource(l.sourceVersion)))issues.push({code:'DUPLICATE_LABOR_SOURCE',category:'labor',description:'Mão de obra integral somada a outro lançamento de trabalho.'});
  if(sources===null){
   issues.push({code:'SOURCE_NOT_LOADED',description:'Histórico de consumo não foi consultado ou falhou.'});
  }

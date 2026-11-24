@@ -901,3 +901,9 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - Projeto MakerCusto; início/término/duração efetiva não aferidos.
 - Atividades: integração de consulta histórica, motor exato, painel de máquina e diagnóstico, quatro regressões e documentação. CI anterior observado em execução: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45318022423 .
 - Evidências: PR #1 e commit desta alteração. Testes novos ainda não confirmados; sem mudança operacional, merge ou deploy.
+
+
+## 24/11/2026 — L4-G12A
+- Projeto MakerCusto; início/término/duração efetiva não aferidos.
+- Atividades: revisão de serviços e rateio, motor de mão de obra, conexão de catálogo, painel, diagnóstico, quatro regressões e documentação.
+- Evidências: PR #1 e commit desta alteração. CI G11C #491 observado em execução. Testes novos ainda não confirmados; sem merge, deploy ou alterações operacionais.
