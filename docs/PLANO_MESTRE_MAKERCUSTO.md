@@ -110,3 +110,13 @@ A homologação das cinco regras **não implica aprovação dessas opções téc
 6. Mudança entre modos de cálculo não duplica material, energia ou depreciação.
 7. Usuário local pode calcular sem conta; seleção de última impressora sobrevive a recarga local quando implementada.
 8. CI (tipagem/unitários/desktop/mobile) verde antes de solicitar homologação; sem deploy automático.
+
+
+## 24/11/2026 — Consolidação de requisitos homologados
+- Modelo 4 para ambiente autenticado: menu lateral, cabeçalho, abas por módulo, painel da oficina, ficha de produto e responsividade. Ambiente autenticado deve ter organização de sistema distinta da página pública.
+- Ações contextuais do formulário ativo sempre acessíveis em barra fixa abaixo do cabeçalho ou no rodapé; nome do produto em destaque. Salvar produto diretamente da calculadora, reutilizando cadastros existentes; permitir salvar peça e produto a partir do cálculo.
+- Peças individuais mantêm identidade mesmo quando impressas na mesma placa. Conjuntos selecionam peças cadastradas; ficha da peça conserva parâmetros necessários à calculadora. Seleção de peça/conjunto deve preencher dados reutilizáveis sem redigitação, preservando histórico e evitando duplicidade.
+- Integração orgânica entre módulos: equipamentos, filamentos, perfis de configuração, peças, conjuntos, produtos, impressões, estoque e custos. Dicas contextuais curtas e até três sugestões similares em campos aplicáveis. P07 conecta tarifas da oficina, energia por fase e fontes de custo, sem confundir prévia com contabilização.
+- Autorizado editar e commitar código e documentação na branch existente, sem nova homologação das decisões acima. Prioridade: SystemNavigation, WorkshopDashboard, ProductSavePanel e App; preservar cadastros. Sem merge, deploy, novas migrações operacionais ou gastos.
+- CONTINUIDADE-01: ao encerrar com pendências, indicar ação do agente e ação necessária do usuário; quando depender apenas de retomada, escrever Sua ação: digite Continue. Nunca indicar nenhuma nesse estado. Regra registrada no AGENTS.md, commit 13e48ea479af53ecac766e76253da933d556c8aa.
+- Evidência das 20 migrações: o proprietário informa execução anterior; a documentação versionada anterior registra plano de 20 scripts e CI #500 aprovado no SHA d51bb995a262cc3f32b3ccf94e8280445523409e em PostgreSQL efêmero. Aplicação operacional individual ainda não comprovada nesta sessão; recuperar recibos e catálogo antes de declarar confirmação. Não reaplicar scripts por presunção.
