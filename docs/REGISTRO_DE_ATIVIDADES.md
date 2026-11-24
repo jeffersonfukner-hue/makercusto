@@ -914,3 +914,11 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - Atividades: migração versionada de evidências, RPCs, cliente, painel, teste SQL, CI e documentação.
 - Evidências: PR #1 e commit desta atualização; CI G12A https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45318642131 observado em execução. Testes novos não confirmados.
 - Sem merge, deploy ou alteração operacional.
+
+
+## 24/11/2026 — MakerCusto L4-G12C: revisão de evidências de mão de obra
+- **Projeto:** MakerCusto, desenvolvimento próprio. **Início/término:** não aferidos. **Duração efetiva:** não mensurada; não inferida entre mensagens.
+- **Executado:** consultados contrato, padrões e histórico; verificado CI verde #493 do G12B; criada migração G12C de revisão append-only de custos de mão de obra, criada regressão SQL transacional e incluídas ambas no workflow.
+- **Resultados:** commits `f413484b60977f12abda03a6ed9d1ec76cab51cd`, `4257367978d21b0f302bb01f7d6ab6023a647586`, `6f8d10780cc6a1ce0779eaa0c34387ba70fe4f51`. **CI G12C:** ainda não confirmado neste registro.
+- **Pendências:** validar CI do HEAD, corrigir eventuais falhas, integrar cliente/UI de revisão, fontes restantes e fechamento P09; migração ainda não aplicada ao banco operacional.
+- **Evidência:** PR #1 https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; CI anterior https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45319086048 . Sem merge ou deploy.
