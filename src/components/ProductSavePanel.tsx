@@ -37,7 +37,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   return()=>{live=false;};
  },[session?.user.id,workspaceId,refresh]);
  const visibleItems=filter==='component'?items.filter(item=>item.kind==='component'):items;
- useEffect(()=>{if(revisionTarget){setName(revisionTarget.name);setSku(revisionTarget.sku??'');setKind(revisionTarget.kind);}},[revisionTarget?.snapshot_id]);
+ useEffect(()=>{setRequestKey(null);if(revisionTarget){setName(revisionTarget.name);setSku(revisionTarget.sku??'');setKind(revisionTarget.kind);}},[revisionTarget?.snapshot_id]);
  const save=async()=>{
   setError('');setMessage('');
   if(!session||!workspaceId){onLogin();return;}
@@ -55,7 +55,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     await appendProductCalculation(workspaceId,revisionTarget.product_id,key,payload);
    }else await saveCalculatedProduct(workspaceId,payload);
    setLastSavedKind(kind);setName('');setSku('');setDescription('');setKind('product');
-   setMessage(revisionTarget?'Nova revisão de custo salva na mesma ficha. O histórico anterior foi preservado.':'Produto, versão inicial e custo estimado salvos na sua oficina.');
+   setMessage(revisionTarget?'Nova revisão de custo salva na mesma ficha. O histórico anterior foi preservado.':(kind==='component'?'Peça':'Produto')+', versão inicial e custo estimado salvos na sua oficina.');
    setRequestKey(null);
    if(revisionTarget)onClearRevisionTarget?.();
    setRefresh(n=>n+1);
@@ -63,7 +63,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   finally{setBusy(false);}
  };
  return <section className="panel product-save-panel" aria-labelledby="product-save-title">
-  <div className="panel-heading"><div><h2 id="product-save-title">{filter==='component'?'Minhas peças':'Meus produtos'}</h2>
+  <div className="panel-heading"><div><h2 id="product-save-title">Salvar cálculo na oficina</h2>
    <p>Salve o cálculo como um produto da oficina. Os custos anteriores ficam registrados em um snapshot.</p></div></div>
   {!session?<div><p className="footnote">Entre na sua conta para salvar e consultar os produtos na nuvem.</p>
    <button type="button" className="primary-action" onClick={onLogin}>Entrar para salvar produto</button></div>:
@@ -84,8 +84,9 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     <p className="footnote">Reaproveita parâmetros do cálculo escolhido. A máquina atual pode alterar o novo resultado; o custo histórico salvo não é reescrito.</p>
    </div>}
    {revisionTarget&&<div className="product-reuse-panel" role="status"><strong>Nova revisão: {revisionTarget.name}</strong><p className="footnote">Este cálculo será anexado à ficha existente, sem criar outro produto. O preço de venda da ficha será atualizado; os custos históricos permanecem intactos.</p>{onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo cadastro</button>}</div>}
-   <div className="product-name-feature"><span>{revisionTarget?'Revisão de custo':'Cadastro a partir da calculadora'}</span><strong>{name.trim()||'Dê um nome ao produto'}</strong></div>
+   <div className="product-name-feature"><span>{revisionTarget?'Revisão de custo':kind==='component'?'Cadastro de peça':'Cadastro de produto'}</span><strong>{name.trim()||'Dê um nome ao produto'}</strong></div>
    <div className="product-save-fields">
+    <label className="product-wide product-name-input">Nome {kind==='component'?'da peça':'do produto'}<input aria-label="Nome do cadastro" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={e=>setName(e.target.value)} placeholder="Ex.: Guirlanda natalina"/></label>
     <label>SKU / referência (opcional) <input aria-label="SKU do produto" maxLength={100} value={sku} disabled={Boolean(revisionTarget)} onChange={e=>setSku(e.target.value)} placeholder="Ex.: CH-GALO-01" /></label>
     <label>Tipo <select aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)} onChange={e=>setKind(e.target.value as typeof kind)}><option value="product">Produto final</option><option value="component">Peça / componente</option></select></label>
     <label>Descrição (opcional) <input aria-label="Descrição do produto" maxLength={2000} value={description} onChange={e=>setDescription(e.target.value)} /></label>
@@ -103,9 +104,8 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    </div>
   </div>}
   {session&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={revisionTarget?'Nova revisão em cadastro existente':'Salvar cálculo como produto ou peça'}>
-   <label className="form-action-dock-name">Nome do produto<input aria-label="Nome do produto" maxLength={150} value={name} disabled={Boolean(revisionTarget)} onChange={e=>setName(e.target.value)} placeholder="Ex.: Guirlanda natalina"/></label>
    {revisionTarget&&onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo</button>}
-   <button className="primary-action" type="button" disabled={busy||!result||!workspaceId||name.trim().length<2} onClick={()=>void save()}>{busy?'Salvando…':revisionTarget?'Salvar nova revisão':'Salvar produto e custo'}</button>
+   <button className="primary-action" type="button" disabled={busy||!result||!workspaceId||name.trim().length<2} onClick={()=>void save()}>{busy?'Salvando…':revisionTarget?'Salvar nova revisão':kind==='component'?'Salvar peça e custo':'Salvar produto e custo'}</button>
   </FormActionDock>}
  </section>;
 }
