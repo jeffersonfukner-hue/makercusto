@@ -32,8 +32,10 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
  const [error,setError]=useState('');
  const [reload,setReload]=useState(0);
  const [openingCalculation,setOpeningCalculation]=useState(false);
+ const [libraryError,setLibraryError]=useState('');
+ useEffect(()=>{setMode('catalog');setSelected(null);setQuery('');setFeedback('');setError('');},[tab,workspaceId]);
  useEffect(()=>{
-  let active=true;setLoading(true);
+  let active=true;setLoading(true);setItems([]);setKits([]);
   if(!workspaceId){setLoading(false);return;}
   void Promise.all([listProducts(workspaceId),listAssemblies(workspaceId)]).then(([p,k])=>{
    if(active){setItems(p);setKits(k);}
@@ -42,19 +44,12 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
   return()=>{active=false;};
  },[workspaceId,reload]);
  useEffect(()=>{
-  let live=true;
+  let live=true;setLibrary([]);setLibraryError('');
   if(!workspaceId){setLibrary([]);return;}
   void listComponentLibrary(workspaceId).then(rows=>{if(live)setLibrary(rows);})
-   .catch(()=>{if(live)setLibrary([]);});
+   .catch(e=>{if(live){setLibrary([]);setLibraryError('Não foi possível consultar os custos das peças: '+(e as Error).message);}});
   return()=>{live=false;};
  },[workspaceId,reload]);
- useEffect(()=>{
-  if(!library.length)return;
-  setParts(prev=>prev.map(p=>{
-   const source=library.find(x=>x.id===p.product_id);
-   return source?{...p,name:source.name,grams:source.grams,unit_cost:source.unit_cost}:p;
-  }));
- },[library]);
  const kit=kits.find(x=>x.id===selected);
  const product=items.find(x=>x.id===selected);
  const visible=useMemo(()=>items.filter(x=>
@@ -190,6 +185,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
     <label className="product-wide">Descrição (opcional)<textarea aria-label="Descrição do produto" maxLength={2000} value={description} onChange={e=>setDescription(e.target.value)}/></label>
    </div>
    {kind==='kit'&&<div className="product-component-editor">
+    {libraryError&&<p role="alert" className="error">{libraryError}</p>}
     <div className="product-workspace-heading"><div><h3>Peças necessárias</h3><p>Inclua as peças que precisam ser combinadas.</p></div>
      <button type="button" className="secondary-action" disabled={parts.length>=30} onClick={()=>setParts(prev=>[...prev,blank()])}>+ Adicionar peça</button></div>
     {parts.map((p,i)=><fieldset key={p.id??'new-'+i} className="assembly-part">
