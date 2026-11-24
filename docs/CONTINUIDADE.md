@@ -834,3 +834,12 @@
 ## 24/11/2026 — L4-G12B: evidências históricas de mão de obra
 - Migração append-only com autoria, referência única por impressão, replay idempotente, tarifa congelada e distinção entre tarifa manual e catálogo vigente. Consulta financeira isolada por oficina; UPDATE/DELETE bloqueados. Painel registra explicitamente e consulta histórico; importação separada de rascunhos e evidências, sem somar ambos. Não há comprovação financeira definitiva.
 - Teste SQL rollback incluído no CI. CI anterior #492 observado em execução; novos testes não confirmados. Pendências: revisão/compensação auditável de evidências, integração de ferramentas e acessórios, fechamento P09. Sem migração operacional, merge ou deploy.
+
+
+## 24/11/2026 — L4-G12C: revisão auditável da mão de obra
+- Leitura prévia de AGENTS.md (incluindo CI-ECONOMY-01), README.md, ARQUITETURA.md, PADROES.md e continuidade; HEAD anterior G12B `cc2d6af17133cf066a98715ea2e42e7d647d7461`, CI #493 aprovado: https://github.com/jeffersonfukner-hue/makercusto/actions/runs/45319086048 .
+- Nova migração `20261124003000_l4_labor_revisions.sql`: histórico append-only de revisões de minutos, tarifa e base medida/estimada, autor, motivo, idempotência, trava de concorrência, rejeição de versão obsoleta e acesso por oficina. Preserva atividade/referência originais e tarifa da evidência inicial; a consulta expõe versão vigente e histórico, sempre com `posting_allowed=false`.
+- Regressão `l4_labor_revisions_rollback.sql` criada e incluída no pipeline PostgreSQL descartável; verifica replay, divergência de chave, revisão obsoleta, valor vigente, histórico original, imutabilidade, autorização externa e privilégios anônimos.
+- Commits criados: `f413484b60977f12abda03a6ed9d1ec76cab51cd`, `4257367978d21b0f302bb01f7d6ab6023a647586`, `6f8d10780cc6a1ce0779eaa0c34387ba70fe4f51`. CI do lote G12C ainda pendente de confirmação após atualizações; não declarar testes aprovados até consulta à execução efetiva.
+- Limites: revisão não renomeia atividade/referência, não altera período histórico, não gera pagamento, estoque ou lançamento financeiro e não oferece UI de revisão nesta etapa; revisão feita por RPC, ainda sem integração visual. Pendem integração de ferramentas/acessórios, P09 e evidências para fechamento.
+- Sem merge, deploy, migração operacional ou gastos autorizados. **NÃO FAÇA O DEPLOY AINDA.**
