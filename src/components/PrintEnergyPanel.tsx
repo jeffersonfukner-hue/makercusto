@@ -3,7 +3,7 @@ import {getEnergyEvidence,registerEnergyTariff,recordEnergyInterval,getIntegralE
 import {prepareRecordedEnergy} from '../domain/p07-recorded-energy';
 import {energyAllocationCandidate} from '../domain/p07-energy-allocation';
 
-export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation}:{workspaceId:string|null;executionId:string;onUseForAllocation?:(candidate:NonNullable<ReturnType<typeof energyAllocationCandidate>>)=>void}){
+export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation,onInvalidateAllocation}:{workspaceId:string|null;executionId:string;onInvalidateAllocation?:()=>void;onUseForAllocation?:(candidate:NonNullable<ReturnType<typeof energyAllocationCandidate>>)=>void}){
  const [data,setData]=useState<EnergyEvidence|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const [name,setName]=useState(''),[price,setPrice]=useState(''),[from,setFrom]=useState(''),[until,setUntil]=useState(''),[tariffRef,setTariffRef]=useState('');
  const [start,setStart]=useState(''),[end,setEnd]=useState(''),[phase,setPhase]=useState<EnergyEvidenceInterval['phase']>('heating');
@@ -22,14 +22,14 @@ export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation}:{w
  useEffect(()=>()=>{++seq.current;},[]);
  const load=async(action?:()=>Promise<string>)=>{
   if(!workspaceId||busy)return;
-  const request=++seq.current;setBusy(true);setError('');setDraft(null);
+  const request=++seq.current;setBusy(true);setError('');setDraft(null);onInvalidateAllocation?.();
   try{
    if(action)await action();
    const [result,integral]=await Promise.all([getEnergyEvidence(workspaceId,executionId),getIntegralEnergy(workspaceId,executionId)]);
    if(integral.workspace_id!==workspaceId||integral.execution_id!==executionId||integral.posting_allowed!==false)throw new Error('Resposta de medição integral inválida.');
    if(result.workspace_id!==workspaceId||result.execution_id!==executionId||result.posting_allowed!==false||!Array.isArray(result.intervals)||!Array.isArray(result.tariffs))throw new Error('Resposta P07 inválida.');
    if(request===seq.current){setData(result);setSavedIntegral(integral.measurement);setOriginalIntegral(integral.original??integral.measurement);setRevisions(integral.revisions??[]);if(integral.measurement){setIntegralEnabled(true);setIntegralKwh(integral.measurement.kwh);setIntegralRef(integral.measurement.reference);}}
-  }catch(e){if(request===seq.current)setError((e as Error).message);}
+  }catch(e){if(request===seq.current){setData(null);setSavedIntegral(null);setOriginalIntegral(null);setRevisions([]);setError((e as Error).message);}}
   finally{if(request===seq.current)setBusy(false);}
  };
  const iso=(v:string)=>new Date(v+'-03:00').toISOString();
@@ -44,7 +44,7 @@ export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation}:{w
   });
  };
  const calculate=()=>{
-  setDraft(null);setError('');
+  setDraft(null);setError('');onInvalidateAllocation?.();
   if(!data)return;
   try{
    const observedStart=data.start_at??savedIntegral?.start_at??iso(periodStart),observedEnd=data.end_at??savedIntegral?.end_at??iso(periodEnd);
@@ -84,15 +84,15 @@ export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation}:{w
     <button type="button" disabled={busy||!start||!end||end<=start||(kind!=='unknown'&&(!value||!reference.trim()))} onClick={()=>void load(()=>recordEnergyInterval(workspaceId,executionId,{start:iso(start),end:iso(end),phase,condition:phase==='pause'?condition:null,kind,reference:kind==='unknown'?null:reference,kwh:kind==='measured'?value:null,watts:kind.endsWith('estimate')?value:null}))}>Registrar intervalo sem contabilização</button>
    </details>
    <div className="product-save-fields">
-    {!data.start_at&&!savedIntegral&&<label>Início total observado<input type="datetime-local" value={periodStart} onChange={e=>{setPeriodStart(e.target.value);setDraft(null);}}/></label>}
-    {!data.end_at&&!savedIntegral&&<label>Fim total observado<input type="datetime-local" value={periodEnd} onChange={e=>{setPeriodEnd(e.target.value);setDraft(null);}}/></label>}
+    {!data.start_at&&!savedIntegral&&<label>Início total observado<input type="datetime-local" value={periodStart} onChange={e=>{setPeriodStart(e.target.value);setDraft(null);onInvalidateAllocation?.();}}/></label>}
+    {!data.end_at&&!savedIntegral&&<label>Fim total observado<input type="datetime-local" value={periodEnd} onChange={e=>{setPeriodEnd(e.target.value);setDraft(null);onInvalidateAllocation?.();}}/></label>}
    </div>
    <details><summary>Medição integral da execução</summary>
-    <label><input type="checkbox" checked={integralEnabled} disabled={!!savedIntegral} onChange={e=>{setIntegralEnabled(e.target.checked);setDraft(null);}}/> Tenho medição real que cobre todo o período informado</label>
+    <label><input type="checkbox" checked={integralEnabled} disabled={!!savedIntegral} onChange={e=>{setIntegralEnabled(e.target.checked);setDraft(null);onInvalidateAllocation?.();}}/> Tenho medição real que cobre todo o período informado</label>
     <p className="footnote">A medição integral substitui a soma das fases, não é adicionada a ela. Confirme que o medidor cobre exatamente o início e fim da execução. O registro preserva a medição original; não confirma custo financeiro.</p>
     {integralEnabled&&<div className="product-save-fields">
-     <label>Consumo integral medido (kWh)<input inputMode="decimal" readOnly={!!savedIntegral} value={integralKwh} onChange={e=>{setIntegralKwh(e.target.value);setDraft(null);}}/></label>
-     <label>Referência do medidor<input readOnly={!!savedIntegral} value={integralRef} onChange={e=>{setIntegralRef(e.target.value);setDraft(null);}}/></label>
+     <label>Consumo integral medido (kWh)<input inputMode="decimal" readOnly={!!savedIntegral} value={integralKwh} onChange={e=>{setIntegralKwh(e.target.value);setDraft(null);onInvalidateAllocation?.();}}/></label>
+     <label>Referência do medidor<input readOnly={!!savedIntegral} value={integralRef} onChange={e=>{setIntegralRef(e.target.value);setDraft(null);onInvalidateAllocation?.();}}/></label>
     </div>}
     {savedIntegral?<p>Registro preservado: {savedIntegral.reference} · {savedIntegral.kwh} kWh · {savedIntegral.start_at} — {savedIntegral.end_at}. Correções exigem revisão auditável.</p>:integralEnabled&&<button type="button" disabled={busy||!(data.start_at||periodStart)||!(data.end_at||periodEnd)||!integralKwh.trim()||!integralRef.trim()} onClick={()=>void load(()=>recordIntegralEnergy(workspaceId,executionId,{start:data.start_at??iso(periodStart),end:data.end_at??iso(periodEnd),kwh:integralKwh,reference:integralRef}))}>Registrar medição integral</button>}
     {savedIntegral&&<details><summary>Histórico e correção da medição</summary>
