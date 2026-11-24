@@ -10,10 +10,11 @@ export function energyAllocationCandidate(draft:EnergyDraft){
  const cents=BigInt(draft.categoryCents);
  if(cents<=0n)return null;
  const sourceVersion='p07:'+draft.executionId+':'+draft.startMs+':'+draft.endMs+':'+
-  draft.tariff.reference+':'+draft.intervals.map(i=>i.id).join(',');
+  draft.tariff.reference+':'+draft.intervals.map(i=>i.id).join(',')+
+  (draft.integralMeasurement?':integral:'+draft.integralMeasurement.reference+':'+draft.integralMeasurement.kwh:'');
  return {
   amountBrl:(cents/100n).toString()+'.'+(cents%100n).toString().padStart(2,'0'),
-  source:'P07 '+draft.energySource+' · '+draft.tariff.reference+' · simulação sem contabilização',
+  source:'P07 '+draft.energySource+' · '+draft.tariff.reference+(draft.integralMeasurement?' · medidor '+draft.integralMeasurement.reference:'')+' · simulação sem contabilização',
   sourceVersion,
   estimated:draft.energySource==='contains_estimates'
  };
