@@ -772,3 +772,10 @@
 - A interface impede duas linhas de energia na mesma prévia, exige base/destino e justificação do rateio compartilhado e conserva caráter **SIMULAÇÃO NÃO SALVA**. Categoria antiga precisa ser removida antes de recalcular e importar; fonte histórica não pode ser editada silenciosamente.
 - Adicionadas regressões em `src/domain/p07-energy-allocation.test.ts`. **Execução dos testes e CI deste HEAD ainda não confirmadas**; não classificar como módulo completo, liberar deploy ou aplicar migrações operacionais.
 - Limites: tarifa deve cobrir todo o período; medição integral independente, correção/compensação de evidências, rateio final servidor, contabilização imutável e P09 continuam pendentes. CI-ECONOMY-01 permanece ativo; sem merge/deploy/gastos.
+
+
+## 23/11/2026 — L4-G08A: medição integral P07 em prévia local
+- `prepareRecordedEnergy` aceita medição real integral opcional com período e referência explícitos, reaproveitando o motor P07 já existente. A medição integral substitui a soma das fases, sem duplicidade; os intervalos e lacunas de classificação continuam visíveis.
+- `PrintEnergyPanel` oferece confirmação de cobertura de todo o período e campos kWh/referência do medidor. Alterar dados invalida o cálculo anterior. O formulário declara expressamente que a medição integral ainda não é persistida.
+- `p07-energy-allocation.ts` conserva referência e valor da medição na identificação da fonte do rateio; o bloqueio de postagem é mantido. Três testes unitários adicionados para substituição, período/referência inválidos e preservação de lacunas.
+- CI #466 anterior cancelado; CI do código atual não confirmado. **Não liberar deploy**. Próxima etapa: persistência auditável da medição integral e período observado, com idempotência e isolamento por oficina, antes de qualquer fechamento. Sem migração operacional, merge, deploy ou acionamento manual de CI.
