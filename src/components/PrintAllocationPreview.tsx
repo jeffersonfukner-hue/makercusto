@@ -71,11 +71,23 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
  const resetImportedSource=()=>{
   setSourceVersion('entrada-local-1');setSource('');setAmount('');setSeparate(false);
  };
+ const useP07Energy=(candidate:{amountBrl:string;source:string;sourceVersion:string;estimated:boolean})=>{
+  setPreview(null);setError('');
+  if(lines.some(l=>l.category==='energy')){
+   setError('Energia já incluída nesta prévia. Remova a categoria anterior para evitar dupla contagem.');return;
+  }
+  setCategory('energy');setAmount(candidate.amountBrl);setSource(candidate.source);
+  setSourceVersion(candidate.sourceVersion);setSeparate(false);setBasis({});
+  setRationale(candidate.estimated?'Rateio provisório: energia contém estimativas explícitas.':'');
+ };
  const addLine=()=>{
   setError('');setPreview(null);
   if(!print||!destinations.length){setError('Selecione uma impressão com peças confirmadas.');return;}
   const selected=destinations.filter(o=>basis[o.id]&&basis[o.id].trim()!==''&&basis[o.id].trim()!=='0')
    .map(o=>({outputId:o.id,basis:basis[o.id]}));
+  if(category==='energy'&&lines.some(l=>l.category==='energy')){
+   setError('Energia já consta na prévia: remova a categoria antiga antes de incluir uma nova.');return;
+  }
   if(sourceVersion!=='entrada-local-1'&&lines.some(l=>l.sourceVersion===sourceVersion)){
    setError('Esta categoria de consumo já está na prévia. Remova a anterior antes de reutilizar.');return;
   }
@@ -103,7 +115,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
    </select><small>Somente saídas com quantidades já confirmadas aparecem como destinos.</small></label>
   </div>
   {print&&<div>
-   <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id}/>
+   <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onUseForAllocation={useP07Energy}/>
    <PrintReadinessPanel key={print.id} workspaceId={workspaceId} executionId={print.id}/>
    <PrintExactMaterialDraft workspaceId={workspaceId} executionId={print.id} outputs={destinations} lines={lines}/>
    <h4>Consumos confirmados vinculados à impressão</h4>
@@ -139,7 +151,7 @@ export function PrintAllocationPreview({workspaceId,prints,active,onActivate}:Pr
      <label>Justificativa e unidade da base<input aria-label="Justificativa do rateio L4" value={rationale} onChange={e=>setRationale(e.target.value)} placeholder="Ex.: massa medida em gramas ou tempo atribuível" />
       <small>Na distribuição compartilhada, explique a base e se é medição ou estimativa.</small></label>
     </div>
-    {sourceVersion!=='entrada-local-1'&&<p className="footnote">Fonte histórica selecionada: valor indicativo protegido contra edição. É preciso informar o destino e uma base válida. <button type="button" onClick={resetImportedSource}>Usar entrada manual</button></p>}
+    {sourceVersion!=='entrada-local-1'&&<p className="footnote">Fonte histórica ou evidência P07 selecionada: valor indicativo protegido contra edição. É preciso informar o destino e uma base válida. <button type="button" onClick={resetImportedSource}>Usar entrada manual</button></p>}
     {(category==='purge'||category==='loss')&&<label><input type="checkbox" checked={separate} disabled={sourceVersion!=='entrada-local-1'} onChange={e=>setSeparate(e.target.checked)} />
      Esta purga/perda foi medida separadamente e NÃO está incluída no custo do modelo.</label>}
     <div className="materials-spool-grid">{destinations.map(o=><label key={o.id}>
