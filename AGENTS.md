@@ -1,3 +1,5 @@
+> Contrato global de trabalho para Mac/iPad remoto e navegador: [CONTRATO_GLOBAL.md](CONTRATO_GLOBAL.md). As regras atuais do proprietário sobre CI econômico e testes prevalecem sobre referências históricas de CI obrigatório em cada commit.
+
 # MakerCusto — contrato de trabalho
 
 1. Ler README.md, docs/CONTINUIDADE.md, docs/ARQUITETURA.md e docs/PADROES.md antes de editar.
