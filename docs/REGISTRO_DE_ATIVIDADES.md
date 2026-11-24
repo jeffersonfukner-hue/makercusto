@@ -865,3 +865,12 @@ Documento oficial de atividades efetivamente executadas neste projeto. Horários
 - Painel P07 invalida prévia dependente ao consultar/alterar/recalcular fontes; falha de consulta não preserva dados anteriores como atuais. Rateio descarta somente linhas importadas P07 obsoletas e exige nova importação; outras categorias são mantidas. Commits `c6d1e2162154826b3b0c9a2f84ebf98750b56b6d`, `2faa33b3f3595ad72bcfd17c22b84418a5b1d21c`.
 - Regressões SQL adicionais para fase fora do período e tentativas de modificação/exclusão de evidências. Commit `8c77c733dffba8509de36b8c9fde9d9190d64904`. Testes ainda não confirmados; nenhuma migração operacional, merge ou deploy.
 - Pendências: CI acumulado; revisão auditável de fases e tarifas, integração das demais fontes de custos, fechamento e compensação P09. Não há liberação de deploy. PR #1: https://github.com/jeffersonfukner-hue/makercusto/pull/1 .
+
+
+## 23/11/2026 — L4-G10A: verificações de origem na prévia de custo
+- **Projeto:** MakerCusto.
+- **Início/término/duração efetiva:** não aferidos; não inferidos pelo intervalo entre mensagens.
+- **Atividades:** consulta ao HEAD e regras do AGENTS.md; revisão do motor L4 e testes existentes; implementação de diagnóstico de origem histórica incompatível, múltiplas linhas de energia e uso de origem P07 em categoria incorreta; três regressões unitárias adicionadas e continuidade registrada.
+- **Resultado:** alterações de código e testes preparadas na branch, sem fechamento financeiro ou alterações operacionais. Commit identificado no histórico desta atualização.
+- **Pendências:** teste local e CI deste commit ainda não comprovados; homologação visual e integrações financeiras restantes.
+- **Evidências:** https://github.com/jeffersonfukner-hue/makercusto/pull/1 ; arquivo src/domain/print-financial-draft.test.ts.

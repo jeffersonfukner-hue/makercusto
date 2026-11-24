@@ -795,3 +795,10 @@
 - Painel P07 invalida prévia dependente ao consultar/alterar/recalcular fontes; falha de consulta não preserva dados anteriores como atuais. Rateio descarta somente linhas importadas P07 obsoletas e exige nova importação; outras categorias são mantidas. Commits `c6d1e2162154826b3b0c9a2f84ebf98750b56b6d`, `2faa33b3f3595ad72bcfd17c22b84418a5b1d21c`.
 - Regressões SQL adicionais para fase fora do período e tentativas de modificação/exclusão de evidências. Commit `8c77c733dffba8509de36b8c9fde9d9190d64904`. Testes ainda não confirmados; nenhuma migração operacional, merge ou deploy.
 - Pendências: CI acumulado; revisão auditável de fases e tarifas, integração das demais fontes de custos, fechamento e compensação P09. Não há liberação de deploy. PR #1: https://github.com/jeffersonfukner-hue/makercusto/pull/1 .
+
+
+## 23/11/2026 — L4-G10A: diagnóstico de integridade das origens de rateio
+- O diagnóstico local de fechamento passa a sinalizar origem histórica com categoria trocada, versões P07 em categorias distintas de energia e múltiplas linhas energéticas na mesma execução.
+- Fontes P07 permanecem prévias não verificadas, ainda que possuam referência; nenhuma dessas verificações transforma simulação em fechamento financeiro.
+- Acrescentados três testes unitários de regressão. Execução local e CI deste commit não confirmados; sem snapshot, migração operacional, merge ou deploy.
+- Próximas etapas: validar pipeline de forma econômica e ampliar comprovação das outras fontes financeiras, revisões de evidências e P09.

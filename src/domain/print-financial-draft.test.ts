@@ -71,6 +71,33 @@ describe('L4 — diagnóstico de fechamento financeiro, não persistido',()=>{
   expect(result.allocation.categoryTotals[0].allocations.reduce((total,x)=>total+BigInt(x.cents),0n))
    .toBe(BigInt(result.allocation.totalCents));
  });
+ it('sinaliza categoria incompatível com fonte histórica e mantém fechamento bloqueado',()=>{
+  const r=request([model]);
+  r.lines[0].category='energy';
+  const result=preparePrintFinancialDraft({allocationRequest:r,historicalSources:[source()]});
+  expect(result.issues.map(x=>x.code)).toContain('SOURCE_CATEGORY_MISMATCH');
+  expect(result.financialSnapshot).toBeNull();
+ });
+ it('detecta duas linhas energéticas mesmo com versões P07 distintas',()=>{
+  const r=request();
+  for(const version of ['p07:print-01:version-a','p07:print-01:version-b']){
+   r.lines.push({id:version,category:'energy',amountBrl:'1.23',source:'simulação P07',
+    sourceVersion:version,rationale:'rateio por tempo declarado',method:'shared',
+    separatelyMeasured:false,destinations:[{outputId:'guirlanda',basis:'2'},{outputId:'estrela',basis:'1'}]});
+  }
+  const result=preparePrintFinancialDraft({allocationRequest:r,historicalSources:[]});
+  expect(result.issues.map(x=>x.code)).toContain('DUPLICATE_ENERGY_SOURCE');
+  expect(result.issues.filter(x=>x.code==='UNVERIFIED_MANUAL_SOURCE')).toHaveLength(2);
+  expect(result.financialSnapshot).toBeNull();
+ });
+ it('não aceita origem energética como material mesmo com referência P07',()=>{
+  const r=request();
+  r.lines.push({id:'energia-como-modelo',category:'model',amountBrl:'1.23',source:'P07',
+   sourceVersion:'p07:print-01:sample',rationale:'',method:'direct',
+   separatelyMeasured:false,destinations:[{outputId:'guirlanda',basis:'1'}]});
+  const result=preparePrintFinancialDraft({allocationRequest:r,historicalSources:[]});
+  expect(result.issues.map(x=>x.code)).toContain('SOURCE_CATEGORY_MISMATCH');
+ });
  it('não inventa massa em campos de origem inválidos',()=>{
   expect(()=>preparePrintFinancialDraft({allocationRequest:request([model]),
    historicalSources:[source({model_g:'NaN'})]})).toThrow(/Massa histórica inválida/);

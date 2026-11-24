@@ -17,7 +17,8 @@ export type HistoricConsumptionSource = {
 };
 export type FinancialDraftIssue = {
  code:'SOURCE_NOT_LOADED'|'UNKNOWN_LOT_COST'|'ESTIMATED_LOT_COST'|'HISTORICAL_PRECISION'
- |'UNALLOCATED_CONSUMPTION'|'DUPLICATE_CONSUMPTION'|'UNVERIFIED_MANUAL_SOURCE'|'COST_CATEGORY_UNREVIEWED';
+ |'UNALLOCATED_CONSUMPTION'|'DUPLICATE_CONSUMPTION'|'UNVERIFIED_MANUAL_SOURCE'|'COST_CATEGORY_UNREVIEWED'
+ |'SOURCE_CATEGORY_MISMATCH'|'DUPLICATE_ENERGY_SOURCE';
  sourceId?:string;
  category?:AllocationCategory;
  description:string;
@@ -57,17 +58,41 @@ export function preparePrintFinancialDraft(input:{
  const issues:FinancialDraftIssue[]=[];
  const sources=input.historicalSources;
  const included=new Set<string>();
+ const energyLines=new Set<string>();
  for(const line of input.allocationRequest.lines){
-  if(line.sourceVersion.startsWith('historico:')){
-   if(included.has(line.sourceVersion)){
-    issues.push({code:'DUPLICATE_CONSUMPTION',sourceId:line.sourceVersion,
+  const version=line.sourceVersion;
+  if(version.startsWith('historico:')){
+   // A chave da confirmação só vale para a categoria realmente confirmada.
+   // Não aceitar uma origem de modelo rotulada como energia ou purga.
+   const match=/^historico:([^:]+):(model|purge|loss)$/.exec(version);
+   if(!match||match[2]!==line.category){
+    issues.push({code:'SOURCE_CATEGORY_MISMATCH',sourceId:version,category:line.category,
+     description:'Origem histórica incompatível com a categoria declarada; revise antes do fechamento.'});
+   }
+   if(included.has(version)){
+    issues.push({code:'DUPLICATE_CONSUMPTION',sourceId:version,
      description:'Origem histórica repetida na mesma categoria; verifique dupla apropriação.'});
    }
-   included.add(line.sourceVersion);
+   included.add(version);
   }else{
+   // Uma prévia P07 não é evidência financeira verificada pelo servidor.
+   // Preservar o bloqueio de fechamento mesmo quando a prévia traz referência.
    issues.push({code:'UNVERIFIED_MANUAL_SOURCE',sourceId:line.id,category:line.category,
-    description:'Custo manual precisa de comprovação de origem antes de fechar.'});
+    description:version.startsWith('p07:')?
+     'Prévia energética P07 ainda não foi verificada para fechamento financeiro.':
+     'Custo manual precisa de comprovação de origem antes de fechar.'});
+   if(version.startsWith('p07:')&&line.category!=='energy'){
+    issues.push({code:'SOURCE_CATEGORY_MISMATCH',sourceId:version,category:line.category,
+     description:'Origem P07 só pode representar a categoria energia.'});
+   }
   }
+  if(line.category==='energy'){
+   energyLines.add(line.id);
+  }
+ }
+ if(energyLines.size>1){
+  issues.push({code:'DUPLICATE_ENERGY_SOURCE',category:'energy',
+   description:'Mais de uma linha de energia na execução: risco de contabilização duplicada.'});
  }
  if(sources===null){
   issues.push({code:'SOURCE_NOT_LOADED',description:'Histórico de consumo não foi consultado ou falhou.'});
