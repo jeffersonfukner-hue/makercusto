@@ -31,7 +31,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
   return()=>window.removeEventListener('keydown',close);
  },[open]);
  if(!authenticated)return <>{children}</>;
- const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Custos e precificação':section==='prints'?'Impressões da oficina':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
+ const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Calculadora de Produto':section==='prints'?'Impressões da oficina':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
  const navigate=(next:SystemSection)=>{onNavigate(next);setOpen(false);};
  return <div className={'system-shell'+(collapsed?' is-collapsed':'')}>
   <header className="system-topbar">
@@ -53,7 +53,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
    <div className="system-content">
     <div className="system-section-header">
      <div><p className="system-breadcrumb">MakerCusto / {section==='overview'?'Visão geral':section==='calculator'?'Custos':section==='materials'?'Materiais':section==='prints'?'Impressões':title}</p><h1>{title}</h1>
-      <p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='calculator'?'Simule custos e confira os parâmetros de produção.':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p></div>
+      <p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='calculator'?'':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p></div>
      
     </div>
     <div className="system-tabs" role="navigation" aria-label={'Abas de '+title}>
