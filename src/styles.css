@@ -567,3 +567,30 @@
 
 /* Compactação final do lote visual, restrita à calculadora autenticada. */
 .mc-inline-help{position:relative;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;color:#405777;cursor:help;font-size:13px;align-self:start}.mc-tooltip{display:none;position:absolute;z-index:20;bottom:100%;left:0;width:max-content;max-width:min(260px,70vw);white-space:normal;background:#172b45;color:white;padding:8px 10px;border-radius:6px;font-size:12px;line-height:1.4;box-shadow:0 3px 12px #14223833}.mc-inline-help:hover .mc-tooltip,.mc-inline-help:focus .mc-tooltip,.mc-inline-help:focus-within .mc-tooltip{display:block}.mc-inline-help:focus-visible{outline:2px solid #2459eb}.system-shell:has(.calculator-identity) .workspace{gap:14px}.system-shell:has(.calculator-identity) .result-panel .hero-amount strong{font-size:32px}.system-shell:has(.calculator-identity) .result-panel .quick-outcomes>div{padding:9px}.system-shell:has(.calculator-identity) .mc-result-metrics>div{padding:8px}.system-shell:has(.calculator-identity) .mc-result-metrics{margin:8px 0}.system-shell:has(.calculator-identity) .mc-sale-price{margin:8px 0}.system-shell:has(.calculator-identity) .form-action-dock-context{flex:0 1 220px}.system-shell:has(.calculator-identity) .product-save-content{row-gap:6px}.system-shell:has(.calculator-identity) .app-main button:disabled{opacity:.65}.system-shell:has(.calculator-identity) .product-reuse-panel button{min-height:36px}.system-shell:has(.calculator-identity) .result-panel .cost-list dd{font-weight:650}.system-shell:has(.calculator-identity) .result-panel .cost-list dt:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#648bd1;margin-right:8px}.system-shell:has(.calculator-identity) .result-panel .cost-list>div:nth-child(2) dt:before{background:#d29b36}.system-shell:has(.calculator-identity) .result-panel .cost-list>div:nth-child(3) dt:before{background:#8171bc}.system-shell:has(.calculator-identity) .result-panel .cost-list>div:nth-child(4) dt:before{background:#a76c48}.system-shell:has(.calculator-identity) .result-panel .cost-list>div:nth-child(5) dt:before{background:#32927b}
+
+/* Modelo 5: navegação superior e área de trabalho integral */
+.system-top-navigation .system-frame{display:block;min-height:calc(100vh - 56px)}
+.system-top-navigation .system-topbar{height:56px;background:#fff;color:#172b45;border-color:#dce3ed;gap:16px}
+.system-top-navigation .system-brand strong,.system-top-navigation .system-workshop-name,.system-top-navigation .system-email{color:#172b45}
+.system-top-navigation .system-brand small{color:#52647b}
+.system-top-navigation .system-account button{background:#f1f5fa;color:#24364b;border-color:#dce3ed}
+.system-horizontal-menu{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px clamp(12px,2vw,32px);background:#172b45;color:white}
+.system-horizontal-menu button{display:flex;align-items:center;gap:6px;white-space:nowrap;background:transparent;color:#e4edf9;border:1px solid transparent;border-radius:5px;padding:8px 10px;font-size:13px;font-weight:600}
+.system-horizontal-menu button:hover,.system-horizontal-menu button.system-nav-active{background:#2459eb;color:#fff}
+.system-top-navigation .system-content{max-width:none;padding-inline:clamp(12px,2vw,32px)}
+.system-top-navigation .form-action-dock{left:0;box-shadow:0 -3px 12px #172b4526}
+.system-top-navigation:has(.calculator-identity) .system-section-header{padding-block:0;margin-bottom:6px}
+.system-top-navigation:has(.calculator-identity) .system-section-header h1{font-size:23px;margin-block:3px}
+.system-top-navigation:has(.calculator-identity) .system-tabs{display:none}
+.system-top-navigation:has(.calculator-identity) .app-main .panel{padding:12px}
+.system-top-navigation:has(.calculator-identity) .result-panel>h2{margin:-12px -12px 10px}
+.system-top-navigation:has(.calculator-identity) .product-save-content{gap:6px 12px}
+.system-top-navigation:has(.calculator-identity) .product-name-input input{color:#142238;background:white}
+.system-top-navigation:has(.calculator-identity) .mc-dock-metrics>div{padding-inline:8px}
+.system-top-navigation:has(.calculator-identity) .mc-dock-metrics strong{font-size:15px}
+.system-top-navigation:has(.calculator-identity) .mc-dock-metrics>div:nth-child(1) strong{color:#86efac}
+.system-top-navigation:has(.calculator-identity) .mc-dock-metrics>div:nth-child(2) strong{color:#93c5fd}
+.system-top-navigation:has(.calculator-identity) .mc-dock-metrics>div:nth-child(3) strong{color:#86efac}
+@media(min-width:1101px){.system-top-navigation .workspace{grid-template-columns:minmax(0,2.15fr) minmax(300px,1fr)}.system-top-navigation .mc-dock-metrics{flex-wrap:nowrap;gap:4px}.system-top-navigation .system-mobile-menu{display:none}}
+@media(max-width:1100px){.system-top-navigation .system-mobile-menu{display:block;margin-left:auto;background:#edf3ff;color:#1745c6;border:1px solid #c9d6eb;border-radius:6px;width:38px;height:38px}.system-horizontal-menu{display:none}.system-horizontal-menu.mobile-open{display:flex}.system-horizontal-menu button{flex:1 1 145px}.system-top-navigation .system-topbar-center{display:none}}
+@media(max-width:430px){.system-top-navigation .system-email{display:none}.system-top-navigation .system-topbar{gap:8px}.system-horizontal-menu button{flex-basis:120px}}
