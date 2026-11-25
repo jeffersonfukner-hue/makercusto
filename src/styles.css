@@ -25,19 +25,17 @@
 .form-actions .primary-action{background:#117e80;border-color:#278f90}
 .materials-table-scroll{overflow-x:auto;margin-top:12px;border:1px solid #34465f;border-radius:10px}
 .materials-table{width:100%;border-collapse:collapse;font-size:12px}
-.materials-table th,.materials-table td{padding:10px 8px;border-bottom:1px solid #30415a;text-align:left;white-space:nowrap}
+.materials-table th,.materials-table td{padding:4px 8px;border-bottom:1px solid #30415a;text-align:left;white-space:nowrap}
 .materials-table thead{background:#102035;color:#afc3d6}
-.materials-table td small{display:block;color:#96b1c7}
+.materials-table .material-row-type{display:inline;color:var(--mc-muted);font-size:inherit}
 .materials-table tfoot th{background:#14333c;color:#defbf5;border-bottom:0}
 .materials-table .numeric-cell{font-weight:700}
 .row-actions{display:flex;gap:4px}
-.row-actions button{padding:5px 7px}
 @media(max-width:600px){.material-summary strong{font-size:13px}.material-summary>div{padding:10px 7px}.material-summary small{font-size:10px}.materials-table{min-width:650px}}
 
 /* Melhor alcance e toque para controles do detalhamento mobile. */
 .materials-heading{position:relative}
 .materials-heading .details-button{position:relative;z-index:2;touch-action:manipulation}
-.row-actions{margin-top:5px}
 @media(max-width:600px){
  .materials-heading{display:flex;flex-direction:column;align-items:stretch;gap:4px}
  .materials-heading .details-button{display:block;align-self:flex-start;min-height:44px;padding:10px 12px!important;background:#172c3c!important;border:1px solid #3a5c70!important}
@@ -822,4 +820,20 @@
 .mc-calculator .catalog-field .smart-suggestions button:hover,
 .mc-calculator .catalog-field .smart-suggestions button[aria-selected=true] {
  background:#e8f1ff;color:var(--mc-blue);box-shadow:none;
+}
+
+
+.mc-calculator .material-actions-cell {text-align:right}
+.mc-calculator .material-actions-cell .row-actions {justify-content:flex-end}
+.mc-calculator .row-actions button {
+ display:grid;place-items:center;width:24px;height:24px;padding:0;
+ background:transparent;border-color:transparent;color:var(--mc-blue);font-size:16px;line-height:1;
+}
+.mc-calculator .row-actions button:hover {background:#e8f1ff;border-color:var(--mc-border)}
+.mc-calculator .row-actions .material-remove {color:#a52224}
+.mc-calculator .row-actions .material-remove:hover {background:#fff1f1}
+.filament-profile-head .mc-profile-title {display:flex;align-items:center;gap:5px}
+@media(max-width:600px) {
+ .materials-table .material-actions-cell {position:sticky;right:0;background:#fff;box-shadow:-3px 0 5px #172b4510}
+ .mc-cost-block .materials-table :is(thead,tfoot) .material-actions-cell {background:#e4eefb}
 }

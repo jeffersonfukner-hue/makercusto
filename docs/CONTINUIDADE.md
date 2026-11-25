@@ -983,3 +983,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Referências: [3D Fila Silk Duo](https://3dfila.com.br/categoria-produto/filamento-3d-para-impressora-3d/filamento-pla-silk-duo/), [SUNLU multicolor](https://store.sunlu.com/collections/sunlu-anniversary-prime-deal-esthetic-filament-series-1kg/products/over-3kg-bundle-sales-1-75mm-sunlu-multi-color-silk-3d-printer-filament-1kg-roll-dual-color-tri-color-silk-filament), [Polymaker](https://polymaker.com/wp-content/uploads/SKU-PDF-20240523.pdf) e [Voolt3D](https://voolt3d.com.br/produtos/filamento-pla-tri-azul-safira-dourado-verde-v-silk-high-speed-premium-1kg/).
 - Regra de escrita adotada nos nomes de produto, peça, conjunto, filamento, perfil e impressora ao salvar: iniciais maiúsculas nas palavras principais e conectores internos em minúsculas, como Azul Claro e Castelo de Areia. Castelo de Areia é apenas exemplo e não foi incluído no catálogo. Grafias oficiais e siglas são preservadas. SKUs, identificações de bobina, referências e anotações não recebem essa formatação.
 - No cadastro de cor, tipo e marca, uma grafia parecida recebe aviso com a opção existente, sem troca automática. Sem reescrita de registros existentes no banco. Build, 78 unitários e 16 cenários de navegador aprovados.
+
+### Tabela compacta de filamentos e confirmações
+
+- Cor e tipo ficam na mesma linha. Lápis e × aparecem no fim, com texto acessível e rótulo de ajuda. Em telas pequenas a coluna de ações continua acessível ao rolar a tabela.
+- Salvar uma edição ou remover um filamento deste cálculo exige confirmação. Cancelar mantém a tabela intacta e conserva o rascunho de edição. Salvar alterações de um perfil pessoal de fatiador também pede confirmação.
+- Orientações de preço, uso e purga e o aviso de perfil indisponível ficaram no ícone do bloco Filamento. O perfil disponível conserva parâmetros, fonte e link de referência.
+- Build, 78 unitários e 14 cenários Playwright aprovados. Confirmações nos demais módulos, feedback de operações longas e WhatsApp configurável estão registrados no backlog.

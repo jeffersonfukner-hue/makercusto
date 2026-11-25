@@ -1015,3 +1015,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Pesquisadas linhas multicoloridas e adicionadas as combinações ao catálogo. Consolidada a formatação de nomes usados nos cadastros e adicionada sugestão de grafia próxima no modal de tipo, cor e marca.
 - Build, 78 testes unitários e 16 cenários Playwright aprovados. Sem deploy, migração ou reescrita de registros existentes. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Tabela de filamentos e ajuda contextual
+
+- Compactada a tabela e revistas as ações de edição e remoção. Verificados aceitar e cancelar, manutenção do rascunho e ajuda para materiais sem perfil técnico.
+- Build, 78 unitários e 14 casos Playwright aprovados. Sem deploy ou alteração operacional. Commit com `[skip ci]`. Duração não aferida.

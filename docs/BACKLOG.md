@@ -199,3 +199,10 @@ Não ampliar escopo sem homologação.
 - [ ] **Contadores na página sem login.** Mostrar em destaque os totais reais de visitas e cálculos gratuitos realizados. Explorar a posição ao lado da introdução “Impressão 3D sem complicação” ou dos botões, com adaptação ao celular. Definir o que conta como visita e como cálculo realizado para evitar inflar os totais com recargas, digitação e robôs.
 - [ ] **Chamada para criar conta.** Posicionar perto dos contadores e explicar o benefício de salvar e acessar os cadastros. Definir o modelo comercial, inclusive eventual cobrança da conta ou de funcionalidades, antes de anunciar condições na página.
 - [ ] **Área administrativa.** Após os ajustes de layout e funcionalidades, planejar um painel privado para acompanhar visitas, uso da calculadora, funil de criação de conta e vendas, com indicadores para entender interesse e conversão.
+
+## Confirmações, progresso e suporte
+
+- [ ] **Confirmações de alteração.** Auditar os fluxos existentes e aplicar confirmação antes de salvar edições ou excluir dados nos demais módulos. Nomear o item e manter a edição ou o registro intacto ao cancelar. A tabela de filamento e a edição dos perfis de fatiador já têm confirmação.
+- [ ] **Feedback de operações demoradas.** Mostrar carregamento, etapa atual, falha e opção Detalhes. Usar porcentagem apenas quando a operação expuser progresso mensurável. Em operações sem total conhecido, mostrar estado indeterminado e a última etapa confirmada.
+- [ ] **Suporte por WhatsApp.** Permitir configurar o número de suporte na futura área administrativa e oferecer um link nas mensagens de erro pertinentes. O usuário pode revisar o texto que será encaminhado. Sistema de tickets fica para etapa posterior.
+- [ ] **Ajuda por contexto.** Nas próximas revisões de interface, mover explicações auxiliares para o ícone de informação junto ao título, rótulo ou ação. Deixar erros e informações necessárias para agir à vista.

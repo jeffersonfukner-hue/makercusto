@@ -54,10 +54,17 @@ test('edita uma linha, calcula embalagem 1,3 kg e remove',async({page})=>{
  await expect(page.getByRole('button',{name:'Salvar alteração'})).toBeVisible();
  await page.getByTestId('packageQuantity').fill('1.3');
  await page.getByTestId('packagePrice').fill('130');
+ page.once('dialog',async dialog=>{expect(dialog.message()).toContain('Salvar as alterações');await dialog.dismiss();});
  await page.getByRole('button',{name:'Salvar alteração'}).click();
+ await expect(page.getByTestId('row-blue')).not.toContainText('1,3 kg');
+ await expect(page.getByTestId('packageQuantity')).toHaveValue('1.3');
+ page.once('dialog',dialog=>dialog.accept()); await page.getByRole('button',{name:'Salvar alteração'}).click();
  await expect(page.getByTestId('row-blue')).toContainText('1,3 kg');
  await expect(page.getByTestId('materialCost')).toContainText('15,16');
+ page.once('dialog',async dialog=>{expect(dialog.message()).toContain('Remover "Dourado"');await dialog.dismiss();});
  await page.getByRole('button',{name:'Remover Dourado'}).click();
+ await expect(page.getByTestId('row-gold')).toBeVisible();
+ page.once('dialog',dialog=>dialog.accept()); await page.getByRole('button',{name:'Remover Dourado'}).click();
  await expect(page.getByTestId('row-gold')).toHaveCount(0);
 });
 test('valida o formulário sem criar linhas pendentes',async({page})=>{
@@ -407,6 +414,7 @@ test('perfil de filamento personalizado pode ser editado e persiste após recarr
  await region.getByRole('button',{name:'Salvar meu perfil'}).click();
  await region.getByRole('button',{name:'Editar meu perfil'}).click();
  await region.getByRole('textbox',{name:'Bico do perfil'}).fill('238 °C');
+ page.once('dialog',dialog=>dialog.accept());
  await region.getByRole('button',{name:'Salvar alterações'}).click();
  await expect(region).toContainText('238 °C');
  await region.getByRole('combobox',{name:'Perfil do filamento'}).selectOption('');
@@ -424,6 +432,11 @@ test('outros materiais de catálogo têm pontos de partida visíveis no slicer',
   await page.getByLabel('Tipo de filamento').fill(material);
   await expect(region).toContainText('Estimativa MakerCusto');
  }
+ await page.getByLabel('Tipo de filamento').fill('PEEK');
+ await page.getByLabel('Tipo de filamento').blur();
+ await expect(page.getByRole('region',{name:'Configuração de filamento para slicer'})).toHaveCount(0);
+ await page.getByRole('button',{name:'Ajuda: Filamento',exact:true}).focus();
+ await expect(page.getByRole('tooltip')).toContainText('perfil técnico ainda não está disponível');
 });
 test('preço da embalagem explica custo por quilo e preserva cálculo',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();

@@ -1,3 +1,4 @@
+import {chooseSlicerProfile} from './data/filamentProfiles';
 import {filamentBrands,filamentColors,filamentTypes} from './data/filamentCatalog';
 import {LibraryWorkspace} from './components/LibraryWorkspace';
 import type {ReactNode} from 'react';
@@ -210,13 +211,18 @@ export default function App(){
   }
   const gramsPurchased=draft.packageQuantity!*(draft.packageUnit==='kg'?1000:1);
   const row:MaterialLine={...draft,name:formatCatalogName(draft.name,list('cor')),type:formatCatalogName(draft.type??'',list('tipo')),brand:formatCatalogName(draft.brand??'',list('marca')),id:editId??'extra-'+nextId,pricePerKg:draft.packagePrice!/gramsPurchased*1000};
+  if(editId&&!window.confirm('Salvar as alterações do filamento "'+row.name+'"?'))return;
   setDetailedMaterials(prev=>editId?prev.map(m=>m.id===editId?row:m):[...prev,row]);
   if(!editId)setNextId(v=>v+1);
   remember('cor',row.name);remember('tipo',row.type||'');remember('marca',row.brand||'');
   setDraft(newDraft());setEditId(null);setErrorDraft('');
  };
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
- const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
+ const remove=(item:MaterialLine)=>{
+  if(!window.confirm('Remover "'+item.name+'" deste cálculo?'))return;
+  setDetailedMaterials(previous=>previous.filter(row=>row.id!==item.id));
+  if(editId===item.id){setDraft(newDraft());setEditId(null);setErrorDraft('');}
+ };
  const reset=()=>{
    setRevisionTarget(null);
    setLoadedCalculation('');
@@ -337,7 +343,13 @@ export default function App(){
      {!session&&accountError&&<p role="alert" className="error">{accountError}</p>}
     </section>}
     <section className="materials" aria-labelledby="materials-title">
-     <div className="materials-heading"><h3 id="materials-title">Filamento</h3>{advanced&&<button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button>}</div>
+     <div className="materials-heading"><div className="mc-field-caption"><h3 id="materials-title">Filamento</h3>
+      <CalculatorHelp label="Filamento">
+       {advanced&&details?<>Informe o preço total da embalagem. A tabela calcula o custo pelos gramas usados e só soma a purga quando ela é informada separadamente.
+        {!chooseSlicerProfile(draft.brand??'',draft.type??'')&&<> O perfil técnico ainda não está disponível para este tipo. Consulte as recomendações do fabricante para configurar o fatiador.</>}
+       </>:<>Informe o consumo total e o preço do filamento. No Avançado você pode detalhar a compra e o consumo de cada cor.</>}
+      </CalculatorHelp>
+     </div>{advanced&&<button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button>}</div>
      {(!advanced||!details)&&<div className="simple-material-fields">
        <FilamentField id="simpleQuantity" label="Filamento utilizado" help={simple.quantityUnit==='kg'?'Informe o peso total em quilogramas.':'Use o total em gramas informado pelo fatiador.'}>
         <div className="simple-field-combo"><input id="simpleQuantity" data-testid="simpleQuantity" type="number" min="0" step="any" value={display(simple.quantity)} onChange={e=>setSimple(prev=>({...prev,quantity:numeric(e.target.value)}))}/><select aria-label="Unidade do total utilizado" value={simple.quantityUnit} onChange={e=>setSimple(prev=>({...prev,quantityUnit:e.target.value as Unit}))}><option value="g">g</option><option value="kg">kg</option></select></div>
@@ -383,14 +395,22 @@ export default function App(){
        {errorDraft&&<p className="error" role="alert">{errorDraft}</p>}
       </div>
 
-      <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento / ações</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Usado</th><th>Custo</th></tr></thead><tbody>
+      <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Usado</th><th>Custo</th><th className="material-actions-cell">Ações</th></tr></thead><tbody>
         {detailedMaterials.map(item=>{
          const pkgQty=item.packageQuantity??1,pkgUnit=item.packageUnit??'kg';
          const spent=(item.grams+item.wasteGrams)*((item.packagePrice??item.pricePerKg*pkgQty*(pkgUnit==='kg'?1:.001))/(pkgQty*(pkgUnit==='kg'?1000:1)));
-         return <tr key={item.id} data-testid={'row-'+item.id}><td><strong>{item.name}</strong><small>{item.type||'Filamento'}</small><div className="row-actions"><button type="button" aria-label={'Editar '+item.name} onClick={()=>edit(item)}>Editar</button><button type="button" aria-label={'Remover '+item.name} onClick={()=>remove(item.id)}>×</button></div></td><td>{item.brand||'—'}</td><td>{count(pkgQty)} {pkgUnit}</td><td>{money(calculatedPackagePrice(item))}</td><td>{count(item.grams+item.wasteGrams)} g</td><td className="numeric-cell">{money(spent)}</td></tr>;
+         return <tr key={item.id} data-testid={'row-'+item.id}>
+          <td><strong>{item.name}</strong>{item.type&&<small className="material-row-type"> · {item.type}</small>}</td>
+          <td>{item.brand||'—'}</td><td>{count(pkgQty)} {pkgUnit}</td>
+          <td>{money(calculatedPackagePrice(item))}</td><td>{count(item.grams+item.wasteGrams)} g</td>
+          <td className="numeric-cell">{money(spent)}</td>
+          <td className="material-actions-cell"><div className="row-actions">
+           <button type="button" aria-label={'Editar '+item.name} title="Editar filamento" onClick={()=>edit(item)}>✎</button>
+           <button type="button" className="material-remove" aria-label={'Remover '+item.name} title="Remover deste cálculo" onClick={()=>remove(item)}>×</button>
+          </div></td>
+         </tr>;
         })}
-      </tbody><tfoot><tr><th colSpan={4}>Total</th><th>{result?count(used)+' g':'—'}</th><th>{result?money(result.material):'—'}</th></tr></tfoot></table></div>
-      <p className="footnote">A tabela usa quantidade adquirida e preço da embalagem para calcular o preço por grama. Informe purga apenas se ela não estiver incluída no peso usado.</p>
+      </tbody><tfoot><tr><th colSpan={4}>Total</th><th>{result?count(used)+' g':'—'}</th><th>{result?money(result.material):'—'}</th><th className="material-actions-cell"/></tr></tfoot></table></div>
      </div>}
     </section>
     {advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
