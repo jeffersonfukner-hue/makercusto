@@ -249,7 +249,12 @@ export default function App(){
   {session&&activeSection==='overview'&&<WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
   {(!session||activeSection==='calculator')&&<>
   {loadedCalculation&&<p role="status" className="product-success">{loadedCalculation}</p>}
-  <section className={session?"intro app-calculator-intro":"intro"}><p className="eyebrow">{session?"FERRAMENTA DE CUSTOS":"IMPRESSÃO 3D SEM COMPLICAÇÃO"}</p><h1>{session?"Calculadora de produção":"Descubra seu custo. Venda com confiança."}</h1><p>{session?"Simule custos antes de registrar um produto. Valores ilustrativos permanecem identificados.":"Comece com o essencial. Precisa de mais controle? Ative o Avançado."}</p></section>
+  <section className={session?"intro app-calculator-intro":"intro"}><p className="eyebrow">{session?"FERRAMENTA DE CUSTOS":"IMPRESSÃO 3D SEM COMPLICAÇÃO"}</p><h1>{session?(revisionTarget?.name??"Novo cálculo de produção"):"Descubra seu custo. Venda com confiança."}</h1><p>{session?"Simule custos antes de registrar um produto. Valores ilustrativos permanecem identificados.":"Comece com o essencial. Precisa de mais controle? Ative o Avançado."}</p></section>
+  {session&&<div className="calculator-identity"><ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
+   onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
+   onClearRevisionTarget={()=>setRevisionTarget(null)}
+   onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
+   onCreateAssembly={()=>setActiveSection('assemblies')}/></div>}
   <nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples <small>Direto ao resultado</small></button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado <small>Cores, impressora e custos extras</small></button></nav>
   <div className="workspace">
    <section className="panel">
@@ -317,7 +322,7 @@ export default function App(){
      </div>}
     </section>
     {advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
-    <div className="fields">{fields.filter(field=>advanced||['hours','quantity','salePrice'].includes(field.key)).map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/><small className="smart-hint">{field.key==='hours'?'Tempo previsto pelo slicer, em horas. Ex.: 2 h e 30 min → 2,5 h.':field.key==='quantity'?'Informe quantas unidades prontas saem deste lote.':field.key==='salePrice'?'Preço cobrado por unidade. A margem bruta aparece no resultado.':field.key==='accessoryPerUnit'?'Custo de acessórios consumidos por peça, sem repetir o filamento.':field.key==='assemblyMinutesPerUnit'?'Tempo de montagem de cada unidade, não da impressão.':'Valor estimado da sua hora de trabalho na montagem.'}</small></label>)}</div>
+    <section className="calculator-production"><h3>Produção, montagem e preço</h3><div className="fields">{fields.filter(field=>advanced||['hours','quantity','salePrice'].includes(field.key)).map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/><small className="smart-hint">{field.key==='hours'?'Tempo previsto pelo slicer, em horas. Ex.: 2 h e 30 min → 2,5 h.':field.key==='quantity'?'Informe quantas unidades prontas saem deste lote.':field.key==='salePrice'?'Preço cobrado por unidade. A margem bruta aparece no resultado.':field.key==='accessoryPerUnit'?'Custo de acessórios consumidos por peça, sem repetir o filamento.':field.key==='assemblyMinutesPerUnit'?'Tempo de montagem de cada unidade, não da impressão.':'Valor estimado da sua hora de trabalho na montagem.'}</small></label>)}</div></section>
     <p className="footnote">{advanced?"Tarifa, potência e vida útil são hipóteses editáveis, não medições oficiais.":"Energia, desgaste da impressora e outros custos usam valores de exemplo. Confira-os no Avançado antes de definir seu preço final."}</p>
    </section>
    <section className="panel result-panel" aria-live="polite"><h2>Seu resultado</h2>{error?<p className="error" role="alert">{error}</p>:result&&<>
@@ -328,12 +333,12 @@ export default function App(){
     <p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p></div></details>
    </>}</section>
   </div>
-  </>}
-  {(!session||activeSection==='calculator')&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
+  {!session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    onClearRevisionTarget={()=>setRevisionTarget(null)}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
-   onCreateAssembly={()=>setActiveSection('assemblies')}/>} 
+   onCreateAssembly={()=>setActiveSection('assemblies')}/>}
+  </>}
   {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
   {session&&activeSection==='printers'&&<section className="panel"><h2>Minhas impressoras</h2><button type="button" onClick={addPrinter}>Nova impressora</button>{stored.length===0?<p>Nenhuma impressora cadastrada.</p>:<ul className="dashboard-activity-list">{stored.map(p=><li key={p.id}><strong>{p.name}</strong><button type="button" onClick={()=>{setPrinterId(p.id);setPrinterModal('edit');}}>Editar</button></li>)}</ul>}</section>}
   {session&&activeSection==='workshop'&&<section className="panel"><h2>{workspaceName}</h2><p>Configurações e tarifas da oficina: integração pendente.</p></section>}
