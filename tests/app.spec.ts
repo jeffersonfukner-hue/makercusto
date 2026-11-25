@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-async function openSystemMenuIfMobile(page:Page){const toggle=page.getByRole('button',{name:'Abrir menu do sistema'});if(await toggle.isVisible())await toggle.click();}
+async function openSystemMenuIfMobile(page:Page){const toggle=page.getByRole('button',{name:'Abrir menu do sistema'});if(await toggle.isVisible()&&await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();}
 function systemModule(page:Page,name:string){
  return page.getByRole('navigation',{name:'Módulos do MakerCusto'}).getByRole('button',{name,exact:true});
 }
@@ -780,7 +780,14 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await page.route('**/rest/v1/**',async route=>{
   const url=route.request().url();
   if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Oficina de Testes',owner_id:user}])});
-  if(url.includes('/mc_printers?')||url.includes('/mc_catalog?')||url.includes('/mc_products?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
+  if(url.includes('/mc_products?'))return route.fulfill({json:Array.from({length:12},(_,index)=>({
+   id:String(index),kind:'product',name:'Cadastro '+index+' — '+(index===0?'NomeSemEspaços'.repeat(8):'Componente com descrição'),
+   description:'Dados para testar a adaptação do catálogo à largura disponível.',sku:null,sale_price:15,created_at:'2026-11-25T10:00:00Z'
+  }))});
+  if(url.includes('/mc_customer_orders?'))return route.fulfill({json:[
+   {status:'planned',quantity:2,sale_price:10},{status:'sold',quantity:15,sale_price:8}
+  ]});
+  if(url.includes('/mc_printers?')||url.includes('/mc_catalog?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
   if(url.includes('/rpc/mc_list_assemblies'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:'44444444-4444-4444-8444-444444444444',name:'Lançador de hélices',sku:null,description:null,sale_price:null,created_at:'2026-11-22T00:00:00Z',total_cost:null,cost_status:'unknown',revision:1,parts:[{id:'1',name:'Lançador',quantity:1,notes:null,grams:null},{id:'2',name:'Haste',quantity:1,notes:null,grams:null},{id:'3',name:'Hélice',quantity:1,notes:null,grams:null}]}])});
   if(url.includes('/rpc/mc_list_prints'))return route.fulfill({json:[
    {id:'1',status:'partial',outputs:[{good:3,failed:1,planned:5}]},
@@ -792,6 +799,8 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(page.getByRole('region',{name:'Painel da oficina'})).toBeVisible();
  await openSystemMenuIfMobile(page);
  await expect(systemModule(page,'Visão geral')).toHaveAttribute('aria-current','page');
+ const menuToggle=page.getByRole('button',{name:'Abrir menu do sistema'});
+ if(await menuToggle.isVisible())await page.keyboard.press('Escape');
  await page.getByRole('button',{name:'Atividades',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Cadastros recentes'})).toBeVisible();
  await expect(page.getByText('Esta lista não é um log de alterações ou impressões.')).toBeVisible();
@@ -804,21 +813,25 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Boas5');
  await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Rejeitadas1');
  const shortcuts=page.getByRole('navigation',{name:'Acesso rápido'});
- await expect(shortcuts.getByRole('button')).toHaveCount(6);
+ await expect(shortcuts.getByRole('button')).toHaveText(['◷Calculadora de custos','▤Pedidos','▥Biblioteca STL','◇Dicas de impressão']);
+ const orders=page.getByRole('region',{name:'Pedidos por situação'});
+ await expect(orders).toContainText('Planejados1');
+ await expect(orders).toContainText('Vendidos1');
+ await expect(page.getByText('Faturamento',{exact:true}).locator('..')).toContainText('120,00');
  const originalViewport=page.viewportSize()!;
- for(const [width,expectedRows] of [[320,[2,2,2]],[900,[2,2,2]],[901,[6]],[1280,[6]]] as const){
+ for(const [width,expectedRows] of [[320,[2,2]],[768,[2,2]],[882,[2,2]],[1180,[2,2]],[1201,[4]],[1280,[4]]] as const){
   await page.setViewportSize({width,height:originalViewport.height});
   const layout=await shortcuts.evaluate(nav=>{
    const buttons=Array.from(nav.querySelectorAll('button'),button=>button.getBoundingClientRect());
    const rows=new Map<number,number>();
    for(const button of buttons)rows.set(button.top,(rows.get(button.top)??0)+1);
    const header=nav.parentElement!.getBoundingClientRect();
-   return {rows:[...rows.values()],insideHeader:buttons.every(button=>button.left>=header.left&&button.right<=header.right)};
+   return {rows:[...rows.values()],insideHeader:buttons.every(button=>button.left>=header.left&&button.right<=header.right&&button.height>=58)};
   });
   expect(layout,`Atalhos da Visão geral em ${width}px`).toEqual({rows:expectedRows,insideHeader:true});
  }
  await page.setViewportSize(originalViewport);
- await shortcuts.getByRole('button',{name:'Calculadora',exact:true}).click();
+ await shortcuts.getByRole('button',{name:'Calculadora de custos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Calculadora de Produto'})).toBeVisible();
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Visão geral').click();
@@ -828,6 +841,26 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(systemModule(page,'Impressões')).toBeEnabled();
  await systemModule(page,'Produtos').click();
  await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();
+ await expect(page.locator('.product-catalog-card')).toHaveCount(12);
+ for(const width of [320,768,882,1024,1180,1250,1251,1366]){
+  await page.setViewportSize({width,height:720});
+  await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
+  const layout=await page.locator('.system-sticky-header').evaluate(header=>({
+   top:Math.round(header.getBoundingClientRect().top),
+   overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+   desktopMenuRows:new Set([...header.querySelectorAll('nav button')].map(button=>button.getBoundingClientRect().top)).size,
+   menuFits:[...header.querySelectorAll('nav button')].every(button=>button.getBoundingClientRect().right<=header.getBoundingClientRect().right)
+  }));
+  expect(layout,`Cabeçalho e catálogo em ${width}px`).toEqual({top:0,overflow:false,desktopMenuRows:1,menuFits:true});
+  if(width<=1250){
+   await menuToggle.click();
+   await expect(systemModule(page,'Pedidos')).toBeVisible();
+   await page.keyboard.press('Escape');
+   await expect(menuToggle).toBeFocused();
+  }
+ }
+ await page.setViewportSize(originalViewport);
+ await page.evaluate(()=>window.scrollTo(0,0));
  await page.getByRole('button',{name:'Peças',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Peças'})).toBeVisible();
  await page.getByRole('navigation',{name:'Abas de Produtos e componentes'}).getByRole('button',{name:'Conjuntos',exact:true}).click();

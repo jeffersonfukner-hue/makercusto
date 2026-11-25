@@ -1,4 +1,4 @@
-import {useEffect,useState,type ReactNode} from 'react';
+import {useEffect,useRef,useState,type ReactNode} from 'react';
 
 export type SystemSection='overview'|'products'|'assemblies'|'materials'|'prints'|'orders'|'calculator'|'printers'|'workshop'|'library'|'tips';
 export type ProductTab='all'|'parts';
@@ -21,41 +21,52 @@ const menu=[
  {label:'Biblioteca STL',symbol:'▥',section:'library'},
  {label:'Dicas de impressão',symbol:'◇',section:'tips'}
 ] as const;
-const overviewShortcutSections:ReadonlySet<SystemSection>=new Set(['calculator','products','printers','materials','library','tips']);
-const overviewShortcuts=menu.filter(item=>overviewShortcutSections.has(item.section));
+const overviewShortcutSections=['calculator','orders','library','tips'] as const;
+const overviewShortcuts=overviewShortcutSections.map(section=>menu.find(item=>item.section===section)!);
 
 export function SystemNavigation({authenticated,workspaceName,email,section,productTab,onProductTab,overviewTab,onOverviewTab,onNavigate,onLogout,children}:Props){
  const [open,setOpen]=useState(false);
+ const menuButton=useRef<HTMLButtonElement>(null);
+ const stickyHeader=useRef<HTMLDivElement>(null);
 
  useEffect(()=>{setOpen(false);},[section]);
  useEffect(()=>{
   if(!open)return;
-  const close=(event:KeyboardEvent)=>{if(event.key==='Escape')setOpen(false);};
+  const close=(event:KeyboardEvent)=>{if(event.key==='Escape'){setOpen(false);menuButton.current?.focus();}};
+  const closeOutside=(event:PointerEvent)=>{
+   if(event.target instanceof Node&&!stickyHeader.current?.contains(event.target))setOpen(false);
+  };
   window.addEventListener('keydown',close);
-  return()=>window.removeEventListener('keydown',close);
+  document.addEventListener('pointerdown',closeOutside);
+  return()=>{
+   window.removeEventListener('keydown',close);
+   document.removeEventListener('pointerdown',closeOutside);
+  };
  },[open]);
  if(!authenticated)return <>{children}</>;
  const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Calculadora de Produto':section==='prints'?'Impressões da oficina':section==='orders'?'Pedidos e vendas':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
  const navigate=(next:SystemSection)=>{onNavigate(next);setOpen(false);};
  return <div className={'system-shell system-top-navigation'+(section==='calculator'?' system-calculator':'')}>
+  <div ref={stickyHeader} className="system-sticky-header">
   <header className="system-topbar">
    <div className="system-brand"><span className="system-logo" aria-hidden="true">M</span><span><strong>MakerCusto</strong><small>Sistema da oficina</small></span></div>
-   <button className="system-mobile-menu" type="button" aria-label="Abrir menu do sistema" aria-expanded={open} aria-controls="system-main-menu" onClick={()=>setOpen(v=>!v)}>☰</button>
+   <button ref={menuButton} className="system-mobile-menu" type="button" aria-label="Abrir menu do sistema" aria-expanded={open} aria-controls="system-main-menu" onClick={()=>setOpen(v=>!v)}>☰</button>
    <div className="system-topbar-center"><span className="system-workshop-name">{workspaceName}</span><span className="system-test-badge">Ambiente de teste</span></div>
    <div className="system-account"><span className="system-email" title={email}>{email}</span><span className="system-avatar" aria-hidden="true">{email.trim().slice(0,1).toUpperCase()||'U'}</span><button type="button" onClick={onLogout}>Sair</button></div>
   </header>
-  <div className="system-frame">
    <nav id="system-main-menu" className={'system-horizontal-menu'+(open?' mobile-open':'')} aria-label="Módulos do MakerCusto">
     {menu.map(item=><button key={item.section} type="button" className={item.section===section||(item.section==='products'&&section==='assemblies')?'system-nav-active':''} aria-current={item.section===section?'page':undefined} onClick={()=>navigate(item.section)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}
     <button type="button" className={section==='assemblies'?'system-nav-active':''} aria-current={section==='assemblies'?'page':undefined} onClick={()=>navigate('assemblies')}>Conjuntos</button>
    </nav>
+  </div>
+  <div className="system-frame">
    <div className="system-content">
     <div className="system-section-header">
      <div>{section!=='calculator'&&<p className="system-breadcrumb">MakerCusto / {section==='overview'?'Visão geral':section==='materials'?'Materiais':section==='prints'?'Impressões':title}</p>}<h1>{title}</h1>
       {section!=='calculator'&&<p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p>}</div>
      {section==='overview'&&overviewTab==='general'&&<nav className="overview-shortcuts" aria-label="Acesso rápido">
       {overviewShortcuts.map(item=><button key={item.section} type="button" onClick={()=>navigate(item.section)}>
-       <span aria-hidden="true">{item.symbol}</span>{item.section==='calculator'?'Calculadora':item.label}
+       <span aria-hidden="true">{item.symbol}</span>{item.label}
       </button>)}
      </nav>}
     </div>

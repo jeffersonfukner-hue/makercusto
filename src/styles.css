@@ -419,19 +419,32 @@
 .system-sidebar{background:#202e3d}.system-sidebar nav>button.system-nav-active{background:#3b5268}
 
 /* Navegação superior da oficina */
-.system-top-navigation .system-frame{display:block;min-height:calc(100vh - 56px)}
-.system-top-navigation .system-topbar{height:56px;background:#fff;color:#172b45;border-color:#dce3ed;gap:16px}
+.system-top-navigation .system-frame{display:block;min-width:0;min-height:calc(100vh - 56px)}
+.system-sticky-header{position:sticky;top:0;z-index:50;min-width:0}
+.system-top-navigation .system-topbar{position:relative;z-index:auto;height:56px;background:#fff;color:#172b45;border-color:#dce3ed;gap:16px}
 .system-top-navigation .system-brand strong,.system-top-navigation .system-workshop-name,.system-top-navigation .system-email{color:#172b45}
 .system-top-navigation .system-brand small{color:#52647b}
 .system-top-navigation .system-account button{background:#f1f5fa;color:#24364b;border-color:#dce3ed}
-.system-horizontal-menu{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px clamp(12px,2vw,32px);background:#172b45;color:white}
-.system-horizontal-menu button{display:flex;align-items:center;gap:6px;white-space:nowrap;background:transparent;color:#e4edf9;border:1px solid transparent;border-radius:5px;padding:8px 10px;font-size:13px;font-weight:600}
+.system-horizontal-menu{display:flex;gap:3px;overflow-x:auto;align-items:center;padding:6px clamp(12px,2vw,32px);background:#172b45;color:white}
+.system-horizontal-menu button{display:flex;align-items:center;gap:6px;white-space:nowrap;background:transparent;color:#e4edf9;border:1px solid transparent;border-radius:5px;padding:8px 6px;font-size:13px;font-weight:600}
 .system-horizontal-menu button:hover,.system-horizontal-menu button.system-nav-active{background:#2459eb;color:#fff}
 .system-top-navigation .system-content{max-width:none;padding-inline:clamp(12px,2vw,32px)}
 .system-top-navigation .form-action-dock{left:0;box-shadow:0 -3px 12px #172b4526}
-@media(min-width:1101px){.system-top-navigation .system-mobile-menu{display:none}}
-@media(max-width:1100px){.system-top-navigation .system-mobile-menu{display:block;margin-left:auto;background:#edf3ff;color:#1745c6;border:1px solid #c9d6eb;border-radius:6px;width:38px;height:38px}.system-horizontal-menu{display:none}.system-horizontal-menu.mobile-open{display:flex}.system-horizontal-menu button{flex:1 1 145px}.system-top-navigation .system-topbar-center{display:none}}
-@media(max-width:430px){.system-top-navigation .system-email{display:none}.system-top-navigation .system-topbar{gap:8px}.system-horizontal-menu button{flex-basis:120px}}
+@media(min-width:1251px){.system-top-navigation .system-mobile-menu{display:none}}
+@media(max-width:1250px){
+ .system-top-navigation .system-mobile-menu{display:block;margin-left:auto;background:#edf3ff;color:#1745c6;border:1px solid #c9d6eb;border-radius:6px;width:38px;height:38px}
+ .system-horizontal-menu{display:none;position:absolute;inset:100% 0 auto;max-height:min(65dvh,420px);overflow:auto;overscroll-behavior:contain;box-shadow:0 8px 18px #172b4533}
+ .system-horizontal-menu.mobile-open{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .system-horizontal-menu button{min-width:0;min-height:42px;white-space:normal;text-align:left;overflow-wrap:anywhere}
+ .system-top-navigation .system-topbar-center,.system-top-navigation .system-email{display:none}
+ .dashboard-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .product-workspace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+ .system-horizontal-menu.mobile-open{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .product-workspace-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:430px){.system-top-navigation .system-topbar{gap:8px}}
 
 /* Calculadora da oficina — Modelo 5 */
 .mc-theme {
@@ -751,24 +764,24 @@
 .mc-product-thumbnail-slot:empty {display:none}
 .mc-product-thumbnail-slot img {display:block}
 .product-card-identity {display:flex;align-items:flex-start;gap:10px;min-width:0}
-.product-card-text {min-width:0}
+.product-card-text {min-width:0;overflow-wrap:anywhere}
 .product-card-identity .mc-product-thumbnail {width:64px;height:64px;border:1px solid var(--mc-border)}
 .product-card-identity:has(img) h3 {margin-top:6px}
 
 
-.overview-shortcuts {display:grid;grid-template-columns:repeat(6,max-content);justify-items:start;gap:5px;flex:none}
+.system-section-header:has(.overview-shortcuts) {display:grid;grid-template-columns:minmax(190px,1fr) minmax(0,2.2fr)}
+.overview-shortcuts {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
 .overview-shortcuts button {
- display:inline-flex;align-items:center;justify-content:flex-start;gap:4px;min-height:34px;white-space:nowrap;
- padding:4px 7px;border:1px solid #bdcde7;border-radius:7px;background:#eef4ff;
- color:#194386;font-size:12px;font-weight:650;
+ display:flex;align-items:center;justify-content:center;gap:7px;min-height:58px;min-width:0;
+ padding:8px 10px;border:1px solid #bdcde7;border-radius:8px;background:#eef4ff;
+ color:#194386;font-size:13px;font-weight:700;text-align:center;overflow-wrap:anywhere;
 }
 .overview-shortcuts button:hover {background:#dfeaff}
-@media(max-width:900px) {
- .overview-shortcuts {grid-template-columns:repeat(2,max-content)}
+@media(max-width:1200px) {
+ .overview-shortcuts {grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:760px) {
- .system-section-header:has(.overview-shortcuts) {flex-direction:column}
- .overview-shortcuts button {min-height:40px}
+ .system-section-header:has(.overview-shortcuts) {grid-template-columns:minmax(0,1fr)}
 }
 
 

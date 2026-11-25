@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {listProducts,listAssemblies,listPrints,type ProductRecord,type AssemblyRecord,type PrintRecord} from '../data/supabase';
+import {listProducts,listAssemblies,listPrints,listCustomerOrders,type CustomerOrder,type ProductRecord,type AssemblyRecord,type PrintRecord} from '../data/supabase';
 import type {OverviewTab,SystemSection} from './SystemNavigation';
 
 type View=SystemSection;
@@ -30,6 +30,9 @@ export function WorkshopDashboard({tab,workspaceId,workspaceName,busy,onNavigate
  const [prints,setPrints]=useState<PrintRecord[]|null>(null);
  const [printsLoading,setPrintsLoading]=useState(false);
  const [printsError,setPrintsError]=useState(false);
+ const [orders,setOrders]=useState<CustomerOrder[]|null>(null);
+ const [ordersLoading,setOrdersLoading]=useState(false);
+ const [ordersError,setOrdersError]=useState(false);
  useEffect(()=>{
   let alive=true;
   setProducts([]);setKits([]);setError('');
@@ -52,6 +55,21 @@ export function WorkshopDashboard({tab,workspaceId,workspaceName,busy,onNavigate
    .finally(()=>{if(active)setPrintsLoading(false);});
   return()=>{active=false;};
  },[workspaceId,tab,refresh]);
+ useEffect(()=>{
+  let active=true;
+  setOrders(null);setOrdersError(false);setOrdersLoading(false);
+  if(!workspaceId||tab!=='general')return;
+  setOrdersLoading(true);
+  void listCustomerOrders(workspaceId,0)
+   .then(rows=>{if(active)setOrders(rows);})
+   .catch(()=>{if(active)setOrdersError(true);})
+   .finally(()=>{if(active)setOrdersLoading(false);});
+  return()=>{active=false;};
+ },[workspaceId,tab,refresh]);
+ const soldOrders=orders?.filter(order=>order.status==='sold')??[];
+ const plannedOrders=orders?.filter(order=>order.status==='planned')??[];
+ const revenue=soldOrders.reduce((sum,order)=>sum+Number(order.sale_price)*order.quantity,0);
+ const brl=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
  const printCounts=printStages.map(({label,statuses,color})=>({
   label,color,value:prints?.filter(print=>statuses.includes(print.status)).length??0
  }));
@@ -71,7 +89,7 @@ export function WorkshopDashboard({tab,workspaceId,workspaceName,busy,onNavigate
   <div className="dashboard-welcome">
    <div><p className="eyebrow">PAINEL DA OFICINA</p><h1>{workspaceName}</h1>
     <p>Gerencie seus cadastros e acompanhe o que já está salvo na nuvem.</p></div>
-   <button type="button" onClick={()=>setRefresh(n=>n+1)} disabled={loading||printsLoading||busy||!workspaceId}>Atualizar dados</button>
+   <button type="button" onClick={()=>setRefresh(n=>n+1)} disabled={loading||printsLoading||ordersLoading||busy||!workspaceId}>Atualizar dados</button>
   </div>
   {busy&&<p role="status" className="footnote">Conectando à sua oficina…</p>}
   {error&&<p className="error" role="alert">{error}</p>}
@@ -79,24 +97,36 @@ export function WorkshopDashboard({tab,workspaceId,workspaceName,busy,onNavigate
    <div className="dashboard-metric"><span>Produtos</span><strong>{loading||busy||error||!workspaceId?'—':productCount}</strong><small>Produtos simples cadastrados</small></div>
    <div className="dashboard-metric"><span>Impressões</span><strong>{prints?.length??'—'}</strong><small>Execuções disponíveis</small></div>
    <div className="dashboard-metric"><span>Custos</span><strong>R$ —</strong><small>Aguardando custos finais apurados</small></div>
-   <div className="dashboard-metric"><span>Resultados</span><strong>R$ —</strong><small>Aguardando vendas registradas</small></div>
+   <div className="dashboard-metric"><span>Faturamento</span><strong>{orders?brl.format(revenue):'—'}</strong><small>Vendas entre os últimos 20 pedidos</small></div>
   </div>
-  {printsLoading&&<p role="status">Consultando impressões…</p>}
-  {printsError&&<p role="status" className="footnote">Impressões indisponíveis no momento.</p>}
-  {prints?.length===0&&<p className="footnote">Nenhuma execução disponível nesta oficina.</p>}
-  {prints&&prints.length>0&&<div className="dashboard-columns dashboard-production">
+  <div className="dashboard-columns dashboard-production">
+   <section className="panel dashboard-card" aria-labelledby="dashboard-orders">
+    <h2 id="dashboard-orders">Pedidos por situação</h2>
+    {ordersLoading&&<p role="status">Consultando pedidos…</p>}
+    {ordersError&&<p>Pedidos indisponíveis no momento.</p>}
+    {orders&&<>
+     <DashboardBars bars={[
+      {label:'Planejados',value:plannedOrders.length,color:'blue'},
+      {label:'Vendidos',value:soldOrders.length,color:'green'}
+     ]}/>
+     <p className="footnote">{orders.length===0?'Nenhum pedido registrado.':'Últimos 20 pedidos da oficina.'}</p>
+    </>}
+   </section>
    <section className="panel dashboard-card" aria-labelledby="dashboard-print-status">
     <h2 id="dashboard-print-status">Impressões por etapa</h2>
-    <DashboardBars bars={printCounts}/>
+    {printsLoading&&<p role="status">Consultando impressões…</p>}
+    {printsError&&<p>Impressões indisponíveis no momento.</p>}
+    {prints&&<DashboardBars bars={printCounts}/>}
+    {prints?.length===0&&<p className="footnote">Nenhuma execução registrada.</p>}
    </section>
-   <section className="panel dashboard-card" aria-labelledby="dashboard-piece-results">
+   {prints&&prints.length>0&&<section className="panel dashboard-card" aria-labelledby="dashboard-piece-results">
     <h2 id="dashboard-piece-results">Peças confirmadas</h2>
     {confirmedPieces.good+confirmedPieces.failed>0?<DashboardBars bars={[
      {label:'Boas',value:confirmedPieces.good,color:'green'},
      {label:'Rejeitadas',value:confirmedPieces.failed,color:'amber'}
     ]}/>:<p>Nenhuma peça confirmada nas execuções disponíveis.</p>}
-   </section>
-  </div>}
+   </section>}
+  </div>
   </>}
   {tab==='activities'&&<section className="panel dashboard-card dashboard-tab-panel" aria-label="Atividades da oficina">
    <h2>Cadastros recentes</h2><p>Registros de produtos cadastrados na oficina, ordenados pela data de criação. Esta lista não é um log de alterações ou impressões.</p>

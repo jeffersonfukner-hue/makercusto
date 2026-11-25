@@ -1064,3 +1064,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A área Conjuntos oferece um atalho para a mesma montagem na calculadora e mantém o fluxo de cadastro e consulta existente. As funções atuais e as permissões de leitura das revisões foram conferidas no Supabase de teste por consulta de metadados. Nenhuma migração é necessária.
 - A revisão do menu em telas menores aguarda o print do proprietário. O cabeçalho não foi alterado neste lote.
 - Build e 82 unitários passaram. A regressão Playwright teve 124 cenários aprovados e duas falhas de seletor no novo teste. Corrigido o seletor, o novo cenário passou em desktop e mobile, incluindo seleção da Base e Mão com Microfone, total de 26 g com duas bases, salvamento vinculado e acesso por Conjuntos.
+
+### Navegação no iPad e gráficos da Visão geral — 25/11/2026
+
+- O cabeçalho e a navegação permanecem no topo ao rolar. Até 1250 px o botão do cabeçalho abre uma grade compacta; acima disso, o menu horizontal tem uma fileira. O catálogo usa até duas colunas em tablets e uma em celulares. Títulos longos quebram dentro do cartão.
+- A área de acesso rápido mostra quatro botões grandes. Calculadora de custos, Pedidos, Biblioteca STL e Dicas de impressão ocupam o espaço disponível, com duas colunas em larguras menores e quatro em desktop.
+- A Visão geral exibe gráficos de pedidos por situação e de impressões por etapa, com estado vazio quando não existem registros. O faturamento considera pedidos vendidos entre os 20 registros mais recentes; peças confirmadas aparecem quando há execuções.
+- Build, 82 testes unitários, 126 cenários Chromium desktop/mobile e o cenário responsivo em WebKit com perfil de iPad passaram. Foram verificados alinhamento e ausência de rolagem horizontal na página em larguras de 320 a 1366 px, menu durante a rolagem e dados dos gráficos simulados. Homologação no iPad físico pelo proprietário segue pendente.
