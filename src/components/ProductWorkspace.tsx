@@ -9,13 +9,13 @@ import {
 
 type Tab='all'|'component'|'assemblies';
 type Mode='catalog'|'view'|'edit'|'new';
-type Props={workspaceId:string|null;tab:Tab;onCalculate?:(snapshot:SavedCalculation)=>void};
+type Props={workspaceId:string|null;tab:Tab;onCalculate?:(snapshot:SavedCalculation)=>void;onCompose?:()=>void};
 const brl=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const blank=():AssemblyPartDraft=>({name:'',quantity:1,grams:null,unit_cost:null,notes:''});
 const template=()=>[blank(),blank()];
 const moneyValue=(s:string):number|null=>s.trim()===''?null:Number(s);
 const partDraft=(p:AssemblyRecord['parts'][number]):AssemblyPartDraft=>({id:p.id,product_id:p.product_id??null,name:p.name,quantity:Number(p.quantity),notes:p.notes??'',grams:p.grams===null?null:Number(p.grams),unit_cost:p.unit_cost});
-export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
+export function ProductWorkspace({workspaceId,tab,onCalculate,onCompose}:Props){
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [kits,setKits]=useState<AssemblyRecord[]>([]);
  const [library,setLibrary]=useState<ComponentLibraryItem[]>([]);
@@ -149,6 +149,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
    <div><h2>{mode==='catalog'?heading:mode==='view'?'Ficha do produto':mode==='edit'?'Editar produto':'Novo produto'}</h2>
     <p>{mode==='catalog'?'Selecione um cadastro para consultar, editar ou duplicar.':mode==='view'?'Detalhes registrados na oficina.':'Preencha somente os dados que você conhece.'}</p></div>
    <div className="product-workspace-buttons">
+    {mode==='catalog'&&tab==='assemblies'&&onCompose&&<button type="button" className="secondary-action" onClick={onCompose}>Montar com peças salvas</button>}
     {mode==='catalog'&&<button type="button" className="primary-action" onClick={()=>reset(tab==='assemblies'?'kit':tab==='component'?'component':'product')}>{tab==='assemblies'?'+ Novo conjunto':tab==='component'?'+ Nova peça':'+ Novo produto'}</button>}
    </div>
   </div>

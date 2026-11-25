@@ -1056,3 +1056,11 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Zerar cálculo foi adicionado ao lado de Simples e Avançado, com confirmação no padrão visual do site. Zera filamento, preços, tempo, extras e identificação do rascunho, volta a uma peça por mesa e conserva o modo atual, a impressora selecionada e o histórico salvo. No Avançado, a tabela por cor fica vazia ao reabrir o detalhamento.
 - Salvar como novo fica na linha de Identificação do produto quando um cálculo salvo está carregado. A ação existente no rodapé permanece e ambas abrem a mesma cópia editável, incluindo nome e tipo.
 - Build, 82 testes unitários e cenários Playwright de reset, cópia e compartilhamento aprovados em desktop e mobile. Homologação visual pendente.
+
+### Compor conjuntos dentro da calculadora — 25/11/2026
+
+- A aba Composição / Peças na calculadora abre um formulário compacto para selecionar peças salvas, ajustar quantidades e ver o resultado. Cada peça guarda o vínculo com a ficha existente. O rascunho permanece ao alternar entre as abas da calculadora.
+- O custo usa o mesmo catálogo de peças e o mesmo salvamento dos conjuntos vinculados. O painel reaproveita o peso consumido, filamentos por identificação e categorias de custo do cálculo salvo quando a revisão disponível corresponde ao custo de referência. Em registros sem detalhe, a interface indica indisponibilidade. O conjunto soma peças já custeadas; rateio de uma mesa mista não é inferido.
+- A área Conjuntos oferece um atalho para a mesma montagem na calculadora e mantém o fluxo de cadastro e consulta existente. As funções atuais e as permissões de leitura das revisões foram conferidas no Supabase de teste por consulta de metadados. Nenhuma migração é necessária.
+- A revisão do menu em telas menores aguarda o print do proprietário. O cabeçalho não foi alterado neste lote.
+- Build e 82 unitários passaram. A regressão Playwright teve 124 cenários aprovados e duas falhas de seletor no novo teste. Corrigido o seletor, o novo cenário passou em desktop e mobile, incluindo seleção da Base e Mão com Microfone, total de 26 g com duas bases, salvamento vinculado e acesso por Conjuntos.

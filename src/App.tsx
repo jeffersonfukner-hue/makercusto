@@ -1,3 +1,4 @@
+import {AssemblyComposer} from './components/AssemblyComposer';
 import {OrdersWorkspace} from './components/OrdersWorkspace';
 import {OrderPlanning} from './components/OrderPlanning';
 import {useConfirmation} from './components/ConfirmationDialog';
@@ -397,13 +398,13 @@ export default function App(){
   {(!session||activeSection==='calculator')&&<>
   <div className="mc-calculator">
   {!session&&<section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>}
-  {session&&<ProductSavePanel key={identityReset} session={session} workspaceId={workspaceId} input={activeInput} result={result}
+  {session&&<div hidden={calculatorTab==='composition'}><ProductSavePanel key={identityReset} session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthMode('login')} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity')}
    onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
    onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
-   onCreateAssembly={()=>setActiveSection('assemblies')}/>}
+   onCreateAssembly={()=>setCalculatorTab('composition')}/></div>}
   {loadedCalculation&&<p role="status" className="product-success mc-calculation-status">{loadedCalculation}</p>}
   {session&&accountError&&<p role="alert" className="error">{accountError}</p>}
   {session&&<div className="mc-calculator-navigation">
@@ -632,7 +633,10 @@ export default function App(){
    </section>
   </div>
   </div>
-  {session&&calculatorTab==="composition"&&<ProductWorkspace workspaceId={workspaceId} tab="component" onCalculate={applySavedCalculation}/>}
+  {session&&workspaceId&&<div hidden={calculatorTab!=='composition'}>
+   <AssemblyComposer key={workspaceId} workspaceId={workspaceId} active={calculatorTab==='composition'}
+    onViewAssemblies={()=>setActiveSection('assemblies')}/>
+  </div>}
   {session&&calculatorTab==="settings"&&<section className="panel mc-tab-panel">
    <h2>Configurações do cálculo</h2>
    <p>Impressora selecionada: {activePrinter.name}</p>
@@ -654,7 +658,8 @@ export default function App(){
   {session&&activeSection==='tips'&&<section className="panel"><h2>Dicas de impressão</h2><p>Conteúdo em desenvolvimento.</p></section>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
-  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCalculate={snapshot=>{if(applySavedCalculation(snapshot)){setCalculatorTab("calculation");setActiveSection('calculator');}}}/>} 
+  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCompose={()=>{setCalculatorTab('composition');setActiveSection('calculator');}}
+   onCalculate={snapshot=>{if(applySavedCalculation(snapshot)){setCalculatorTab("calculation");setActiveSection('calculator');}}}/>}
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>
  {authMode&&<AuthModal initialSignup={authMode==='signup'} onClose={()=>setAuthMode(null)} onSuccess={()=>{setAuthMode(null);void loadAccount();}}/>}

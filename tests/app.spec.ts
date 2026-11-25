@@ -1525,7 +1525,7 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Estrela grande');
  await expect(page.locator('.form-action-dock-context strong')).toHaveText('Estrela grande');
  await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();
- await page.getByRole('button',{name:'+ Nova peça'}).click();
+ await expect(page.getByRole('heading',{name:'Montar conjunto'})).toBeVisible();
  await expect(page.locator('.form-action-dock:visible')).toHaveCount(1);
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Estrela grande');
@@ -1900,6 +1900,66 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await page.getByRole('button',{name:'Preparar imagem'}).click();
  await expect(page.getByText('Orçamento pronto com a foto principal.')).toBeVisible();
  await expect(page.getByRole('button',{name:'Baixar imagem'})).toBeVisible();
+});
+
+test('monta base e mão com microfone na calculadora usando custos e filamentos salvos',async({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111';
+ const user='22222222-2222-4222-8222-222222222222';
+ const base='33333333-3333-4333-8333-333333333333';
+ const mic='44444444-4444-4444-8444-444444444444';
+ let saved:unknown;
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=new URL(route.request().url());
+  if(url.pathname.endsWith('/mc_workspaces'))return route.fulfill({json:[{id:workspace,name:'Oficina teste',owner_id:user}]});
+  if(url.pathname.endsWith('/mc_list_component_library'))return route.fulfill({json:[
+   {id:base,name:'Base',sku:null,unit_cost:4,cost_source:'snapshot'},
+   {id:mic,name:'Mão com Microfone',sku:null,unit_cost:8,cost_source:'snapshot'}
+  ]});
+  if(url.pathname.endsWith('/mc_cost_snapshots')){
+   const isBase=url.searchParams.get('product_id')==='eq.'+base;
+   const grams=isBase?11:15;
+   return route.fulfill({json:[{quantity:isBase?2:1,total_cost:8,parameters:{calculated_result:{
+    modelGrams:grams-1,wasteGrams:1,material:2,energy:1,depreciation:5,assembly:0,accessories:0,
+    materialBreakdown:[{id:'one',name:'Preto',totalGrams:grams}]
+   }}}]});
+  }
+  if(url.pathname.endsWith('/mc_save_assembly_linked')){
+   saved=route.request().postDataJSON();
+   return route.fulfill({json:'55555555-5555-4555-8555-555555555555'});
+  }
+  return route.fulfill({json:[]});
+ });
+ await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Calculadora de custos').click();
+ await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();
+ await page.getByLabel('Nome do conjunto').fill('Microfone com base');
+ const piece=page.getByLabel('Peça salva');
+ await piece.selectOption(base);
+ await page.getByRole('button',{name:'Adicionar peça',exact:true}).click();
+ await piece.selectOption(mic);
+ await page.getByRole('button',{name:'Adicionar peça',exact:true}).click();
+ await page.getByLabel('Quantidade de Base').fill('2');
+ const result=page.getByRole('region',{name:'Resultado do conjunto'});
+ await expect(result.getByText('16,00',{exact:false})).toBeVisible();
+ await expect(result.getByText('Filamento consumido',{exact:true}).locator('..')).toContainText('26 g');
+ await result.getByText('Composição dos custos e filamentos').click();
+ await expect(result.getByText('Preto')).toBeVisible();
+ await expect(page.getByTestId('simpleQuantity')).toBeHidden();
+ await page.getByRole('button',{name:'Cálculo',exact:true}).click();
+ await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();
+ await expect(page.getByLabel('Quantidade de Base')).toHaveValue('2');
+ await page.getByRole('button',{name:'Salvar conjunto',exact:true}).click();
+ await expect(page.getByText('Conjunto salvo na oficina.')).toBeVisible();
+ expect(saved).toMatchObject({p_workspace_id:workspace,p_name:'Microfone com Base',p_parts:[
+  {product_id:base,quantity:2},{product_id:mic,quantity:1}
+ ]});
+ await page.getByRole('button',{name:'Ver conjuntos'}).click();
+ await page.getByRole('button',{name:'Montar com peças salvas'}).click();
+ await expect(page.getByRole('heading',{name:'Montar conjunto'})).toBeVisible();
 });
 
 test('recupera revisão antiga e registra pedido vendido no histórico da oficina',async({page})=>{

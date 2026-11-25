@@ -416,3 +416,12 @@ export const listCustomerOrders=(workspaceId:string,offset:number)=>
   encodeURIComponent(workspaceId)+'&order=created_at.desc,id.desc&limit=20&offset='+offset);
 export const saveCustomerOrder=(workspaceId:string,draft:CustomerOrderDraft)=>
  api<void>('mc_customer_orders?on_conflict=id','POST',{...draft,workspace_id:workspaceId},'resolution=ignore-duplicates,return=minimal');
+
+export type ComponentCostSnapshot={
+ quantity:number;total_cost:number;
+ parameters:{calculated_result?:Partial<import('../domain/cost').CostResult>;saved_input?:Partial<import('../domain/cost').CostInput>};
+};
+export const getComponentCostSnapshot=async(workspaceId:string,productId:string)=>
+ (await api<ComponentCostSnapshot[]>('mc_cost_snapshots?select=quantity,total_cost,parameters&workspace_id=eq.'+
+  encodeURIComponent(workspaceId)+'&product_id=eq.'+encodeURIComponent(productId)+
+  '&parameters->>assembly_id=is.null&total_cost=not.is.null&order=confirmed_at.desc,id.desc&limit=1'))[0];
