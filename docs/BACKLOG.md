@@ -193,3 +193,9 @@ Não ampliar escopo sem homologação.
 - [ ] Aplicar progressivamente em impressoras, filamentos (marca/tipo/cor/linha), nomes próprios, parâmetros técnicos, compras e custo; avaliar campo por campo e não apresentar dica quando não ajuda.
 - [ ] Avisos claros para duplicata ou provável erro de grafia; ao escolher sugestão, preencher campo certo e conservar demais valores.
 - [ ] Testar teclado, toque mobile 320px, acessibilidade, reação durante digitação, falsos positivos, nomes oficiais imutáveis e ausência de requisições excessivas.
+
+## Página pública e acompanhamento do produto — etapas futuras
+
+- [ ] **Contadores na página sem login.** Mostrar em destaque os totais reais de visitas e cálculos gratuitos realizados. Explorar a posição ao lado da introdução “Impressão 3D sem complicação” ou dos botões, com adaptação ao celular. Definir o que conta como visita e como cálculo realizado para evitar inflar os totais com recargas, digitação e robôs.
+- [ ] **Chamada para criar conta.** Posicionar perto dos contadores e explicar o benefício de salvar e acessar os cadastros. Definir o modelo comercial, inclusive eventual cobrança da conta ou de funcionalidades, antes de anunciar condições na página.
+- [ ] **Área administrativa.** Após os ajustes de layout e funcionalidades, planejar um painel privado para acompanhar visitas, uso da calculadora, funil de criação de conta e vendas, com indicadores para entender interesse e conversão.
