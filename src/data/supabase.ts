@@ -75,29 +75,36 @@ export const appendProductCalculation=(workspaceId:string,productId:string,reque
   p_parameters:draft.parameters
  });
 
-export type AssemblyPart = {id:string;product_id?:string|null;name:string;quantity:number;notes:string|null;grams:string|null;unit_cost:number|null;cost_source?:'linked'|'manual'|'legacy'};
-export type AssemblyRecord = {id:string;product_kind?:'product'|'kit';snapshot_id?:string;saved_at?:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:AssemblyPart[];revision:number;total_cost:number|null;cost_status:'unknown'|'estimated'|'confirmed'};
-export type AssemblyPartDraft = {id?:string;product_id?:string|null;name:string;quantity:number;notes:string;grams:number|null;unit_cost?:number|null};
+export type AssemblyPart = {id:string;product_id?:string|null;source_snapshot_id?:string|null;name:string;quantity:number;notes:string|null;grams:string|null;unit_cost:number|null;cost_source?:'linked'|'manual'|'legacy'};
+export type CompositionPricing={mode:'price'|'margin';targetMarginPercent?:number;orderQuantity?:number};
+export type AssemblyRecord = {id:string;pricing?:CompositionPricing|null;price_from_snapshot?:boolean;product_kind?:'product'|'kit';snapshot_id?:string;saved_at?:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:AssemblyPart[];revision:number;total_cost:number|null;cost_status:'unknown'|'estimated'|'confirmed'};
+export type AssemblyPartDraft = {id?:string;product_id?:string|null;source_snapshot_id?:string|null;name:string;quantity:number;notes:string;grams:number|null;unit_cost?:number|null};
 export type ComponentLibraryItem={id:string;name:string;sku:string|null;
  grams:number|null;unit_cost:number|null;cost_source:'snapshot'|'unknown'};
 export const listComponentLibrary=(workspaceId:string)=>api<ComponentLibraryItem[]>('rpc/mc_list_component_library','POST',{p_workspace_id:workspaceId});
-type LinkedAssemblyDraft={name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]};
+type LinkedAssemblyDraft={name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[];pricing?:CompositionPricing};
 const linkedAssemblyParts=(parts:AssemblyPartDraft[])=>parts.map(part=>({
- product_id:part.product_id??null,name:part.name,quantity:part.quantity,notes:part.notes,
+ product_id:part.product_id??null,source_snapshot_id:part.source_snapshot_id??undefined,name:part.name,quantity:part.quantity,notes:part.notes,
  grams:part.grams,unit_cost:part.unit_cost??null
 }));
+const assemblyPayload=(draft:LinkedAssemblyDraft)=>{
+ const parts=linkedAssemblyParts(draft.parts);
+ return draft.pricing?{parts,pricing:draft.pricing}:parts;
+};
 export const saveAssemblyWithComponents=(workspaceId:string,productId:string|null,draft:LinkedAssemblyDraft)=>
  api<string>('rpc/mc_save_assembly_linked','POST',{
   p_workspace_id:workspaceId,p_product_id:productId,
   p_name:draft.name,p_sku:draft.sku,p_description:draft.description,
-  p_sale_price:draft.salePrice,p_parts:linkedAssemblyParts(draft.parts)
+  p_sale_price:draft.salePrice,p_parts:assemblyPayload(draft)
  });
 export const createComposedProduct=(workspaceId:string,draft:LinkedAssemblyDraft)=>
  api<string>('rpc/mc_create_composed_product','POST',{
   p_workspace_id:workspaceId,p_name:draft.name,p_sku:draft.sku,p_description:draft.description,
-  p_sale_price:draft.salePrice,p_parts:linkedAssemblyParts(draft.parts)
+  p_sale_price:draft.salePrice,p_parts:assemblyPayload(draft)
  });
 export const listAssemblies=(workspaceId:string)=>api<AssemblyRecord[]>('rpc/mc_list_assemblies','POST',{p_workspace_id:workspaceId});
+export const getAssemblySnapshot=(workspaceId:string,snapshotId:string)=>
+ api<AssemblyRecord|null>('rpc/mc_get_assembly_snapshot','POST',{p_workspace_id:workspaceId,p_snapshot_id:snapshotId});
 export const createAssembly=(workspaceId:string,draft:{name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]})=>
  api<string>('rpc/mc_create_assembly','POST',{
   p_workspace_id:workspaceId,p_name:draft.name,p_sku:draft.sku,p_description:draft.description,
@@ -317,10 +324,30 @@ export const getPhysicalOccurrenceDossier=(workspaceId:string,occurrenceId:strin
 
 export type SavedCalculation={
  product_id:string;name:string;kind:'component'|'product';sku:string|null;
- snapshot_id:string;unit_cost:number|null;saved_input:Record<string,unknown>;saved_at:string
+ snapshot_id:string;unit_cost:number|null;saved_input:Record<string,unknown>;saved_at:string;composition?:AssemblyRecord;available_composition?:AssemblyRecord;direct_snapshot_id?:string
 };
 export const listSavedCalculations=(workspaceId:string)=>
  api<SavedCalculation[]>('rpc/mc_list_saved_calculations','POST',{p_workspace_id:workspaceId});
+export function compositionCalculation(assembly:AssemblyRecord,direct?:SavedCalculation):SavedCalculation|undefined{
+ if(!assembly.snapshot_id||!assembly.saved_at||assembly.product_kind!=='product')return undefined;
+ return {
+  product_id:assembly.id,name:assembly.name,kind:'product',sku:assembly.sku,snapshot_id:assembly.snapshot_id,
+  unit_cost:assembly.total_cost,saved_at:assembly.saved_at,composition:assembly,
+  direct_snapshot_id:direct?.composition?direct.direct_snapshot_id:direct?.snapshot_id,
+  saved_input:direct?.saved_input??{grams:0,pricePerKg:0,hours:0,quantity:1,accessoryPerUnit:0,
+   assemblyMinutesPerUnit:0,laborPerHour:0,salePrice:0}
+ };
+}
+export async function listLatestProductCalculations(workspaceId:string){
+ const [direct,assemblies]=await Promise.all([listSavedCalculations(workspaceId),listAssemblies(workspaceId)]);
+ const latest=new Map(direct.map(item=>[item.product_id,item]));
+ for(const assembly of assemblies){
+  const current=latest.get(assembly.id);
+  const composed=compositionCalculation(assembly,current);
+  if(composed)latest.set(assembly.id,composed);
+ }
+ return [...latest.values()].sort((a,b)=>Date.parse(b.saved_at)-Date.parse(a.saved_at));
+}
 
 export type EnergyTariff={id:string;name:string;price:string;valid_from:string;valid_until:string;reference:string};
 export type EnergyEvidenceInterval={id:string;start_at:string;end_at:string;phase:import('../domain/l4-energy-draft').EnergyInterval['phase'];pause_condition:NonNullable<import('../domain/l4-energy-draft').EnergyInterval['pauseCondition']>|null;source_kind:import('../domain/l4-energy-draft').EnergyInterval['source']['kind'];reference:string|null;kwh:string|null;watts:string|null};
@@ -405,12 +432,12 @@ export const setPrimaryProductPhoto=(workspaceId:string,productId:string,path:st
 
 export type CalculationHistoryRow = {
  id:string;confirmed_at:string;quantity:number;total_cost:number|null;
- parameters:{saved_input:Record<string,unknown>};
+ parameters:{origin?:string;saved_input?:Record<string,unknown>};
 };
 export const listCalculationHistory=(workspaceId:string,productId:string,offset:number)=>
  api<CalculationHistoryRow[]>('mc_cost_snapshots?select=id,confirmed_at,quantity,total_cost,parameters&workspace_id=eq.'+
   encodeURIComponent(workspaceId)+'&product_id=eq.'+encodeURIComponent(productId)+
-  '&parameters->>origin=eq.calculator&order=confirmed_at.desc,id.desc&limit=20&offset='+offset);
+  '&parameters->>origin=in.(calculator,assembly-revision)&order=confirmed_at.desc,id.desc&limit=20&offset='+offset);
 
 export type CustomerOrderDraft = {
  id:string;snapshot_id:string|null;product_name:string;status:'planned'|'sold';quantity:number;
@@ -427,7 +454,8 @@ export type ComponentCostSnapshot={
  quantity:number;total_cost:number;
  parameters:{calculated_result?:Partial<import('../domain/cost').CostResult>;saved_input?:Partial<import('../domain/cost').CostInput>};
 };
-export const getComponentCostSnapshot=async(workspaceId:string,productId:string)=>
+export const getComponentCostSnapshot=async(workspaceId:string,productId:string,snapshotId?:string)=>
  (await api<ComponentCostSnapshot[]>('mc_cost_snapshots?select=quantity,total_cost,parameters&workspace_id=eq.'+
   encodeURIComponent(workspaceId)+'&product_id=eq.'+encodeURIComponent(productId)+
-  '&parameters->>assembly_id=is.null&total_cost=not.is.null&order=confirmed_at.desc,id.desc&limit=1'))[0];
+  '&parameters->>assembly_id=is.null&total_cost=not.is.null&order=confirmed_at.desc,id.desc&limit=1'+
+  (snapshotId?'&id=eq.'+encodeURIComponent(snapshotId):'')))[0];

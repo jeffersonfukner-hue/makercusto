@@ -5,7 +5,7 @@ import {ProductThumbnail} from './ProductPhotos';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {CalculatorHelp} from './CalculatorHelp';
 import {FormActionDock} from './FormActionDock';
-import { listProducts, saveCalculatedProduct, appendProductCalculation, listSavedCalculations, type ProductRecord, type Session, type SavedCalculation } from '../data/supabase';
+import { listProducts, saveCalculatedProduct, appendProductCalculation, listLatestProductCalculations, type ProductRecord, type Session, type SavedCalculation } from '../data/supabase';
 import type { CostInput, CostResult } from '../domain/cost';
 
 type Props = { session: Session | null; workspaceId: string | null; kind:'product'|'component'; onKindChange:(kind:'product'|'component')=>void; name:string; onNameChange:(name:string)=>void; sku:string; onSkuChange:(sku:string)=>void; composing?:boolean; hideCostDock?:boolean; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:(calculation:SavedCalculation)=>void; onLoadCalculation?:(draft:SavedCalculation)=>boolean; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
@@ -45,7 +45,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
  useEffect(()=>{
   let live=true;
   if(!session||!workspaceId){setSavedCalculations([]);return;}
-  void listSavedCalculations(workspaceId).then(rows=>{if(live)setSavedCalculations(rows);})
+  void listLatestProductCalculations(workspaceId).then(rows=>{if(live)setSavedCalculations(rows);})
     .catch(()=>{if(live)setSavedCalculations([]);});
   return()=>{live=false;};
  },[session?.user.id,workspaceId,refresh]);
@@ -147,7 +147,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
       {revisionTarget&&!savedCalculations.some(item=>item.snapshot_id===revisionTarget.snapshot_id)&&
        <option value={revisionTarget.snapshot_id}>{revisionTarget.name} · revisão carregada</option>}
       {savedCalculations.map(item=><option key={item.snapshot_id} value={item.snapshot_id}>
-       {item.kind==='component'?'Peça: ':'Produto: '}{item.name}
+       {item.kind==='component'?'Peça: ':'Produto: '}{item.name}{item.composition?' · Montagem por partes':''}
       </option>)}
      </select>
      {onNewCalculation&&<button type="button" className="mc-new-calculation" aria-label="Novo cálculo" disabled={busy}

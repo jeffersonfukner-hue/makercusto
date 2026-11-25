@@ -230,3 +230,5 @@ Não ampliar escopo sem homologação.
 
 - [x] Aplicar e validar a migração do método de produção de Pedidos no Supabase de teste.
 - [ ] Homologar o painel único e o pedido por montagem no Preview.
+- [x] Aplicar a migração de precificação da composição no Supabase de teste.
+- [ ] Homologar no Preview a recuperação em outro aparelho, a troca de método no mesmo produto e o valor usado no pedido.

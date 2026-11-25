@@ -6,9 +6,9 @@ import {CalculationResultPanel,type ResultLine,type ResultNumbers} from './Calcu
 import {FormActionDock} from './FormActionDock';
 import {formatCatalogName} from '../domain/catalogName';
 import {createComposedProduct,getComponentCostSnapshot,listAssemblies,listComponentLibrary,listProducts,saveAssemblyWithComponents,
- type ComponentCostSnapshot,type ComponentLibraryItem,type ProductRecord} from '../data/supabase';
+ type AssemblyRecord,type CompositionPricing,type ComponentCostSnapshot,type ComponentLibraryItem,type ProductRecord} from '../data/supabase';
 
-type Part={id:string;quantity:number};
+type Part={id:string;quantity:number;savedCost?:number|null;snapshotId?:string|null};
 const brl=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const number=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3});
 const costCategories=[
@@ -26,7 +26,7 @@ export function compositionNumbers(cost:number|null,price:number):ResultNumbers|
 
 function summarizeComposition(parts:Part[],library:ComponentLibraryItem[],snapshots:Record<string,ComponentCostSnapshot|undefined>):CompositionSummary{
  const count=parts.reduce((sum,part)=>sum+part.quantity,0);
- const unitCosts=parts.map(part=>library.find(item=>item.id===part.id)?.unit_cost??null);
+ const unitCosts=parts.map(part=>part.savedCost!==undefined?part.savedCost:library.find(item=>item.id===part.id)?.unit_cost??null);
  const total=parts.length&&unitCosts.every(cost=>cost!==null)
   ?parts.reduce((sum,part,index)=>sum+Number(unitCosts[index])*part.quantity,0):null;
  const records=parts.map((part,index)=>{
@@ -58,9 +58,9 @@ function summarizeComposition(parts:Part[],library:ComponentLibraryItem[],snapsh
  return {cost:total,partsCount:count,lines,filamentDetails:[...details].map(([label,grams])=>[label+' (consumo)',number.format(grams)+' g'])};
 }
 
-export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAssemblies,onResult,configuredSalePrice}:{
+export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAssemblies,onResult,configuredSalePrice,pricing,selectedComposition,onRestorePricing}:{
  workspaceId:string;active:boolean;identity?:{name:string;sku:string;description:string;productId?:string};
- onSaved?:(name:string)=>void;onViewAssemblies:()=>void;onResult?:(result:CompositionSummary)=>void;configuredSalePrice?:number
+ onSaved?:(name:string,productId:string)=>void;onViewAssemblies:()=>void;onResult?:(result:CompositionSummary)=>void;configuredSalePrice?:number;pricing?:CompositionPricing;selectedComposition?:AssemblyRecord;onRestorePricing?:(assembly:AssemblyRecord)=>void
 }){
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [library,setLibrary]=useState<ComponentLibraryItem[]>();
@@ -81,25 +81,27 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
   if(!active)return;
   let live=true;
   void Promise.all([listComponentLibrary(workspaceId),listProducts(workspaceId),
-   identity?.productId?listAssemblies(workspaceId):Promise.resolve([])
+   identity?.productId&&!selectedComposition?listAssemblies(workspaceId):Promise.resolve([])
   ]).then(([rows,products,assemblies])=>{
    if(!live)return;
    setLibrary(rows);setCatalog(products.filter(product=>product.kind==='component'));
    setSourceProduct(products.find(product=>product.id===identity?.productId));
    if(!initialized.current){
     initialized.current=true;
-    const existing=assemblies.find(item=>item.id===identity?.productId);
+    const existing=selectedComposition??assemblies.find(item=>item.id===identity?.productId);
     if(existing){
-     const linked=existing.parts.flatMap(part=>part.product_id?[{id:part.product_id,quantity:Number(part.quantity)}]:[]);
+     const linked=existing.parts.flatMap(part=>part.product_id?[{id:part.product_id,quantity:Number(part.quantity),
+      savedCost:part.unit_cost,snapshotId:part.source_snapshot_id}]:[]);
      setParts(linked);
      setSalePrice(existing.sale_price===null?'':String(existing.sale_price));
-     for(const part of linked)void getComponentCostSnapshot(workspaceId,part.id)
+     onRestorePricing?.(existing);
+     for(const part of linked)if(part.snapshotId)void getComponentCostSnapshot(workspaceId,part.id,part.snapshotId)
       .then(snapshot=>setSnapshots(previous=>({...previous,[part.id]:snapshot}))).catch(()=>{});
     }
    }
   }).catch(()=>{if(live){setLibrary(previous=>previous??[]);setError('Não foi possível consultar as peças da oficina.');}});
   return()=>{live=false;};
- },[workspaceId,active,identity?.productId]);
+ },[workspaceId,active,identity?.productId,selectedComposition,onRestorePricing]);
  const filter=query.trim().toLocaleLowerCase('pt-BR');
  const choices=catalog.filter(item=>(item.name+' '+(item.sku??'')).toLocaleLowerCase('pt-BR').includes(filter));
  const price=identity?configuredSalePrice??null:salePrice===''?null:Number(salePrice);
@@ -128,13 +130,13 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
   const nameToSave=identity?.productId?name.trim():formatCatalogName(name);
   try{
    const componentParts=parts.map(part=>({product_id:part.id,name:catalog.find(item=>item.id===part.id)!.name,
-    quantity:part.quantity,notes:'',grams:null}));
+    quantity:part.quantity,notes:'',grams:null,source_snapshot_id:part.snapshotId}));
    const draft={name:sourceProduct?.name??nameToSave,sku:sourceProduct?.sku??identity?.sku.trim()??'',
     description:sourceProduct?.description??(identity?.productId?'':identity?.description.trim()??''),
-    salePrice:price??sourceProduct?.sale_price??null,parts:componentParts};
-   if(identity&&!identity.productId)await createComposedProduct(workspaceId,draft);
-   else await saveAssemblyWithComponents(workspaceId,identity?.productId??null,draft);
-   setSaved(true);onSaved?.(nameToSave);
+    salePrice:price??sourceProduct?.sale_price??null,parts:componentParts,pricing};
+   const savedProductId=identity&&!identity.productId?await createComposedProduct(workspaceId,draft):
+    await saveAssemblyWithComponents(workspaceId,identity?.productId??null,draft);
+   setSaved(true);onSaved?.(nameToSave,savedProductId);
   }catch(cause){setError('Não foi possível salvar o conjunto. '+(cause as Error).message);}
   finally{setBusy(false);}
  };
@@ -163,9 +165,10 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
    {parts.length>0&&<h3>Partes na composição</h3>}
    {parts.length>0&&<ul className="mc-assembly-parts">{parts.map(part=>{
     const item=library?.find(row=>row.id===part.id);
+    const unitCost=part.savedCost===undefined?item?.unit_cost:part.savedCost;
     const partName=catalog.find(record=>record.id===part.id)?.name??'Peça indisponível';
     return <li key={part.id}>
-     <div><strong>{partName}</strong><small>{item?.unit_cost==null?'Custo ainda não apurado':brl.format(Number(item.unit_cost))+'/peça'}</small></div>
+     <div><strong>{partName}</strong><small>{unitCost==null?'Custo ainda não apurado':brl.format(Number(unitCost))+'/peça'}</small></div>
      <label>Qtd.<input aria-label={'Quantidade de '+partName} type="number" min="1" max="100000" step="1" value={Number.isNaN(part.quantity)?'':part.quantity}
       disabled={busy||saved} onChange={event=>{const quantity=event.target.valueAsNumber;setParts(previous=>previous.map(row=>row.id===part.id?{...row,quantity}:row));}}/></label>
      <button type="button" className="mc-light-action" disabled={busy||saved} onClick={()=>requestConfirmation({

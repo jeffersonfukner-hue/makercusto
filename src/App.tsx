@@ -9,7 +9,7 @@ import {filamentBrands,filamentColors,filamentTypes} from './data/filamentCatalo
 import {LibraryWorkspace} from './components/LibraryWorkspace';
 import type {ReactNode} from 'react';
 import {PrintDurationFields,printDurationInHours,splitPrintDuration,type DurationDraft} from './components/PrintDurationFields';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
 import {SmartField,formatCatalogName,matchKey as normalize} from './components/SmartField';
 import {FilamentProfilePanel} from './components/FilamentProfilePanel';
@@ -21,7 +21,7 @@ import {PrintsWorkspace} from './components/PrintsWorkspace';
 import {WorkshopDashboard} from './components/WorkshopDashboard';
 import {SystemNavigation,type ProductTab,type OverviewTab,type SystemSection} from './components/SystemNavigation';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
-import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,type SavedCalculation,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
+import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,type SavedCalculation,type AssemblyRecord,listLatestProductCalculations,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
 import { calculateCost, materialTotalGrams, referenceCase, salePriceForMargin, type CostInput, type MaterialLine } from './domain/cost';
 
 const money = (value:number) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value);
@@ -121,6 +121,15 @@ export default function App(){
  const [compositionSummary,setCompositionSummary]=useState<CompositionSummary>();
  const [preferComposition,setPreferComposition]=useState(false);
  const [compositionOrder,setCompositionOrder]=useState<OrderPlanInput>({});
+ const [compositionPricing,setCompositionPricing]=useState<{price:number;mode:'price'|'margin';target:number;legacy?:string}>();
+ const restoreCompositionPricing=useCallback((assembly:AssemblyRecord)=>{
+  setCompositionPricing({price:Number(assembly.sale_price??0),
+   mode:assembly.pricing?.mode??'price',target:assembly.pricing?.targetMarginPercent??30,
+   legacy:assembly.price_from_snapshot===false?(assembly.sale_price===null?
+    'Esta revisão antiga não guardou o preço de venda.':
+    'Preço atual da ficha. Esta revisão antiga não guardou a meta de margem.'):undefined});
+  setCompositionOrder({quantity:assembly.pricing?.orderQuantity});
+ },[]);
  const [description,setDescription]=useState('');
  const [identityReset,setIdentityReset]=useState(0);
  const [calculatorKind,setCalculatorKind]=useState<'product'|'component'>('product');
@@ -271,7 +280,7 @@ export default function App(){
  });
  const reset=()=>{
    setRevisionTarget(null);
-   setPreferComposition(false);setCompositionOrder({});setCompositionSummary(undefined);
+   setPreferComposition(false);setCompositionOrder({});setCompositionPricing(undefined);setCompositionSummary(undefined);
    setCalculatorKind('product');
    setLoadedCalculation('');
    setPrintDurationDraft(null);
@@ -289,7 +298,7 @@ export default function App(){
   message:'Os valores e a identificação deste rascunho serão limpos. A impressora selecionada e os cálculos salvos serão mantidos.',
   actionLabel:'Zerar cálculo',
   onConfirm:()=>{
-   setRevisionTarget(null);setPreferComposition(false);setCompositionOrder({});setCompositionSummary(undefined);setCalculatorKind('product');setLoadedCalculation('');setAccountError('');
+   setRevisionTarget(null);setPreferComposition(false);setCompositionOrder({});setCompositionPricing(undefined);setCompositionSummary(undefined);setCalculatorKind('product');setLoadedCalculation('');setAccountError('');
    setDescription('');setCalculatorName('');setCalculatorSku('');setIdentityReset(value=>value+1);
    setPrintDurationDraft(null);setSlicerDurationDrafts({});
    setForm({...referenceCase,materials:undefined,grams:0,pricePerKg:0,hours:0,quantity:1,
@@ -324,7 +333,10 @@ export default function App(){
   setAccountError('');
   setLoadedCalculation('Dados de "'+saved.name+'" carregados com a impressora selecionada.');
   setRevisionTarget(saved);setCalculatorName(saved.name);setCalculatorSku(saved.sku??'');
-  setCalculatorKind(saved.kind);setPreferComposition(false);setCompositionOrder({});
+  setCalculatorKind(saved.kind);setPreferComposition(Boolean(saved.composition));
+  if((revisionTarget?.composition?.snapshot_id??revisionTarget?.product_id)!==(saved.composition?.snapshot_id??saved.product_id))setCompositionSummary(undefined);
+  if(saved.composition)restoreCompositionPricing(saved.composition);
+  else{setCompositionOrder({});setCompositionPricing(undefined);}
   setCalculatorTab('calculation');
   return true;
  };
@@ -377,11 +389,16 @@ export default function App(){
   updateSlicerSummary(key,printDurationInHours(value)??undefined);
  };
  const composed=Boolean(session)&&calculatorKind==='product'&&preferComposition&&
-  (calculatorTab==='composition'||Boolean(compositionSummary?.partsCount));
- let assemblyPrice=form.salePrice, assemblyError='';
- if(compositionSummary?.cost!=null&&priceByMargin)try{
-  assemblyPrice=salePriceForMargin(compositionSummary.cost,targetMargin);
+  (calculatorTab==='composition'||Boolean(revisionTarget?.composition??revisionTarget?.available_composition)||Boolean(compositionSummary?.partsCount));
+ const selectedComposition=revisionTarget?.composition??revisionTarget?.available_composition;
+ const showCompositionEditor=calculatorTab==='composition'||calculatorTab==='calculation'&&composed;
+ const assemblyPricing=compositionPricing??{price:form.salePrice,mode:priceByMargin?'margin' as const:'price' as const,target:targetMargin};
+ const displayedPriceByMargin=composed?assemblyPricing.mode==='margin':priceByMargin;
+ let assemblyPrice=assemblyPricing.price, assemblyError='';
+ if(assemblyPricing.mode==='margin'&&compositionSummary?.cost!=null)try{
+  assemblyPrice=salePriceForMargin(compositionSummary.cost,assemblyPricing.target);
  }catch(cause){assemblyError=(cause as Error).message;assemblyPrice=NaN;}
+ const updateAssemblyPricing=(patch:Partial<typeof assemblyPricing>)=>setCompositionPricing({...assemblyPricing,...patch,legacy:undefined});
  const displayedResult=composed?compositionNumbers(compositionSummary?.cost??null,assemblyPrice):result;
  const resultQuantity=composed?1:activeInput.quantity;
  const resultLines:readonly ResultLine[]=composed?(compositionSummary?.lines??[]):result?[
@@ -414,6 +431,7 @@ export default function App(){
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
    onCreateAssembly={saved=>{if(applySavedCalculation(saved)){setPreferComposition(true);setCalculatorTab('composition');}}}/>}
   {loadedCalculation&&calculatorTab!=='composition'&&<p role="status" className="product-success mc-calculation-status">{loadedCalculation}</p>}
+  {compositionSaved&&<p role="status" className="product-success">{compositionSaved}</p>}
   {session&&accountError&&<p role="alert" className="error">{accountError}</p>}
   {session&&<div className="mc-calculator-navigation">
   <nav className="mc-calculator-tabs" aria-label="Áreas da calculadora">
@@ -430,7 +448,6 @@ export default function App(){
     <h2 id="active-composition-heading">Montagem por partes</h2>
     <p>O resultado e o pedido usam as partes da composição.</p>
     <div className="form-actions">
-     <button type="button" className="mc-light-action" onClick={()=>setCalculatorTab('composition')}>Editar composição</button>
      <button type="button" className="mc-light-action" onClick={()=>setPreferComposition(false)}>Editar impressão direta</button>
     </div>
    </section>}
@@ -593,14 +610,20 @@ export default function App(){
     </section>}
    </div>
   </div>
-  {session&&workspaceId&&<div hidden={calculatorTab!=='composition'}>
-   <AssemblyComposer key={workspaceId+'/'+(revisionTarget?.product_id??identityReset)} workspaceId={workspaceId} active={calculatorTab==='composition'}
+  {session&&workspaceId&&<div hidden={!showCompositionEditor}>
+   <AssemblyComposer key={workspaceId+'/'+(revisionTarget?.composition?.snapshot_id??revisionTarget?.product_id??identityReset)} workspaceId={workspaceId} active={showCompositionEditor}
     identity={{name:calculatorName,sku:calculatorSku,description,productId:revisionTarget?.product_id}}
-    onResult={setCompositionSummary} configuredSalePrice={Number.isFinite(assemblyPrice)?assemblyPrice:undefined}
-    onSaved={name=>{
-     setCompositionSaved(revisionTarget?'Composição de “'+name+'” salva na mesma ficha.':'Conjunto “'+name+'” salvo na oficina.');
-     setRevisionTarget(null);setLoadedCalculation('');setCalculatorName('');setCalculatorSku('');setDescription('');
-     setIdentityReset(value=>value+1);setPreferComposition(false);setCompositionOrder({});setCompositionSummary(undefined);setCalculatorTab('calculation');setActiveSection('assemblies');
+    onResult={setCompositionSummary} configuredSalePrice={assemblyPrice}
+    selectedComposition={selectedComposition} onRestorePricing={restoreCompositionPricing}
+    pricing={{mode:assemblyPricing.mode,targetMarginPercent:assemblyPricing.mode==='margin'?assemblyPricing.target:undefined,
+     orderQuantity:Number.isSafeInteger(compositionOrder.quantity)&&compositionOrder.quantity!>0?compositionOrder.quantity:undefined}}
+    onSaved={(name,id)=>{
+     const message=revisionTarget?'Composição de “'+name+'” salva na mesma ficha.':'Conjunto “'+name+'” salvo na oficina.';
+     setCompositionSaved(message);
+     void listLatestProductCalculations(workspaceId).then(rows=>{
+      const saved=rows.find(item=>item.product_id===id&&item.composition);
+      if(saved)applySavedCalculation(saved);
+     }).catch(()=>setAccountError('Composição salva. Reabra a ficha em Conjuntos para carregar a nova revisão.'));
     }}
     onViewAssemblies={()=>setActiveSection('assemblies')}/>
   </div>}
@@ -620,9 +643,9 @@ export default function App(){
    <CalculationResultPanel result={displayedResult} composed={composed} quantity={resultQuantity} title={shareTitle}
     lines={resultLines} filamentDetails={composed?compositionSummary?.filamentDetails:undefined}
     expanded={!composed&&(advanced||Boolean(session))}
-    source={session&&calculatorKind==='product'&&(calculatorTab==='composition'||composed||Boolean(compositionSummary?.partsCount))&&
+    source={session&&calculatorKind==='product'&&(calculatorTab==='composition'||composed||Boolean(selectedComposition)||Boolean(compositionSummary?.partsCount))&&
      <div className="mc-result-source" role="group" aria-label="Origem do resultado">
-      <button type="button" className="mc-light-action" aria-pressed={!composed} onClick={()=>setPreferComposition(false)}>Impressão direta</button>
+      <button type="button" className="mc-light-action" aria-pressed={!composed} onClick={()=>setPreferComposition(false)}>Impressão em peça única</button>
       <button type="button" className="mc-light-action" aria-pressed={composed} onClick={()=>setPreferComposition(true)}>Montagem por partes</button>
      </div>}
     sourceNotice={composed?(compositionSummary?.partsCount?count(compositionSummary.partsCount)+' partes na composição':'Selecione as partes para começar'):undefined}
@@ -630,22 +653,23 @@ export default function App(){
     <fieldset className="mc-pricing-mode">
      <legend>Como definir o preço de venda</legend>
      <div className="mc-pricing-options">
-      <label><input type="radio" name="pricing-mode" checked={!priceByMargin} onChange={()=>setPriceByMargin(false)}/> Preço informado</label>
-      <label><input type="radio" name="pricing-mode" checked={priceByMargin} onChange={()=>setPriceByMargin(true)}/> Margem desejada</label>
+      <label><input type="radio" name="pricing-mode" checked={!displayedPriceByMargin} onChange={()=>composed?updateAssemblyPricing({mode:'price'}):setPriceByMargin(false)}/> Preço informado</label>
+      <label><input type="radio" name="pricing-mode" checked={displayedPriceByMargin} onChange={()=>composed?updateAssemblyPricing({mode:'margin'}):setPriceByMargin(true)}/> Margem desejada</label>
      </div>
-     {priceByMargin?<div className="mc-number-field">
+     {displayedPriceByMargin?<div className="mc-number-field">
       <label><span>Margem bruta desejada (%)</span>
-       <input type="number" min="0" max="99.99" step="0.01" value={display(targetMargin)} onChange={event=>setTargetMargin(numeric(event.target.value))}/>
+       <input type="number" min="0" max="99.99" step="0.01" value={display(composed?assemblyPricing.target:targetMargin)} onChange={event=>composed?updateAssemblyPricing({target:numeric(event.target.value)}):setTargetMargin(numeric(event.target.value))}/>
       </label>
       <CalculatorHelp label="Margem bruta desejada">Percentual do preço de venda que sobra após descontar o custo estimado. O preço por unidade é arredondado para cima em centavos.</CalculatorHelp>
      </div>:calculationField('salePrice',false)}
-     {priceByMargin&&displayedResult&&<p className="mc-calculated-sale-price" aria-live="polite">Preço de venda por unidade <strong>{money(displayedResult.salePrice)}</strong></p>}
+     {displayedPriceByMargin&&displayedResult&&<p className="mc-calculated-sale-price" aria-live="polite">Preço de venda por unidade <strong>{money(displayedResult.salePrice)}</strong></p>}
+     {composed&&assemblyPricing.legacy&&<p className="footnote">{assemblyPricing.legacy}</p>}
     </fieldset>
      {(composed?assemblyError:error)&&<p className="error" role="alert">{composed?assemblyError:error}</p>}
     </>}
     order={{input:composed?compositionOrder:form.orderPlan??{},
      onChange:composed?setCompositionOrder:orderPlan=>setForm(previous=>({...previous,orderPlan})),
-     orderRegistration:session&&workspaceId?{workspaceId,snapshotId:composed?null:revisionTarget?.snapshot_id??null,
+     orderRegistration:session&&workspaceId?{workspaceId,snapshotId:composed?selectedComposition?.snapshot_id??null:revisionTarget?.composition?revisionTarget.direct_snapshot_id??null:revisionTarget?.snapshot_id??null,
       productName:shareTitle||undefined,onViewOrders:()=>setActiveSection('orders')}:undefined}}
     product={session&&workspaceId&&revisionTarget?{workspaceId,id:revisionTarget.product_id}:undefined}
     quoteKey={revisionTarget?.snapshot_id??identityReset}

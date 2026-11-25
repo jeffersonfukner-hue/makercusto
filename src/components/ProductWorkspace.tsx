@@ -6,7 +6,7 @@ import {ProductPhotos,ProductThumbnail} from './ProductPhotos';
 import {useEffect,useMemo,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
 import {
- createAssembly,listAssemblies,listProducts,saveProductRecord,updateAssembly,listComponentLibrary,saveAssemblyWithComponents,listSavedCalculations,
+ createAssembly,listAssemblies,listProducts,saveProductRecord,updateAssembly,listComponentLibrary,saveAssemblyWithComponents,listLatestProductCalculations,
  type AssemblyPartDraft,type AssemblyRecord,type ProductRecord,type ComponentLibraryItem,type SavedCalculation
 } from '../data/supabase';
 
@@ -106,7 +106,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
   if(!workspaceId||!product||product.kind==='kit'||!onCalculate)return;
   setError('');setOpeningCalculation(true);
   try{
-   const history=await listSavedCalculations(workspaceId);
+   const history=await listLatestProductCalculations(workspaceId);
    const latest=history.filter(x=>x.product_id===product.id)
     .sort((a,b)=>b.saved_at.localeCompare(a.saved_at))[0];
    if(latest){onCalculate(latest);return;}

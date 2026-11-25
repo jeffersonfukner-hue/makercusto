@@ -2078,14 +2078,16 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await expect(result.getByTestId('unitCost')).toContainText('16,00');
  await page.getByRole('button',{name:'Salvar conjunto',exact:true}).click();
  await expect(page.getByText('Conjunto “Microfone com Base” salvo na oficina.')).toBeVisible();
- expect(saved).toMatchObject({p_workspace_id:workspace,p_name:'Microfone com Base',p_parts:[
+ expect(saved).toMatchObject({p_workspace_id:workspace,p_name:'Microfone com Base',p_parts:{parts:[
   {product_id:base,quantity:2},{product_id:mic,quantity:1}
- ]});
+ ]}});
+ await page.getByRole('button',{name:'Ver conjuntos'}).click();
  await page.getByRole('button',{name:'Montar com peças salvas'}).click();
  await expect(page.getByRole('heading',{name:'Montar conjunto'})).toBeVisible();
  await page.getByRole('button',{name:'Ver conjuntos'}).click();
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
+ await page.getByRole('button',{name:'Cálculo',exact:true}).click();
  await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(oldSnapshot);
  await compositionTab.click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Troféu já cadastrado');
@@ -2102,7 +2104,7 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await convert.click();
  await confirmation.getByRole('button',{name:'Salvar composição',exact:true}).click();
  await expect(page.getByText('Composição de “Troféu já cadastrado” salva na mesma ficha.')).toBeVisible();
- expect(converted).toMatchObject({p_product_id:trophy,p_parts:[{product_id:base,quantity:1},{product_id:mic,quantity:1}]});
+ expect(converted).toMatchObject({p_product_id:trophy,p_parts:{parts:[{product_id:base,quantity:1},{product_id:mic,quantity:1}]}});
 });
 
 test('recupera revisão antiga e registra pedido vendido no histórico da oficina',async({page})=>{
@@ -2159,4 +2161,64 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await expect(order).toContainText('Vendido');
  await expect(order).toContainText('15 peças · 8 mesas · última mesa: 1 un.');
  await expect(order.getByText('Faturamento do pedido').locator('..')).toContainText('120,00');
+});
+
+test('recupera margem da composição e mantém o preço da peça única independente',async({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111';
+ const user='22222222-2222-4222-8222-222222222222';
+ const product='33333333-3333-4333-8333-333333333333';
+ const latest='44444444-4444-4444-8444-444444444444';
+ const earlier='55555555-5555-4555-8555-555555555555';
+ const direct='66666666-6666-4666-8666-666666666666';
+ const base='77777777-7777-4777-8777-777777777777';
+ const hand='88888888-8888-4888-8888-888888888888';
+ const priceRevision=(id:string,margin:number,price:number,savedAt:string)=>({
+  id:product,product_kind:'product',name:'Troféu',sku:null,description:null,snapshot_id:id,
+  saved_at:savedAt,total_cost:16,sale_price:price,price_from_snapshot:true,
+  pricing:{mode:'margin',targetMarginPercent:margin,orderQuantity:12},
+  parts:[{product_id:base,name:'Base',quantity:1,unit_cost:7},{product_id:hand,name:'Mão',quantity:1,unit_cost:9}]
+ });
+ const old=priceRevision(earlier,60,40,'2026-11-25T12:05:00Z');
+ const current=priceRevision(latest,80,80,'2026-11-25T13:00:00Z');
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path.endsWith('/mc_workspaces'))return route.fulfill({json:[{id:workspace,name:'Oficina teste',owner_id:user}]});
+  if(path.endsWith('/mc_products'))return route.fulfill({json:[[product,'Troféu','product'],[base,'Base','component'],[hand,'Mão','component']].map(([id,name,kind])=>
+   ({id,name,kind,workspace_id:workspace,sku:null,description:null,sale_price:80,created_at:'2026-11-25T12:00:00Z'}))});
+  if(path.endsWith('/mc_list_saved_calculations'))return route.fulfill({json:[
+   {product_id:product,snapshot_id:direct,name:'Troféu',kind:'product',sku:null,saved_input:{quantity:2,salePrice:8},saved_at:'2026-11-25T12:00:00Z'}
+  ]});
+  if(path.endsWith('/mc_list_assemblies'))return route.fulfill({json:[current]});
+  if(path.endsWith('/mc_list_component_library'))return route.fulfill({json:[{id:base,name:'Base',unit_cost:70},{id:hand,name:'Mão',unit_cost:90}]});
+  if(path.endsWith('/mc_cost_snapshots'))return route.fulfill({json:[
+   {id:earlier,confirmed_at:old.saved_at,quantity:1,total_cost:16,parameters:{origin:'assembly-revision'}}
+  ]});
+  if(path.endsWith('/mc_get_assembly_snapshot')){
+   expect(route.request().postDataJSON().p_snapshot_id).toBe(earlier);
+   return route.fulfill({json:old});
+  }
+  return route.fulfill({json:[]});
+ });
+ await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Calculadora de custos').click();
+ const picker=page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'});
+ await picker.selectOption(latest);
+ const composition=page.getByRole('region',{name:'Resultado do conjunto'});
+ await expect(composition.getByTestId('unitCost')).toContainText('16,00');
+ await expect(composition.getByRole('spinbutton',{name:'Margem bruta desejada (%)'})).toHaveValue('80');
+ await expect(composition.locator('.mc-calculated-sale-price')).toContainText('80,00');
+ await expect(composition.getByLabel('Quantidade do pedido (conjuntos)')).toHaveValue('12');
+ await expect(page.getByRole('region',{name:'Montar conjunto com peças salvas'}).getByLabel('Quantidade de Base')).toBeVisible();
+ await composition.getByRole('button',{name:'Impressão em peça única'}).click();
+ await expect(page.getByTestId('salePrice')).toHaveValue('8');
+ await page.getByText('Histórico de custos',{exact:true}).click();
+ await page.getByLabel('Produto do histórico').selectOption(product);
+ await page.getByRole('button',{name:'Carregar composição'}).click();
+ await expect(picker).toHaveValue(earlier);
+ await expect(composition.getByRole('spinbutton',{name:'Margem bruta desejada (%)'})).toHaveValue('60');
+ await expect(composition.locator('.mc-calculated-sale-price')).toContainText('40,00');
 });
