@@ -62,7 +62,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   }catch(e){setError('Não foi possível salvar o produto: '+(e as Error).message);}
   finally{setBusy(false);}
  };
- return <section className="panel product-save-panel" aria-labelledby="product-save-title">
+ return <section className="panel product-save-panel" aria-label="Identificação do produto">
   <div className="panel-heading"><div><h2 id="product-save-title">Identificação do produto</h2>
    <span className="mc-info" tabIndex={0} title="Os custos anteriores ficam registrados em um snapshot.">ⓘ</span></div></div>
   {!session?<div><p className="footnote">Entre na sua conta para salvar e consultar os produtos na nuvem.</p>
@@ -85,7 +85,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    </div>}
    {revisionTarget&&<div className="product-reuse-panel" role="status"><strong>Nova revisão: {revisionTarget.name}</strong><p className="footnote">Este cálculo será anexado à ficha existente, sem criar outro produto. O preço de venda da ficha será atualizado; os custos históricos permanecem intactos.</p>{onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo cadastro</button>}</div>}
    <div className="product-save-fields">
-    <label className="product-wide product-name-input">Nome {kind==='component'?'da peça':'do produto'}<input aria-label="Nome do cadastro" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={e=>setName(e.target.value)} placeholder="Ex.: Guirlanda natalina"/></label>
+    <label className="product-wide product-name-input">Nome {kind==='component'?'da peça':'do produto'}<input aria-label="Nome do produto" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={e=>setName(e.target.value)} placeholder="Ex.: Guirlanda natalina"/></label>
     <label>SKU / referência (opcional) <input aria-label="SKU do produto" maxLength={100} value={sku} disabled={Boolean(revisionTarget)} onChange={e=>setSku(e.target.value)} placeholder="Ex.: CH-GALO-01" /></label>
     <label>Tipo <select aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)} onChange={e=>setKind(e.target.value as typeof kind)}><option value="product">Produto final</option><option value="component">Peça / componente</option></select></label>
     <label className="mc-description">Descrição (opcional) <input aria-label="Descrição do produto" maxLength={2000} value={description} onChange={e=>setDescription(e.target.value)} /></label>
