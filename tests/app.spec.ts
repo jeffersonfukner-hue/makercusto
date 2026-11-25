@@ -1947,6 +1947,11 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await page.route('**/rest/v1/**',async route=>{
   const url=new URL(route.request().url());
   if(url.pathname.endsWith('/mc_workspaces'))return route.fulfill({json:[{id:workspace,name:'Oficina teste',owner_id:user}]});
+  if(url.pathname.endsWith('/mc_products'))return route.fulfill({json:[
+   {id:base,workspace_id:workspace,name:'Base',kind:'component',sku:'TR-BASE',description:'Base do troféu',sale_price:null,active:true},
+   {id:mic,workspace_id:workspace,name:'Mão com Microfone',kind:'component',sku:null,description:null,sale_price:null,active:true},
+   {id:'111',workspace_id:workspace,name:'Outro produto final',kind:'product',sku:null,description:null,sale_price:null,active:true}
+  ]});
   if(url.pathname.endsWith('/mc_list_component_library'))return route.fulfill({json:[
    {id:base,name:'Base',sku:null,unit_cost:4,cost_source:'snapshot'},
    {id:mic,name:'Mão com Microfone',sku:null,unit_cost:8,cost_source:'snapshot'}
@@ -1968,13 +1973,24 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await page.goto('/');
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
- await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();
+ const compositionTab=page.getByRole('button',{name:'Composição / Peças',exact:true});
+ const kind=page.getByRole('combobox',{name:'Tipo de produto'});
+ await kind.selectOption('component');
+ await expect(compositionTab).toHaveCount(0);
+ await kind.selectOption('product');
+ await compositionTab.click();
  await page.getByLabel('Nome do conjunto').fill('Microfone com base');
- const piece=page.getByLabel('Peça salva');
- await piece.selectOption(base);
- await page.getByRole('button',{name:'Adicionar peça',exact:true}).click();
- await piece.selectOption(mic);
- await page.getByRole('button',{name:'Adicionar peça',exact:true}).click();
+ const pieces=page.getByRole('list',{name:'Peças salvas'});
+ await expect(pieces.getByRole('listitem')).toHaveCount(2);
+ const baseCard=pieces.getByRole('listitem').filter({hasText:'Base'});
+ await baseCard.getByRole('button',{name:'Ver ficha',exact:true}).click();
+ const sheet=page.getByRole('dialog',{name:'Base'});
+ await expect(sheet).toContainText('Base do troféu');
+ await sheet.getByRole('button',{name:'Adicionar à composição'}).click();
+ await expect(baseCard.getByRole('button',{name:'Na composição'})).toBeDisabled();
+ await page.getByLabel('Buscar peça salva').fill('Microfone');
+ await expect(pieces.getByRole('listitem')).toHaveCount(1);
+ await pieces.getByRole('button',{name:'Adicionar à composição'}).click();
  await page.getByLabel('Quantidade de Base').fill('2');
  const result=page.getByRole('region',{name:'Resultado do conjunto'});
  await expect(result.getByText('16,00',{exact:false})).toBeVisible();

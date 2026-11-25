@@ -1071,3 +1071,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A área de acesso rápido mostra quatro botões grandes. Calculadora de custos, Pedidos, Biblioteca STL e Dicas de impressão ocupam o espaço disponível, com duas colunas em larguras menores e quatro em desktop.
 - A Visão geral exibe gráficos de pedidos por situação e de impressões por etapa, com estado vazio quando não existem registros. O faturamento considera pedidos vendidos entre os 20 registros mais recentes; peças confirmadas aparecem quando há execuções.
 - Build, 82 testes unitários, 126 cenários Chromium desktop/mobile e o cenário responsivo em WebKit com perfil de iPad passaram. Foram verificados alinhamento e ausência de rolagem horizontal na página em larguras de 320 a 1366 px, menu durante a rolagem e dados dos gráficos simulados. Homologação no iPad físico pelo proprietário segue pendente.
+
+### Seleção direta de peças na composição — 25/11/2026
+
+- A aba Composição / Peças aparece na calculadora de Produto final. A seleção do tipo e a recuperação de cálculos salvos governam essa visibilidade.
+- A composição lista apenas cadastros do tipo Peça, com busca por nome e referência. Ver ficha abre os dados e a galeria acima do formulário. Adicionar à composição está disponível na lista e na ficha. Após adicionar, a quantidade é ajustada na linha de composição e o botão sinaliza que a peça já está incluída.
+- Conjuntos oferece o mesmo formulário dentro do módulo. A montagem é salva como conjunto por meio da operação existente, reutilizando os IDs das peças.
+- Build, 82 unitários e 126 cenários Playwright aprovados. O cenário do troféu valida a aba por tipo, a consulta da ficha, a inclusão pelas duas entradas e a preservação das peças ao alternar de aba.

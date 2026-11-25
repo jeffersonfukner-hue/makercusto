@@ -920,9 +920,7 @@
 .mc-calculator .mc-clear-calculation,.mc-calculator .mc-copy-calculation {min-height:32px;white-space:nowrap}
 .mc-copy-calculation {margin-left:auto}
 
-.mc-assembly-inputs>label,.mc-assembly-select label {display:grid;gap:4px;margin-bottom:8px;font-size:13px}
-.mc-assembly-select {display:flex;align-items:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:8px}
-.mc-assembly-select label {flex:1;min-width:min(100%,180px);margin:0}
+.mc-assembly-inputs>label {display:grid;gap:4px;margin-bottom:8px;font-size:13px}
 .mc-assembly-inputs :is(input,select) {width:100%;min-width:0}
 .mc-assembly-parts {list-style:none;padding:0;margin:8px 0 16px}
 .mc-assembly-parts li {display:grid;grid-template-columns:minmax(0,1fr) minmax(52px,72px) auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--mc-border)}
@@ -932,3 +930,11 @@
 .mc-assembly-composer .result-panel .cost-list>div {border-color:var(--mc-border)}
 .mc-assembly-composer .result-panel .cost-list dt {color:var(--mc-muted)}
 .mc-assembly-composer .result-panel p {font-size:13px}
+
+.mc-assembly-catalog {list-style:none;margin:8px 0 16px;padding:0;max-height:250px;overflow:auto}
+.mc-assembly-catalog li {display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;padding:8px 2px;border-bottom:1px solid var(--mc-border)}
+.mc-assembly-catalog strong {overflow-wrap:anywhere}
+.mc-assembly-catalog small {display:block;color:var(--mc-muted)}
+.mc-assembly-card-actions {display:flex;flex-wrap:wrap;gap:4px}
+.mc-assembly-card-actions button {min-height:38px}
+.mc-assembly-inputs h3 {font-size:14px;margin:12px 0 0}

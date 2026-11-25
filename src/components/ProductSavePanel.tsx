@@ -8,7 +8,7 @@ import {FormActionDock} from './FormActionDock';
 import { listProducts, saveCalculatedProduct, appendProductCalculation, listSavedCalculations, type ProductRecord, type Session, type SavedCalculation } from '../data/supabase';
 import type { CostInput, CostResult } from '../domain/cost';
 
-type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:()=>void; onLoadCalculation?:(draft:SavedCalculation)=>boolean; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
+type Props = { session: Session | null; workspaceId: string | null; kind:'product'|'component'; onKindChange:(kind:'product'|'component')=>void; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:()=>void; onLoadCalculation?:(draft:SavedCalculation)=>boolean; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
 const currency=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const comparableName=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR').trim().replace(/\s+/g,' ');
 function availableCopyName(original:string,existing:Set<string>){
@@ -18,14 +18,13 @@ function availableCopyName(original:string,existing:Set<string>){
   if(!existing.has(comparableName(candidate)))return candidate;
  }
 }
-export function ProductSavePanel({session,workspaceId,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly,onLoadCalculation,revisionTarget,onClearRevisionTarget,description='',onDescriptionChange,lotField,onNewCalculation}:Props){
+export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly,onLoadCalculation,revisionTarget,onClearRevisionTarget,description='',onDescriptionChange,lotField,onNewCalculation}:Props){
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [name,setName]=useState('');
  const [copySource,setCopySource]=useState<string|null>(null);
  const nameInput=useRef<HTMLInputElement>(null);
  const focusCopyName=useRef(false);
  const [sku,setSku]=useState('');
- const [kind,setKind]=useState<'product'|'component'>('product');
  const [lastSavedKind,setLastSavedKind]=useState<'product'|'component'>('product');
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [savedCalculations,setSavedCalculations]=useState<SavedCalculation[]>([]);
@@ -55,7 +54,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
  const registeredNames=new Set([...items,...savedCalculations].map(item=>comparableName(item.name)));
  const partCount=items.filter(item=>item.kind==='component').length;
  const visibleItems=filter==='component'?items.filter(item=>item.kind==='component'):items;
- useEffect(()=>{setRequestKey(null);if(revisionTarget){setCopySource(null);setName(revisionTarget.name);setSku(revisionTarget.sku??'');setKind(revisionTarget.kind);}},[revisionTarget?.snapshot_id]);
+ useEffect(()=>{setRequestKey(null);if(revisionTarget){setCopySource(null);setName(revisionTarget.name);setSku(revisionTarget.sku??'');}},[revisionTarget?.snapshot_id]);
  useEffect(()=>{
   if(revisionTarget||!focusCopyName.current)return;
   focusCopyName.current=false;
@@ -95,7 +94,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     await appendProductCalculation(workspaceId,revisionTarget.product_id,key,payload);
    }else await saveCalculatedProduct(workspaceId,payload);
    setSelectedCalculation('');
-   setLastSavedKind(kind);setCopySource(null);setName('');setSku('');onDescriptionChange?.('');setKind('product');
+   setLastSavedKind(kind);setCopySource(null);setName('');setSku('');onDescriptionChange?.('');onKindChange('product');
    setMessage(revisionTarget?'Nova revisão de custo salva na mesma ficha. O histórico anterior foi preservado.':(kind==='component'?'Peça':'Produto')+', versão inicial e custo estimado salvos na sua oficina.');
    setRequestKey(null);
    if(revisionTarget)onClearRevisionTarget?.();
@@ -108,7 +107,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   message:'O novo cálculo começa com os valores de exemplo. Os dados não salvos do cálculo atual serão descartados.',
   actionLabel:'Iniciar novo cálculo',
   onConfirm:()=>{
-   setCopySource(null);setName('');setSku('');onDescriptionChange?.('');setKind('product');
+   setCopySource(null);setName('');setSku('');onDescriptionChange?.('');onKindChange('product');
    setSelectedCalculation('');setMessage('');setError('');setRequestKey(null);
    onNewCalculation?.();
   }
@@ -172,7 +171,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
       <div className="mc-field-caption"><label htmlFor="mc-product-kind">Tipo</label>
        <CalculatorHelp label="Tipo de produto">Produto final é um item pronto. Peça é um componente que pode ser usado em um conjunto.</CalculatorHelp>
       </div>
-      <select id="mc-product-kind" aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)||busy} onChange={event=>setKind(event.target.value as typeof kind)}>
+      <select id="mc-product-kind" aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)||busy} onChange={event=>onKindChange(event.target.value as typeof kind)}>
        <option value="product">Produto final</option><option value="component">Peça / componente</option>
       </select>
      </div>
@@ -188,7 +187,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    <div className="mc-save-feedback" aria-live="polite">{message&&<div className="mc-save-confirmation"><p className="product-success" role="status">{message}</p>
     <div className="product-workspace-buttons">
      {onViewSaved&&<button type="button" onClick={()=>onViewSaved(lastSavedKind)}>Ver cadastros da oficina</button>}
-     {onCreateAssembly&&<button type="button" onClick={onCreateAssembly}>Montar conjunto com peças</button>}
+     {kind==='product'&&lastSavedKind==='product'&&onCreateAssembly&&<button type="button" onClick={onCreateAssembly}>Montar conjunto com peças</button>}
     </div></div>}{error&&<p className="error" role="alert">{error}</p>}</div>
   </div>
   <FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?(kind==="component"?"Peça / componente":"Produto final"):"Cálculo inválido"} metrics={result?[{label:"Custo unitário",value:currency(result.unitCost)},{label:"Venda",value:currency(input.salePrice)},{label:"Lucro bruto/un.",value:currency(input.salePrice-result.unitCost)},{label:"Margem",value:result.marginPercent.toFixed(1).replace(".",",")+"%"}]:undefined}>

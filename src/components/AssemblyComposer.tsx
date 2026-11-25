@@ -1,9 +1,11 @@
+import {Modal} from './Modals';
+import {ProductPhotos} from './ProductPhotos';
 import {useEffect,useState} from 'react';
 import {CalculatorHelp} from './CalculatorHelp';
 import {FormActionDock} from './FormActionDock';
 import {formatCatalogName} from '../domain/catalogName';
-import {getComponentCostSnapshot,listComponentLibrary,saveAssemblyWithComponents,
- type ComponentCostSnapshot,type ComponentLibraryItem} from '../data/supabase';
+import {getComponentCostSnapshot,listComponentLibrary,listProducts,saveAssemblyWithComponents,
+ type ComponentCostSnapshot,type ComponentLibraryItem,type ProductRecord} from '../data/supabase';
 
 type Part={id:string;quantity:number};
 const brl=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
@@ -71,7 +73,9 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
  const [library,setLibrary]=useState<ComponentLibraryItem[]>();
  const [snapshots,setSnapshots]=useState<Record<string,ComponentCostSnapshot|undefined>>({});
  const [parts,setParts]=useState<Part[]>([]);
- const [selection,setSelection]=useState('');
+ const [catalog,setCatalog]=useState<ProductRecord[]>([]);
+ const [query,setQuery]=useState('');
+ const [viewing,setViewing]=useState<ProductRecord|null>(null);
  const [name,setName]=useState('');
  const [salePrice,setSalePrice]=useState('');
  const [error,setError]=useState('');
@@ -80,20 +84,22 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
  useEffect(()=>{
   if(!active)return;
   let live=true;
-  void listComponentLibrary(workspaceId).then(rows=>{if(live)setLibrary(rows);})
+  void Promise.all([listComponentLibrary(workspaceId),listProducts(workspaceId)]).then(([rows,products])=>{
+   if(live){setLibrary(rows);setCatalog(products.filter(product=>product.kind==='component'));}
+  })
    .catch(()=>{if(live){setLibrary(previous=>previous??[]);setError('Não foi possível consultar as peças da oficina.');}});
   return()=>{live=false;};
  },[workspaceId,active]);
- const choices=(library??[]).filter(item=>!parts.some(part=>part.id===item.id));
+ const filter=query.trim().toLocaleLowerCase('pt-BR');
+ const choices=catalog.filter(item=>(item.name+' '+(item.sku??'')).toLocaleLowerCase('pt-BR').includes(filter));
  const price=salePrice===''?null:Number(salePrice);
  const priceValid=price===null||(Number.isFinite(price)&&price>=0&&price<=100000000);
  const quantitiesValid=parts.every(part=>Number.isSafeInteger(part.quantity)&&part.quantity>=1&&part.quantity<=100000);
  const canSave=parts.length>=2&&quantitiesValid
-  &&name.trim().length>=2&&priceValid&&parts.every(part=>library?.some(item=>item.id===part.id));
- const add=()=>{
-  if(!selection||parts.some(part=>part.id===selection)||parts.length>=30)return;
-  const id=selection;
-  setParts(previous=>[...previous,{id,quantity:1}]);setSelection('');
+  &&name.trim().length>=2&&priceValid&&parts.every(part=>catalog.some(item=>item.id===part.id));
+ const add=(id:string)=>{
+  if(busy||saved||!catalog.some(item=>item.id===id))return;
+  setParts(previous=>previous.length>=30||previous.some(part=>part.id===id)?previous:[...previous,{id,quantity:1}]);
   void getComponentCostSnapshot(workspaceId,id)
    .then(snapshot=>setSnapshots(previous=>({...previous,[id]:snapshot})))
    .catch(()=>{});
@@ -103,7 +109,7 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
   setBusy(true);setError('');
   try{
    await saveAssemblyWithComponents(workspaceId,null,{name:formatCatalogName(name),sku:'',description:'',salePrice:price,
-    parts:parts.map(part=>({product_id:part.id,name:library!.find(item=>item.id===part.id)!.name,
+    parts:parts.map(part=>({product_id:part.id,name:catalog.find(item=>item.id===part.id)!.name,
      quantity:part.quantity,notes:'',grams:null}))});
    setSaved(true);
   }catch(cause){setError('Não foi possível salvar o conjunto. '+(cause as Error).message);}
@@ -113,22 +119,32 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
   <section className="panel mc-assembly-inputs" aria-label="Montar conjunto com peças salvas">
    <h2>Montar conjunto</h2>
    <label>Nome do conjunto<input value={name} maxLength={150} disabled={busy||saved} onChange={event=>setName(event.target.value)}/></label>
-   <div className="mc-assembly-select">
-    <label>Peça salva<select value={selection} disabled={busy||saved||!library||parts.length>=30} onChange={event=>setSelection(event.target.value)}>
-     <option value="">{library?'Selecione uma peça':'Carregando peças…'}</option>
-     {choices.map(item=><option key={item.id} value={item.id}>{item.name}{item.sku?' · '+item.sku:''}</option>)}
-    </select></label>
-    <button type="button" className="details-button" disabled={busy||saved||!selection} onClick={add}>Adicionar peça</button>
-   </div>
-   {library?.length===0&&!error&&<p>Salve as peças na calculadora para usar aqui.</p>}
+   <label>Buscar peça salva<input type="search" value={query} onChange={event=>setQuery(event.target.value)}/></label>
+   {!library&&!error&&<p role="status">Carregando peças…</p>}
+   {library&&choices.length===0&&!error&&<p>{catalog.length===0?'Salve as peças na calculadora para usar aqui.':'Nenhuma peça encontrada.'}</p>}
+   {choices.length>0&&<ul className="mc-assembly-catalog" aria-label="Peças salvas">
+    {choices.map(item=>{
+     const added=parts.some(part=>part.id===item.id);
+     return <li key={item.id}>
+      <div><strong>{item.name}</strong>{item.sku&&<small>{item.sku}</small>}</div>
+      <div className="mc-assembly-card-actions">
+       <button type="button" className="details-button" onClick={()=>setViewing(item)}>Ver ficha</button>
+       <button type="button" className="details-button" disabled={busy||saved||added||parts.length>=30}
+        onClick={()=>add(item.id)}>{added?'Na composição':'Adicionar à composição'}</button>
+      </div>
+     </li>;
+    })}
+   </ul>}
+   {parts.length>0&&<h3>Peças na composição</h3>}
    {parts.length>0&&<ul className="mc-assembly-parts">{parts.map(part=>{
     const item=library?.find(row=>row.id===part.id);
+    const partName=catalog.find(record=>record.id===part.id)?.name??'Peça indisponível';
     return <li key={part.id}>
-     <div><strong>{item?.name??'Peça indisponível'}</strong><small>{item?.unit_cost==null?'Custo ainda não apurado':brl.format(Number(item.unit_cost))+'/peça'}</small></div>
-     <label>Qtd.<input aria-label={'Quantidade de '+(item?.name??'peça indisponível')} type="number" min="1" max="100000" step="1" value={Number.isNaN(part.quantity)?'':part.quantity}
+     <div><strong>{partName}</strong><small>{item?.unit_cost==null?'Custo ainda não apurado':brl.format(Number(item.unit_cost))+'/peça'}</small></div>
+     <label>Qtd.<input aria-label={'Quantidade de '+partName} type="number" min="1" max="100000" step="1" value={Number.isNaN(part.quantity)?'':part.quantity}
       disabled={busy||saved} onChange={event=>{const quantity=event.target.valueAsNumber;setParts(previous=>previous.map(row=>row.id===part.id?{...row,quantity}:row));}}/></label>
      <button type="button" className="details-button" disabled={busy||saved} onClick={()=>setParts(previous=>previous.filter(row=>row.id!==part.id))}
-      aria-label={'Remover '+(item?.name??'peça indisponível')}>×</button>
+      aria-label={'Remover '+partName}>×</button>
     </li>;
    })}</ul>}
    <label>Preço de venda do conjunto (R$, opcional)<input type="number" min="0" step=".01" value={salePrice}
@@ -136,6 +152,19 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
    {!quantitiesValid&&<p role="alert" className="error">Informe uma quantidade inteira válida para cada peça.</p>}
    {error&&<p role="alert" className="error">{error}</p>}
    {saved&&<p role="status" className="product-success">Conjunto salvo na oficina.</p>}
+   {active&&viewing&&<Modal title={viewing.name} onClose={()=>setViewing(null)}>
+    <div className="modal-body">
+     {viewing.sku&&<p>Referência {viewing.sku}</p>}
+     {viewing.description&&<p>{viewing.description}</p>}
+     {viewing.sale_price!==null&&<p>Preço de venda {brl.format(Number(viewing.sale_price))}</p>}
+     <ProductPhotos workspaceId={workspaceId} productId={viewing.id} name={viewing.name} readOnly/>
+     <div className="modal-actions">
+      <button type="button" onClick={()=>setViewing(null)}>Fechar ficha</button>
+      {!parts.some(part=>part.id===viewing.id)&&!saved&&parts.length<30&&
+       <button type="button" className="primary-action" onClick={()=>{add(viewing.id);setViewing(null);}}>Adicionar à composição</button>}
+     </div>
+    </div>
+   </Modal>}
   </section>
   <AssemblyResults parts={quantitiesValid?parts:[]} library={library??[]} snapshots={snapshots} price={priceValid?price:null}/>
   {active&&<FormActionDock title={name.trim()||'Novo conjunto'} subtitle="Composição de peças salvas">

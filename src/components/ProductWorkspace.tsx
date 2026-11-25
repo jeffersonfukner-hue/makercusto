@@ -1,3 +1,4 @@
+import {AssemblyComposer} from './AssemblyComposer';
 import {formatCatalogName} from '../domain/catalogName';
 import {ProductPhotos,ProductThumbnail} from './ProductPhotos';
 import {useEffect,useMemo,useState} from 'react';
@@ -8,14 +9,14 @@ import {
 } from '../data/supabase';
 
 type Tab='all'|'component'|'assemblies';
-type Mode='catalog'|'view'|'edit'|'new';
-type Props={workspaceId:string|null;tab:Tab;onCalculate?:(snapshot:SavedCalculation)=>void;onCompose?:()=>void};
+type Mode='catalog'|'view'|'edit'|'new'|'compose';
+type Props={workspaceId:string|null;tab:Tab;onCalculate?:(snapshot:SavedCalculation)=>void};
 const brl=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const blank=():AssemblyPartDraft=>({name:'',quantity:1,grams:null,unit_cost:null,notes:''});
 const template=()=>[blank(),blank()];
 const moneyValue=(s:string):number|null=>s.trim()===''?null:Number(s);
 const partDraft=(p:AssemblyRecord['parts'][number]):AssemblyPartDraft=>({id:p.id,product_id:p.product_id??null,name:p.name,quantity:Number(p.quantity),notes:p.notes??'',grams:p.grams===null?null:Number(p.grams),unit_cost:p.unit_cost});
-export function ProductWorkspace({workspaceId,tab,onCalculate,onCompose}:Props){
+export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [kits,setKits]=useState<AssemblyRecord[]>([]);
  const [library,setLibrary]=useState<ComponentLibraryItem[]>([]);
@@ -142,6 +143,9 @@ export function ProductWorkspace({workspaceId,tab,onCalculate,onCompose}:Props){
   }catch(e){setError('Não foi possível salvar: '+(e as Error).message);}
   finally{setBusy(false);}
  };
+ if(mode==='compose'&&workspaceId)return <div className="mc-calculator">
+  <AssemblyComposer key={workspaceId} workspaceId={workspaceId} active onViewAssemblies={()=>{setMode('catalog');setReload(value=>value+1);}}/>
+ </div>;
  const heading=tab==='assemblies'?'Conjuntos':tab==='component'?'Peças':'Produtos da oficina';
  const label=(p:ProductRecord)=>p.kind==='kit'?'Conjunto':p.kind==='component'?'Peça':'Produto';
  return <section className="product-workspace" aria-label="Gestão de produtos">
@@ -149,7 +153,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate,onCompose}:Props){
    <div><h2>{mode==='catalog'?heading:mode==='view'?'Ficha do produto':mode==='edit'?'Editar produto':'Novo produto'}</h2>
     <p>{mode==='catalog'?'Selecione um cadastro para consultar, editar ou duplicar.':mode==='view'?'Detalhes registrados na oficina.':'Preencha somente os dados que você conhece.'}</p></div>
    <div className="product-workspace-buttons">
-    {mode==='catalog'&&tab==='assemblies'&&onCompose&&<button type="button" className="secondary-action" onClick={onCompose}>Montar com peças salvas</button>}
+    {mode==='catalog'&&tab==='assemblies'&&workspaceId&&<button type="button" className="secondary-action" onClick={()=>setMode('compose')}>Montar com peças salvas</button>}
     {mode==='catalog'&&<button type="button" className="primary-action" onClick={()=>reset(tab==='assemblies'?'kit':tab==='component'?'component':'product')}>{tab==='assemblies'?'+ Novo conjunto':tab==='component'?'+ Nova peça':'+ Novo produto'}</button>}
    </div>
   </div>
