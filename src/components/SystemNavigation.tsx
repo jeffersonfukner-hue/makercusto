@@ -22,7 +22,7 @@ const menu=[
 ] as const;
 export function SystemNavigation({authenticated,workspaceName,email,section,productTab,onProductTab,overviewTab,onOverviewTab,onNavigate,onLogout,children}:Props){
  const [open,setOpen]=useState(false);
- const [collapsed,setCollapsed]=useState(false);
+
  useEffect(()=>{setOpen(false);},[section]);
  useEffect(()=>{
   if(!open)return;
@@ -33,23 +33,18 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
  if(!authenticated)return <>{children}</>;
  const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Calculadora de Produto':section==='prints'?'Impressões da oficina':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
  const navigate=(next:SystemSection)=>{onNavigate(next);setOpen(false);};
- return <div className={'system-shell'+(collapsed?' is-collapsed':'')}>
+ return <div className="system-shell system-top-navigation">
   <header className="system-topbar">
    <div className="system-brand"><span className="system-logo" aria-hidden="true">M</span><span><strong>MakerCusto</strong><small>Sistema da oficina</small></span></div>
-   <button className="system-mobile-menu" type="button" aria-label="Abrir menu do sistema" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>☰</button>
+   <button className="system-mobile-menu" type="button" aria-label="Abrir menu do sistema" aria-expanded={open} aria-controls="system-main-menu" onClick={()=>setOpen(v=>!v)}>☰</button>
    <div className="system-topbar-center"><span className="system-workshop-name">{workspaceName}</span><span className="system-test-badge">Ambiente de teste</span></div>
    <div className="system-account"><span className="system-email" title={email}>{email}</span><span className="system-avatar" aria-hidden="true">{email.trim().slice(0,1).toUpperCase()||'U'}</span><button type="button" onClick={onLogout}>Sair</button></div>
   </header>
   <div className="system-frame">
-   {open&&<button className="system-backdrop" type="button" aria-label="Fechar menu do sistema" onClick={()=>setOpen(false)}/>}
-   <aside className={'system-sidebar'+(open?' mobile-open':'')} aria-label="Menu lateral do MakerCusto">
-    <div className="system-sidebar-top"><span>MENU PRINCIPAL</span><button type="button" className="system-collapse-button" aria-label={collapsed?'Expandir menu lateral':'Recolher menu lateral'} onClick={()=>setCollapsed(v=>!v)}>{collapsed?'»':'«'}</button></div>
-    <nav aria-label="Módulos do MakerCusto">
-     {menu.map(item=><button key={item.label} type="button" title={item.label} className={item.section===section?'system-nav-active':''} aria-current={item.section===section?'page':undefined}
-      onClick={()=>item.section&&navigate(item.section)}><span className="system-nav-icon" aria-hidden="true">{item.symbol}</span><span className="system-nav-text">{item.label}</span></button>)}
-    </nav>
-    <div className="system-sidebar-bottom"><span className="system-nav-icon" aria-hidden="true">◈</span><span className="system-nav-text">Oficina conectada</span></div>
-   </aside>
+   <nav id="system-main-menu" className={'system-horizontal-menu'+(open?' mobile-open':'')} aria-label="Módulos do MakerCusto">
+    {menu.map(item=><button key={item.section} type="button" className={item.section===section||(item.section==='products'&&section==='assemblies')?'system-nav-active':''} aria-current={item.section===section?'page':undefined} onClick={()=>navigate(item.section)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}
+    <button type="button" className={section==='assemblies'?'system-nav-active':''} aria-current={section==='assemblies'?'page':undefined} onClick={()=>navigate('assemblies')}>Conjuntos</button>
+   </nav>
    <div className="system-content">
     <div className="system-section-header">
      <div><p className="system-breadcrumb">MakerCusto / {section==='overview'?'Visão geral':section==='calculator'?'Custos':section==='materials'?'Materiais':section==='prints'?'Impressões':title}</p><h1>{title}</h1>
