@@ -20,6 +20,23 @@ test('resumo padrão compacto e valores do exemplo',async({page})=>{
  await expect(page.getByTestId('simplePrice')).toHaveValue('100');
  await expect(page.getByRole('table')).toBeHidden();
 });
+test('define o preço pela margem desejada e usa esse valor no orçamento',async({page})=>{
+ await page.goto('/');
+ await page.getByTestId('salePrice').fill('8');
+ await page.getByRole('radio',{name:'Margem desejada',exact:true}).check();
+ const margin=page.getByRole('spinbutton',{name:'Margem bruta desejada (%)',exact:true});
+ await margin.fill('50');
+ await expect(page.locator('.mc-calculated-sale-price')).toContainText('5,04');
+ await page.getByText('Orçamento para cliente',{exact:true}).click();
+ await expect(page.getByText(/10 un.*50,40/)).toBeVisible();
+ await margin.fill('100');
+ await expect(page.getByRole('alert')).toContainText('Informe uma margem desejada');
+ await expect(page.locator('.mc-calculated-sale-price')).toHaveCount(0);
+ await margin.fill('30');
+ await expect(page.locator('.mc-calculated-sale-price')).toContainText('3,60');
+ await page.getByRole('radio',{name:'Preço informado',exact:true}).check();
+ await expect(page.getByTestId('salePrice')).toHaveValue('8');
+});
 test('detalhar por cor exibe tabela alinhada e total',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:/Avançado/}).click();

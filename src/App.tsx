@@ -98,6 +98,8 @@ export default function App(){
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [printDurationDraft,setPrintDurationDraft]=useState<DurationDraft|null>(null);
  const [slicerDurationDrafts,setSlicerDurationDrafts]=useState<Partial<Record<'preparation'|'printing',DurationDraft>>>({});
+ const [priceByMargin,setPriceByMargin]=useState(false);
+ const [targetMargin,setTargetMargin]=useState(30);
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
  const [printers,setPrinters]=useState<PrinterProfile[]>(()=>sessionStore.get()?seedPrinters():[...seedPrinters(),...readLocalPrinters()]);
  const [printerId,setPrinterId]=useState(()=>sessionStore.get()?'example':readSelectedPrinter('guest',[...seedPrinters(),...readLocalPrinters()]));
@@ -256,6 +258,7 @@ export default function App(){
    setSlicerDurationDrafts({});
    if(!sessionStore.get()){setPrinters([...seedPrinters(),...readLocalPrinters()]);setPrinterId('example');}
    setForm({...referenceCase,materials:undefined});
+   setPriceByMargin(false);setTargetMargin(30);
    setSimple(initialSimple);
    setDetailedMaterials(seeded());
    setAdvanced(false);setDetails(false);
@@ -274,6 +277,8 @@ export default function App(){
   try{calculateCost(testInput);}
   catch(e){setAccountError('Este cálculo salvo não pode ser reutilizado: '+(e as Error).message);return false;}
   setForm({...restored,materials:undefined});
+  setPriceByMargin(restored.targetMarginPercent!==undefined);
+  setTargetMargin(restored.targetMarginPercent??30);
   setPrintDurationDraft(null);
   setSlicerDurationDrafts({});
   setSimple({quantity:Number(restored.grams),quantityUnit:'g',
@@ -290,9 +295,10 @@ export default function App(){
  const hasSlicerTiming=advanced&&slicerSummary?.preparation!==undefined&&slicerSummary.printing!==undefined;
  const invalidSlicerTiming=advanced&&[slicerSummary?.preparation,slicerSummary?.printing].some(Number.isNaN);
  const estimatedHours=invalidSlicerTiming?NaN:hasSlicerTiming?slicerSummary.preparation!+slicerSummary.printing!:form.hours;
- const activeInput:CostInput={
+ const pricingInput:CostInput={
    ...form,
    hours:estimatedHours,
+   targetMarginPercent:priceByMargin?targetMargin:undefined,
    printerPrice:activePrinter.printerPrice,
    averageWatts:activePrinter.averageWatts,
    lifetimeHours:activePrinter.lifetimeHours,
@@ -302,7 +308,8 @@ export default function App(){
    materials:advanced&&details?detailedMaterials:undefined
  };
  let result:ReturnType<typeof calculateCost>|undefined, error='';
- try{result=calculateCost(activeInput)}catch(e){error=(e as Error).message;}
+ try{result=calculateCost(pricingInput)}catch(e){error=(e as Error).message;}
+ const activeInput={...pricingInput,salePrice:result?.salePrice??pricingInput.salePrice};
  const slicerTotals=advanced&&details?detailedMaterials.reduce((totals,line)=>({
   model:totals.model+line.grams,
   flushed:totals.flushed+line.wasteGrams,
@@ -549,11 +556,24 @@ export default function App(){
      <strong data-testid="unitCost">{money(result.unitCost)}</strong>
      <small>Total do lote: {money(result.lotCost)}</small>
     </div>}
-    {calculationField('salePrice',false)}
+    <fieldset className="mc-pricing-mode">
+     <legend>Como definir o preço de venda</legend>
+     <div className="mc-pricing-options">
+      <label><input type="radio" name="pricing-mode" checked={!priceByMargin} onChange={()=>setPriceByMargin(false)}/> Preço informado</label>
+      <label><input type="radio" name="pricing-mode" checked={priceByMargin} onChange={()=>setPriceByMargin(true)}/> Margem desejada</label>
+     </div>
+     {priceByMargin?<div className="mc-number-field">
+      <label><span>Margem bruta desejada (%)</span>
+       <input type="number" min="0" max="99.99" step="0.01" value={display(targetMargin)} onChange={event=>setTargetMargin(numeric(event.target.value))}/>
+      </label>
+      <CalculatorHelp label="Margem bruta desejada">Percentual do preço de venda que sobra após descontar o custo estimado. O preço por unidade é arredondado para cima em centavos.</CalculatorHelp>
+     </div>:calculationField('salePrice',false)}
+     {priceByMargin&&result&&<p className="mc-calculated-sale-price" aria-live="polite">Preço de venda por unidade <strong>{money(result.salePrice)}</strong></p>}
+    </fieldset>
     {error&&<p className="error" role="alert">{error}</p>}
     {result&&<>
      <dl className="mc-result-metrics">
-      <div><dt>Margem em R$/un.</dt><dd data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(form.salePrice-result.unitCost)}</dd></div>
+      <div><dt>Margem em R$/un.</dt><dd data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.salePrice-result.unitCost)}</dd></div>
       <div><dt>Margem bruta</dt><dd data-testid="margin" className={result.marginPercent<0?'negative':undefined}>{percent(result.marginPercent)}</dd></div>
       <div><dt>Markup</dt><dd className={result.markupPercent<0?'negative':undefined}>{percent(result.markupPercent)}</dd></div>
      </dl>

@@ -28,6 +28,7 @@ export interface CostInput {
   assemblyMinutesPerUnit: number;
   laborPerHour: number;
   salePrice: number;
+  targetMarginPercent?: number;
 }
 export interface MaterialResult {
   id: string;
@@ -49,6 +50,7 @@ export interface CostResult {
   assembly: number;
   lotCost: number;
   unitCost: number;
+  salePrice: number;
   lotRevenue: number;
   grossProfit: number;
   marginPercent: number;
@@ -65,7 +67,8 @@ export function calculateCost(input: CostInput): CostResult {
   const baseNumbers = [
     input.hours, input.averageWatts, input.pricePerKwh, input.printerPrice,
     input.lifetimeHours, input.quantity, input.accessoryPerUnit,
-    input.assemblyMinutesPerUnit, input.laborPerHour, input.salePrice
+    input.assemblyMinutesPerUnit, input.laborPerHour,
+    input.targetMarginPercent === undefined ? input.salePrice : 0
   ];
   if (baseNumbers.some(value => !validNonNegative(value)) ||
       !Number.isSafeInteger(input.quantity) || input.quantity < 1 ||
@@ -113,11 +116,25 @@ export function calculateCost(input: CostInput): CostResult {
   const assembly = input.assemblyMinutesPerUnit / 60 * input.laborPerHour * input.quantity;
   const lotCost = material + energy + depreciation + accessories + assembly;
   const unitCost = lotCost / input.quantity;
-  const lotRevenue = input.salePrice * input.quantity;
+  let salePrice = input.salePrice;
+  const target = input.targetMarginPercent;
+  if (target !== undefined) {
+    if (!validNonNegative(target) || target >= 100) {
+      throw new Error('Informe uma margem desejada de 0% até menos de 100%.');
+    }
+    if (target > 0 && unitCost === 0) {
+      throw new Error('Informe um custo maior que zero para calcular um preço por margem.');
+    }
+    const rawCents = unitCost / (1 - target / 100) * 100;
+    const cents = Math.ceil(rawCents - Number.EPSILON * rawCents);
+    if (!Number.isSafeInteger(cents)) throw new Error('O preço calculado excede o limite. Revise o custo ou a margem.');
+    salePrice = cents / 100;
+  }
+  const lotRevenue = salePrice * input.quantity;
   const grossProfit = lotRevenue - lotCost;
   return {
     material, materialBreakdown, modelGrams, wasteGrams, energy, depreciation,
-    accessories, assembly, lotCost, unitCost, lotRevenue, grossProfit,
+    accessories, assembly, lotCost, unitCost, salePrice, lotRevenue, grossProfit,
     marginPercent: lotRevenue ? grossProfit / lotRevenue * 100 : 0,
     markupPercent: lotCost ? grossProfit / lotCost * 100 : 0
   };

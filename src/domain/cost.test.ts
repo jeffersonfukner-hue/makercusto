@@ -41,6 +41,18 @@ describe('motor de custos e materiais', () => {
     expect(zeroWaste.materialBreakdown[1].totalGrams).toBeCloseTo(0.26);
     expect(() => calculateCost({ ...referenceCase, materials: [{ ...red, wasteGrams: -2 }] })).toThrow();
   });
+  it('define o preço por margem bruta e arredonda para cima em centavos', () => {
+    const input = { ...referenceCase, targetMarginPercent: 50 };
+    const result = calculateCost(input);
+    expect(result.salePrice).toBe(5.04);
+    expect(result.marginPercent).toBeGreaterThanOrEqual(50);
+    expect(result.lotRevenue).toBeCloseTo(100.80);
+    const thirty = calculateCost({ ...input, targetMarginPercent: 30 });
+    expect(thirty.salePrice).toBe(3.60);
+    expect(thirty.marginPercent).toBeGreaterThanOrEqual(30);
+    expect(() => calculateCost({ ...input, targetMarginPercent: 100 })).toThrow(/margem desejada/);
+    expect(calculateCost(referenceCase).salePrice).toBe(7.9);
+  });
   it('não soma o filamento legado com os materiais detalhados', () => {
     const r = calculateCost({ ...referenceCase, grams: 90000, pricePerKg: 90000 });
     expect(r.material).toBeCloseTo(15.158, 3);

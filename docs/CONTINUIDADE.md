@@ -1029,3 +1029,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A ação é executada só após confirmação. Cancelar e Esc fecham o diálogo, preservam os dados e devolvem o foco ao botão de origem. O foco inicia em Cancelar.
 - Próxima etapa: conferir o diálogo na próxima homologação do Preview.
 - Build local, 79 testes unitários e 116 cenários Playwright aprovados em desktop e mobile. Os testes cobrem confirmação, cancelamento, Esc e preservação do rascunho.
+
+### Preço de venda por margem desejada — 25/11/2026
+
+- A calculadora oferece Preço informado e Margem desejada. No segundo modo, o preço unitário é o custo unitário dividido por um menos a margem em fração, arredondado para cima em centavos. A margem aceita valores de 0% até menos de 100%. O orçamento, o compartilhamento e o salvamento usam o preço efetivo da opção selecionada.
+- A meta é salva com os parâmetros do cálculo e recuperada quando disponível. Cálculos anteriores abrem por padrão em Preço informado. Alternar entre opções durante a edição preserva o preço digitado.
+- Build, 80 testes unitários e dez cenários Playwright aprovados. Verificadas as metas de 30% e 50%, a rejeição de 100%, o retorno ao preço digitado e o preço gerado no orçamento. Homologação no Preview pendente.
