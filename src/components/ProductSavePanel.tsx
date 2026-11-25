@@ -93,7 +93,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    <span className="mc-info mc-save-help" tabIndex={0} title="Peças diferentes na mesma placa exigem rateio validado. Conjuntos usam peças cadastradas. Não há baixa automática de estoque.">ⓘ Sobre o salvamento</span>
    
 
-   <div aria-live="polite">{message&&<div><p className="product-success" role="status">{message}</p>
+   <div className="mc-save-feedback" aria-live="polite">{message&&<div><p className="product-success" role="status">{message}</p>
     <div className="product-workspace-buttons">
      {onViewSaved&&<button type="button" onClick={()=>onViewSaved(lastSavedKind)}>Ver cadastros da oficina</button>}
      {onCreateAssembly&&<button type="button" onClick={onCreateAssembly}>Montar conjunto com peças</button>}
@@ -102,7 +102,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     <ul>{visibleItems.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
    </details>
   </div>}
-  {session&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?`Custo: ${currency(result.unitCost)} · Venda: ${currency(input.salePrice)} · Lucro bruto/un.: ${currency(input.salePrice-result.unitCost)} · Margem: ${result.marginPercent.toFixed(1)}%`: 'Cálculo inválido'}>
+  {session&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?(kind==="component"?"Peça / componente":"Produto final"):"Cálculo inválido"} metrics={result?[{label:"Custo unitário",value:currency(result.unitCost)},{label:"Venda",value:currency(input.salePrice)},{label:"Lucro bruto/un.",value:currency(input.salePrice-result.unitCost)},{label:"Margem",value:result.marginPercent.toFixed(1).replace(".",",")+"%"}]:undefined}>
    {revisionTarget&&onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo</button>}
    <button className="primary-action" type="button" disabled={busy||!result||!workspaceId||name.trim().length<2} onClick={()=>void save()}>{busy?'Salvando…':revisionTarget?'Salvar nova revisão':kind==='component'?'Salvar peça e custo':'Salvar produto e custo'}</button>
   </FormActionDock>}
