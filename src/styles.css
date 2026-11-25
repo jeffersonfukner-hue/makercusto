@@ -876,3 +876,8 @@
 .mc-customer-quote small {display:block;margin-top:6px}
 .mc-slicer-totals {display:flex;flex-wrap:wrap;gap:8px 16px;margin:0;font-size:12px}
 .mc-slicer-totals dd {margin:2px 0 0;font-weight:700}
+
+.mc-confirmation-dialog {width:min(420px,calc(100% - 32px));padding:0}
+.mc-confirmation-dialog::backdrop {background:#101b2bb3}
+.mc-theme .mc-confirmation-dialog .modal-body p {color:var(--mc-ink)}
+.mc-confirmation-dialog .modal-actions {justify-content:flex-end}

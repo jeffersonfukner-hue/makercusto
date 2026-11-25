@@ -1,3 +1,4 @@
+import {useConfirmation} from './components/ConfirmationDialog';
 import {CustomerQuote} from './components/CustomerQuote';
 import {CalculationShare,CalculationPrintSummary} from './components/CalculationShare';
 import {chooseSlicerProfile} from './data/filamentProfiles';
@@ -94,6 +95,7 @@ function FilamentField({id,label,help,children}:{id:string;label:string;help:str
  </div>;
 }
 export default function App(){
+ const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [printDurationDraft,setPrintDurationDraft]=useState<DurationDraft|null>(null);
  const [slicerDurationDrafts,setSlicerDurationDrafts]=useState<Partial<Record<'preparation'|'printing',DurationDraft>>>({});
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
@@ -224,18 +226,29 @@ export default function App(){
   }
   const gramsPurchased=draft.packageQuantity!*(draft.packageUnit==='kg'?1000:1);
   const row:MaterialLine={...draft,name:formatCatalogName(draft.name,list('cor')),type:formatCatalogName(draft.type??'',list('tipo')),brand:formatCatalogName(draft.brand??'',list('marca')),id:editId??'extra-'+nextId,pricePerKg:draft.packagePrice!/gramsPurchased*1000};
-  if(editId&&!window.confirm('Salvar as alterações do filamento "'+row.name+'"?'))return;
-  setDetailedMaterials(prev=>editId?prev.map(m=>m.id===editId?row:m):[...prev,row]);
-  if(!editId)setNextId(v=>v+1);
-  remember('cor',row.name);remember('tipo',row.type||'');remember('marca',row.brand||'');
-  setDraft(newDraft());setEditId(null);setErrorDraft('');
+  const saveRow=()=>{
+   setDetailedMaterials(prev=>editId?prev.map(m=>m.id===editId?row:m):[...prev,row]);
+   if(!editId)setNextId(v=>v+1);
+   remember('cor',row.name);remember('tipo',row.type||'');remember('marca',row.brand||'');
+   setDraft(newDraft());setEditId(null);setErrorDraft('');
+  };
+  if(editId)requestConfirmation({
+   title:'Salvar alterações do filamento',
+   message:'Deseja salvar as alterações de “'+row.name+'” neste cálculo?',
+   actionLabel:'Salvar alterações',onConfirm:saveRow
+  });
+  else saveRow();
  };
  const edit=(m:MaterialLine)=>{setDetails(true);setEditId(m.id);setErrorDraft('');setDraft({...m,packageQuantity:m.packageQuantity??1,packageUnit:m.packageUnit??'kg',packagePrice:calculatedPackagePrice(m)});};
- const remove=(item:MaterialLine)=>{
-  if(!window.confirm('Remover "'+item.name+'" deste cálculo?'))return;
-  setDetailedMaterials(previous=>previous.filter(row=>row.id!==item.id));
-  if(editId===item.id){setDraft(newDraft());setEditId(null);setErrorDraft('');}
- };
+ const remove=(item:MaterialLine)=>requestConfirmation({
+  title:'Remover filamento',
+  message:'Deseja remover “'+item.name+'” deste cálculo?',
+  actionLabel:'Remover filamento',
+  onConfirm:()=>{
+   setDetailedMaterials(previous=>previous.filter(row=>row.id!==item.id));
+   if(editId===item.id){setDraft(newDraft());setEditId(null);setErrorDraft('');}
+  }
+ });
  const reset=()=>{
    setRevisionTarget(null);
    setLoadedCalculation('');
@@ -340,6 +353,7 @@ export default function App(){
  ] as const;
  const modeSwitch=<nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>;
  return <div className="mc-theme">
+ {confirmationDialog}
  {shareLines&&(!session||activeSection==='calculator')&&<CalculationPrintSummary title={shareTitle} lines={shareLines}/>}
  {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthMode('login')}>Entrar</button></div></header>}
  <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>

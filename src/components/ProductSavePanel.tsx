@@ -1,3 +1,4 @@
+import {useConfirmation} from './ConfirmationDialog';
 import {formatCatalogName} from '../domain/catalogName';
 import {ProductThumbnail} from './ProductPhotos';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -17,6 +18,7 @@ function availableCopyName(original:string,existing:Set<string>){
  }
 }
 export function ProductSavePanel({session,workspaceId,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly,onLoadCalculation,revisionTarget,onClearRevisionTarget,description='',onDescriptionChange,lotField,onNewCalculation}:Props){
+ const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [name,setName]=useState('');
  const [copySource,setCopySource]=useState<string|null>(null);
  const nameInput=useRef<HTMLInputElement>(null);
@@ -100,18 +102,23 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   }catch(e){setError('Não foi possível salvar o produto: '+(e as Error).message);}
   finally{setBusy(false);}
  };
- const startNewCalculation=()=>{
-  if(!window.confirm('Iniciar um novo cálculo com os valores de exemplo? Os dados não salvos do cálculo atual serão descartados.'))return;
-  setCopySource(null);setName('');setSku('');onDescriptionChange?.('');setKind('product');
-  setSelectedCalculation('');setMessage('');setError('');setRequestKey(null);
-  onNewCalculation?.();
- };
+ const startNewCalculation=()=>requestConfirmation({
+  title:'Iniciar novo cálculo',
+  message:'O novo cálculo começa com os valores de exemplo. Os dados não salvos do cálculo atual serão descartados.',
+  actionLabel:'Iniciar novo cálculo',
+  onConfirm:()=>{
+   setCopySource(null);setName('');setSku('');onDescriptionChange?.('');setKind('product');
+   setSelectedCalculation('');setMessage('');setError('');setRequestKey(null);
+   onNewCalculation?.();
+  }
+ });
  if(!session)return <section className="panel product-save-panel" aria-labelledby="product-save-title">
   <h2 id="product-save-title">Identificação do produto</h2>
   <p className="footnote">Entre na sua conta para salvar e consultar os produtos na nuvem.</p>
   <button type="button" className="primary-action" onClick={onLogin}>Entrar para salvar produto</button>
  </section>;
  return <section className="calculator-identity" aria-label="Identificação do cálculo">
+  {confirmationDialog}
   <div className="product-save-content">
    {onLoadCalculation&&<section className="panel mc-recovery" aria-labelledby="recover-calculation">
     <div className="mc-identity-heading">

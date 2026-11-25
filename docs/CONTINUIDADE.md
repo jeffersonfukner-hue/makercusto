@@ -1022,3 +1022,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Compartilhar resultado gera texto para e-mail ou WhatsApp e uma versão para Salvar PDF pelo navegador. Orçamento para cliente mostra quantidades, preço de venda unitário e total. O arquivo PNG inclui a foto principal de um produto com cálculo recuperado, quando disponível. O menu do dispositivo permite compartilhar o arquivo em navegadores compatíveis e o download permite anexar manualmente. Links assinados da galeria ficam fora do orçamento.
 - O fluxo da foto foi validado com Storage simulado. Próxima validação no Preview: lançar o chaveiro com os valores do fatiador e preparar um orçamento com foto. Validar o menu de compartilhamento do dispositivo antes de enviar a um cliente.
 - Build local, 79 testes unitários e 116 cenários Playwright aprovados. Foram verificados os pesos do print (2,63 g), o tempo de 13 min e 33 s, a geração de PDF e o orçamento com foto simulada em desktop e mobile.
+
+### Confirmações no padrão visual do MakerCusto — 25/11/2026
+
+- As quatro confirmações nativas da calculadora foram substituídas por um diálogo com o estilo dos modais existentes. Aplica-se a salvar uma edição de filamento, remover uma cor do cálculo, salvar uma edição do perfil pessoal do fatiador e iniciar um novo cálculo.
+- A ação é executada só após confirmação. Cancelar e Esc fecham o diálogo, preservam os dados e devolvem o foco ao botão de origem. O foco inicia em Cancelar.
+- Próxima etapa: conferir o diálogo na próxima homologação do Preview.
+- Build local, 79 testes unitários e 116 cenários Playwright aprovados em desktop e mobile. Os testes cobrem confirmação, cancelamento, Esc e preservação do rascunho.

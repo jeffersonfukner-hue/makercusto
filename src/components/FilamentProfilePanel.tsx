@@ -1,3 +1,4 @@
+import {useConfirmation} from './ConfirmationDialog';
 import {CalculatorHelp} from './CalculatorHelp';
 import {useState} from 'react';
 import {chooseSlicerProfile,type SlicerProfile} from '../data/filamentProfiles';
@@ -6,6 +7,7 @@ const STORAGE='makercusto:perfis-filamento:v1';
 type Personal=SlicerProfile&{sourceId:string};
 function load():Personal[]{try{const arr:unknown=JSON.parse(localStorage.getItem(STORAGE)||'[]');return Array.isArray(arr)?arr.filter((v):v is Personal=>v!==null&&typeof v==='object'&&typeof v.id==='string'&&typeof v.sourceId==='string').slice(0,100):[];}catch{return [];}}
 export function FilamentProfilePanel({brand,material}:{brand:string;material:string}){
+ const {requestConfirmation,confirmationDialog}=useConfirmation();
  const base=chooseSlicerProfile(brand,material);
  const [personal,setPersonal]=useState<Personal[]>(load);
  const [selection,setSelection]=useState('');
@@ -25,13 +27,21 @@ export function FilamentProfilePanel({brand,material}:{brand:string;material:str
   if(scoped.some(p=>p.id!==editingId&&matchKey(p.name)===matchKey(canonicalName))||matchKey(base.name)===matchKey(canonicalName)){
    setSaveError('Já existe um perfil com esse nome. Escolha outro para preservar os dois.');return;
   }
-  if(editingId&&!window.confirm('Salvar as alterações do perfil "'+canonicalName+'"?'))return;
   const next:Personal={...form,id:editingId??'personal-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),name:canonicalName,sourceId:base.id,classification:'estimativa inicial',sourceLabel:'Cópia personalizada de '+base.name};
   const arr=editingId?personal.map(p=>p.id===editingId&&p.sourceId===base.id?next:p):[...personal,next];
-  setPersonal(arr);setSelection(next.id);setEditing(false);setEditingId(null);setSaveError('');
-  try{localStorage.setItem(STORAGE,JSON.stringify(arr));}catch{/* persiste só nesta sessão */}
+  const saveProfile=()=>{
+   setPersonal(arr);setSelection(next.id);setEditing(false);setEditingId(null);setSaveError('');
+   try{localStorage.setItem(STORAGE,JSON.stringify(arr));}catch{/* persiste só nesta sessão */}
+  };
+  if(editingId)requestConfirmation({
+   title:'Salvar alterações do perfil',
+   message:'Deseja salvar as alterações de “'+canonicalName+'”?',
+   actionLabel:'Salvar alterações',onConfirm:saveProfile
+  });
+  else saveProfile();
  };
  return <section className="filament-profile" aria-label="Configuração de filamento para slicer">
+  {confirmationDialog}
   <div className="filament-profile-head"><div className="mc-profile-title"><strong>Configurações para o slicer</strong>
    <CalculatorHelp label="Configurações para o slicer">Ajuste os parâmetros conforme máquina, bico e peça. O perfil não altera o custo. Cópias pessoais ficam neste navegador e preservam o original.</CalculatorHelp>
   </div><div className="profile-head-actions"><button type="button" className="details-button" onClick={clone}>Clonar e personalizar</button>{selection&&scoped.some(p=>p.id===selection)&&<button type="button" className="details-button" onClick={editPersonal}>Editar meu perfil</button>}</div></div>
