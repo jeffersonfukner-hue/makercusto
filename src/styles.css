@@ -459,3 +459,17 @@
 
 /* Visão geral homologada — 24/11/2026 */
 .system-sidebar{background:#202e3d}.system-sidebar nav>button.system-nav-active{background:#3b5268}.dashboard-shortcuts{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.dashboard-shortcuts button{min-height:112px;justify-items:center;align-content:center;text-align:center;gap:10px}.dashboard-shortcuts button .dashboard-shortcut-icon{font-size:32px;color:#80b6e4;line-height:1}.dashboard-chart-empty{min-height:150px;display:grid;place-items:center;color:#a6b9ce;background:repeating-linear-gradient(to bottom,transparent 0,transparent 36px,#ffffff12 37px,#ffffff12 38px);border-bottom:1px solid #40516e;text-align:center}.dashboard-chart h2{margin-top:0}@media(max-width:700px){.dashboard-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Calculadora da oficina: identificação, produção e resultado. */
+.system-shell .calculator-identity{margin-bottom:18px;min-width:0}
+.system-shell .calculator-identity .product-save-panel{margin:0;padding:18px;background:#172331;border-color:#35465a}
+.system-shell .calculator-identity .product-save-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+.system-shell .calculator-identity .product-name-input{grid-column:1/-1}
+.system-shell .calculator-identity .product-name-input input{font-size:21px;font-weight:700}
+.system-shell .calculator-identity .product-name-feature strong{font-size:clamp(22px,3vw,32px);overflow-wrap:anywhere}
+.system-shell .calculator-identity .product-list summary{cursor:pointer;color:#b9cce0;font-size:13px}
+.system-shell .calculator-production h3{font-size:16px;margin:0 0 14px}
+.system-shell .workspace{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr)}
+.system-shell .workspace .result-panel{position:sticky;top:16px;background:#172331;border-color:#35465a}
+@media(max-width:1100px){.system-shell .workspace{grid-template-columns:minmax(0,1fr)}.system-shell .workspace .result-panel{position:static}}
+@media(max-width:700px){.system-shell .calculator-identity .product-save-fields{grid-template-columns:minmax(0,1fr)}.system-shell .calculator-identity .product-save-panel{padding:14px}}
