@@ -1,3 +1,4 @@
+import {CalculationHistory} from './CalculationHistory';
 import {useConfirmation} from './ConfirmationDialog';
 import {AssemblyComposer} from './AssemblyComposer';
 import {formatCatalogName} from '../domain/catalogName';
@@ -62,9 +63,9 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
  const kit=kits.find(x=>x.id===selected);
  const product=items.find(x=>x.id===selected);
  const visible=useMemo(()=>items.filter(x=>
-  (tab==='all'||(tab==='component'?x.kind==='component':x.kind==='kit'))&&
+  (tab==='all'||(tab==='component'?x.kind==='component':x.kind==='kit'||kits.some(assembly=>assembly.id===x.id)))&&
   (x.name+' '+(x.sku??'')).toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR'))
- ),[items,tab,query]);
+ ),[items,kits,tab,query]);
  const totalCost=(p:AssemblyPartDraft[])=>p.every(x=>x.unit_cost!==null&&x.unit_cost!==undefined)?
    p.reduce((sum,x)=>sum+(x.unit_cost??0)*x.quantity,0):null;
  const reset=(next:'product'|'component'|'kit')=>{
@@ -108,8 +109,15 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
    const history=await listSavedCalculations(workspaceId);
    const latest=history.filter(x=>x.product_id===product.id)
     .sort((a,b)=>b.saved_at.localeCompare(a.saved_at))[0];
-   if(!latest){setError('Esta ficha ainda não possui um cálculo salvo. Use a calculadora para registrar o primeiro custo; o cadastro atual será preservado.');return;}
-   onCalculate(latest);
+   if(latest){onCalculate(latest);return;}
+   if(kit?.snapshot_id&&kit.saved_at){
+    onCalculate({product_id:product.id,name:product.name,kind:product.kind,sku:product.sku,
+     snapshot_id:kit.snapshot_id,saved_at:kit.saved_at,unit_cost:null,
+     saved_input:{grams:0,pricePerKg:0,hours:0,quantity:1,accessoryPerUnit:0,
+      assemblyMinutesPerUnit:0,laborPerHour:0,salePrice:product.sale_price??0}});
+    return;
+   }
+   setError('Esta ficha ainda não possui um cálculo salvo. Use a calculadora para registrar o primeiro custo; o cadastro atual será preservado.');
   }catch(e){setError('Não foi possível abrir o cálculo: '+(e as Error).message);}
   finally{setOpeningCalculation(false);}
  };
@@ -154,7 +162,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
   <AssemblyComposer key={workspaceId} workspaceId={workspaceId} active onViewAssemblies={()=>{setMode('catalog');setReload(value=>value+1);}}/>
  </div>;
  const heading=tab==='assemblies'?'Conjuntos':tab==='component'?'Peças':'Produtos da oficina';
- const label=(p:ProductRecord)=>p.kind==='kit'?'Conjunto':p.kind==='component'?'Peça':'Produto';
+ const label=(p:ProductRecord)=>p.kind==='kit'?'Conjunto':kits.some(assembly=>assembly.id===p.id)?'Produto com composição':p.kind==='component'?'Peça':'Produto';
  return <section className="product-workspace" aria-label="Gestão de produtos">
   {confirmationDialog}
   <div className="product-workspace-heading">
@@ -176,7 +184,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
      {workspaceId&&<ProductThumbnail workspaceId={workspaceId} productId={p.id} name={p.name} defer/>}
      <div className="product-card-text"><span className="product-kind">{label(p)}</span><h3>{p.name}</h3><p>{p.description||'Sem descrição cadastrada'}</p></div>
     </div>
-    <div className="product-catalog-meta"><span>{p.kind==='kit'?(kits.find(x=>x.id===p.id)?.parts.length??'—')+' peças':p.sku??'Sem referência'}</span><span>{p.sale_price===null?'Sem preço':brl(p.sale_price)}</span></div>
+    <div className="product-catalog-meta"><span>{kits.some(assembly=>assembly.id===p.id)?(kits.find(x=>x.id===p.id)?.parts.length??'—')+' peças':p.sku??'Sem referência'}</span><span>{p.sale_price===null?'Sem preço':brl(p.sale_price)}</span></div>
     <button type="button" onClick={()=>open(p.id)}>Ver ficha</button>
    </article>)}</div>}
   </>}
@@ -192,6 +200,8 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
     <div><small>Custo de produção</small><strong>{kit?(kit.total_cost===null?'Não apurado':brl(kit.total_cost)+' (informado)'):'Consultar cálculo'}</strong></div>
     <div><small>Revisão</small><strong>{kit?kit.revision:'Histórico preservado'}</strong></div>
    </div>
+   {kit&&workspaceId&&<CalculationHistory key={kit.id} workspaceId={workspaceId} initialProductId={kit.id}
+    products={[{product_id:kit.id,name:kit.name,sku:kit.sku,kind:'kit'}]}/>}
    {kit&&<><h4>Composição do conjunto</h4><div className="product-detail-scroll"><table><thead><tr><th>Peça</th><th>Qtd.</th><th>Peso/un.</th><th>Custo informado/un.</th><th>Subtotal</th></tr></thead><tbody>
     {kit.parts.map(p=><tr key={p.id}><td><strong>{p.name}</strong><small>{p.notes||'Sem observação'}</small></td><td>{p.quantity}</td><td>{p.grams===null?'—':p.grams+' g'}</td><td>{p.unit_cost===null?'—':brl(p.unit_cost)}</td><td>{p.unit_cost===null?'—':brl(p.unit_cost*p.quantity)}</td></tr>)}
    </tbody></table></div>

@@ -1,11 +1,11 @@
 import {useConfirmation} from './ConfirmationDialog';
 import {Modal} from './Modals';
 import {ProductPhotos} from './ProductPhotos';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {CalculatorHelp} from './CalculatorHelp';
 import {FormActionDock} from './FormActionDock';
 import {formatCatalogName} from '../domain/catalogName';
-import {getComponentCostSnapshot,listComponentLibrary,listProducts,saveAssemblyWithComponents,
+import {createComposedProduct,getComponentCostSnapshot,listAssemblies,listComponentLibrary,listProducts,saveAssemblyWithComponents,
  type ComponentCostSnapshot,type ComponentLibraryItem,type ProductRecord} from '../data/supabase';
 
 type Part={id:string;quantity:number};
@@ -70,35 +70,55 @@ function AssemblyResults({parts,library,snapshots,price}:{
  </section>;
 }
 
-export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspaceId:string;active:boolean;onViewAssemblies:()=>void}){
+export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAssemblies}:{
+ workspaceId:string;active:boolean;identity?:{name:string;sku:string;description:string;productId?:string};
+ onSaved?:(name:string)=>void;onViewAssemblies:()=>void
+}){
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [library,setLibrary]=useState<ComponentLibraryItem[]>();
  const [snapshots,setSnapshots]=useState<Record<string,ComponentCostSnapshot|undefined>>({});
  const [parts,setParts]=useState<Part[]>([]);
  const [catalog,setCatalog]=useState<ProductRecord[]>([]);
+ const [sourceProduct,setSourceProduct]=useState<ProductRecord>();
  const [query,setQuery]=useState('');
  const [viewing,setViewing]=useState<ProductRecord|null>(null);
- const [name,setName]=useState('');
+ const [localName,setName]=useState('');
+ const name=identity?.name??localName;
  const [salePrice,setSalePrice]=useState('');
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
  const [saved,setSaved]=useState(false);
+ const initialized=useRef(false);
  useEffect(()=>{
   if(!active)return;
   let live=true;
-  void Promise.all([listComponentLibrary(workspaceId),listProducts(workspaceId)]).then(([rows,products])=>{
-   if(live){setLibrary(rows);setCatalog(products.filter(product=>product.kind==='component'));}
-  })
-   .catch(()=>{if(live){setLibrary(previous=>previous??[]);setError('Não foi possível consultar as peças da oficina.');}});
+  void Promise.all([listComponentLibrary(workspaceId),listProducts(workspaceId),
+   identity?.productId?listAssemblies(workspaceId):Promise.resolve([])
+  ]).then(([rows,products,assemblies])=>{
+   if(!live)return;
+   setLibrary(rows);setCatalog(products.filter(product=>product.kind==='component'));
+   setSourceProduct(products.find(product=>product.id===identity?.productId));
+   if(!initialized.current){
+    initialized.current=true;
+    const existing=assemblies.find(item=>item.id===identity?.productId);
+    if(existing){
+     const linked=existing.parts.flatMap(part=>part.product_id?[{id:part.product_id,quantity:Number(part.quantity)}]:[]);
+     setParts(linked);
+     setSalePrice(existing.sale_price===null?'':String(existing.sale_price));
+     for(const part of linked)void getComponentCostSnapshot(workspaceId,part.id)
+      .then(snapshot=>setSnapshots(previous=>({...previous,[part.id]:snapshot}))).catch(()=>{});
+    }
+   }
+  }).catch(()=>{if(live){setLibrary(previous=>previous??[]);setError('Não foi possível consultar as peças da oficina.');}});
   return()=>{live=false;};
- },[workspaceId,active]);
+ },[workspaceId,active,identity?.productId]);
  const filter=query.trim().toLocaleLowerCase('pt-BR');
  const choices=catalog.filter(item=>(item.name+' '+(item.sku??'')).toLocaleLowerCase('pt-BR').includes(filter));
  const price=salePrice===''?null:Number(salePrice);
  const priceValid=price===null||(Number.isFinite(price)&&price>=0&&price<=100000000);
  const quantitiesValid=parts.every(part=>Number.isSafeInteger(part.quantity)&&part.quantity>=1&&part.quantity<=100000);
  const canSave=parts.length>=2&&quantitiesValid
-  &&name.trim().length>=2&&priceValid&&parts.every(part=>catalog.some(item=>item.id===part.id));
+  &&name.trim().length>=2&&priceValid&&(!identity?.productId||Boolean(sourceProduct))&&parts.every(part=>catalog.some(item=>item.id===part.id));
  const add=(id:string)=>{
   if(busy||saved||!catalog.some(item=>item.id===id))return;
   setParts(previous=>previous.length>=30||previous.some(part=>part.id===id)?previous:[...previous,{id,quantity:1}]);
@@ -106,14 +126,25 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
    .then(snapshot=>setSnapshots(previous=>({...previous,[id]:snapshot})))
    .catch(()=>{});
  };
- const save=async()=>{
+ const save=async(confirmed=false)=>{
   if(!canSave||busy||saved||!library)return;
+  if(identity?.productId&&!confirmed){
+   requestConfirmation({title:'Salvar composição neste produto',
+    message:'Salvar a montagem por partes de “'+name.trim()+'” como uma nova revisão? A impressão direta continua disponível na mesma ficha.',
+    actionLabel:'Salvar composição',onConfirm:()=>void save(true)});
+   return;
+  }
   setBusy(true);setError('');
+  const nameToSave=identity?.productId?name.trim():formatCatalogName(name);
   try{
-   await saveAssemblyWithComponents(workspaceId,null,{name:formatCatalogName(name),sku:'',description:'',salePrice:price,
-    parts:parts.map(part=>({product_id:part.id,name:catalog.find(item=>item.id===part.id)!.name,
-     quantity:part.quantity,notes:'',grams:null}))});
-   setSaved(true);
+   const componentParts=parts.map(part=>({product_id:part.id,name:catalog.find(item=>item.id===part.id)!.name,
+    quantity:part.quantity,notes:'',grams:null}));
+   const draft={name:sourceProduct?.name??nameToSave,sku:sourceProduct?.sku??identity?.sku.trim()??'',
+    description:sourceProduct?.description??(identity?.productId?'':identity?.description.trim()??''),
+    salePrice:price??sourceProduct?.sale_price??null,parts:componentParts};
+   if(identity&&!identity.productId)await createComposedProduct(workspaceId,draft);
+   else await saveAssemblyWithComponents(workspaceId,identity?.productId??null,draft);
+   setSaved(true);onSaved?.(nameToSave);
   }catch(cause){setError('Não foi possível salvar o conjunto. '+(cause as Error).message);}
   finally{setBusy(false);}
  };
@@ -121,7 +152,8 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
   {confirmationDialog}
   <section className="panel mc-assembly-inputs" aria-label="Montar conjunto com peças salvas">
    <h2>Montar conjunto</h2>
-   <label>Nome do conjunto<input value={name} maxLength={150} disabled={busy||saved} onChange={event=>setName(event.target.value)}/></label>
+   {!identity&&<label>Nome do conjunto<input value={name} maxLength={150} disabled={busy||saved} onChange={event=>setName(event.target.value)}/></label>}
+   {identity?.productId&&<p>A montagem por partes fica na mesma ficha. Use Cálculo para a impressão direta, inclusive em multicolorido com AMS.</p>}
    <label>Buscar peça salva<input type="search" value={query} onChange={event=>setQuery(event.target.value)}/></label>
    {!library&&!error&&<p role="status">Carregando peças…</p>}
    {library&&choices.length===0&&!error&&<p>{catalog.length===0?'Salve as peças na calculadora para usar aqui.':'Nenhuma peça encontrada.'}</p>}
@@ -138,7 +170,7 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
      </li>;
     })}
    </ul>}
-   {parts.length>0&&<h3>Peças na composição</h3>}
+   {parts.length>0&&<h3>Partes na composição</h3>}
    {parts.length>0&&<ul className="mc-assembly-parts">{parts.map(part=>{
     const item=library?.find(row=>row.id===part.id);
     const partName=catalog.find(record=>record.id===part.id)?.name??'Peça indisponível';
@@ -174,7 +206,7 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
   <AssemblyResults parts={quantitiesValid?parts:[]} library={library??[]} snapshots={snapshots} price={priceValid?price:null}/>
   {active&&<FormActionDock title={name.trim()||'Novo conjunto'} subtitle="Composição de peças salvas">
    <button type="button" className="secondary-action" disabled={busy} onClick={onViewAssemblies}>Ver conjuntos</button>
-   <button type="button" className="primary-action" disabled={!canSave||busy||saved} onClick={()=>void save()}>{busy?'Salvando…':'Salvar conjunto'}</button>
+   <button type="button" className="primary-action" disabled={!canSave||busy||saved} onClick={()=>void save()}>{busy?'Salvando…':identity?.productId?'Salvar composição':'Salvar conjunto'}</button>
   </FormActionDock>}
  </div>;
 }

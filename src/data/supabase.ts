@@ -76,21 +76,27 @@ export const appendProductCalculation=(workspaceId:string,productId:string,reque
  });
 
 export type AssemblyPart = {id:string;product_id?:string|null;name:string;quantity:number;notes:string|null;grams:string|null;unit_cost:number|null;cost_source?:'linked'|'manual'|'legacy'};
-export type AssemblyRecord = {id:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:AssemblyPart[];revision:number;total_cost:number|null;cost_status:'unknown'|'estimated'|'confirmed'};
+export type AssemblyRecord = {id:string;product_kind?:'product'|'kit';snapshot_id?:string;saved_at?:string;name:string;sku:string|null;description:string|null;sale_price:number|null;created_at:string;parts:AssemblyPart[];revision:number;total_cost:number|null;cost_status:'unknown'|'estimated'|'confirmed'};
 export type AssemblyPartDraft = {id?:string;product_id?:string|null;name:string;quantity:number;notes:string;grams:number|null;unit_cost?:number|null};
 export type ComponentLibraryItem={id:string;name:string;sku:string|null;
  grams:number|null;unit_cost:number|null;cost_source:'snapshot'|'unknown'};
 export const listComponentLibrary=(workspaceId:string)=>api<ComponentLibraryItem[]>('rpc/mc_list_component_library','POST',{p_workspace_id:workspaceId});
-export const saveAssemblyWithComponents=(workspaceId:string,productId:string|null,draft:{
- name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]
-})=>api<string>('rpc/mc_save_assembly_linked','POST',{
- p_workspace_id:workspaceId,p_product_id:productId,
- p_name:draft.name,p_sku:draft.sku,p_description:draft.description,
- p_sale_price:draft.salePrice,p_parts:draft.parts.map(p=>({
-  product_id:p.product_id??null,name:p.name,quantity:p.quantity,notes:p.notes,
-  grams:p.grams,unit_cost:p.unit_cost??null
- }))
-});
+type LinkedAssemblyDraft={name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]};
+const linkedAssemblyParts=(parts:AssemblyPartDraft[])=>parts.map(part=>({
+ product_id:part.product_id??null,name:part.name,quantity:part.quantity,notes:part.notes,
+ grams:part.grams,unit_cost:part.unit_cost??null
+}));
+export const saveAssemblyWithComponents=(workspaceId:string,productId:string|null,draft:LinkedAssemblyDraft)=>
+ api<string>('rpc/mc_save_assembly_linked','POST',{
+  p_workspace_id:workspaceId,p_product_id:productId,
+  p_name:draft.name,p_sku:draft.sku,p_description:draft.description,
+  p_sale_price:draft.salePrice,p_parts:linkedAssemblyParts(draft.parts)
+ });
+export const createComposedProduct=(workspaceId:string,draft:LinkedAssemblyDraft)=>
+ api<string>('rpc/mc_create_composed_product','POST',{
+  p_workspace_id:workspaceId,p_name:draft.name,p_sku:draft.sku,p_description:draft.description,
+  p_sale_price:draft.salePrice,p_parts:linkedAssemblyParts(draft.parts)
+ });
 export const listAssemblies=(workspaceId:string)=>api<AssemblyRecord[]>('rpc/mc_list_assemblies','POST',{p_workspace_id:workspaceId});
 export const createAssembly=(workspaceId:string,draft:{name:string;sku:string;description:string;salePrice:number|null;parts:AssemblyPartDraft[]})=>
  api<string>('rpc/mc_create_assembly','POST',{

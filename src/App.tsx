@@ -115,6 +115,9 @@ export default function App(){
  const [workspaceId,setWorkspaceId]=useState<string|null>(null);
  const [accountError,setAccountError]=useState('');
  const [workspaceName,setWorkspaceName]=useState('Minha oficina');
+ const [calculatorName,setCalculatorName]=useState('');
+ const [calculatorSku,setCalculatorSku]=useState('');
+ const [compositionSaved,setCompositionSaved]=useState('');
  const [description,setDescription]=useState('');
  const [identityReset,setIdentityReset]=useState(0);
  const [calculatorKind,setCalculatorKind]=useState<'product'|'component'>('product');
@@ -283,7 +286,7 @@ export default function App(){
   actionLabel:'Zerar cálculo',
   onConfirm:()=>{
    setRevisionTarget(null);setCalculatorKind('product');setLoadedCalculation('');setAccountError('');
-   setDescription('');setIdentityReset(value=>value+1);
+   setDescription('');setCalculatorName('');setCalculatorSku('');setIdentityReset(value=>value+1);
    setPrintDurationDraft(null);setSlicerDurationDrafts({});
    setForm({...referenceCase,materials:undefined,grams:0,pricePerKg:0,hours:0,quantity:1,
     accessoryPerUnit:0,assemblyMinutesPerUnit:0,laborPerHour:0,salePrice:0});
@@ -316,7 +319,7 @@ export default function App(){
   else{setAdvanced(Object.values(restored.slicerSummary??{}).some(value=>value!==undefined));setDetails(false);}
   setAccountError('');
   setLoadedCalculation('Dados de "'+saved.name+'" carregados com a impressora selecionada.');
-  setRevisionTarget(saved);
+  setRevisionTarget(saved);setCalculatorName(saved.name);setCalculatorSku(saved.sku??'');
   setCalculatorKind(saved.kind);
   setCalculatorTab('calculation');
   return true;
@@ -395,21 +398,23 @@ export default function App(){
  {confirmationDialog}
  {shareLines&&(!session||activeSection==='calculator')&&<CalculationPrintSummary title={shareTitle} lines={shareLines}/>}
  {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthMode('login')}>Entrar</button></div></header>}
- <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>
+ <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={section=>{setCompositionSaved('');setActiveSection(section);}} onLogout={()=>void logout()}>
  <main className={session?"app-main":"shell"}>
   {session&&activeSection==='overview'&&<WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
   {(!session||activeSection==='calculator')&&<>
   <div className="mc-calculator">
   {!session&&<section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>}
-  {session&&<div hidden={calculatorTab==='composition'}><ProductSavePanel key={identityReset} session={session} workspaceId={workspaceId} input={activeInput} result={result}
-   kind={calculatorKind} onKindChange={setCalculatorKind}
+  {session&&<ProductSavePanel key={identityReset} session={session} workspaceId={workspaceId} input={activeInput} result={result}
+   kind={calculatorKind} onKindChange={kind=>{setCalculatorKind(kind);if(kind==='component'&&calculatorTab==='composition')setCalculatorTab('calculation');}}
+   name={calculatorName} onNameChange={setCalculatorName} sku={calculatorSku} onSkuChange={setCalculatorSku}
+   composing={calculatorTab==='composition'}
    onLogin={()=>setAuthMode('login')} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity')}
    onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
    onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
-   onCreateAssembly={()=>{setCalculatorKind('product');setCalculatorTab('composition');}}/></div>}
-  {loadedCalculation&&<p role="status" className="product-success mc-calculation-status">{loadedCalculation}</p>}
+   onCreateAssembly={saved=>{if(applySavedCalculation(saved))setCalculatorTab('composition');}}/>}
+  {loadedCalculation&&calculatorTab!=='composition'&&<p role="status" className="product-success mc-calculation-status">{loadedCalculation}</p>}
   {session&&accountError&&<p role="alert" className="error">{accountError}</p>}
   {session&&<div className="mc-calculator-navigation">
   <nav className="mc-calculator-tabs" aria-label="Áreas da calculadora">
@@ -639,6 +644,12 @@ export default function App(){
   </div>
   {session&&workspaceId&&<div hidden={calculatorTab!=='composition'}>
    <AssemblyComposer key={workspaceId+'/'+(revisionTarget?.product_id??identityReset)} workspaceId={workspaceId} active={calculatorTab==='composition'}
+    identity={{name:calculatorName,sku:calculatorSku,description,productId:revisionTarget?.product_id}}
+    onSaved={name=>{
+     setCompositionSaved(revisionTarget?'Composição de “'+name+'” salva na mesma ficha.':'Conjunto “'+name+'” salvo na oficina.');
+     setRevisionTarget(null);setLoadedCalculation('');setCalculatorName('');setCalculatorSku('');setDescription('');
+     setIdentityReset(value=>value+1);setCalculatorTab('calculation');setActiveSection('assemblies');
+    }}
     onViewAssemblies={()=>setActiveSection('assemblies')}/>
   </div>}
   {session&&calculatorTab==="settings"&&<section className="panel mc-tab-panel">
@@ -662,6 +673,7 @@ export default function App(){
   {session&&activeSection==='tips'&&<section className="panel"><h2>Dicas de impressão</h2><p>Conteúdo em desenvolvimento.</p></section>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
+  {session&&activeSection==='assemblies'&&compositionSaved&&<p role="status" className="product-success">{compositionSaved}</p>}
   {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'}
    onCalculate={snapshot=>{if(applySavedCalculation(snapshot)){setCalculatorTab("calculation");setActiveSection('calculator');}}}/>}
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}

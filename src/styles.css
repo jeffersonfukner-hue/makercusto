@@ -941,3 +941,10 @@
 .mc-upload-progress {margin:8px 0}
 .mc-upload-progress p {overflow-wrap:anywhere}
 .mc-upload-progress progress {width:min(100%,260px);accent-color:var(--mc-blue)}
+
+.mc-composing-identity .product-save-content {grid-template-columns:minmax(0,1fr)}
+.mc-composing-identity .mc-product-identity-fields {grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:540px){
+ .mc-composing-identity .mc-product-identity-fields {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .mc-composing-identity .mc-product-identity-fields .mc-sku-field {grid-column:auto}
+}

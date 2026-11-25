@@ -8,7 +8,7 @@ import {FormActionDock} from './FormActionDock';
 import { listProducts, saveCalculatedProduct, appendProductCalculation, listSavedCalculations, type ProductRecord, type Session, type SavedCalculation } from '../data/supabase';
 import type { CostInput, CostResult } from '../domain/cost';
 
-type Props = { session: Session | null; workspaceId: string | null; kind:'product'|'component'; onKindChange:(kind:'product'|'component')=>void; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:()=>void; onLoadCalculation?:(draft:SavedCalculation)=>boolean; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
+type Props = { session: Session | null; workspaceId: string | null; kind:'product'|'component'; onKindChange:(kind:'product'|'component')=>void; name:string; onNameChange:(name:string)=>void; sku:string; onSkuChange:(sku:string)=>void; composing?:boolean; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:(calculation:SavedCalculation)=>void; onLoadCalculation?:(draft:SavedCalculation)=>boolean; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
 const currency=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const comparableName=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR').trim().replace(/\s+/g,' ');
 function availableCopyName(original:string,existing:Set<string>){
@@ -18,13 +18,12 @@ function availableCopyName(original:string,existing:Set<string>){
   if(!existing.has(comparableName(candidate)))return candidate;
  }
 }
-export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly,onLoadCalculation,revisionTarget,onClearRevisionTarget,description='',onDescriptionChange,lotField,onNewCalculation}:Props){
+export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onNameChange:setName,sku,onSkuChange:setSku,composing=false,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly,onLoadCalculation,revisionTarget,onClearRevisionTarget,description='',onDescriptionChange,lotField,onNewCalculation}:Props){
  const {requestConfirmation,confirmationDialog}=useConfirmation();
- const [name,setName]=useState('');
  const [copySource,setCopySource]=useState<string|null>(null);
  const nameInput=useRef<HTMLInputElement>(null);
  const focusCopyName=useRef(false);
- const [sku,setSku]=useState('');
+ const [lastSavedProductId,setLastSavedProductId]=useState('');
  const [lastSavedKind,setLastSavedKind]=useState<'product'|'component'>('product');
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [savedCalculations,setSavedCalculations]=useState<SavedCalculation[]>([]);
@@ -51,6 +50,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,re
     .catch(()=>{if(live)setSavedCalculations([]);});
   return()=>{live=false;};
  },[session?.user.id,workspaceId,refresh]);
+ const lastSavedCalculation=savedCalculations.find(item=>item.product_id===lastSavedProductId);
  const registeredNames=new Set([...items,...savedCalculations].map(item=>comparableName(item.name)));
  const partCount=items.filter(item=>item.kind==='component').length;
  const visibleItems=filter==='component'?items.filter(item=>item.kind==='component'):items;
@@ -94,10 +94,13 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,re
     salePrice:input.salePrice,quantity:input.quantity,totalCost:result.lotCost,
     parameters:{origin:'calculator',source:'user-and-estimates',saved_input:input,calculated_result:result}
    };
+   let productId:string;
    if(revisionTarget){
+    productId=revisionTarget.product_id;
     const key=requestKey??crypto.randomUUID();setRequestKey(key);
     await appendProductCalculation(workspaceId,revisionTarget.product_id,key,payload);
-   }else await saveCalculatedProduct(workspaceId,payload);
+   }else productId=await saveCalculatedProduct(workspaceId,payload);
+   setLastSavedProductId(productId);
    setSelectedCalculation('');
    setLastSavedKind(kind);setCopySource(null);setName('');setSku('');onDescriptionChange?.('');onKindChange('product');
    setMessage(revisionTarget?'Nova revisão de custo salva na mesma ficha. O histórico anterior foi preservado.':(kind==='component'?'Peça':'Produto')+', versão inicial e custo estimado salvos na sua oficina.');
@@ -122,10 +125,10 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,re
   <p className="footnote">Entre na sua conta para salvar e consultar os produtos na nuvem.</p>
   <button type="button" className="primary-action" onClick={onLogin}>Entrar para salvar produto</button>
  </section>;
- return <section className="calculator-identity" aria-label="Identificação do cálculo">
+ return <section className={composing?"calculator-identity mc-composing-identity":"calculator-identity"} aria-label="Identificação do cálculo">
   {confirmationDialog}
   <div className="product-save-content">
-   {onLoadCalculation&&<section className="panel mc-recovery" aria-labelledby="recover-calculation">
+   {!composing&&onLoadCalculation&&<section className="panel mc-recovery" aria-labelledby="recover-calculation">
     <div className="mc-identity-heading">
      <h2 id="recover-calculation">Recuperar cálculo salvo</h2>
      <CalculatorHelp label="Recuperar cálculo salvo">Selecione para carregar os parâmetros com a impressora atual. O histórico fica preservado. Use o botão + para iniciar um novo cálculo.</CalculatorHelp>
@@ -158,7 +161,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,re
    <section className="panel mc-current-product" aria-labelledby="product-save-title">
     <div className="mc-identity-heading"><h2 id="product-save-title">Identificação do produto</h2>
      <CalculatorHelp label="Salvar produto">O custo é registrado com os parâmetros atuais. Peças diferentes na mesma placa exigem rateio validado. O salvamento não movimenta estoque.</CalculatorHelp>
-     {revisionTarget&&onClearRevisionTarget&&<button type="button" className="details-button mc-copy-calculation"
+     {!composing&&revisionTarget&&onClearRevisionTarget&&<button type="button" className="details-button mc-copy-calculation"
       disabled={busy} onClick={draftAsCopy}>Salvar como novo</button>}
     </div>
     <div className="product-save-fields mc-product-identity-fields">
@@ -180,7 +183,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,re
        <option value="product">Produto final</option><option value="component">Peça / componente</option>
       </select>
      </div>
-     {lotField}
+     {!composing&&lotField}
      <div className="mc-sku-field">
       <div className="mc-field-caption"><label htmlFor="mc-product-sku">SKU</label>
        <CalculatorHelp label="SKU">Código interno opcional para identificar e buscar um produto. Ex.: CH-GALO-01.</CalculatorHelp>
@@ -192,12 +195,12 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,re
    <div className="mc-save-feedback" aria-live="polite">{message&&<div className="mc-save-confirmation"><p className="product-success" role="status">{message}</p>
     <div className="product-workspace-buttons">
      {onViewSaved&&<button type="button" onClick={()=>onViewSaved(lastSavedKind)}>Ver cadastros da oficina</button>}
-     {kind==='product'&&lastSavedKind==='product'&&onCreateAssembly&&<button type="button" onClick={onCreateAssembly}>Montar conjunto com peças</button>}
+     {kind==='product'&&lastSavedKind==='product'&&lastSavedCalculation&&onCreateAssembly&&<button type="button" onClick={()=>onCreateAssembly(lastSavedCalculation)}>Montar conjunto com peças</button>}
     </div></div>}{error&&<p className="error" role="alert">{error}</p>}</div>
   </div>
-  <FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?(kind==="component"?"Peça / componente":"Produto final"):"Cálculo inválido"} metrics={result?[{label:"Custo unitário",value:currency(result.unitCost)},{label:"Venda",value:currency(input.salePrice)},{label:"Lucro bruto/un.",value:currency(input.salePrice-result.unitCost)},{label:"Margem",value:result.marginPercent.toFixed(1).replace(".",",")+"%"}]:undefined}>
+  {!composing&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?(kind==="component"?"Peça / componente":"Produto final"):"Cálculo inválido"} metrics={result?[{label:"Custo unitário",value:currency(result.unitCost)},{label:"Venda",value:currency(input.salePrice)},{label:"Lucro bruto/un.",value:currency(input.salePrice-result.unitCost)},{label:"Margem",value:result.marginPercent.toFixed(1).replace(".",",")+"%"}]:undefined}>
    {revisionTarget&&onClearRevisionTarget&&<button type="button" className="secondary-action" disabled={busy} onClick={draftAsCopy}>Salvar como novo</button>}
    <button className="primary-action" type="button" disabled={busy||!result||!workspaceId||name.trim().length<2} onClick={()=>void save()}>{busy?'Salvando…':revisionTarget?'Salvar nova revisão':kind==='component'?'Salvar peça e custo':'Salvar produto e custo'}</button>
-  </FormActionDock>
+  </FormActionDock>}
  </section>;
 }

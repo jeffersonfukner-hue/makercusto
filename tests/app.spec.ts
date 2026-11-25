@@ -1971,6 +1971,9 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  const base='33333333-3333-4333-8333-333333333333';
  const mic='44444444-4444-4444-8444-444444444444';
  let saved:unknown;
+ let converted:unknown;
+ const trophy='77777777-7777-4777-8777-777777777777';
+ const oldSnapshot='88888888-8888-4888-8888-888888888888';
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user}
  })),{user});
@@ -1980,7 +1983,10 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
   if(url.pathname.endsWith('/mc_products'))return route.fulfill({json:[
    {id:base,workspace_id:workspace,name:'Base',kind:'component',sku:'TR-BASE',description:'Base do troféu',sale_price:null,active:true},
    {id:mic,workspace_id:workspace,name:'Mão com Microfone',kind:'component',sku:null,description:null,sale_price:null,active:true},
-   {id:'111',workspace_id:workspace,name:'Outro produto final',kind:'product',sku:null,description:null,sale_price:null,active:true}
+   {id:trophy,workspace_id:workspace,name:'Troféu já cadastrado',kind:'product',sku:null,description:null,sale_price:null,active:true}
+  ]});
+  if(url.pathname.endsWith('/mc_list_saved_calculations'))return route.fulfill({json:[
+   {product_id:trophy,snapshot_id:oldSnapshot,name:'Troféu já cadastrado',kind:'product',sku:'TR-01',saved_input:{quantity:1,salePrice:0},saved_at:'2026-11-25T12:00:00Z'}
   ]});
   if(url.pathname.endsWith('/mc_list_component_library'))return route.fulfill({json:[
    {id:base,name:'Base',sku:null,unit_cost:4,cost_source:'snapshot'},
@@ -1994,8 +2000,10 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
     materialBreakdown:[{id:'one',name:'Preto',totalGrams:grams}]
    }}}]});
   }
-  if(url.pathname.endsWith('/mc_save_assembly_linked')){
-   saved=route.request().postDataJSON();
+  if(url.pathname.endsWith('/mc_save_assembly_linked')||url.pathname.endsWith('/mc_create_composed_product')){
+   const payload=route.request().postDataJSON();
+   if(payload.p_product_id){converted=payload;return route.fulfill({json:trophy});}
+   saved=payload;
    return route.fulfill({json:'55555555-5555-4555-8555-555555555555'});
   }
   return route.fulfill({json:[]});
@@ -2008,8 +2016,12 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await kind.selectOption('component');
  await expect(compositionTab).toHaveCount(0);
  await kind.selectOption('product');
+ await page.getByRole('textbox',{name:'Nome do produto'}).fill('Microfone com base');
  await compositionTab.click();
- await page.getByLabel('Nome do conjunto').fill('Microfone com base');
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Microfone com base');
+ await expect(page.getByLabel('Nome do conjunto')).toHaveCount(0);
+ await expect(page.getByTestId('quantity')).toHaveCount(0);
+ await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toHaveCount(0);
  const pieces=page.getByRole('list',{name:'Peças salvas'});
  await expect(pieces.getByRole('listitem')).toHaveCount(2);
  const baseCard=pieces.getByRole('listitem').filter({hasText:'Base'});
@@ -2032,13 +2044,32 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();
  await expect(page.getByLabel('Quantidade de Base')).toHaveValue('2');
  await page.getByRole('button',{name:'Salvar conjunto',exact:true}).click();
- await expect(page.getByText('Conjunto salvo na oficina.')).toBeVisible();
+ await expect(page.getByText('Conjunto “Microfone com Base” salvo na oficina.')).toBeVisible();
  expect(saved).toMatchObject({p_workspace_id:workspace,p_name:'Microfone com Base',p_parts:[
   {product_id:base,quantity:2},{product_id:mic,quantity:1}
  ]});
- await page.getByRole('button',{name:'Ver conjuntos'}).click();
  await page.getByRole('button',{name:'Montar com peças salvas'}).click();
  await expect(page.getByRole('heading',{name:'Montar conjunto'})).toBeVisible();
+ await page.getByRole('button',{name:'Ver conjuntos'}).click();
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Calculadora de custos').click();
+ await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(oldSnapshot);
+ await compositionTab.click();
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Troféu já cadastrado');
+ await expect(page.getByRole('textbox',{name:'SKU do produto'})).toHaveValue('TR-01');
+ const add=page.getByRole('list',{name:'Peças salvas'}).getByRole('button',{name:'Adicionar à composição'});
+ await add.first().click();
+ await add.first().click();
+ const convert=page.getByRole('button',{name:'Salvar composição',exact:true});
+ await convert.click();
+ const confirmation=page.getByRole('dialog',{name:'Salvar composição neste produto'});
+ await expect(confirmation).toContainText('Troféu já cadastrado');
+ await confirmation.getByRole('button',{name:'Cancelar'}).click();
+ expect(converted).toBeUndefined();
+ await convert.click();
+ await confirmation.getByRole('button',{name:'Salvar composição',exact:true}).click();
+ await expect(page.getByText('Composição de “Troféu já cadastrado” salva na mesma ficha.')).toBeVisible();
+ expect(converted).toMatchObject({p_product_id:trophy,p_parts:[{product_id:base,quantity:1},{product_id:mic,quantity:1}]});
 });
 
 test('recupera revisão antiga e registra pedido vendido no histórico da oficina',async({page})=>{

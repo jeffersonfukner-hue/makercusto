@@ -218,3 +218,12 @@ Não ampliar escopo sem homologação.
 
 - [ ] Consolidar os cadastros em telas de consulta e gestão próprias para cada entidade. Preservar os atalhos rápidos na calculadora e reaproveitar a mesma lógica de cadastro.
 - [ ] Homologar o registro de pedidos por produto, histórico de revisões de custo e isolamento por oficina no Preview após autorização específica para a migração de Pedidos.
+
+## Custos gerais de montagem
+
+- [ ] Decidir como registrar cola, embalagem e consumíveis de baixo valor na montagem. Avaliar custos gerais rateados ou valores por unidade/conjunto conforme a forma de registrar o consumo. Retomar numa etapa posterior.
+
+## Resultado único da calculadora — próximo após identificação e revisões
+
+- [ ] Reaproveitar um único painel de resultado em Cálculo, Composição, Configurações e Observações. Manter compartilhamento, orçamento e planejamento/registro de pedidos no mesmo painel. Preservar a origem ativa ao trocar de aba, com escolha explícita entre impressão direta e montagem por partes e sem copiar automaticamente os dados de uma forma de produção para a outra.
+- [ ] Nos pedidos por composição, multiplicar pelo número de produtos montados. Exibir mesas apenas ao usar uma estimativa de impressão direta, ou quando houver dados próprios de produção para as partes.
