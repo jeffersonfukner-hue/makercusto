@@ -555,7 +555,7 @@
 .mc-calculator .workspace {grid-template-columns:minmax(0,2.2fr) minmax(280px,1fr);gap:12px;align-items:start}
 .mc-cost-editor {
  display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);
- grid-template-rows:auto 1fr;gap:10px;min-width:0;align-items:start;
+ gap:10px;min-width:0;align-items:stretch;
 }
 .mc-calculator .mode-switch {display:flex;gap:0;margin:0;padding:2px;background:#eaf0f8;border-radius:8px}
 .mc-calculator .mode-switch button {min-height:32px;border-color:transparent;background:none;box-shadow:none;padding:5px 14px}
@@ -563,8 +563,14 @@
 .mc-cost-block {min-width:0;border:1px solid var(--mc-border);border-radius:10px;padding:13px}
 .mc-cost-block>:is(h2,h3) {margin-bottom:10px}
 .mc-cost-block .fields {display:grid;grid-template-columns:minmax(0,1fr);margin:0;gap:8px}
-.mc-print {background:#eaf3ff;grid-row:1/3}
-.mc-print:only-of-type {grid-column:1/-1;grid-row:auto}
+.mc-print {background:#eaf3ff;grid-column:1/-1}
+.mc-print-timing {min-width:0}
+@media(min-width:970px) {
+ .mc-print[data-detailed="false"] {display:grid;grid-template-columns:minmax(0,3fr) minmax(170px,1.5fr);column-gap:14px;align-items:start}
+ .mc-print[data-detailed="false"]>:not(.materials,.mc-print-timing) {grid-column:1/-1}
+ .mc-print[data-detailed="false"] .materials {margin:0;padding:0;border:0}
+ .mc-assembly .fields {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 .mc-assembly {background:#f1ebfb;border-color:#ded3ef}
 .mc-extras {background:#fff5dc;border-color:#e9d8ad}
 .mc-print-duration {margin:0;padding:0;border:0;min-width:0}
@@ -664,8 +670,6 @@
 }
 @media(max-width:900px) {
  .mc-calculator .workspace {grid-template-columns:minmax(0,1fr) minmax(255px,.7fr)}
- .mc-cost-editor {grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
- .mc-print {grid-row:auto}
 }
 @media(max-width:760px) {
  .mc-calculator .workspace,.calculator-identity .product-save-content {grid-template-columns:minmax(0,1fr)}
@@ -751,4 +755,8 @@
  .mc-theme .mc-print-duration-fields input {font-size:16px}
  .mc-theme .dashboard-welcome {flex-wrap:wrap}
  .mc-theme .product-workspace-search {flex-wrap:wrap}
+}
+
+@media(max-width:520px) {
+ .mc-cost-editor {grid-template-columns:minmax(0,1fr)}
 }

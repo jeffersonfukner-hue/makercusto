@@ -313,7 +313,7 @@ export default function App(){
   {!session&&modeSwitch}
   <div className="workspace">
    <div className="mc-cost-editor">
-    <section className="mc-cost-block mc-print" aria-labelledby="print-title">
+    <section className="mc-cost-block mc-print" data-detailed={advanced&&details} aria-labelledby="print-title">
      {session?<h2 id="print-title">Impressão</h2>:<div className="panel-heading">
       <h2 id="print-title">Impressão 3D</h2>
       <button type="button" onClick={reset}>Restaurar exemplo</button>
@@ -381,10 +381,12 @@ export default function App(){
      </div>}
     </section>
     {advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
+     <div className="mc-print-timing">
      <PrintDurationFields label="Tempo de impressão" value={printDuration} onChange={setPrintDuration}>
       {printDurationDraft&&!Number.isFinite(form.hours)&&<p className="error" role="alert">Informe horas inteiras e minutos de 0 a 59.</p>}
      </PrintDurationFields>
      {!session&&calculationField('quantity',false)}
+     </div>
      {!session&&<p className="footnote">Tarifa, potência e vida útil são hipóteses editáveis. Confira os valores no modo Avançado.</p>}
     </section>
     {advanced&&<section className="mc-cost-block mc-assembly">

@@ -973,3 +973,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Aplicado o padrão Modelo 5 à área pública e aos módulos autenticados. Reutilizados os blocos de custo, os estilos de campos e painéis e o controle de duração. Ajuda de filamento compactada na linha dos rótulos.
 - Verificados conversão de 6 h 5 min na calculadora e no registro previsto, limite de minutos, leitura de tempo histórico, cópia numerada em caso de colisão, foco no nome e rejeição do nome original. Compactados consulta com contagem de peças e retorno do salvamento.
 - Build aprovado, 75 unitários, 110 cenários na rodada completa e 10 na regressão focada após os últimos ajustes. Verificação responsiva local com mocks. Commit com `[skip ci]`, sem merge, deploy, banco operacional ou gastos. Duração não aferida.
+
+### 25/11/2026 — Distribuição dos blocos de cálculo
+
+- Reorganizados impressão, montagem e adicionais após feedback sobre a coluna vazia. Verificados build, 75 unitários, oito cenários Playwright e layout nas larguras de 320, 390, 1024 e 1600 px, nos acessos público e logado. Commit com `[skip ci]`. Duração não aferida.

@@ -924,3 +924,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Salvar como novo sugere um nome disponível com sufixo de cópia, limpa o SKU e foca o nome editável. O fluxo bloqueia reutilização do nome original ou de um nome conhecido na oficina. A consulta de cadastros exibe a quantidade de peças quando há registros e o retorno do salvamento usa uma linha compacta.
 - Build e 75 unitários passaram. A regressão Playwright completa teve 110 aprovados. Depois dos ajustes finais, passaram 10 cenários focados em desktop e celular. Testes adicionais de navegador verificaram as duas calculadoras de 320 a 1600 px e os módulos logados em 320, 1024 e 1600 px com serviços simulados.
 - Próximo passo: deploy manual do proprietário para homologar o lote. P07, L4-G04 e L4-G05 permanecem pausados.
+
+### Ajuste de distribuição na calculadora
+
+- Depois da foto do Preview, a impressão passou a ocupar a largura da área de edição, com tempo ao lado do filamento quando há espaço. Montagem e adicionais ficam lado a lado abaixo da impressão. O resultado permanece à direita em telas largas.
+- O cadastro e a recuperação de cálculo atuais não expõem uma foto de produto. A distribuição foi resolvida com os campos existentes, sem reservar espaço para mídia.
+- Build, 75 testes unitários, oito cenários Playwright e verificação visual responsiva de 320 a 1600 px nas duas calculadoras aprovados. Ajuste acumulado para o próximo lote visual.
