@@ -996,3 +996,29 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - O mesmo painel público e logado destaca margem em reais por unidade, margem bruta em porcentagem, markup, faturamento e lucro bruto do lote. Valores negativos permanecem em vermelho. O ícone do resultado explica as três medidas e o escopo da composição fica na ajuda contextual.
 - A página pública é uma simulação avulsa. Em vez de painéis de salvamento e montagem, o resultado oferece Criar conta e o cabeçalho oferece Entrar. Salvar cálculo permanece disponível na oficina autenticada. Cobrança segue pendente de definição e histórico ficou para uma etapa separada.
 - Build, 78 unitários e 16 cenários Playwright aprovados. Confirmados contraste de valores negativos, tipografia e tabela compacta de 320 a 1600 px nas duas áreas.
+
+### Galeria de produtos no Supabase de teste — 25/11/2026
+
+- O proprietário confirmou que o Supabase MakerCusto (`bxtbfdddcxbyaomydgxn`) é o ambiente de desenvolvimento e teste e autorizou a migração da galeria nesse projeto.
+- Migração versionada `20261125025716_product_photo_gallery.sql` aplicada a partir do HEAD `9a25ea95f7769b2e933ada1d0b9c39ca27e212cf`. O Supabase registrou a versão remota `20261125043455`, nome `product_photo_gallery`.
+- Verificados bucket privado `mc-product-photos`, limite de 6 MiB, JPEG/PNG/WebP, RLS nas preferências e cinco políticas. O roteiro SQL `supabase/tests/product_photo_gallery_rollback.sql` passou no ambiente de teste com dados descartáveis, incluindo troca da foto principal e isolamento entre oficinas. Após o rollback, os usuários e objetos fictícios consultados estavam ausentes.
+- Próxima validação: enviar uma imagem descartável pelo Preview autenticado, conferir a troca da foto principal e a miniatura ao voltar à lista de Produtos. O roteiro SQL verificou permissões e metadados. O fluxo HTTP do Storage e a renderização no Preview ainda aguardam essa validação.
+
+### Atalhos compactos da Visão geral — 25/11/2026
+
+- Os seis atalhos ficam agrupados no cabeçalho, com os rótulos em uma linha e largura ajustada ao conteúdo. Em telas largas ficam na mesma fileira. Até 900 px ficam em duas colunas, com três fileiras.
+- Build e 78 testes unitários aprovados. Playwright verificou quantidade, encaixe no cabeçalho e navegação em desktop e mobile, com medidas de 320, 900, 901 e 1280 px. Ajuste acumulado para a próxima homologação visual.
+
+### Purga e torre no consumo por cor — 25/11/2026
+
+- Em Avançado → Detalhar por cor, o peso do modelo, Purga (Flush) e Torre (Tower) são editados separadamente. O motor soma os três pesos por cor e a tabela mostra o consumo total e seu custo.
+- Cálculos anteriores preservam o valor salvo de purga e tratam torre ausente como zero. Cálculos novos guardam o peso da torre no JSON de parâmetros existente.
+- Build, 78 testes unitários e oito cenários Playwright em desktop e mobile aprovados. O teste do formulário verificou 50 g de modelo, 5 g de purga e 2,5 g de torre, total de 57,5 g, custo proporcional e reabertura dos valores separados. Homologação no Preview pendente.
+
+### Resumo do fatiador, pesagem e compartilhamento — 25/11/2026
+
+- A calculadora registra por cor Modelo, Flushed e Tower em gramas, com metragem opcional e totais estimados. Flushed aceita o ajuste negativo do fatiador quando o peso estimado da cor continua não negativo. A pesagem opcional de purga e torre descartadas substitui o descarte estimado no cálculo da cor e mantém os valores anteriores para comparação.
+- O tempo aceita horas, minutos e segundos. Ao informar preparação e impressão no resumo avançado, a soma passa a alimentar o cálculo. O número de trocas e o custo informado pelo fatiador são referências.
+- Compartilhar resultado gera texto para e-mail ou WhatsApp e uma versão para Salvar PDF pelo navegador. Orçamento para cliente mostra quantidades, preço de venda unitário e total. O arquivo PNG inclui a foto principal de um produto com cálculo recuperado, quando disponível. O menu do dispositivo permite compartilhar o arquivo em navegadores compatíveis e o download permite anexar manualmente. Links assinados da galeria ficam fora do orçamento.
+- O fluxo da foto foi validado com Storage simulado. Próxima validação no Preview: lançar o chaveiro com os valores do fatiador e preparar um orçamento com foto. Validar o menu de compartilhamento do dispositivo antes de enviar a um cliente.
+- Build local, 79 testes unitários e 116 cenários Playwright aprovados. Foram verificados os pesos do print (2,63 g), o tempo de 13 min e 33 s, a geração de PDF e o orçamento com foto simulada em desktop e mobile.

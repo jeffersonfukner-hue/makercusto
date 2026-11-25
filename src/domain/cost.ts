@@ -4,6 +4,8 @@ export interface MaterialLine {
   grams: number;
   wasteGrams: number;
   towerGrams?: number;
+  measuredWasteGrams?: number;
+  slicerMeters?: { model?: number; flushed?: number; tower?: number; total?: number };
   pricePerKg: number;
   type?: string;
   brand?: string;
@@ -16,6 +18,7 @@ export interface CostInput {
   pricePerKg: number;
   materials?: MaterialLine[];
   hours: number;
+  slicerSummary?: { preparation?: number; printing?: number; changes?: number; cost?: number };
   averageWatts: number;
   pricePerKwh: number;
   printerPrice: number;
@@ -52,8 +55,11 @@ export interface CostResult {
   markupPercent: number;
 }
 const validNonNegative = (value: number): boolean => Number.isFinite(value) && value >= 0;
+export function materialWasteGrams(item: MaterialLine): number {
+  return item.measuredWasteGrams ?? (item.wasteGrams + (item.towerGrams ?? 0));
+}
 export function materialTotalGrams(item: MaterialLine): number {
-  return item.grams + item.wasteGrams + (item.towerGrams ?? 0);
+  return item.grams + materialWasteGrams(item);
 }
 export function calculateCost(input: CostInput): CostResult {
   const baseNumbers = [
@@ -74,7 +80,9 @@ export function calculateCost(input: CostInput): CostResult {
   if (!materials.length || new Set(materials.map(item => item.id)).size !== materials.length ||
       materials.some(item =>
         !item.id.trim() || !item.name.trim() ||
-        !validNonNegative(item.grams) || !validNonNegative(item.wasteGrams) ||
+        !validNonNegative(item.grams) || !Number.isFinite(item.wasteGrams) ||
+        item.grams + item.wasteGrams + (item.towerGrams ?? 0) < 0 ||
+        !validNonNegative(item.measuredWasteGrams ?? 0) ||
         !validNonNegative(item.towerGrams ?? 0) || !validNonNegative(item.pricePerKg) ||
         ((item.packageQuantity !== undefined || item.packageUnit !== undefined || item.packagePrice !== undefined) &&
           (!Number.isFinite(item.packageQuantity) || (item.packageQuantity ?? 0) <= 0 ||
@@ -91,7 +99,7 @@ export function calculateCost(input: CostInput): CostResult {
     id: item.id,
     name: item.name,
     modelGrams: item.grams,
-    wasteGrams: item.wasteGrams + (item.towerGrams ?? 0),
+    wasteGrams: materialWasteGrams(item),
     totalGrams,
     cost: totalGrams * pricePerKg / 1000,
     pricePerKg

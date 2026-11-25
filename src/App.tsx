@@ -1,3 +1,5 @@
+import {CustomerQuote} from './components/CustomerQuote';
+import {CalculationShare,CalculationPrintSummary} from './components/CalculationShare';
 import {chooseSlicerProfile} from './data/filamentProfiles';
 import {filamentBrands,filamentColors,filamentTypes} from './data/filamentCatalog';
 import {LibraryWorkspace} from './components/LibraryWorkspace';
@@ -21,6 +23,11 @@ import { calculateCost, materialTotalGrams, referenceCase, type CostInput, type 
 const money = (value:number) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value);
 const count = (value:number) => value.toLocaleString('pt-BR',{maximumFractionDigits:2});
 const numeric = (value:string) => value.trim() === '' ? NaN : Number(value);
+const optionalNumber = (value:string) => value===''?undefined:Number(value);
+const meterFields = [
+ ['model','Modelo (m)'],['flushed','Purga (m)'],['tower','Torre (m)'],['total','Total do fatiador (m)']
+] as const;
+const estimatedMaterialGrams=(line:MaterialLine)=>line.grams+line.wasteGrams+(line.towerGrams??0);
 const display = (value:number | undefined) => value !== undefined && Number.isFinite(value) ? value : '';
 type Catalog = 'cor' | 'tipo' | 'marca';
 const defaults:Record<Catalog,string[]> = {cor:filamentColors,tipo:filamentTypes,marca:filamentBrands};
@@ -88,6 +95,7 @@ function FilamentField({id,label,help,children}:{id:string;label:string;help:str
 }
 export default function App(){
  const [printDurationDraft,setPrintDurationDraft]=useState<DurationDraft|null>(null);
+ const [slicerDurationDrafts,setSlicerDurationDrafts]=useState<Partial<Record<'preparation'|'printing',DurationDraft>>>({});
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
  const [printers,setPrinters]=useState<PrinterProfile[]>(()=>sessionStore.get()?seedPrinters():[...seedPrinters(),...readLocalPrinters()]);
  const [printerId,setPrinterId]=useState(()=>sessionStore.get()?'example':readSelectedPrinter('guest',[...seedPrinters(),...readLocalPrinters()]));
@@ -199,14 +207,19 @@ export default function App(){
  };
  const update=(field:NumericKey,value:string)=>setForm(prev=>({...prev,[field]:numeric(value)}));
  const setDraftText=(field:'name'|'brand'|'type',value:string)=>{setDraft(prev=>({...prev,[field]:value}));setErrorDraft('');};
- const setDraftNumber=(field:'grams'|'wasteGrams'|'towerGrams'|'packagePrice'|'packageQuantity',value:string)=>{setDraft(prev=>({...prev,[field]:value===''&&(field==='wasteGrams'||field==='towerGrams')?0:numeric(value)}));setErrorDraft('');};
+ const setDraftNumber=(field:'grams'|'wasteGrams'|'towerGrams'|'measuredWasteGrams'|'packagePrice'|'packageQuantity',value:string)=>{setDraft(prev=>({...prev,[field]:field==='measuredWasteGrams'?optionalNumber(value):value===''&&(field==='wasteGrams'||field==='towerGrams')?0:numeric(value)}));setErrorDraft('');};
  const save=()=>{
-  if(!draft.name.trim()||!draft.type?.trim()||!Number.isFinite(draft.grams)||draft.grams<=0||
-     !Number.isFinite(draft.wasteGrams)||draft.wasteGrams<0||
+  if(!draft.name.trim()||!draft.type?.trim()||!Number.isFinite(draft.grams)||draft.grams<0||
+     !Number.isFinite(draft.wasteGrams)||estimatedMaterialGrams(draft)<0||
      !Number.isFinite(draft.towerGrams??0)||(draft.towerGrams??0)<0||
+     !Number.isFinite(draft.measuredWasteGrams??0)||(draft.measuredWasteGrams??0)<0||
+     (draft.slicerMeters&&meterFields.some(([key])=>{
+       const value=draft.slicerMeters?.[key];
+       return value!==undefined&&(!Number.isFinite(value)||(key!=='flushed'&&value<0));
+     }))||
      !Number.isFinite(draft.packageQuantity)||draft.packageQuantity!<=0||
      !Number.isFinite(draft.packagePrice)||draft.packagePrice!<0){
-       setErrorDraft('Informe tipo, cor, embalagem, preço e quantidade usada válidos. Purga e torre devem ser iguais ou maiores que zero.');
+       setErrorDraft('Informe tipo, cor, embalagem, preço e quantidade usada válidos. A purga pode ser negativa quando o fatiador indicar, desde que o consumo estimado da cor seja igual ou maior que zero.');
        return;
   }
   const gramsPurchased=draft.packageQuantity!*(draft.packageUnit==='kg'?1000:1);
@@ -227,6 +240,7 @@ export default function App(){
    setRevisionTarget(null);
    setLoadedCalculation('');
    setPrintDurationDraft(null);
+   setSlicerDurationDrafts({});
    if(!sessionStore.get()){setPrinters([...seedPrinters(),...readLocalPrinters()]);setPrinterId('example');}
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
@@ -248,18 +262,24 @@ export default function App(){
   catch(e){setAccountError('Este cálculo salvo não pode ser reutilizado: '+(e as Error).message);return false;}
   setForm({...restored,materials:undefined});
   setPrintDurationDraft(null);
+  setSlicerDurationDrafts({});
   setSimple({quantity:Number(restored.grams),quantityUnit:'g',
    price:Number(restored.pricePerKg),priceUnit:'kg'});
   if(data&&data.length){setDetailedMaterials(data);setAdvanced(true);setDetails(true);}
-  else{setAdvanced(false);setDetails(false);}
+  else{setAdvanced(Object.values(restored.slicerSummary??{}).some(value=>value!==undefined));setDetails(false);}
   setAccountError('');
   setLoadedCalculation('Dados de "'+saved.name+'" carregados com a impressora selecionada.');
   setRevisionTarget(saved);
   setCalculatorTab('calculation');
   return true;
  };
+ const slicerSummary=form.slicerSummary;
+ const hasSlicerTiming=advanced&&slicerSummary?.preparation!==undefined&&slicerSummary.printing!==undefined;
+ const invalidSlicerTiming=advanced&&[slicerSummary?.preparation,slicerSummary?.printing].some(Number.isNaN);
+ const estimatedHours=invalidSlicerTiming?NaN:hasSlicerTiming?slicerSummary.preparation!+slicerSummary.printing!:form.hours;
  const activeInput:CostInput={
    ...form,
+   hours:estimatedHours,
    printerPrice:activePrinter.printerPrice,
    averageWatts:activePrinter.averageWatts,
    lifetimeHours:activePrinter.lifetimeHours,
@@ -270,6 +290,11 @@ export default function App(){
  };
  let result:ReturnType<typeof calculateCost>|undefined, error='';
  try{result=calculateCost(activeInput)}catch(e){error=(e as Error).message;}
+ const slicerTotals=advanced&&details?detailedMaterials.reduce((totals,line)=>({
+  model:totals.model+line.grams,
+  flushed:totals.flushed+line.wasteGrams,
+  tower:totals.tower+(line.towerGrams??0)
+ }),{model:0,flushed:0,tower:0}):null;
  const used = result ? result.modelGrams+result.wasteGrams : 0;
  const average = result&&used>0?result.material/used*1000:0;
  const calculationField=(key:keyof typeof fields, showHelp=Boolean(session))=>{
@@ -282,18 +307,40 @@ export default function App(){
    {showHelp&&<CalculatorHelp label={label}>{field.help}</CalculatorHelp>}
   </div>;
  };
- const printDuration=printDurationDraft??splitPrintDuration(form.hours);
+ const printDuration=printDurationDraft??splitPrintDuration(estimatedHours,true);
  const setPrintDuration=(next:DurationDraft)=>{
   setPrintDurationDraft(next);
   setForm(previous=>({...previous,hours:printDurationInHours(next)??NaN}));
+ };
+ const updateSlicerSummary=(key:keyof NonNullable<CostInput['slicerSummary']>,value:number|undefined)=>{
+  setForm(previous=>({...previous,slicerSummary:{...previous.slicerSummary,[key]:value}}));
+ };
+ const updateSlicerDuration=(key:'preparation'|'printing',value:DurationDraft)=>{
+  setSlicerDurationDrafts(previous=>({...previous,[key]:value}));
+  updateSlicerSummary(key,printDurationInHours(value)??undefined);
  };
  const costLines=result&&[
   ['Filamentos',result.material],['Energia',result.energy],['Depreciação',result.depreciation],
   ['Acessórios',result.accessories],['Montagem',result.assembly]
  ] as const;
  const percent=(value:number)=>count(Math.round(value*10)/10)+'%';
+ const shareTitle=revisionTarget?.name?revisionTarget.name:'Resultado do cálculo';
+ const shareLines=result&&costLines&&[
+  ['Quantidade',String(activeInput.quantity)],
+  ['Consumo de filamento',count(used)+' g'],
+  ...costLines.map(([label,value])=>[label,money(value)] as const),
+  ['Custo por unidade',money(result.unitCost)],
+  ['Custo total do lote',money(result.lotCost)],
+  ['Preço de venda por unidade',money(activeInput.salePrice)],
+  ['Margem em R$/un.',money(activeInput.salePrice-result.unitCost)],
+  ['Margem bruta',percent(result.marginPercent)],
+  ['Markup',percent(result.markupPercent)],
+  ['Faturamento do lote',money(result.lotRevenue)],
+  ['Lucro bruto do lote',money(result.grossProfit)]
+ ] as const;
  const modeSwitch=<nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>;
  return <div className="mc-theme">
+ {shareLines&&(!session||activeSection==='calculator')&&<CalculationPrintSummary title={shareTitle} lines={shareLines}/>}
  {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthMode('login')}>Entrar</button></div></header>}
  <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>
  <main className={session?"app-main":"shell"}>
@@ -387,9 +434,23 @@ export default function App(){
          <legend>Consumo nesta impressão</legend>
          <div className="mc-filament-form-fields">
           <FilamentField id="gramsUsed" label="Modelo (g)" help="Peso do modelo fornecido pelo fatiador."><input type="number" min="0" step="any" id="gramsUsed" data-testid="gramsUsed" value={display(draft.grams)} onChange={e=>setDraftNumber('grams',e.target.value)}/></FilamentField>
-          <FilamentField id="wasteGrams" label="Purga (g)" help="Use a coluna Flush do fatiador. Se a purga já foi registrada junto com a torre em um cálculo anterior, mantenha o total neste campo ou divida os valores ao editar."><input type="number" min="0" step="any" id="wasteGrams" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/></FilamentField>
-          <FilamentField id="towerGrams" label="Torre (g)" help="Use a coluna Tower do fatiador. Deixe em branco se não houver torre."><input type="number" min="0" step="any" id="towerGrams" value={display(draft.towerGrams)} onChange={e=>setDraftNumber('towerGrams',e.target.value)}/></FilamentField>
+          <FilamentField id="wasteGrams" label="Purga (g)" help="Use o valor de Flushed do fatiador, inclusive quando negativo. Em cálculos antigos, confira se a torre já está incluída neste valor."><input type="number" step="any" id="wasteGrams" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/></FilamentField>
+          <FilamentField id="towerGrams" label="Torre (g)" help="Torre de purga. Use a coluna Tower do fatiador. Deixe em branco se não houver torre."><input type="number" min="0" step="any" id="towerGrams" value={display(draft.towerGrams)} onChange={e=>setDraftNumber('towerGrams',e.target.value)}/></FilamentField>
          </div>
+         <label className="mc-filament-field mc-measured-waste"><span>Descarte pesado (g)</span>
+          <input type="number" min="0" step="any" value={display(draft.measuredWasteGrams)} onChange={e=>setDraftNumber('measuredWasteGrams',e.target.value)}/>
+          <small>Pese juntos a purga e o material descartado da torre desta cor. O peso informado substitui a estimativa no custo.</small>
+         </label>
+         <details className="mc-slicer-details">
+          <summary>Metragem do fatiador</summary>
+          <div className="mc-slicer-meters">
+           {meterFields.map(([key,label])=><label key={key} className="mc-filament-field"><span>{label}</span>
+            <input type="number" min={key==='flushed'?undefined:0} step="any" value={display(draft.slicerMeters?.[key])}
+             onChange={event=>{const value=optionalNumber(event.target.value);setDraft(previous=>({...previous,slicerMeters:{...previous.slicerMeters,[key]:value}}));setErrorDraft('');}}/>
+           </label>)}
+          </div>
+          <small>Use os valores em metros como referência. O custo do MakerCusto usa os pesos em gramas.</small>
+         </details>
         </fieldset>
        </div>
        <div className="form-actions"><button type="button" className="primary-action" onClick={save}>{editId?'Salvar alteração':'Adicionar à tabela'}</button>{editId&&<button type="button" onClick={()=>{setEditId(null);setDraft(newDraft());setErrorDraft('');}}>Cancelar edição</button>}</div>
@@ -404,7 +465,10 @@ export default function App(){
          return <tr key={item.id} data-testid={'row-'+item.id}>
           <td><strong>{item.name}</strong>{item.type&&<small className="material-row-type"> · {item.type}</small>}</td>
           <td>{item.brand||'—'}</td><td>{count(pkgQty)} {pkgUnit}</td>
-          <td>{money(calculatedPackagePrice(item))}</td><td>{count(totalGrams)} g</td>
+          <td>{money(calculatedPackagePrice(item))}</td><td>{count(totalGrams)} g
+           {item.measuredWasteGrams!==undefined&&<small className="mc-slicer-reference">Fatiador: {count(estimatedMaterialGrams(item))} g</small>}
+           {item.slicerMeters?.total!==undefined&&<small className="mc-slicer-reference">{count(item.slicerMeters.total)} m</small>}
+          </td>
           <td className="numeric-cell">{money(spent)}</td>
           <td className="material-actions-cell"><div className="row-actions">
            <button type="button" aria-label={'Editar '+item.name} title="Editar filamento" onClick={()=>edit(item)}>✎</button>
@@ -413,13 +477,41 @@ export default function App(){
          </tr>;
         })}
       </tbody><tfoot><tr><th colSpan={4}>Total</th><th>{result?count(used)+' g':'—'}</th><th>{result?money(result.material):'—'}</th><th className="material-actions-cell"/></tr></tfoot></table></div>
+      {slicerTotals&&<details className="mc-slicer-details">
+       <summary>Totais estimados do fatiador</summary>
+       <dl className="mc-slicer-totals">
+        <div><dt>Modelo</dt><dd>{count(slicerTotals.model)} g</dd></div>
+        <div><dt>Purga</dt><dd>{count(slicerTotals.flushed)} g</dd></div>
+        <div><dt>Torre</dt><dd>{count(slicerTotals.tower)} g</dd></div>
+        <div><dt>Total</dt><dd>{count(slicerTotals.model+slicerTotals.flushed+slicerTotals.tower)} g</dd></div>
+       </dl>
+      </details>}
      </div>}
     </section>
     {advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
      <div className="mc-print-timing">
-     <PrintDurationFields label="Tempo de impressão" value={printDuration} onChange={setPrintDuration}>
-      {printDurationDraft&&!Number.isFinite(form.hours)&&<p className="error" role="alert">Informe horas inteiras e minutos de 0 a 59.</p>}
+     <PrintDurationFields label="Tempo de impressão" includeSeconds disabled={hasSlicerTiming}
+      value={hasSlicerTiming?splitPrintDuration(estimatedHours,true):printDuration} onChange={setPrintDuration}>
+      {printDurationDraft&&!Number.isFinite(form.hours)&&!hasSlicerTiming&&<p className="error" role="alert">Informe horas inteiras e minutos e segundos de 0 a 59.</p>}
      </PrintDurationFields>
+     {advanced&&<details className="mc-slicer-details">
+      <summary>Resumo do fatiador</summary>
+      <PrintDurationFields label="Tempo de preparação" includeSeconds
+       value={slicerDurationDrafts.preparation??splitPrintDuration(slicerSummary?.preparation??NaN,true)}
+       onChange={value=>updateSlicerDuration('preparation',value)}/>
+      <PrintDurationFields label="Tempo do modelo" includeSeconds
+       value={slicerDurationDrafts.printing??splitPrintDuration(slicerSummary?.printing??NaN,true)}
+       onChange={value=>updateSlicerDuration('printing',value)}/>
+      {invalidSlicerTiming&&
+       <p className="error" role="alert">Informe horas inteiras e minutos e segundos de 0 a 59.</p>}
+      <small>Preencha os dois tempos para calcular o total automaticamente. Se não houver preparação, informe zero.</small>
+      <div className="mc-slicer-meters">
+       <label className="mc-filament-field"><span>Trocas de filamento</span><input type="number" min="0" step="1"
+        value={display(slicerSummary?.changes)} onChange={event=>updateSlicerSummary('changes',optionalNumber(event.target.value))}/></label>
+       <label className="mc-filament-field"><span>Custo do fatiador (R$)</span><input type="number" min="0" step="any"
+        value={display(slicerSummary?.cost)} onChange={event=>updateSlicerSummary('cost',optionalNumber(event.target.value))}/></label>
+      </div>
+     </details>}
      {!session&&calculationField('quantity',false)}
      </div>
      {!session&&<p className="footnote">Tarifa, potência e vida útil são hipóteses editáveis. Confira os valores no modo Avançado.</p>}
@@ -462,6 +554,10 @@ export default function App(){
        <div className="mc-result-help"><CalculatorHelp label="Escopo dos custos">Estimativa sem embalagem, frete, taxas de marketplace, tributos e despesas administrativas. O lucro exibido é bruto.</CalculatorHelp></div>
       </div>
      </details>
+     {shareLines&&<CalculationShare title={shareTitle} lines={shareLines}/>}
+     <CustomerQuote key={revisionTarget?.snapshot_id??'new-quote'} name={revisionTarget?.name}
+      quantity={activeInput.quantity} salePrice={activeInput.salePrice}
+      product={session&&workspaceId&&revisionTarget?{workspaceId,id:revisionTarget.product_id}:undefined}/>
      {!session&&<div className="mc-public-account">
       <span>Quer salvar seus cálculos?</span>
       <button type="button" className="primary-action" onClick={()=>setAuthMode('signup')}>Criar conta</button>

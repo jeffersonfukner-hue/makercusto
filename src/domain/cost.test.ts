@@ -28,6 +28,19 @@ describe('motor de custos e materiais', () => {
     expect(r.material).toBeCloseTo(16.158, 3);
     expect(r.lotCost - calculateCost(referenceCase).lotCost).toBeCloseTo(1, 5);
   });
+  it('concilia o resumo do fatiador e substitui o descarte estimado pelo pesado por cor', () => {
+    const red = { id: 'red', name: 'Vermelho', grams: 1.31, wasteGrams: -0.08, pricePerKg: 100 };
+    const white = { id: 'white', name: 'Branco', grams: 0.26, wasteGrams: 0.63, towerGrams: 0.51, pricePerKg: 100 };
+    const estimated = calculateCost({ ...referenceCase, materials: [red, white] });
+    expect(estimated.materialBreakdown[0].totalGrams).toBeCloseTo(1.23);
+    expect(estimated.materialBreakdown[1].totalGrams).toBeCloseTo(1.40);
+    expect(estimated.material).toBeCloseTo(0.263);
+    const measured = calculateCost({ ...referenceCase, materials: [{ ...red, measuredWasteGrams: 0.19 }, white] });
+    expect(measured.material).toBeCloseTo(0.29);
+    const zeroWaste = calculateCost({ ...referenceCase, materials: [red, { ...white, measuredWasteGrams: 0 }] });
+    expect(zeroWaste.materialBreakdown[1].totalGrams).toBeCloseTo(0.26);
+    expect(() => calculateCost({ ...referenceCase, materials: [{ ...red, wasteGrams: -2 }] })).toThrow();
+  });
   it('não soma o filamento legado com os materiais detalhados', () => {
     const r = calculateCost({ ...referenceCase, grams: 90000, pricePerKg: 90000 });
     expect(r.material).toBeCloseTo(15.158, 3);

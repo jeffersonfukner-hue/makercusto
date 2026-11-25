@@ -52,6 +52,62 @@ test('inclui rolo de 250g com preço total e consumo proporcional',async({page})
  await expect(page.getByLabel('Purga (g)',{exact:true})).toHaveValue('5');
  await expect(page.getByLabel('Torre (g)',{exact:true})).toHaveValue('2.5');
 });
+test('registra Flushed negativo, descarte pesado e segundos do fatiador',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ await page.getByLabel('Cor do filamento').fill('Vermelho');
+ await page.getByTestId('packagePrice').fill('100');
+ await page.getByTestId('gramsUsed').fill('1.31');
+ await page.getByLabel('Purga (g)',{exact:true}).fill('-0.08');
+ await page.getByText('Metragem do fatiador',{exact:true}).click();
+ await page.getByLabel('Purga (m)',{exact:true}).fill('-0.03');
+ await page.getByLabel('Total do fatiador (m)',{exact:true}).fill('0.42');
+ await page.getByRole('button',{name:'Adicionar à tabela'}).click();
+ const row=page.getByTestId('row-extra-1');
+ await expect(row).toContainText('1,23 g');
+ await expect(row).toContainText('0,42 m');
+ await page.getByRole('button',{name:'Editar Vermelho'}).click();
+ await page.getByLabel('Descarte pesado (g)',{exact:false}).fill('0.19');
+ page.once('dialog',dialog=>dialog.accept());
+ await page.getByRole('button',{name:'Salvar alteração'}).click();
+ await expect(row).toContainText('1,5 g');
+ await expect(row).toContainText('Fatiador: 1,23 g');
+ await page.getByText('Resumo do fatiador',{exact:true}).click();
+ const preparation=page.getByRole('group',{name:'Tempo de preparação'});
+ const printing=page.getByRole('group',{name:'Tempo do modelo'});
+ await preparation.getByLabel('Segundos').fill('1');
+ await printing.getByLabel('Minutos').fill('13');
+ await printing.getByLabel('Segundos').fill('32');
+ const total=page.getByRole('group',{name:'Tempo de impressão'});
+ await expect(total.getByLabel('Minutos')).toHaveValue('13');
+ await expect(total.getByLabel('Segundos')).toHaveValue('33');
+});
+test('compartilha resultado interno e prepara orçamento sem expor custos',async({page})=>{
+ await page.addInitScript(()=>Object.defineProperty(window,'print',{value:()=>document.body.dataset.printing='true'}));
+ await page.goto('/');
+ await page.getByText('Compartilhar resultado',{exact:true}).click();
+ const email=await page.getByRole('link',{name:'E-mail',exact:true}).getAttribute('href');
+ expect(decodeURIComponent(email!)).toContain('Lucro bruto do lote');
+ await page.getByRole('button',{name:'Salvar PDF'}).click();
+ await expect(page.locator('body')).toHaveAttribute('data-printing','true');
+ await page.emulateMedia({media:'print'});
+ await expect(page.locator('.mc-calculation-print')).toBeVisible();
+ const pdf=await page.pdf({format:'A4'});
+ expect(pdf.subarray(0,4).toString()).toBe('%PDF');
+ await page.emulateMedia({media:'screen'});
+ await page.getByText('Orçamento para cliente',{exact:true}).click();
+ await page.getByLabel('Produto',{exact:true}).fill('Chaveiro');
+ await page.getByLabel('Quantidades',{exact:true}).fill('1, 10, 50');
+ const whatsapp=await page.getByRole('link',{name:'WhatsApp (texto)',exact:true}).getAttribute('href');
+ const quote=new URL(whatsapp!).searchParams.get('text')!;
+ expect(quote).toContain('Chaveiro');
+ expect(quote).toContain('50 un.');
+ expect(quote).toContain('395,00');
+ expect(quote).not.toMatch(/custos?|lucro|margem/i);
+ await page.getByRole('button',{name:'Preparar imagem'}).click();
+ await expect(page.getByRole('button',{name:'Baixar imagem'})).toBeVisible();
+});
 test('edita uma linha, calcula embalagem 1,3 kg e remove',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:/Avançado/}).click();
@@ -1398,7 +1454,7 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  const printMinutes=page.getByRole('spinbutton',{name:'Minutos',exact:true});
  await printHours.fill('6');
  await printMinutes.fill('60');
- await expect(page.getByText('Informe horas inteiras e minutos de 0 a 59.')).toBeVisible();
+ await expect(page.getByText('Informe horas inteiras e minutos e segundos de 0 a 59.')).toBeVisible();
  await expect(page.getByRole('button',{name:'Salvar produto e custo'})).toBeDisabled();
  await printMinutes.fill('5');
  await page.getByTestId('quantity').fill('3');
@@ -1521,7 +1577,8 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('90');
  await expect(page.getByTestId('simplePrice')).toHaveValue('120');
  await expect(page.getByRole('spinbutton',{name:'Horas',exact:true})).toHaveValue('5');
- await expect(page.getByRole('spinbutton',{name:'Minutos',exact:true})).toHaveValue('14');
+ await expect(page.getByRole('spinbutton',{name:'Minutos',exact:true})).toHaveValue('13');
+ await expect(page.getByRole('spinbutton',{name:'Segundos',exact:true})).toHaveValue('30');
  await expect(page.getByTestId('salePrice')).toHaveValue('40');
  expect(readCalls).toContain('read');
  await page.getByRole('button',{name:'Salvar como novo',exact:true}).click();
@@ -1690,7 +1747,7 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  const folder=workspace+'/'+product+'/';
  const filenames:string[]=[];
  let primary:string|undefined;
- const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+xhZkAAAAASUVORK5CYII=','base64');
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64');
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@test.local'}
  })),{user});
@@ -1754,4 +1811,8 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(snapshot);
 
  await expect(page.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
+ await page.getByText('Orçamento para cliente',{exact:true}).click();
+ await page.getByRole('button',{name:'Preparar imagem'}).click();
+ await expect(page.getByText('Orçamento pronto com a foto principal.')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Baixar imagem'})).toBeVisible();
 });

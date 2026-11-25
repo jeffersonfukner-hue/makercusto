@@ -848,3 +848,31 @@
 .mc-public-account {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--mc-border)}
 .mc-public-account span {font-size:12px;color:var(--mc-muted)}
 .mc-public-account button {border:1px solid var(--mc-blue);border-radius:6px;padding:7px 10px;font-size:12px;font-weight:650}
+
+.mc-print-duration-fields.mc-print-duration-seconds {grid-template-columns:repeat(3,minmax(0,1fr))}
+.mc-slicer-details,.mc-measured-waste {margin-top:8px}
+.mc-slicer-details summary {cursor:pointer}
+.mc-slicer-details[open] summary {margin-bottom:8px}
+.mc-slicer-meters {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-block:6px}
+.mc-slicer-reference {display:block}
+.mc-calculation-share {margin-top:12px}
+.mc-calculation-share summary {cursor:pointer;color:#194386;font-size:13px;font-weight:700}
+.mc-calculation-share-actions {display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mc-theme .mc-calculation-share-actions :is(a,button) {
+ display:inline-flex;align-items:center;min-height:34px;padding:4px 8px;border:1px solid var(--mc-border);
+ border-radius:6px;background:#eef4ff;color:#194386;font-size:12px;font-weight:650;text-decoration:none;
+}
+.mc-calculation-print {display:none}
+@media print {
+ :root,body {background:#fff;color:#000}
+ .mc-theme:has(> .mc-calculation-print) > :not(.mc-calculation-print) {display:none!important}
+ .mc-calculation-print {display:block;color:#172235;padding:8mm}
+ .mc-calculation-print dl div {display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid #c0c7d2;break-inside:avoid}
+ .mc-calculation-print dd {margin:0;font-weight:650}
+}
+.mc-customer-quote label {display:grid;gap:4px;margin-top:8px;font-size:13px}
+.mc-customer-quote input {width:100%;min-width:0}
+.mc-customer-quote ul {margin:8px 0;padding-left:20px;font-size:13px}
+.mc-customer-quote small {display:block;margin-top:6px}
+.mc-slicer-totals {display:flex;flex-wrap:wrap;gap:8px 16px;margin:0;font-size:12px}
+.mc-slicer-totals dd {margin:2px 0 0;font-weight:700}
