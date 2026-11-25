@@ -99,9 +99,9 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
      {onViewSaved&&<button type="button" onClick={()=>onViewSaved(lastSavedKind)}>Ver cadastros da oficina</button>}
      {onCreateAssembly&&<button type="button" onClick={onCreateAssembly}>Montar conjunto com peças</button>}
     </div></div>}{error&&<p className="error" role="alert">{error}</p>}</div>
-   <div className="product-list"><h3>{filter==='component'?'Peças cadastradas':'Produtos da oficina'}</h3>{loading?<p role="status">Carregando produtos…</p>:visibleItems.length===0?<p className="footnote">Nenhum produto cadastrado nesta oficina.</p>:
+   <details className="product-list"><summary>Consultar cadastros existentes</summary><h3>{filter==='component'?'Peças cadastradas':'Produtos da oficina'}</h3>{loading?<p role="status">Carregando produtos…</p>:visibleItems.length===0?<p className="footnote">Nenhum produto cadastrado nesta oficina.</p>:
     <ul>{visibleItems.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
-   </div>
+   </details>
   </div>}
   {session&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={revisionTarget?'Nova revisão em cadastro existente':'Salvar cálculo como produto ou peça'}>
    {revisionTarget&&onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo</button>}
