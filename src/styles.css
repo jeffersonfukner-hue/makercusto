@@ -535,3 +535,8 @@
 .mc-result-metrics>div{display:grid;gap:5px;padding:10px;background:#f2edfc;border-radius:7px;color:#30205b}
 .mc-result-metrics strong{font-size:20px}
 @media(max-width:700px){.mc-production-grid{grid-template-columns:minmax(0,1fr)}}
+
+.mc-calculator-tabs{display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #d5deeb;margin:0 0 12px;white-space:nowrap}
+.system-shell:has(.calculator-identity) .mc-calculator-tabs button{background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 14px;font-weight:600;color:#34445c}
+.system-shell:has(.calculator-identity) .mc-calculator-tabs button.selected{border-bottom-color:#2459eb;color:#2459eb;background:#eef3ff}
+.system-shell:has(.calculator-identity) .app-main [hidden]{display:none!important}
