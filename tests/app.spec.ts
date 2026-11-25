@@ -2052,12 +2052,28 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toHaveCount(0);
  const pieces=page.getByRole('list',{name:'Peças salvas'});
  await expect(pieces.getByRole('listitem')).toHaveCount(2);
+ const selectedParts=page.getByRole('region',{name:'Partes na composição'});
+ const availableParts=page.getByRole('region',{name:'Peças disponíveis'});
+ const initialSize=page.viewportSize()!;
+ for(const width of [320,820,1280]){
+  await page.setViewportSize({...initialSize,width});
+  const selectedBox=(await selectedParts.boundingBox())!;
+  const availableBox=(await availableParts.boundingBox())!;
+  if(width===1280){
+   expect(selectedBox.y).toBe(availableBox.y);
+   expect(availableBox.x).toBeGreaterThan(selectedBox.x+selectedBox.width);
+  }else{
+   expect(availableBox.y).toBeGreaterThan(selectedBox.y+selectedBox.height);
+  }
+  expect(availableBox.x+availableBox.width).toBeLessThanOrEqual(width);
+ }
+ await page.setViewportSize(initialSize);
  const baseCard=pieces.getByRole('listitem').filter({hasText:'Base'});
  await baseCard.getByRole('button',{name:'Ver ficha',exact:true}).click();
  const sheet=page.getByRole('dialog',{name:'Base'});
  await expect(sheet).toContainText('Base do troféu');
  await sheet.getByRole('button',{name:'Adicionar à composição'}).click();
- await expect(baseCard.getByRole('button',{name:'Na composição'})).toBeDisabled();
+ await expect(baseCard.getByRole('button',{name:'Adicionada'})).toBeDisabled();
  await page.getByLabel('Buscar peça salva').fill('Microfone');
  await expect(pieces.getByRole('listitem')).toHaveCount(1);
  await pieces.getByRole('button',{name:'Adicionar à composição'}).click();
@@ -2080,7 +2096,7 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
  await expect(result.getByTestId('unitCost')).toContainText('16,00');
  await expect(page.getByTestId('simpleQuantity')).toBeHidden();
- await expect(page.getByRole('region',{name:'Montagem por partes'})).toBeVisible();
+ await expect(page.getByRole('region',{name:'Partes na composição'})).toBeVisible();
  const originalViewport=page.viewportSize()!;
  const tabs=page.getByRole('navigation',{name:'Áreas da calculadora'});
  for(const width of [320,768,820,882,1024,1180]){
@@ -2093,7 +2109,7 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await page.getByRole('button',{name:'Configurações',exact:true}).click();
  await expect(result.getByTestId('unitCost')).toContainText('16,00');
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
- await page.getByRole('button',{name:'Editar impressão direta',exact:true}).click();
+ await page.getByRole('button',{name:'Impressão em peça única',exact:true}).click();
  await expect(page.getByRole('region',{name:'Resultado do cálculo'})).toBeVisible();
  await expect(page.getByTestId('simpleQuantity')).toBeVisible();
  await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();

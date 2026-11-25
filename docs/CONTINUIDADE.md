@@ -1129,3 +1129,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Os três salvamentos informam quando aguardam resposta. Em caso de falha, apresentam uma mensagem curta e deixam a resposta técnica acessível em Detalhes. A espera fica sem percentual porque essas requisições não informam progresso mensurável.
 - Build, 82 testes unitários e seis cenários de navegador passaram. A regressão de Pedidos confirma espera, proteção contra segundo envio, detalhe da falha e repetição com o mesmo identificador.
 - Commit local para o lote seguinte ao Preview da calculadora. Resta estender o padrão às demais operações pertinentes. Nenhuma migração necessária.
+
+## 25/11/2026 — Disposição do Montar conjunto
+
+- A composição mostra as partes adicionadas à esquerda e o catálogo pesquisável à direita quando o painel tem espaço. Em telas estreitas a composição vem primeiro, seguida do catálogo. Ações de ficha e inclusão têm largura consistente. O seletor de método continua no painel de resultado.
+- Build e seis cenários de navegador passaram, incluindo verificação das colunas a 320, 820 e 1280 px. Ajuste local para o próximo lote, sem deploy.

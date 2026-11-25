@@ -444,13 +444,6 @@ export default function App(){
   {!session&&modeSwitch}
   <div className="workspace">
    <div className="mc-calculator-input-pane">
-   {session&&calculatorTab==='calculation'&&composed&&<section className="panel mc-composition-context" aria-labelledby="active-composition-heading">
-    <h2 id="active-composition-heading">Montagem por partes</h2>
-    <p>O resultado e o pedido usam as partes da composição.</p>
-    <div className="form-actions">
-     <button type="button" className="mc-light-action" onClick={()=>setPreferComposition(false)}>Editar impressão direta</button>
-    </div>
-   </section>}
    <div hidden={Boolean(session)&&(calculatorTab!=="calculation"||composed)}>
    <div className="mc-cost-editor">
     <section className="mc-cost-block mc-print" data-detailed={advanced&&details} aria-labelledby="print-title">

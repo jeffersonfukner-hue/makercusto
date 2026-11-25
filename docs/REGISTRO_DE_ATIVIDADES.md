@@ -1039,3 +1039,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Feedback ao salvar cálculos, composições e pedidos
 
 - Adicionados estado de espera e detalhes recolhíveis de falha. Build, 82 unitários e seis testes Playwright aprovados. Commit local para o próximo lote.
+
+### 25/11/2026 — Disposição do Montar conjunto
+
+- Organizados o catálogo e as partes adicionadas em áreas responsivas, com ações alinhadas. Build e seis cenários Playwright aprovados.

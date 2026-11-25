@@ -2,7 +2,7 @@ import {OperationFeedback} from './OperationFeedback';
 import {useConfirmation} from './ConfirmationDialog';
 import {Modal} from './Modals';
 import {ProductPhotos} from './ProductPhotos';
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useEffect,useId,useMemo,useRef,useState} from 'react';
 import {CalculationResultPanel,type ResultLine,type ResultNumbers} from './CalculationResultPanel';
 import {FormActionDock} from './FormActionDock';
 import {formatCatalogName} from '../domain/catalogName';
@@ -63,6 +63,7 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
  workspaceId:string;active:boolean;identity?:{name:string;sku:string;description:string;productId?:string};
  onSaved?:(name:string,productId:string)=>void;onViewAssemblies:()=>void;onResult?:(result:CompositionSummary)=>void;configuredSalePrice?:number;pricing?:CompositionPricing;selectedComposition?:AssemblyRecord;onRestorePricing?:(assembly:AssemblyRecord)=>void
 }){
+ const selectedHeading=useId(),catalogHeading=useId();
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [library,setLibrary]=useState<ComponentLibraryItem[]>();
  const [snapshots,setSnapshots]=useState<Record<string,ComponentCostSnapshot|undefined>>({});
@@ -147,38 +148,45 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
   <section className="panel mc-assembly-inputs" aria-label="Montar conjunto com peças salvas">
    <h2>Montar conjunto</h2>
    {!identity&&<label>Nome do conjunto<input value={name} maxLength={150} disabled={busy||saved} onChange={event=>setName(event.target.value)}/></label>}
-   {identity?.productId&&<p>A montagem por partes fica na mesma ficha. Use Cálculo para a impressão direta, inclusive em multicolorido com AMS.</p>}
-   <label>Buscar peça salva<input type="search" value={query} onChange={event=>setQuery(event.target.value)}/></label>
-   {!library&&!error&&<p role="status">Carregando peças…</p>}
-   {library&&choices.length===0&&!error&&<p>{catalog.length===0?'Salve as peças na calculadora para usar aqui.':'Nenhuma peça encontrada.'}</p>}
-   {choices.length>0&&<ul className="mc-assembly-catalog" aria-label="Peças salvas">
-    {choices.map(item=>{
-     const added=parts.some(part=>part.id===item.id);
-     return <li key={item.id}>
-      <div><strong>{item.name}</strong>{item.sku&&<small>{item.sku}</small>}</div>
-      <div className="mc-assembly-card-actions">
-       <button type="button" className="mc-light-action" onClick={()=>setViewing(item)}>Ver ficha</button>
-       <button type="button" className="mc-light-action" disabled={busy||saved||added||parts.length>=30}
-        onClick={()=>add(item.id)}>{added?'Na composição':'Adicionar à composição'}</button>
-      </div>
-     </li>;
-    })}
-   </ul>}
-   {parts.length>0&&<h3>Partes na composição</h3>}
-   {parts.length>0&&<ul className="mc-assembly-parts">{parts.map(part=>{
-    const item=library?.find(row=>row.id===part.id);
-    const unitCost=part.savedCost===undefined?item?.unit_cost:part.savedCost;
-    const partName=catalog.find(record=>record.id===part.id)?.name??'Peça indisponível';
-    return <li key={part.id}>
-     <div><strong>{partName}</strong><small>{unitCost==null?'Custo ainda não apurado':brl.format(Number(unitCost))+'/peça'}</small></div>
-     <label>Qtd.<input aria-label={'Quantidade de '+partName} type="number" min="1" max="100000" step="1" value={Number.isNaN(part.quantity)?'':part.quantity}
-      disabled={busy||saved} onChange={event=>{const quantity=event.target.valueAsNumber;setParts(previous=>previous.map(row=>row.id===part.id?{...row,quantity}:row));}}/></label>
-     <button type="button" className="mc-light-action" disabled={busy||saved} onClick={()=>requestConfirmation({
-       title:'Remover peça da composição',message:'Remover “'+partName+'” deste conjunto?',
-       actionLabel:'Remover peça',onConfirm:()=>setParts(previous=>previous.filter(row=>row.id!==part.id))})}
-      aria-label={'Remover '+partName}>×</button>
-    </li>;
-   })}</ul>}
+   <div className="mc-assembly-columns">
+    <section className="mc-assembly-column" aria-labelledby={selectedHeading}>
+     <h3 id={selectedHeading}>Partes na composição</h3>
+     {parts.length===0&&<p className="footnote">Adicione peças salvas para montar o conjunto.</p>}
+     {parts.length>0&&<ul className="mc-assembly-parts">{parts.map(part=>{
+      const item=library?.find(row=>row.id===part.id);
+      const unitCost=part.savedCost===undefined?item?.unit_cost:part.savedCost;
+      const partName=catalog.find(record=>record.id===part.id)?.name??'Peça indisponível';
+      return <li key={part.id}>
+       <div><strong>{partName}</strong><small>{unitCost==null?'Custo ainda não apurado':brl.format(Number(unitCost))+'/peça'}</small></div>
+       <label>Qtd.<input aria-label={'Quantidade de '+partName} type="number" min="1" max="100000" step="1" value={Number.isNaN(part.quantity)?'':part.quantity}
+        disabled={busy||saved} onChange={event=>{const quantity=event.target.valueAsNumber;setParts(previous=>previous.map(row=>row.id===part.id?{...row,quantity}:row));}}/></label>
+       <button type="button" className="mc-light-action" disabled={busy||saved} onClick={()=>requestConfirmation({
+         title:'Remover peça da composição',message:'Remover “'+partName+'” deste conjunto?',
+         actionLabel:'Remover peça',onConfirm:()=>setParts(previous=>previous.filter(row=>row.id!==part.id))})}
+        aria-label={'Remover '+partName}>×</button>
+      </li>;
+     })}</ul>}
+    </section>
+    <section className="mc-assembly-column" aria-labelledby={catalogHeading}>
+     <h3 id={catalogHeading}>Peças disponíveis</h3>
+     <label className="mc-assembly-search">Buscar peça salva<input type="search" value={query} onChange={event=>setQuery(event.target.value)}/></label>
+     {!library&&!error&&<p role="status">Carregando peças…</p>}
+     {library&&choices.length===0&&!error&&<p>{catalog.length===0?'Salve as peças na calculadora para usar aqui.':'Nenhuma peça encontrada.'}</p>}
+     {choices.length>0&&<ul className="mc-assembly-catalog" aria-label="Peças salvas">
+      {choices.map(item=>{
+       const added=parts.some(part=>part.id===item.id);
+       return <li key={item.id}>
+        <div><strong>{item.name}</strong>{item.sku&&<small>{item.sku}</small>}</div>
+        <div className="mc-assembly-card-actions">
+         <button type="button" className="mc-light-action" onClick={()=>setViewing(item)}>Ver ficha</button>
+         <button type="button" className="mc-light-action" disabled={busy||saved||added||parts.length>=30}
+          aria-label={added?undefined:'Adicionar à composição'} onClick={()=>add(item.id)}>{added?'Adicionada':'Adicionar'}</button>
+        </div>
+       </li>;
+      })}
+     </ul>}
+    </section>
+   </div>
    {!identity&&<label>Preço de venda do conjunto (R$, opcional)<input type="number" min="0" step=".01" value={salePrice}
     disabled={busy||saved} onChange={event=>setSalePrice(event.target.value)}/></label>}
    {!quantitiesValid&&<p role="alert" className="error">Informe uma quantidade inteira válida para cada peça.</p>}
