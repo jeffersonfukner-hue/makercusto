@@ -1,5 +1,13 @@
 # Backlog priorizado
 
+## Prioridade atual — Clientes, pedidos e navegação
+
+- [ ] Criar a área Clientes na oficina, com busca, cadastro, edição, dados de contato opcionais e histórico dos pedidos vinculados. Começar com nome, WhatsApp e e-mail.
+- [ ] No planejamento do pedido da calculadora, oferecer busca de cliente e ação Novo cliente. O cadastro abre em modal, preserva o cálculo e o rascunho do pedido e seleciona o cliente ao concluir. Permitir pedido sem cliente e preservar os pedidos antigos.
+- [ ] Na ficha do pedido, mostrar o cliente vinculado. Preparar a modelagem com vínculo opcional e isolamento por oficina, e testar cadastro rápido, cancelamento do modal, recuperação do pedido e bloqueio de vínculo entre oficinas. Aplicar migração de teste somente após autorização específica.
+- [ ] Reorganizar o menu agrupando os destinos atuais e Clientes. Proposta: Visão geral e Calculadora como acessos diretos, Comercial com Pedidos e vendas e Clientes, Produção com Impressões, Produtos e Conjuntos, Oficina com Configurações da oficina, Impressoras e Filamentos, Recursos com Biblioteca STL e Dicas de impressão.
+- [ ] Manter acesso ao menu durante a rolagem, usar os mesmos grupos no menu compacto de tablet e celular e testar navegação por toque e teclado, indicação do módulo ativo e ausência de rolagem horizontal.
+
 ## Etapa 1 — Fundação e cálculo inicial (PR #1)
 - [x] Documentação, arquitetura, contrato e regras de trabalho
 - [x] SPA estática responsiva e motor de custos

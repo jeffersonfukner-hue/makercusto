@@ -1134,3 +1134,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - A composição mostra as partes adicionadas à esquerda e o catálogo pesquisável à direita quando o painel tem espaço. Em telas estreitas a composição vem primeiro, seguida do catálogo. Ações de ficha e inclusão têm largura consistente. O seletor de método continua no painel de resultado.
 - Build e seis cenários de navegador passaram, incluindo verificação das colunas a 320, 820 e 1280 px. Ajuste local para o próximo lote, sem deploy.
+
+## 25/11/2026 — Clientes como prioridade
+
+- O proprietário priorizou área dedicada de Clientes, seleção no pedido da calculadora e cadastro rápido em modal. O pedido já reúne os estados Planejado e Vendido. A proposta mantém esses estados na mesma área comercial junto com Clientes.
+- O backlog registra o fluxo para preservar o cálculo enquanto se cadastra o cliente, o vínculo opcional para manter pedidos existentes e uma proposta de agrupamento da navegação. Próxima implementação começa pelo fluxo de Clientes e Pedidos, seguida do menu agrupado. Esta revisão é documental.
