@@ -894,3 +894,7 @@ Nove fotografias do Preview confirmam renderização dos modos Simples/Avançado
 
 ### Segundo lote visual — pronto para Preview manual
 Compactação de indicadores, composição com marcadores coloridos, ajuda contextual de filamento por foco/hover e ajustes do rodapé. Alterações estáticas, sem build/CI; verificar toque, contraste, responsividade e ausência de sobreposição de barras no Preview. Não implica homologação funcional. Sem alterações no banco ou deploy pelo agente.
+
+
+## 24/11/2026 — Evolução autorizada da navegação Modelo 5
+Proprietário autorizou substituir sidebar por navegação superior agrupada, com acesso a todos os módulos, grupos visíveis no desktop widescreen e adaptação para tablet/celular. Objetivo: liberar largura para calculadora e demais áreas. Preservar destinos, permissões e ações contextuais; organização exata dos grupos é decisão de implementação, ainda sujeita à homologação visual. Dez prints do segundo lote evidenciam excesso de altura na identificação, rodapé quebrando em duas linhas, contraste insuficiente e necessidade de reorganização estrutural. Sem comprovação de persistência. Próximo lote: navegação superior e refinamento estrutural Modelo 5, sem alterar motor ou banco. Registro documental apenas; sem build, CI, merge ou deploy. Duração não aferida.
