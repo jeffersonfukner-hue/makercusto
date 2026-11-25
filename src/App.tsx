@@ -266,12 +266,12 @@ export default function App(){
  const average = result&&used>0?result.material/used*1000:0;
  const calculationField=(key:keyof typeof fields, showHelp=Boolean(session))=>{
   const field=fields[key];
-  const label=session&&key==='quantity'?'Lote (unidades)':field.label;
+  const label=session&&key==='quantity'?'Lote':field.label;
   return <div className="mc-number-field">
    <label><span>{label}</span>
     <input data-testid={key} type="number" min={field.min} step={field.step} value={display(form[key])} onChange={event=>update(key,event.target.value)}/>
    </label>
-   {showHelp&&<CalculatorHelp label={field.label}>{field.help}</CalculatorHelp>}
+   {showHelp&&<CalculatorHelp label={label}>{field.help}</CalculatorHelp>}
   </div>;
  };
  const printDuration=printDurationDraft??splitPrintDuration(form.hours);
@@ -295,7 +295,7 @@ export default function App(){
   {!session&&<section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>}
   {session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
-   description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity',false)}
+   description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity')}
    onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
    onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}

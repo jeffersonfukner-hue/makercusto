@@ -517,26 +517,34 @@
 .mc-theme .positive {color:#156239}
 
 .calculator-identity .product-save-content {
- grid-template-columns:minmax(235px,1fr) minmax(0,2.5fr);gap:10px;align-items:start;
+ grid-template-columns:minmax(300px,1fr) minmax(0,2.5fr);gap:10px;align-items:start;
 }
-.mc-identity-heading,.mc-recovery-controls,.mc-recovery-actions {display:flex;align-items:center;gap:8px;min-width:0}
-.mc-identity-heading {margin-bottom:8px;position:relative}
-.mc-recovery-controls select {flex:1;width:100%;text-overflow:ellipsis;font-size:14px}
-.mc-recovery-controls button,.mc-recovery-actions button {min-height:36px}
-.mc-recovery-actions {margin-top:8px;flex-wrap:wrap}
-.mc-recovery-actions .mc-new-calculation {color:var(--mc-blue)}
+.mc-identity-heading,.mc-recovery-controls {display:flex;align-items:center;gap:6px;min-width:0}
+.mc-identity-heading {margin-bottom:8px;position:relative;flex-wrap:wrap}
+.mc-recovery .mc-identity-heading h2 {font-size:14px}
+.mc-recovery-controls {--recovery-height:38px}
+.mc-recovery-controls select {flex:1;width:100%;height:var(--recovery-height);text-overflow:ellipsis;font-size:14px}
+.mc-calculator .mc-recovery-controls .mc-new-calculation {
+ width:var(--recovery-height);height:var(--recovery-height);flex:none;padding:0;
+ font-size:26px;line-height:1;background:#e8f1ff;color:var(--mc-blue);
+}
 .mc-recovery .product-list {margin:0;padding:0;border:0;font-size:12px;color:var(--mc-muted)}
-.mc-recovery .product-list h3 {margin:8px 0}
-.mc-recovery .product-list[open] {flex-basis:100%}
+.mc-recovery-catalog {
+ position:absolute;z-index:21;top:calc(100% + 6px);left:0;right:0;padding:10px;
+ border:1px solid var(--mc-border);border-radius:8px;background:white;box-shadow:0 4px 14px #172b4520;
+}
+.mc-recovery .product-list h3 {margin-bottom:8px}
 .mc-recovery .product-list :is(li,li span) {color:var(--mc-ink);overflow-wrap:anywhere}
 .mc-product-identity-fields {grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) minmax(72px,.65fr) minmax(0,1.3fr);align-items:end;gap:8px}
 .mc-theme .mc-current-product .product-name-input input {
  font-size:clamp(18px,1.65vw,24px);font-weight:750;line-height:1.2;min-height:40px;
 }
-.mc-product-identity-fields label {align-content:end}
+.mc-product-identity-fields .mc-field-caption label {display:block}
+.mc-product-identity-fields .mc-number-field label>span {min-height:22px;display:flex;align-items:center}
+.mc-product-identity-fields .mc-number-field>.mc-help {top:0}
+.mc-product-identity-fields .mc-field-caption .mc-tooltip {left:auto;right:0}
 .mc-product-identity-fields :is(input,select) {height:40px}
-.mc-revision,.mc-calculation-status {margin:7px 0 0;font-size:12px}
-.mc-revision {color:var(--mc-muted)}
+.mc-calculation-status {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .mc-save-feedback {grid-column:1/-1}
 .mc-save-confirmation {display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px}
 .mc-save-confirmation p {margin:0}
@@ -570,6 +578,13 @@
  .mc-print[data-detailed="false"]>:not(.materials,.mc-print-timing) {grid-column:1/-1}
  .mc-print[data-detailed="false"] .materials {margin:0;padding:0;border:0}
  .mc-assembly .fields {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .mc-print[data-detailed="false"] :is(.materials-heading,.mc-print-duration legend) {
+  display:flex;align-items:center;min-height:34px;margin:0 0 8px;
+ }
+ .mc-print[data-detailed="false"] .mc-print-duration-fields label>span {
+  min-height:22px;display:flex;align-items:center;
+ }
+ .mc-print[data-detailed="false"] :is(.simple-field-combo input,.simple-field-combo select,.mc-print-duration input) {height:40px}
 }
 .mc-assembly {background:#f1ebfb;border-color:#ded3ef}
 .mc-extras {background:#fff5dc;border-color:#e9d8ad}
@@ -689,7 +704,8 @@
  .system-top-navigation .system-brand small {display:none}
  .system-top-navigation .system-account {gap:6px}
  .mc-product-identity-fields {grid-template-columns:repeat(2,minmax(0,1fr))}
- .mc-product-identity-fields>label:last-child {grid-column:1/-1}
+ .mc-product-identity-fields .mc-sku-field {grid-column:1/-1}
+ .mc-product-identity-fields>div:nth-child(2) .mc-tooltip {left:0;right:auto}
 }
 
 /* Superfícies e controles compartilhados entre a oficina e o acesso público. */

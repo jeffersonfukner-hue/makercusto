@@ -982,3 +982,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Implementada galeria privada com seleção múltipla, foto principal, miniatura na calculadora e consulta pela Biblioteca STL. Migração somente versionada.
 - Verificados build, 75 unitários, seis cenários Playwright com API simulada e regressão SQL de isolamento em PostgreSQL descartável com esquema Storage simulado. Sem aplicação operacional, deploy, merge ou gastos. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Seletor de cálculos e alinhamento
+
+- Implementados carregamento ao selecionar, botão + com confirmação, consulta de cadastros no cabeçalho, tooltips de identificação e alinhamento dos campos de impressão.
+- Verificados build, 75 testes unitários, oito cenários Playwright e larguras de 320 a 1600 px. Registrada a ordem pedida para miniaturas na lista de Produtos e pesquisa de impressoras. Sem deploy, migração operacional ou mudança na lista de Produtos. Commit com `[skip ci]`. Duração não aferida.

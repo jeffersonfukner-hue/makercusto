@@ -1437,7 +1437,7 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
  await systemModule(page,'Calculadora de custos').click();
  await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toBeVisible();
  await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
- await page.getByRole('button',{name:'Carregar',exact:true}).click();
+
  await expect(page.getByRole('status').filter({hasText:'Dados de "Guirlanda" carregados'})).toBeVisible();
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('90');
  await expect(page.getByTestId('simplePrice')).toHaveValue('120');
@@ -1459,7 +1459,7 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
  await expect(page.getByRole('status').filter({hasText:'versão inicial e custo estimado salvos'})).toBeVisible();
  expect(created).toHaveLength(1);
  expect(created[0]).toMatchObject({p_name:'Guirlanda — cópia 2',p_parameters:{saved_input:{hours:5.225}}});
- await page.getByRole('button',{name:'Carregar',exact:true}).click();
+ await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
  page.once('dialog',dialog=>dialog.accept());
  await page.getByRole('button',{name:'Novo cálculo',exact:true}).click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toBeEmpty();
@@ -1665,6 +1665,6 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
  await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(snapshot);
- await page.getByRole('button',{name:'Carregar',exact:true}).click();
+
  await expect(page.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
 });

@@ -5,7 +5,7 @@ import {FormActionDock} from './FormActionDock';
 import { listProducts, saveCalculatedProduct, appendProductCalculation, listSavedCalculations, type ProductRecord, type Session, type SavedCalculation } from '../data/supabase';
 import type { CostInput, CostResult } from '../domain/cost';
 
-type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:()=>void; onLoadCalculation?:(draft:SavedCalculation)=>void; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
+type Props = { session: Session | null; workspaceId: string | null; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:()=>void; onLoadCalculation?:(draft:SavedCalculation)=>boolean; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
 const currency=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const comparableName=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR').trim().replace(/\s+/g,' ');
 function availableCopyName(original:string,existing:Set<string>){
@@ -62,6 +62,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   if(!revisionTarget||!onClearRevisionTarget)return;
   const original=revisionTarget.name;
   setCopySource(original);
+  setSelectedCalculation('');
   setName(availableCopyName(original,registeredNames));
   setSku('');
   setMessage('');setError('');
@@ -89,6 +90,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     const key=requestKey??crypto.randomUUID();setRequestKey(key);
     await appendProductCalculation(workspaceId,revisionTarget.product_id,key,payload);
    }else await saveCalculatedProduct(workspaceId,payload);
+   setSelectedCalculation('');
    setLastSavedKind(kind);setCopySource(null);setName('');setSku('');onDescriptionChange?.('');setKind('product');
    setMessage(revisionTarget?'Nova revisão de custo salva na mesma ficha. O histórico anterior foi preservado.':(kind==='component'?'Peça':'Produto')+', versão inicial e custo estimado salvos na sua oficina.');
    setRequestKey(null);
@@ -111,28 +113,31 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
  return <section className="calculator-identity" aria-label="Identificação do cálculo">
   <div className="product-save-content">
    {onLoadCalculation&&<section className="panel mc-recovery" aria-labelledby="recover-calculation">
-    <div className="mc-identity-heading"><h2 id="recover-calculation">Recuperar cálculo salvo</h2>
-     <CalculatorHelp label="Recuperar cálculo salvo">Os parâmetros são reaproveitados com a impressora selecionada. O histórico original fica preservado.</CalculatorHelp>
+    <div className="mc-identity-heading">
+     <h2 id="recover-calculation">Recuperar cálculo salvo</h2>
+     <CalculatorHelp label="Recuperar cálculo salvo">Selecione para carregar os parâmetros com a impressora atual. O histórico fica preservado. Use o botão + para iniciar um novo cálculo.</CalculatorHelp>
+     <details className="product-list">
+      <summary>Cadastros{!loading&&' · '+partCount+(partCount===1?' peça':' peças')}</summary>
+      <div className="mc-recovery-catalog">
+       <h3>{filter==='component'?'Peças cadastradas':'Produtos da oficina'}</h3>
+       {loading?<p role="status">Carregando produtos…</p>:visibleItems.length===0?<p className="footnote">Nenhum produto cadastrado nesta oficina.</p>:
+        <ul>{visibleItems.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
+      </div>
+     </details>
     </div>
     <div className="mc-recovery-controls">
-     <select aria-label="Cálculo salvo para reutilizar" value={selectedCalculation} disabled={busy} onChange={event=>setSelectedCalculation(event.target.value)}>
-      <option value="">Selecione</option>
+     <select aria-label="Cálculo salvo para reutilizar" value={selectedCalculation} disabled={busy} onChange={event=>{
+      const item=savedCalculations.find(snapshot=>snapshot.snapshot_id===event.target.value);
+      if(!item){setSelectedCalculation('');return;}
+      if(onLoadCalculation(item))setSelectedCalculation(item.snapshot_id);
+     }}>
+      <option value="" disabled>Selecione</option>
       {savedCalculations.map(item=><option key={item.snapshot_id} value={item.snapshot_id}>
        {item.kind==='component'?'Peça: ':'Produto: '}{item.name}
       </option>)}
      </select>
-     <button type="button" disabled={busy||!selectedCalculation} onClick={()=>{
-      const item=savedCalculations.find(snapshot=>snapshot.snapshot_id===selectedCalculation);
-      if(item)onLoadCalculation(item);
-     }}>Carregar</button>
-    </div>
-    <div className="mc-recovery-actions">
-     {onNewCalculation&&<button type="button" className="mc-new-calculation" disabled={busy} onClick={startNewCalculation}><span aria-hidden="true">＋</span> Novo cálculo</button>}
-     <details className="product-list"><summary>Cadastros{!loading&&items.length>0&&' · '+partCount+(partCount===1?' peça':' peças')}</summary>
-      <h3>{filter==='component'?'Peças cadastradas':'Produtos da oficina'}</h3>
-      {loading?<p role="status">Carregando produtos…</p>:visibleItems.length===0?<p className="footnote">Nenhum produto cadastrado nesta oficina.</p>:
-       <ul>{visibleItems.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
-     </details>
+     {onNewCalculation&&<button type="button" className="mc-new-calculation" aria-label="Novo cálculo" disabled={busy}
+      onClick={startNewCalculation}>+</button>}
     </div>
    </section>}
    <section className="panel mc-current-product" aria-labelledby="product-save-title">
@@ -140,23 +145,32 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
      <CalculatorHelp label="Salvar produto">O custo é registrado com os parâmetros atuais. Peças diferentes na mesma placa exigem rateio validado. O salvamento não movimenta estoque.</CalculatorHelp>
     </div>
     <div className="product-save-fields mc-product-identity-fields">
-     <label className="product-name-input">Nome {kind==='component'?'da peça':'do produto'}
+     <div className="product-name-input">
+      <div className="mc-field-caption">
+       <label htmlFor="mc-product-name">Nome {kind==='component'?'da peça':'do produto'}</label>
+       <CalculatorHelp label="Nome do produto">{revisionTarget?'O nome vem do cadastro. Use Salvar como novo para dar outro nome à cópia.':'Digite o nome pelo qual você quer encontrar este item na oficina.'}</CalculatorHelp>
+      </div>
       <span className="mc-product-name-row">
        {workspaceId&&revisionTarget&&<ProductThumbnail key={revisionTarget.product_id} workspaceId={workspaceId} productId={revisionTarget.product_id} name={revisionTarget.name}/>}
-       <input ref={nameInput} aria-label="Nome do produto" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={event=>setName(event.target.value)} placeholder="Ex.: Guirlanda natalina"/>
+       <input id="mc-product-name" ref={nameInput} aria-label="Nome do produto" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={event=>setName(event.target.value)} placeholder="Ex.: Guirlanda natalina"/>
       </span>
-     </label>
-     <label>Tipo
-      <select aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)||busy} onChange={event=>setKind(event.target.value as typeof kind)}>
+     </div>
+     <div>
+      <div className="mc-field-caption"><label htmlFor="mc-product-kind">Tipo</label>
+       <CalculatorHelp label="Tipo de produto">Produto final é um item pronto. Peça é um componente que pode ser usado em um conjunto.</CalculatorHelp>
+      </div>
+      <select id="mc-product-kind" aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)||busy} onChange={event=>setKind(event.target.value as typeof kind)}>
        <option value="product">Produto final</option><option value="component">Peça / componente</option>
       </select>
-     </label>
+     </div>
      {lotField}
-     <label>SKU / referência (opcional)
-      <input aria-label="SKU do produto" maxLength={100} value={sku} disabled={Boolean(revisionTarget)||busy} onChange={event=>setSku(event.target.value)} placeholder="Ex.: CH-GALO-01"/>
-     </label>
+     <div className="mc-sku-field">
+      <div className="mc-field-caption"><label htmlFor="mc-product-sku">SKU</label>
+       <CalculatorHelp label="SKU">Código interno opcional para identificar e buscar um produto. Ex.: CH-GALO-01.</CalculatorHelp>
+      </div>
+      <input id="mc-product-sku" aria-label="SKU do produto" maxLength={100} value={sku} disabled={Boolean(revisionTarget)||busy} onChange={event=>setSku(event.target.value)} placeholder="Ex.: CH-GALO-01"/>
+     </div>
     </div>
-    {revisionTarget&&<p className="mc-revision" role="status">Nova revisão do cadastro atual</p>}
    </section>
    <div className="mc-save-feedback" aria-live="polite">{message&&<div className="mc-save-confirmation"><p className="product-success" role="status">{message}</p>
     <div className="product-workspace-buttons">

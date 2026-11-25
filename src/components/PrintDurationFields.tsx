@@ -22,9 +22,9 @@ export function PrintDurationFields({label,value,onChange,children}:{
  return <fieldset className="mc-print-duration">
   <legend>{label}</legend>
   <div className="mc-print-duration-fields">
-   <label>Horas<input type="number" inputMode="numeric" min="0" step="1" value={value.hours}
+   <label><span>Horas</span><input type="number" inputMode="numeric" min="0" step="1" value={value.hours}
     onChange={event=>onChange({...value,hours:event.target.value})}/></label>
-   <label>Minutos<input type="number" inputMode="numeric" min="0" max="59" step="1" value={value.minutes}
+   <label><span>Minutos</span><input type="number" inputMode="numeric" min="0" max="59" step="1" value={value.minutes}
     onChange={event=>onChange({...value,minutes:event.target.value})}/></label>
   </div>
   {children}
