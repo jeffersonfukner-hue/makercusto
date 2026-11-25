@@ -1,3 +1,5 @@
+import type {OrderPlanInput} from './order-plan';
+
 export interface MaterialLine {
   id: string;
   name: string;
@@ -29,6 +31,7 @@ export interface CostInput {
   laborPerHour: number;
   salePrice: number;
   targetMarginPercent?: number;
+  orderPlan?: OrderPlanInput;
 }
 export interface MaterialResult {
   id: string;

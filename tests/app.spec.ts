@@ -37,6 +37,31 @@ test('define o preço pela margem desejada e usa esse valor no orçamento',async
  await page.getByRole('radio',{name:'Preço informado',exact:true}).check();
  await expect(page.getByTestId('salePrice')).toHaveValue('8');
 });
+test('planeja mesas completas e última mesa com somente as peças necessárias',async({page})=>{
+ await page.goto('/');
+ const pieces=page.getByTestId('quantity');
+ await pieces.fill('2');
+ await page.getByText('Planejamento do pedido',{exact:true}).click();
+ const quantity=page.getByLabel('Quantidade do pedido (peças)');
+ await quantity.fill('15');
+ await expect(page.getByText('8 mesas no total · 7 completas + última mesa com 1 peça.')).toBeVisible();
+ await expect(page.getByText('Faturamento do pedido').locator('..')).toContainText('118,50');
+ await expect(page.getByText('Última mesa (rateio estimado)')).toBeVisible();
+ const lastPlate=page.getByRole('spinbutton',{name:/Custo da última mesa/});
+ await lastPlate.fill('6.20');
+ await expect(page.getByText('Última mesa (valor informado)').locator('..')).toContainText('6,20');
+ await pieces.fill('3');
+ await quantity.fill('14');
+ await expect(page.getByText('5 mesas no total · 4 completas + última mesa com 2 peças.')).toBeVisible();
+ await expect(lastPlate).toHaveValue('');
+ await quantity.fill('12');
+ await expect(page.getByText('4 mesas no total · 4 completas.')).toBeVisible();
+ await expect(lastPlate).toHaveCount(0);
+ await pieces.fill('1');
+ await expect(page.getByText('12 mesas no total · 12 completas.')).toBeVisible();
+ await quantity.fill('0');
+ await expect(page.getByText('Informe uma quantidade inteira de peças maior que zero.')).toBeVisible();
+});
 test('detalhar por cor exibe tabela alinhada e total',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:/Avançado/}).click();

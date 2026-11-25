@@ -1,3 +1,4 @@
+import {OrderPlanning} from './components/OrderPlanning';
 import {useConfirmation} from './components/ConfirmationDialog';
 import {CustomerQuote} from './components/CustomerQuote';
 import {CalculationShare,CalculationPrintSummary} from './components/CalculationShare';
@@ -68,7 +69,7 @@ function writeLocalPrinters(printers:PrinterProfile[]):void{
 
 type NumericKey = Exclude<keyof CostInput,'materials'>;
 const fields = {
- quantity: {label:'Unidades finalizadas no lote',step:'1',min:1,help:'Quantidade de unidades prontas produzidas neste lote.'},
+ quantity: {label:'Peças por mesa',step:'1',min:1,help:'Quantidade de peças prontas produzidas em uma impressão de mesa cheia.'},
  accessoryPerUnit: {label:'Acessórios por unidade (R$)',step:'0.01',min:0,help:'Custo dos acessórios consumidos por peça.'},
  assemblyMinutesPerUnit: {label:'Montagem por unidade (min)',step:'0.1',min:0,help:'Tempo de montagem e acabamento de cada unidade.'},
  laborPerHour: {label:'Mão de obra (R$/h)',step:'0.01',min:0,help:'Valor estimado da hora de trabalho na montagem.'},
@@ -209,7 +210,14 @@ export default function App(){
    setCatalog(old=>({...old,[c]:next}));
    try{localStorage.setItem(key(c),JSON.stringify(next));}catch{/* fallback em memória */}
  };
- const update=(field:NumericKey,value:string)=>setForm(prev=>({...prev,[field]:numeric(value)}));
+ const update=(field:NumericKey,value:string)=>{
+  const next=numeric(value);
+  setForm(previous=>({
+   ...previous,[field]:next,
+   orderPlan:field==='quantity'&&next!==previous.quantity&&previous.orderPlan
+    ?{quantity:previous.orderPlan.quantity}:previous.orderPlan
+  }));
+ };
  const setDraftText=(field:'name'|'brand'|'type',value:string)=>{setDraft(prev=>({...prev,[field]:value}));setErrorDraft('');};
  const setDraftNumber=(field:'grams'|'wasteGrams'|'towerGrams'|'measuredWasteGrams'|'packagePrice'|'packageQuantity',value:string)=>{setDraft(prev=>({...prev,[field]:field==='measuredWasteGrams'?optionalNumber(value):value===''&&(field==='wasteGrams'||field==='towerGrams')?0:numeric(value)}));setErrorDraft('');};
  const save=()=>{
@@ -319,7 +327,7 @@ export default function App(){
  const average = result&&used>0?result.material/used*1000:0;
  const calculationField=(key:keyof typeof fields, showHelp=Boolean(session))=>{
   const field=fields[key];
-  const label=session&&key==='quantity'?'Lote':field.label;
+  const label=field.label;
   return <div className="mc-number-field">
    <label><span>{label}</span>
     <input data-testid={key} type="number" min={field.min} step={field.step} value={display(form[key])} onChange={event=>update(key,event.target.value)}/>
@@ -588,6 +596,8 @@ export default function App(){
        <div className="mc-result-help"><CalculatorHelp label="Escopo dos custos">Estimativa sem embalagem, frete, taxas de marketplace, tributos e despesas administrativas. O lucro exibido é bruto.</CalculatorHelp></div>
       </div>
      </details>
+     <OrderPlanning piecesPerPlate={activeInput.quantity} result={result} input={form.orderPlan??{}}
+      onChange={orderPlan=>setForm(previous=>({...previous,orderPlan}))}/>
      {shareLines&&<CalculationShare title={shareTitle} lines={shareLines}/>}
      <CustomerQuote key={revisionTarget?.snapshot_id??'new-quote'} name={revisionTarget?.name}
       quantity={activeInput.quantity} salePrice={activeInput.salePrice}

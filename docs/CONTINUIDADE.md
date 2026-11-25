@@ -1035,3 +1035,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A calculadora oferece Preço informado e Margem desejada. No segundo modo, o preço unitário é o custo unitário dividido por um menos a margem em fração, arredondado para cima em centavos. A margem aceita valores de 0% até menos de 100%. O orçamento, o compartilhamento e o salvamento usam o preço efetivo da opção selecionada.
 - A meta é salva com os parâmetros do cálculo e recuperada quando disponível. Cálculos anteriores abrem por padrão em Preço informado. Alternar entre opções durante a edição preserva o preço digitado.
 - Build, 80 testes unitários e dez cenários Playwright aprovados. Verificadas as metas de 30% e 50%, a rejeição de 100%, o retorno ao preço digitado e o preço gerado no orçamento. Homologação no Preview pendente.
+
+### Planejamento do pedido por mesas — 25/11/2026
+
+- Peças por mesa define a capacidade da impressão de referência. A quantidade do pedido é informada separadamente no painel de resultado. A divisão inteira informa mesas completas e o resto define quantas peças vão na última mesa, sem exceder a quantidade solicitada.
+- O pedido mostra custo, faturamento, lucro bruto e margem no preço de venda selecionado. Por padrão a mesa parcial tem custo proporcional identificado como estimativa. O usuário pode informar o custo calculado em outro fatiamento. Se mudar a capacidade ou a quantidade da mesa parcial, o valor anterior é limpo.
+- A quantidade do pedido e o custo opcional são armazenados no snapshot quando o cálculo é salvo. O planejamento não lança vendas, impressões ou movimentos de estoque.
+- Build local, 82 testes unitários e 120 cenários Playwright aprovados em desktop e mobile. Casos exercitados incluem 15 peças em mesas de 2, 14 em mesas de 3, múltiplo exato, mesa unitária e custo informado para a última mesa.
