@@ -1095,3 +1095,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Próxima etapa registrada: painel único de resultado com compartilhamento e pedidos nas abas da calculadora, mantendo a origem ativa dos valores. Concluir a validação desta etapa antes de retomar o painel.
 - Build local, 82 testes unitários e 126 cenários Playwright aprovados. O cenário do troféu verifica nome e SKU compartilhados, ausência de Peças por mesa em Composição e cancelamento sem gravação antes de salvar na mesma ficha.
 - Migração autorizada e aplicada no Supabase de teste. O histórico remoto registrou `20261125161534` como `product_composition_revisions`. Teste com rollback confirmou duas revisões diretas e uma composição na mesma ficha, produto iniciado pela composição e isolamento de leitura. Após o teste, zero usuários e produtos descartáveis permaneceram.
+
+### Painel único de resultado — 25/11/2026
+
+- Cálculo, Composição, Configurações e Observações compartilham o mesmo painel, com preço, margem, compartilhamento, PDF, orçamento e planejamento/registro de pedidos. Ao retornar ao cálculo com uma composição montada, a origem permanece em Montagem por partes até que o usuário selecione Impressão direta.
+- Pedidos por composição multiplicam o custo por conjunto, sem apresentar número de mesas. A migração `20261125161652_order_production_method.sql` diferencia esse pedido no histórico e preserva os pedidos antigos como impressão direta. Validada em PostgreSQL descartável, incluindo a rejeição de mesas parciais em pedidos por montagem. Ainda não aplicada ao Supabase de teste.
+- Build local, 82 unitários e 126 testes de navegador aprovados. O cenário da Base e Mão com Microfone confirma um único resultado ao mudar de aba, compartilhamento e orçamento disponíveis, alternância de origem e registro simulado de 15 conjuntos pelo custo unitário de montagem.

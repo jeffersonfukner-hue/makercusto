@@ -223,7 +223,9 @@ Não ampliar escopo sem homologação.
 
 - [ ] Decidir como registrar cola, embalagem e consumíveis de baixo valor na montagem. Avaliar custos gerais rateados ou valores por unidade/conjunto conforme a forma de registrar o consumo. Retomar numa etapa posterior.
 
-## Resultado único da calculadora — próximo após identificação e revisões
+## Resultado único da calculadora
 
-- [ ] Reaproveitar um único painel de resultado em Cálculo, Composição, Configurações e Observações. Manter compartilhamento, orçamento e planejamento/registro de pedidos no mesmo painel. Preservar a origem ativa ao trocar de aba, com escolha explícita entre impressão direta e montagem por partes e sem copiar automaticamente os dados de uma forma de produção para a outra.
-- [ ] Nos pedidos por composição, multiplicar pelo número de produtos montados. Exibir mesas apenas ao usar uma estimativa de impressão direta, ou quando houver dados próprios de produção para as partes.
+- [x] Reaproveitar um único painel de resultado em Cálculo, Composição, Configurações e Observações. Manter compartilhamento, orçamento e planejamento/registro de pedidos no mesmo painel. Preservar a origem ativa ao trocar de aba, com escolha explícita entre impressão direta e montagem por partes e sem copiar automaticamente os dados de uma forma de produção para a outra.
+- [x] Nos pedidos por composição, multiplicar pelo número de produtos montados. Exibir mesas apenas ao usar uma estimativa de impressão direta, ou quando houver dados próprios de produção para as partes.
+
+- [ ] Autorizar e aplicar a migração do método de produção de Pedidos no Supabase de teste e homologar o fluxo do painel no Preview.

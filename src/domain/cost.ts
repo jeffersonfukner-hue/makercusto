@@ -66,6 +66,18 @@ export function materialWasteGrams(item: MaterialLine): number {
 export function materialTotalGrams(item: MaterialLine): number {
   return item.grams + materialWasteGrams(item);
 }
+export function salePriceForMargin(unitCost:number,target:number):number {
+  if (!validNonNegative(target) || target >= 100) {
+    throw new Error('Informe uma margem desejada de 0% até menos de 100%.');
+  }
+  if (target > 0 && unitCost === 0) {
+    throw new Error('Informe um custo maior que zero para calcular um preço por margem.');
+  }
+  const rawCents = unitCost / (1 - target / 100) * 100;
+  const cents = Math.ceil(rawCents - Number.EPSILON * rawCents);
+  if (!Number.isSafeInteger(cents)) throw new Error('O preço calculado excede o limite. Revise o custo ou a margem.');
+  return cents / 100;
+}
 export function calculateCost(input: CostInput): CostResult {
   const baseNumbers = [
     input.hours, input.averageWatts, input.pricePerKwh, input.printerPrice,
@@ -119,20 +131,8 @@ export function calculateCost(input: CostInput): CostResult {
   const assembly = input.assemblyMinutesPerUnit / 60 * input.laborPerHour * input.quantity;
   const lotCost = material + energy + depreciation + accessories + assembly;
   const unitCost = lotCost / input.quantity;
-  let salePrice = input.salePrice;
-  const target = input.targetMarginPercent;
-  if (target !== undefined) {
-    if (!validNonNegative(target) || target >= 100) {
-      throw new Error('Informe uma margem desejada de 0% até menos de 100%.');
-    }
-    if (target > 0 && unitCost === 0) {
-      throw new Error('Informe um custo maior que zero para calcular um preço por margem.');
-    }
-    const rawCents = unitCost / (1 - target / 100) * 100;
-    const cents = Math.ceil(rawCents - Number.EPSILON * rawCents);
-    if (!Number.isSafeInteger(cents)) throw new Error('O preço calculado excede o limite. Revise o custo ou a margem.');
-    salePrice = cents / 100;
-  }
+  const salePrice = input.targetMarginPercent === undefined
+    ? input.salePrice : salePriceForMargin(unitCost,input.targetMarginPercent);
   const lotRevenue = salePrice * input.quantity;
   const grossProfit = lotRevenue - lotCost;
   return {

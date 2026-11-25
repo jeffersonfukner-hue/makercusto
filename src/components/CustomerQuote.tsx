@@ -46,7 +46,8 @@ async function quoteImage(name: string, rows: string[], photo?: ImageBitmap): Pr
 }
 
 export function CustomerQuote({name,quantity,salePrice,product}:Props){
- const [title,setTitle]=useState(name??'');
+ const [titleDraft,setTitle]=useState<string>();
+ const title=titleDraft??name??'';
  const [quantityDraft,setQuantities]=useState<string>();
  const quantities=quantityDraft??[...new Set([1,10,50,quantity])].sort((a,b)=>a-b).join(', ');
  const [image,setImage]=useState<{file:File;key:string}>();

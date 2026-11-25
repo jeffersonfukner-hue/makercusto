@@ -1,8 +1,8 @@
 import {useConfirmation} from './ConfirmationDialog';
 import {Modal} from './Modals';
 import {ProductPhotos} from './ProductPhotos';
-import {useEffect,useRef,useState} from 'react';
-import {CalculatorHelp} from './CalculatorHelp';
+import {useEffect,useMemo,useRef,useState} from 'react';
+import {CalculationResultPanel,type ResultLine,type ResultNumbers} from './CalculationResultPanel';
 import {FormActionDock} from './FormActionDock';
 import {formatCatalogName} from '../domain/catalogName';
 import {createComposedProduct,getComponentCostSnapshot,listAssemblies,listComponentLibrary,listProducts,saveAssemblyWithComponents,
@@ -16,9 +16,15 @@ const costCategories=[
  ['assembly','Montagem'],['accessories','Acessórios']
 ] as const;
 
-function AssemblyResults({parts,library,snapshots,price}:{
- parts:Part[];library:ComponentLibraryItem[];snapshots:Record<string,ComponentCostSnapshot|undefined>;price:number|null
-}){
+export type CompositionSummary={cost:number|null;partsCount:number;lines:ResultLine[];filamentDetails:ResultLine[]};
+export function compositionNumbers(cost:number|null,price:number):ResultNumbers|undefined {
+ if(cost===null||!Number.isFinite(price)||price<0)return undefined;
+ const grossProfit=price-cost;
+ return {unitCost:cost,lotCost:cost,salePrice:price,lotRevenue:price,grossProfit,
+  marginPercent:price>0?grossProfit/price*100:0,markupPercent:cost>0?grossProfit/cost*100:0};
+}
+
+function summarizeComposition(parts:Part[],library:ComponentLibraryItem[],snapshots:Record<string,ComponentCostSnapshot|undefined>):CompositionSummary{
  const count=parts.reduce((sum,part)=>sum+part.quantity,0);
  const unitCosts=parts.map(part=>library.find(item=>item.id===part.id)?.unit_cost??null);
  const total=parts.length&&unitCosts.every(cost=>cost!==null)
@@ -43,36 +49,18 @@ function AssemblyResults({parts,library,snapshots,price}:{
    }
   }
  }
- return <section className="panel result-panel" aria-labelledby="assembly-result-title">
-  <div className="mc-result-heading"><h2 id="assembly-result-title">Resultado do conjunto</h2>
-   <CalculatorHelp label="Custo do conjunto">Somamos o custo salvo por peça, multiplicado pela quantidade no conjunto. Esse cálculo reúne peças já custeadas separadamente.</CalculatorHelp>
-  </div>
-  <div className="hero-amount"><span>Custo estimado por conjunto</span>
-   <strong>{total===null?'—':brl.format(total)}</strong>
-   <small>{parts.length===0?'Selecione as peças para começar':number.format(count)+' peças na composição'}</small>
-  </div>
-  {parts.length>0&&<>
-   {total===null&&<p>Há peças sem custo salvo. Abra a ficha da peça na calculadora para apurar o valor.</p>}
-   <dl className="cost-list">
-    <div><dt>Filamento consumido</dt><dd>{weight===null?'Detalhe indisponível':number.format(weight)+' g'}</dd></div>
-    {total!==null&&price!==null&&<>
-     <div><dt>Lucro bruto por conjunto</dt><dd>{brl.format(price-total)}</dd></div>
-     <div><dt>Margem bruta</dt><dd>{price>0?number.format((price-total)/price*100)+'%':'—'}</dd></div>
-    </>}
-   </dl>
-   {weight!==null&&<details className="breakdown"><summary>Composição dos custos e filamentos</summary>
-    <dl className="cost-list">{costCategories.map(([key,label])=>records.every(record=>Number.isFinite(record?.result?.[key]))&&
-     <div key={key}><dt>{label}</dt><dd>{brl.format(records.reduce((sum,record)=>sum+record!.result![key]!*record!.ratio,0))}</dd></div>)}
-     {[...details].map(([name,grams])=><div key={name}><dt>{name}</dt><dd>{number.format(grams)} g</dd></div>)}
-    </dl>
-   </details>}
-  </>}
- </section>;
+ const lines:ResultLine[]=[['Filamento consumido',weight===null?'Detalhe indisponível':number.format(weight)+' g']];
+ for(const [key,label] of costCategories){
+  if(records.length&&records.every(record=>Number.isFinite(record?.result?.[key]))){
+   lines.push([label,brl.format(records.reduce((sum,record)=>sum+record!.result![key]!*record!.ratio,0))]);
+  }
+ }
+ return {cost:total,partsCount:count,lines,filamentDetails:[...details].map(([label,grams])=>[label+' (consumo)',number.format(grams)+' g'])};
 }
 
-export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAssemblies}:{
+export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAssemblies,onResult,configuredSalePrice}:{
  workspaceId:string;active:boolean;identity?:{name:string;sku:string;description:string;productId?:string};
- onSaved?:(name:string)=>void;onViewAssemblies:()=>void
+ onSaved?:(name:string)=>void;onViewAssemblies:()=>void;onResult?:(result:CompositionSummary)=>void;configuredSalePrice?:number
 }){
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [library,setLibrary]=useState<ComponentLibraryItem[]>();
@@ -114,9 +102,11 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
  },[workspaceId,active,identity?.productId]);
  const filter=query.trim().toLocaleLowerCase('pt-BR');
  const choices=catalog.filter(item=>(item.name+' '+(item.sku??'')).toLocaleLowerCase('pt-BR').includes(filter));
- const price=salePrice===''?null:Number(salePrice);
+ const price=identity?configuredSalePrice??null:salePrice===''?null:Number(salePrice);
  const priceValid=price===null||(Number.isFinite(price)&&price>=0&&price<=100000000);
  const quantitiesValid=parts.every(part=>Number.isSafeInteger(part.quantity)&&part.quantity>=1&&part.quantity<=100000);
+ const summary=useMemo(()=>summarizeComposition(quantitiesValid?parts:[],library??[],snapshots),[quantitiesValid,parts,library,snapshots]);
+ useEffect(()=>{onResult?.(summary);},[onResult,summary]);
  const canSave=parts.length>=2&&quantitiesValid
   &&name.trim().length>=2&&priceValid&&(!identity?.productId||Boolean(sourceProduct))&&parts.every(part=>catalog.some(item=>item.id===part.id));
  const add=(id:string)=>{
@@ -148,7 +138,7 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
   }catch(cause){setError('Não foi possível salvar o conjunto. '+(cause as Error).message);}
   finally{setBusy(false);}
  };
- return <div className="workspace mc-assembly-composer">
+ return <div className={identity?"mc-assembly-composer":"workspace mc-assembly-composer"}>
   {confirmationDialog}
   <section className="panel mc-assembly-inputs" aria-label="Montar conjunto com peças salvas">
    <h2>Montar conjunto</h2>
@@ -184,8 +174,8 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
       aria-label={'Remover '+partName}>×</button>
     </li>;
    })}</ul>}
-   <label>Preço de venda do conjunto (R$, opcional)<input type="number" min="0" step=".01" value={salePrice}
-    disabled={busy||saved} onChange={event=>setSalePrice(event.target.value)}/></label>
+   {!identity&&<label>Preço de venda do conjunto (R$, opcional)<input type="number" min="0" step=".01" value={salePrice}
+    disabled={busy||saved} onChange={event=>setSalePrice(event.target.value)}/></label>}
    {!quantitiesValid&&<p role="alert" className="error">Informe uma quantidade inteira válida para cada peça.</p>}
    {error&&<p role="alert" className="error">{error}</p>}
    {saved&&<p role="status" className="product-success">Conjunto salvo na oficina.</p>}
@@ -203,7 +193,9 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
     </div>
    </Modal>}
   </section>
-  <AssemblyResults parts={quantitiesValid?parts:[]} library={library??[]} snapshots={snapshots} price={priceValid?price:null}/>
+  {!identity&&<CalculationResultPanel composed quantity={1} title={name} showShare={false}
+   result={priceValid?compositionNumbers(summary.cost,price??0):undefined} lines={summary.lines} filamentDetails={summary.filamentDetails}
+   sourceNotice={summary.partsCount?number.format(summary.partsCount)+' partes na composição':'Selecione as partes para começar'}/>}
   {active&&<FormActionDock title={name.trim()||'Novo conjunto'} subtitle="Composição de peças salvas">
    <button type="button" className="secondary-action" disabled={busy} onClick={onViewAssemblies}>Ver conjuntos</button>
    <button type="button" className="primary-action" disabled={!canSave||busy||saved} onClick={()=>void save()}>{busy?'Salvando…':identity?.productId?'Salvar composição':'Salvar conjunto'}</button>

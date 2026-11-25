@@ -1,6 +1,6 @@
 import {SaveOrderForm} from './SaveOrderForm';
 import {calculateOrderPlan,type OrderPlanInput} from '../domain/order-plan';
-import type {CostResult} from '../domain/cost';
+import type {ResultNumbers} from './CalculationResultPanel';
 
 const money=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const percent=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1});
@@ -8,8 +8,8 @@ const numberOrUndefined=(value:string)=>value===''?undefined:Number(value);
 const pieceLabel=(count:number)=>count+(count===1?' peça':' peças');
 const plateLabel=(count:number)=>count+(count===1?' mesa':' mesas');
 
-export function OrderPlanning({piecesPerPlate,result,input,onChange,orderRegistration}:{
- piecesPerPlate:number;result:CostResult;input:OrderPlanInput;onChange:(next:OrderPlanInput)=>void;
+export function OrderPlanning({piecesPerPlate,result,input,onChange,orderRegistration,composed=false}:{
+ piecesPerPlate:number;result:ResultNumbers;composed?:boolean;input:OrderPlanInput;onChange:(next:OrderPlanInput)=>void;
  orderRegistration?:{workspaceId:string;snapshotId:string|null;productName?:string;onViewOrders:()=>void}
 }){
  const {quantity,partialPlateCost}=input;
@@ -22,8 +22,8 @@ export function OrderPlanning({piecesPerPlate,result,input,onChange,orderRegistr
  const partialPieces=quantity===undefined?0:quantity%piecesPerPlate;
  return <details className="mc-calculation-share mc-order-plan" open={quantity!==undefined?true:undefined}>
   <summary>Planejamento do pedido</summary>
-  <p>A mesa calculada produz {pieceLabel(piecesPerPlate)} por impressão.</p>
-  <label>Quantidade do pedido (peças)
+  <p>{composed?'Custo calculado por conjunto montado.':'A mesa calculada produz '+pieceLabel(piecesPerPlate)+' por impressão.'}</p>
+  <label>Quantidade do pedido ({composed?'conjuntos':'peças'})
    <input type="number" min="1" step="1" value={quantity??''}
     onChange={event=>{
      const nextQuantity=numberOrUndefined(event.target.value);
@@ -38,7 +38,7 @@ export function OrderPlanning({piecesPerPlate,result,input,onChange,orderRegistr
   </label>}
   {error&&<p role="alert" className="error">{error}</p>}
   {plan&&<>
-   <p role="status">{plateLabel(plan.totalPlates)} no total · {plan.fullPlates} {plan.fullPlates===1?'completa':'completas'}{plan.partialPieces>0&&' + última mesa com '+pieceLabel(plan.partialPieces)}.</p>
+   <p role="status">{composed?quantity+' conjuntos no pedido':<>{plateLabel(plan.totalPlates)} no total · {plan.fullPlates} {plan.fullPlates===1?'completa':'completas'}{plan.partialPieces>0&&' + última mesa com '+pieceLabel(plan.partialPieces)}.</>}</p>
    <dl className="cost-list">
     {plan.partialPieces>0&&<div><dt>{partialPlateCost===undefined?'Última mesa (rateio estimado)':'Última mesa (valor informado)'}</dt><dd>{money.format(plan.lastPlateCost)}</dd></div>}
     <div><dt>Custo do pedido</dt><dd>{money.format(plan.totalCost)}</dd></div>
@@ -46,10 +46,10 @@ export function OrderPlanning({piecesPerPlate,result,input,onChange,orderRegistr
     <div><dt>Lucro bruto do pedido</dt><dd>{money.format(plan.grossProfit)}</dd></div>
     <div><dt>Margem bruta do pedido</dt><dd>{percent.format(plan.marginPercent)}%</dd></div>
    </dl>
-   {orderRegistration&&quantity!==undefined&&<SaveOrderForm key={orderRegistration.workspaceId+'/'+orderRegistration.snapshotId}
+   {orderRegistration&&quantity!==undefined&&<SaveOrderForm key={orderRegistration.workspaceId+'/'+orderRegistration.snapshotId+'/'+composed}
     workspaceId={orderRegistration.workspaceId} productName={orderRegistration.productName} onViewOrders={orderRegistration.onViewOrders}
     draft={{snapshot_id:orderRegistration.snapshotId,quantity,pieces_per_plate:piecesPerPlate,plate_cost:result.lotCost,
-     partial_plate_cost:plan.lastPlateCost,sale_price:result.salePrice}}/>}
+     partial_plate_cost:plan.lastPlateCost,sale_price:result.salePrice,production_method:composed?'assembly':undefined}}/>}
   </>}
  </details>;
 }

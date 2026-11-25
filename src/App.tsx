@@ -1,9 +1,9 @@
-import {AssemblyComposer} from './components/AssemblyComposer';
+import {AssemblyComposer,compositionNumbers,type CompositionSummary} from './components/AssemblyComposer';
+import {CalculationResultPanel,resultShareLines,type ResultLine} from './components/CalculationResultPanel';
+import type {OrderPlanInput} from './domain/order-plan';
 import {OrdersWorkspace} from './components/OrdersWorkspace';
-import {OrderPlanning} from './components/OrderPlanning';
 import {useConfirmation} from './components/ConfirmationDialog';
-import {CustomerQuote} from './components/CustomerQuote';
-import {CalculationShare,CalculationPrintSummary} from './components/CalculationShare';
+import {CalculationPrintSummary} from './components/CalculationShare';
 import {chooseSlicerProfile} from './data/filamentProfiles';
 import {filamentBrands,filamentColors,filamentTypes} from './data/filamentCatalog';
 import {LibraryWorkspace} from './components/LibraryWorkspace';
@@ -22,7 +22,7 @@ import {WorkshopDashboard} from './components/WorkshopDashboard';
 import {SystemNavigation,type ProductTab,type OverviewTab,type SystemSection} from './components/SystemNavigation';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,type SavedCalculation,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
-import { calculateCost, materialTotalGrams, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
+import { calculateCost, materialTotalGrams, referenceCase, salePriceForMargin, type CostInput, type MaterialLine } from './domain/cost';
 
 const money = (value:number) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value);
 const count = (value:number) => value.toLocaleString('pt-BR',{maximumFractionDigits:2});
@@ -118,6 +118,9 @@ export default function App(){
  const [calculatorName,setCalculatorName]=useState('');
  const [calculatorSku,setCalculatorSku]=useState('');
  const [compositionSaved,setCompositionSaved]=useState('');
+ const [compositionSummary,setCompositionSummary]=useState<CompositionSummary>();
+ const [preferComposition,setPreferComposition]=useState(false);
+ const [compositionOrder,setCompositionOrder]=useState<OrderPlanInput>({});
  const [description,setDescription]=useState('');
  const [identityReset,setIdentityReset]=useState(0);
  const [calculatorKind,setCalculatorKind]=useState<'product'|'component'>('product');
@@ -268,6 +271,7 @@ export default function App(){
  });
  const reset=()=>{
    setRevisionTarget(null);
+   setPreferComposition(false);setCompositionOrder({});setCompositionSummary(undefined);
    setCalculatorKind('product');
    setLoadedCalculation('');
    setPrintDurationDraft(null);
@@ -285,7 +289,7 @@ export default function App(){
   message:'Os valores e a identificação deste rascunho serão limpos. A impressora selecionada e os cálculos salvos serão mantidos.',
   actionLabel:'Zerar cálculo',
   onConfirm:()=>{
-   setRevisionTarget(null);setCalculatorKind('product');setLoadedCalculation('');setAccountError('');
+   setRevisionTarget(null);setPreferComposition(false);setCompositionOrder({});setCompositionSummary(undefined);setCalculatorKind('product');setLoadedCalculation('');setAccountError('');
    setDescription('');setCalculatorName('');setCalculatorSku('');setIdentityReset(value=>value+1);
    setPrintDurationDraft(null);setSlicerDurationDrafts({});
    setForm({...referenceCase,materials:undefined,grams:0,pricePerKg:0,hours:0,quantity:1,
@@ -320,7 +324,7 @@ export default function App(){
   setAccountError('');
   setLoadedCalculation('Dados de "'+saved.name+'" carregados com a impressora selecionada.');
   setRevisionTarget(saved);setCalculatorName(saved.name);setCalculatorSku(saved.sku??'');
-  setCalculatorKind(saved.kind);
+  setCalculatorKind(saved.kind);setPreferComposition(false);setCompositionOrder({});
   setCalculatorTab('calculation');
   return true;
  };
@@ -372,31 +376,26 @@ export default function App(){
   setSlicerDurationDrafts(previous=>({...previous,[key]:value}));
   updateSlicerSummary(key,printDurationInHours(value)??undefined);
  };
- const costLines=result&&[
-  ['Filamentos',result.material],['Energia',result.energy],['Depreciação',result.depreciation],
-  ['Acessórios',result.accessories],['Montagem',result.assembly]
- ] as const;
- const percent=(value:number)=>count(Math.round(value*10)/10)+'%';
- const shareTitle=revisionTarget?.name?revisionTarget.name:'Resultado do cálculo';
- const shareLines=result&&costLines&&[
-  ['Quantidade',String(activeInput.quantity)],
-  ['Consumo de filamento',count(used)+' g'],
-  ...costLines.map(([label,value])=>[label,money(value)] as const),
-  ['Custo por unidade',money(result.unitCost)],
-  ['Custo total do lote',money(result.lotCost)],
-  ['Preço de venda por unidade',money(activeInput.salePrice)],
-  ['Margem em R$/un.',money(activeInput.salePrice-result.unitCost)],
-  ['Margem bruta',percent(result.marginPercent)],
-  ['Markup',percent(result.markupPercent)],
-  ['Faturamento do lote',money(result.lotRevenue)],
-  ['Lucro bruto do lote',money(result.grossProfit)]
- ] as const;
+ const composed=Boolean(session)&&calculatorKind==='product'&&preferComposition&&
+  (calculatorTab==='composition'||Boolean(compositionSummary?.partsCount));
+ let assemblyPrice=form.salePrice, assemblyError='';
+ if(compositionSummary?.cost!=null&&priceByMargin)try{
+  assemblyPrice=salePriceForMargin(compositionSummary.cost,targetMargin);
+ }catch(cause){assemblyError=(cause as Error).message;assemblyPrice=NaN;}
+ const displayedResult=composed?compositionNumbers(compositionSummary?.cost??null,assemblyPrice):result;
+ const resultQuantity=composed?1:activeInput.quantity;
+ const resultLines:readonly ResultLine[]=composed?(compositionSummary?.lines??[]):result?[
+  ['Consumo de filamento',count(used)+' g'],['Filamentos',money(result.material)],['Energia',money(result.energy)],['Depreciação',money(result.depreciation)],
+  ['Acessórios',money(result.accessories)],['Montagem',money(result.assembly)]
+ ]:[];
+ const shareTitle=calculatorName.trim()||revisionTarget?.name||'';
+ const shareLines=displayedResult&&resultShareLines(displayedResult,resultQuantity,resultLines,composed);
  const modeSwitch=<div className="mc-calculator-tools"><nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>
   <button type="button" className="details-button mc-clear-calculation" onClick={requestClearCalculation}>Zerar cálculo</button>
  </div>;
  return <div className="mc-theme">
  {confirmationDialog}
- {shareLines&&(!session||activeSection==='calculator')&&<CalculationPrintSummary title={shareTitle} lines={shareLines}/>}
+ {shareLines&&(!session||activeSection==='calculator')&&<CalculationPrintSummary title={shareTitle||'Resultado do cálculo'} lines={shareLines}/>}
  {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthMode('login')}>Entrar</button></div></header>}
  <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={section=>{setCompositionSaved('');setActiveSection(section);}} onLogout={()=>void logout()}>
  <main className={session?"app-main":"shell"}>
@@ -407,26 +406,27 @@ export default function App(){
   {session&&<ProductSavePanel key={identityReset} session={session} workspaceId={workspaceId} input={activeInput} result={result}
    kind={calculatorKind} onKindChange={kind=>{setCalculatorKind(kind);if(kind==='component'&&calculatorTab==='composition')setCalculatorTab('calculation');}}
    name={calculatorName} onNameChange={setCalculatorName} sku={calculatorSku} onSkuChange={setCalculatorSku}
-   composing={calculatorTab==='composition'}
+   composing={calculatorTab==='composition'} hideCostDock={composed}
    onLogin={()=>setAuthMode('login')} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity')}
    onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
    onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
-   onCreateAssembly={saved=>{if(applySavedCalculation(saved))setCalculatorTab('composition');}}/>}
+   onCreateAssembly={saved=>{if(applySavedCalculation(saved)){setPreferComposition(true);setCalculatorTab('composition');}}}/>}
   {loadedCalculation&&calculatorTab!=='composition'&&<p role="status" className="product-success mc-calculation-status">{loadedCalculation}</p>}
   {session&&accountError&&<p role="alert" className="error">{accountError}</p>}
   {session&&<div className="mc-calculator-navigation">
   <nav className="mc-calculator-tabs" aria-label="Áreas da calculadora">
-   {calculatorTabs.filter(([id])=>id!=='composition'||calculatorKind==='product').map(([id,label,icon])=><button key={id} type="button" aria-current={calculatorTab===id?'page':undefined} aria-pressed={calculatorTab===id} onClick={()=>setCalculatorTab(id)}>
+   {calculatorTabs.filter(([id])=>id!=='composition'||calculatorKind==='product').map(([id,label,icon])=><button key={id} type="button" aria-current={calculatorTab===id?'page':undefined} aria-pressed={calculatorTab===id} onClick={()=>{setCalculatorTab(id);if(id==='composition')setPreferComposition(true);}}>
     <span aria-hidden="true">{icon}</span>{label}
    </button>)}
   </nav>
   {calculatorTab==='calculation'&&modeSwitch}
   </div>}
-  <div hidden={Boolean(session)&&calculatorTab!=="calculation"}>
   {!session&&modeSwitch}
   <div className="workspace">
+   <div className="mc-calculator-input-pane">
+   <div hidden={Boolean(session)&&calculatorTab!=="calculation"}>
    <div className="mc-cost-editor">
     <section className="mc-cost-block mc-print" data-detailed={advanced&&details} aria-labelledby="print-title">
      {session?<h2 id="print-title">Impressão</h2>:<div className="panel-heading">
@@ -584,71 +584,15 @@ export default function App(){
      <div className="fields">{calculationField('accessoryPerUnit')}</div>
     </section>}
    </div>
-   <section className="panel result-panel" aria-labelledby="calculation-result">
-    <div className="mc-result-heading">
-     <h2 id="calculation-result">Resultado do cálculo</h2>
-     <CalculatorHelp label="Indicadores do resultado">Margem por unidade é o preço de venda menos o custo unitário. Margem bruta é essa diferença em relação ao preço. Markup é essa diferença em relação ao custo.</CalculatorHelp>
-    </div>
-    {result&&<div className="hero-amount" aria-live="polite">
-     <span>Custo estimado por unidade</span>
-     <strong data-testid="unitCost">{money(result.unitCost)}</strong>
-     <small>Total do lote: {money(result.lotCost)}</small>
-    </div>}
-    <fieldset className="mc-pricing-mode">
-     <legend>Como definir o preço de venda</legend>
-     <div className="mc-pricing-options">
-      <label><input type="radio" name="pricing-mode" checked={!priceByMargin} onChange={()=>setPriceByMargin(false)}/> Preço informado</label>
-      <label><input type="radio" name="pricing-mode" checked={priceByMargin} onChange={()=>setPriceByMargin(true)}/> Margem desejada</label>
-     </div>
-     {priceByMargin?<div className="mc-number-field">
-      <label><span>Margem bruta desejada (%)</span>
-       <input type="number" min="0" max="99.99" step="0.01" value={display(targetMargin)} onChange={event=>setTargetMargin(numeric(event.target.value))}/>
-      </label>
-      <CalculatorHelp label="Margem bruta desejada">Percentual do preço de venda que sobra após descontar o custo estimado. O preço por unidade é arredondado para cima em centavos.</CalculatorHelp>
-     </div>:calculationField('salePrice',false)}
-     {priceByMargin&&result&&<p className="mc-calculated-sale-price" aria-live="polite">Preço de venda por unidade <strong>{money(result.salePrice)}</strong></p>}
-    </fieldset>
-    {error&&<p className="error" role="alert">{error}</p>}
-    {result&&<>
-     <dl className="mc-result-metrics">
-      <div><dt>Margem em R$/un.</dt><dd data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.salePrice-result.unitCost)}</dd></div>
-      <div><dt>Margem bruta</dt><dd data-testid="margin" className={result.marginPercent<0?'negative':undefined}>{percent(result.marginPercent)}</dd></div>
-      <div><dt>Markup</dt><dd className={result.markupPercent<0?'negative':undefined}>{percent(result.markupPercent)}</dd></div>
-     </dl>
-     <details className="breakdown" open={advanced||Boolean(session)}>
-      <summary>Composição dos custos</summary>
-      <div className="breakdown-inner">
-       <dl className="cost-list">{costLines?.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}</dl>
-       <div className="summary">
-        <div><span>Faturamento do lote</span><strong>{money(result.lotRevenue)}</strong></div>
-        <div><span>Lucro bruto do lote</span><strong data-testid="grossProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.grossProfit)}</strong></div>
-        </div>
-       <div className="mc-result-help"><CalculatorHelp label="Escopo dos custos">Estimativa sem embalagem, frete, taxas de marketplace, tributos e despesas administrativas. O lucro exibido é bruto.</CalculatorHelp></div>
-      </div>
-     </details>
-     <OrderPlanning piecesPerPlate={activeInput.quantity} result={result} input={form.orderPlan??{}}
-      onChange={orderPlan=>setForm(previous=>({...previous,orderPlan}))}
-      orderRegistration={session&&workspaceId?{workspaceId,snapshotId:revisionTarget?.snapshot_id??null,
-       productName:revisionTarget?.name,onViewOrders:()=>setActiveSection('orders')}:undefined}/>
-     {shareLines&&<CalculationShare title={shareTitle} lines={shareLines}/>}
-     <CustomerQuote key={revisionTarget?.snapshot_id??identityReset} name={revisionTarget?.name}
-      quantity={activeInput.quantity} salePrice={activeInput.salePrice}
-      product={session&&workspaceId&&revisionTarget?{workspaceId,id:revisionTarget.product_id}:undefined}/>
-     {!session&&<div className="mc-public-account">
-      <span>Quer salvar seus cálculos?</span>
-      <button type="button" className="primary-action" onClick={()=>setAuthMode('signup')}>Criar conta</button>
-     </div>}
-    </>}
-   </section>
-  </div>
   </div>
   {session&&workspaceId&&<div hidden={calculatorTab!=='composition'}>
    <AssemblyComposer key={workspaceId+'/'+(revisionTarget?.product_id??identityReset)} workspaceId={workspaceId} active={calculatorTab==='composition'}
     identity={{name:calculatorName,sku:calculatorSku,description,productId:revisionTarget?.product_id}}
+    onResult={setCompositionSummary} configuredSalePrice={Number.isFinite(assemblyPrice)?assemblyPrice:undefined}
     onSaved={name=>{
      setCompositionSaved(revisionTarget?'Composição de “'+name+'” salva na mesma ficha.':'Conjunto “'+name+'” salvo na oficina.');
      setRevisionTarget(null);setLoadedCalculation('');setCalculatorName('');setCalculatorSku('');setDescription('');
-     setIdentityReset(value=>value+1);setCalculatorTab('calculation');setActiveSection('assemblies');
+     setIdentityReset(value=>value+1);setPreferComposition(false);setCompositionOrder({});setCompositionSummary(undefined);setCalculatorTab('calculation');setActiveSection('assemblies');
     }}
     onViewAssemblies={()=>setActiveSection('assemblies')}/>
   </div>}
@@ -664,6 +608,42 @@ export default function App(){
    <h2>Observações</h2>
    <label>Descrição (opcional)<textarea aria-label="Descrição do produto" maxLength={2000} value={description} onChange={event=>setDescription(event.target.value)}/></label>
   </section>}
+   </div>
+   <CalculationResultPanel result={displayedResult} composed={composed} quantity={resultQuantity} title={shareTitle}
+    lines={resultLines} filamentDetails={composed?compositionSummary?.filamentDetails:undefined}
+    expanded={!composed&&(advanced||Boolean(session))}
+    source={session&&calculatorKind==='product'&&(calculatorTab==='composition'||composed||Boolean(compositionSummary?.partsCount))&&
+     <div className="mc-result-source" role="group" aria-label="Origem do resultado">
+      <button type="button" className="details-button" aria-pressed={!composed} onClick={()=>setPreferComposition(false)}>Impressão direta</button>
+      <button type="button" className="details-button" aria-pressed={composed} onClick={()=>setPreferComposition(true)}>Montagem por partes</button>
+     </div>}
+    sourceNotice={composed?(compositionSummary?.partsCount?count(compositionSummary.partsCount)+' partes na composição':'Selecione as partes para começar'):undefined}
+    pricing={<>
+    <fieldset className="mc-pricing-mode">
+     <legend>Como definir o preço de venda</legend>
+     <div className="mc-pricing-options">
+      <label><input type="radio" name="pricing-mode" checked={!priceByMargin} onChange={()=>setPriceByMargin(false)}/> Preço informado</label>
+      <label><input type="radio" name="pricing-mode" checked={priceByMargin} onChange={()=>setPriceByMargin(true)}/> Margem desejada</label>
+     </div>
+     {priceByMargin?<div className="mc-number-field">
+      <label><span>Margem bruta desejada (%)</span>
+       <input type="number" min="0" max="99.99" step="0.01" value={display(targetMargin)} onChange={event=>setTargetMargin(numeric(event.target.value))}/>
+      </label>
+      <CalculatorHelp label="Margem bruta desejada">Percentual do preço de venda que sobra após descontar o custo estimado. O preço por unidade é arredondado para cima em centavos.</CalculatorHelp>
+     </div>:calculationField('salePrice',false)}
+     {priceByMargin&&displayedResult&&<p className="mc-calculated-sale-price" aria-live="polite">Preço de venda por unidade <strong>{money(displayedResult.salePrice)}</strong></p>}
+    </fieldset>
+     {(composed?assemblyError:error)&&<p className="error" role="alert">{composed?assemblyError:error}</p>}
+    </>}
+    order={{input:composed?compositionOrder:form.orderPlan??{},
+     onChange:composed?setCompositionOrder:orderPlan=>setForm(previous=>({...previous,orderPlan})),
+     orderRegistration:session&&workspaceId?{workspaceId,snapshotId:composed?null:revisionTarget?.snapshot_id??null,
+      productName:shareTitle||undefined,onViewOrders:()=>setActiveSection('orders')}:undefined}}
+    product={session&&workspaceId&&revisionTarget?{workspaceId,id:revisionTarget.product_id}:undefined}
+    quoteKey={revisionTarget?.snapshot_id??identityReset}
+    foot={!session&&<div className="mc-public-account"><span>Quer salvar seus cálculos?</span>
+     <button type="button" className="primary-action" onClick={()=>setAuthMode('signup')}>Criar conta</button></div>}/>
+  </div>
   </div>
   </>}
   {session&&activeSection==='printers'&&<section className="panel"><h2>Minhas impressoras</h2><button type="button" onClick={addPrinter}>Nova impressora</button>{stored.length===0?<p>Nenhuma impressora cadastrada.</p>:<ul className="dashboard-activity-list">{stored.map(p=><li key={p.id}><strong>{p.name}</strong><button type="button" onClick={()=>{setPrinterId(p.id);setPrinterModal('edit');}}>Editar</button></li>)}</ul>}</section>}

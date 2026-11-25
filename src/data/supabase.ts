@@ -414,11 +414,11 @@ export const listCalculationHistory=(workspaceId:string,productId:string,offset:
 
 export type CustomerOrderDraft = {
  id:string;snapshot_id:string|null;product_name:string;status:'planned'|'sold';quantity:number;
- pieces_per_plate:number;plate_cost:number;partial_plate_cost:number;sale_price:number;
+ pieces_per_plate:number;plate_cost:number;partial_plate_cost:number;sale_price:number;production_method?:'direct'|'assembly';
 };
 export type CustomerOrder=CustomerOrderDraft&{created_at:string};
 export const listCustomerOrders=(workspaceId:string,offset:number)=>
- api<CustomerOrder[]>('mc_customer_orders?select=id,snapshot_id,product_name,status,quantity,pieces_per_plate,plate_cost,partial_plate_cost,sale_price,created_at&workspace_id=eq.'+
+ api<CustomerOrder[]>('mc_customer_orders?select=id,snapshot_id,product_name,status,quantity,pieces_per_plate,plate_cost,partial_plate_cost,sale_price,created_at,production_method&workspace_id=eq.'+
   encodeURIComponent(workspaceId)+'&order=created_at.desc,id.desc&limit=20&offset='+offset);
 export const saveCustomerOrder=(workspaceId:string,draft:CustomerOrderDraft)=>
  api<void>('mc_customer_orders?on_conflict=id','POST',{...draft,workspace_id:workspaceId},'resolution=ignore-duplicates,return=minimal');

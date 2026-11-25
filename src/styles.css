@@ -948,3 +948,7 @@
  .mc-composing-identity .mc-product-identity-fields {grid-template-columns:repeat(2,minmax(0,1fr))}
  .mc-composing-identity .mc-product-identity-fields .mc-sku-field {grid-column:auto}
 }
+
+.mc-calculator-input-pane {min-width:0}
+.mc-result-source {display:flex;flex-wrap:wrap;gap:5px;padding-top:8px}
+.mc-result-source button[aria-pressed=true] {border-color:var(--mc-blue);color:var(--mc-blue);font-weight:700}

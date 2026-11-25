@@ -1972,6 +1972,7 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  const mic='44444444-4444-4444-8444-444444444444';
  let saved:unknown;
  let converted:unknown;
+ let order:unknown;
  const trophy='77777777-7777-4777-8777-777777777777';
  const oldSnapshot='88888888-8888-4888-8888-888888888888';
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
@@ -1999,6 +2000,10 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
     modelGrams:grams-1,wasteGrams:1,material:2,energy:1,depreciation:5,assembly:0,accessories:0,
     materialBreakdown:[{id:'one',name:'Preto',totalGrams:grams}]
    }}}]});
+  }
+  if(url.pathname.endsWith('/mc_customer_orders')&&route.request().method()==='POST'){
+   order=route.request().postDataJSON();
+   return route.fulfill({status:204});
   }
   if(url.pathname.endsWith('/mc_save_assembly_linked')||url.pathname.endsWith('/mc_create_composed_product')){
    const payload=route.request().postDataJSON();
@@ -2040,9 +2045,24 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await result.getByText('Composição dos custos e filamentos').click();
  await expect(result.getByText('Preto')).toBeVisible();
  await expect(page.getByTestId('simpleQuantity')).toBeHidden();
+ await expect(result.getByText('Compartilhar resultado',{exact:true})).toBeVisible();
+ await expect(result.getByText('Orçamento para cliente',{exact:true})).toBeVisible();
+ await result.getByText('Planejamento do pedido',{exact:true}).click();
+ await result.getByLabel('Quantidade do pedido (conjuntos)').fill('15');
+ await expect(result.getByText('15 conjuntos no pedido',{exact:true})).toBeVisible();
+ await expect(result.getByText('Custo do pedido').locator('..')).toContainText('240,00');
+ await result.getByRole('button',{name:'Registrar pedido',exact:true}).click();
+ await expect(result.getByText('Pedido registrado no histórico da oficina.')).toBeVisible();
+ expect(order).toMatchObject({production_method:'assembly',quantity:15,pieces_per_plate:1,plate_cost:16,partial_plate_cost:0});
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
+ await expect(result.getByTestId('unitCost')).toContainText('16,00');
+ await page.getByRole('button',{name:'Configurações',exact:true}).click();
+ await expect(result.getByTestId('unitCost')).toContainText('16,00');
+ await result.getByRole('button',{name:'Impressão direta',exact:true}).click();
+ await expect(page.getByRole('region',{name:'Resultado do cálculo'})).toBeVisible();
  await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();
  await expect(page.getByLabel('Quantidade de Base')).toHaveValue('2');
+ await expect(result.getByTestId('unitCost')).toContainText('16,00');
  await page.getByRole('button',{name:'Salvar conjunto',exact:true}).click();
  await expect(page.getByText('Conjunto “Microfone com Base” salvo na oficina.')).toBeVisible();
  expect(saved).toMatchObject({p_workspace_id:workspace,p_name:'Microfone com Base',p_parts:[

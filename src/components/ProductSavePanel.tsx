@@ -8,7 +8,7 @@ import {FormActionDock} from './FormActionDock';
 import { listProducts, saveCalculatedProduct, appendProductCalculation, listSavedCalculations, type ProductRecord, type Session, type SavedCalculation } from '../data/supabase';
 import type { CostInput, CostResult } from '../domain/cost';
 
-type Props = { session: Session | null; workspaceId: string | null; kind:'product'|'component'; onKindChange:(kind:'product'|'component')=>void; name:string; onNameChange:(name:string)=>void; sku:string; onSkuChange:(sku:string)=>void; composing?:boolean; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:(calculation:SavedCalculation)=>void; onLoadCalculation?:(draft:SavedCalculation)=>boolean; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
+type Props = { session: Session | null; workspaceId: string | null; kind:'product'|'component'; onKindChange:(kind:'product'|'component')=>void; name:string; onNameChange:(name:string)=>void; sku:string; onSkuChange:(sku:string)=>void; composing?:boolean; hideCostDock?:boolean; input: CostInput; result?: CostResult; filter?: 'all'|'component'; onLogin: () => void; onViewSaved?: (kind:'product'|'component')=>void; onCreateAssembly?:(calculation:SavedCalculation)=>void; onLoadCalculation?:(draft:SavedCalculation)=>boolean; revisionTarget?:SavedCalculation|null; onClearRevisionTarget?:()=>void; description?:string; onDescriptionChange?:(value:string)=>void; lotField?:ReactNode; onNewCalculation?:()=>void };
 const currency=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const comparableName=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR').trim().replace(/\s+/g,' ');
 function availableCopyName(original:string,existing:Set<string>){
@@ -18,7 +18,7 @@ function availableCopyName(original:string,existing:Set<string>){
   if(!existing.has(comparableName(candidate)))return candidate;
  }
 }
-export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onNameChange:setName,sku,onSkuChange:setSku,composing=false,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly,onLoadCalculation,revisionTarget,onClearRevisionTarget,description='',onDescriptionChange,lotField,onNewCalculation}:Props){
+export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onNameChange:setName,sku,onSkuChange:setSku,composing=false,hideCostDock=false,input,result,filter='all',onLogin,onViewSaved,onCreateAssembly,onLoadCalculation,revisionTarget,onClearRevisionTarget,description='',onDescriptionChange,lotField,onNewCalculation}:Props){
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [copySource,setCopySource]=useState<string|null>(null);
  const nameInput=useRef<HTMLInputElement>(null);
@@ -198,7 +198,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
      {kind==='product'&&lastSavedKind==='product'&&lastSavedCalculation&&onCreateAssembly&&<button type="button" onClick={()=>onCreateAssembly(lastSavedCalculation)}>Montar conjunto com peças</button>}
     </div></div>}{error&&<p className="error" role="alert">{error}</p>}</div>
   </div>
-  {!composing&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?(kind==="component"?"Peça / componente":"Produto final"):"Cálculo inválido"} metrics={result?[{label:"Custo unitário",value:currency(result.unitCost)},{label:"Venda",value:currency(input.salePrice)},{label:"Lucro bruto/un.",value:currency(input.salePrice-result.unitCost)},{label:"Margem",value:result.marginPercent.toFixed(1).replace(".",",")+"%"}]:undefined}>
+  {!composing&&!hideCostDock&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?(kind==="component"?"Peça / componente":"Produto final"):"Cálculo inválido"} metrics={result?[{label:"Custo unitário",value:currency(result.unitCost)},{label:"Venda",value:currency(input.salePrice)},{label:"Lucro bruto/un.",value:currency(input.salePrice-result.unitCost)},{label:"Margem",value:result.marginPercent.toFixed(1).replace(".",",")+"%"}]:undefined}>
    {revisionTarget&&onClearRevisionTarget&&<button type="button" className="secondary-action" disabled={busy} onClick={draftAsCopy}>Salvar como novo</button>}
    <button className="primary-action" type="button" disabled={busy||!result||!workspaceId||name.trim().length<2} onClick={()=>void save()}>{busy?'Salvando…':revisionTarget?'Salvar nova revisão':kind==='component'?'Salvar peça e custo':'Salvar produto e custo'}</button>
   </FormActionDock>}

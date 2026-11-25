@@ -27,8 +27,10 @@ export function OrdersWorkspace({workspaceId}:{workspaceId:string}){
    return <article key={order.id} className="product-detail mc-order-record">
     <h3>{order.product_name}</h3>
     <p>{order.status==='sold'?'Vendido':'Planejado'} · {date.format(new Date(order.created_at))}</p>
-    <p>{order.quantity} peças · {plan.totalPlates} {plan.totalPlates===1?'mesa':'mesas'}
-     {plan.partialPieces>0&&' · última mesa: '+plan.partialPieces+' un.'}</p>
+    <p>{order.production_method==='assembly'?order.quantity+' conjuntos montados':<>
+     {order.quantity} peças · {plan.totalPlates} {plan.totalPlates===1?'mesa':'mesas'}
+     {plan.partialPieces>0&&' · última mesa: '+plan.partialPieces+' un.'}
+    </>}</p>
     <dl className="cost-list">
      <div><dt>Custo registrado</dt><dd>{money.format(plan.totalCost)}</dd></div>
      <div><dt>Venda por unidade</dt><dd>{money.format(Number(order.sale_price))}</dd></div>
