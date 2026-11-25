@@ -902,3 +902,11 @@ Proprietário autorizou substituir sidebar por navegação superior agrupada, co
 
 ## 24/11/2026 — Terceiro lote visual (navegação superior)
 Navegação superior responsiva com todos os dez destinos existentes, sem sidebar (36c4366); cabeçalho claro, área integral, proporção da calculadora e rodapé financeiro ajustados (2c16ecf). Destinos exibidos diretamente, agrupamento fino sujeito à homologação. Sem alteração do motor, banco, merge ou deploy. Build/CI não executados conforme BUILD-MANUAL-01. Preview manual para validar navegação desktop/mobile, densidade e rodapé. Fidelidade integral ao Modelo 5 ainda não homologada. Duração não aferida. Comunicação: evitar relatórios intermediários e solicitar intervenção apenas quando indispensável ou lote pronto.
+
+## 25/11/2026 — Reconstrução estrutural da calculadora logada (Modelo 5)
+
+- Base conferida na branch e no PR #1: `c6d46b715125c5445939694b66271d52e1836184`. A árvore estava limpa e não continha o mockup. A implementação seguiu a descrição do proprietário e as homologações registradas.
+- Identificação em dois painéis, com recuperação de cálculo, nome destacado, tipo, lote e SKU. Novo cálculo exige confirmação antes de restaurar os valores de exemplo e descartar o rascunho. A aba Observações edita a descrição enviada no salvamento existente.
+- A aba Cálculo organiza impressão, montagem/acabamento e adicionais por contexto. O painel lateral concentra custo unitário e de lote, venda editável, lucro, margem, markup e composição. A navegação superior e a barra financeira fixa permanecem acessíveis, com a barra da ficha de peça assumindo o espaço quando aberta na Composição.
+- O motor, os contratos de salvamento e o histórico foram preservados. O próximo passo é o deploy manual pelo proprietário para homologar o Modelo 5. P07, L4-G04 e L4-G05 permanecem pausados até a homologação visual.
+- Validação local aprovada: TypeScript, build Vite, 75 testes unitários e 110 cenários Playwright em desktop e celular com Chromium local. A rodada final de layout confirmou os painéis, o rodapé fixo, a ajuda contextual, o detalhamento de filamento e a edição das observações em 320, 390, 1024 e 1600 px, com serviços simulados. Homologação no Preview pendente.

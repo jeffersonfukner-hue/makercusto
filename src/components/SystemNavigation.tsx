@@ -33,7 +33,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
  if(!authenticated)return <>{children}</>;
  const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Calculadora de Produto':section==='prints'?'Impressões da oficina':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
  const navigate=(next:SystemSection)=>{onNavigate(next);setOpen(false);};
- return <div className="system-shell system-top-navigation">
+ return <div className={'system-shell system-top-navigation'+(section==='calculator'?' system-calculator':'')}>
   <header className="system-topbar">
    <div className="system-brand"><span className="system-logo" aria-hidden="true">M</span><span><strong>MakerCusto</strong><small>Sistema da oficina</small></span></div>
    <button className="system-mobile-menu" type="button" aria-label="Abrir menu do sistema" aria-expanded={open} aria-controls="system-main-menu" onClick={()=>setOpen(v=>!v)}>☰</button>
@@ -47,11 +47,11 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
    </nav>
    <div className="system-content">
     <div className="system-section-header">
-     <div><p className="system-breadcrumb">MakerCusto / {section==='overview'?'Visão geral':section==='calculator'?'Custos':section==='materials'?'Materiais':section==='prints'?'Impressões':title}</p><h1>{title}</h1>
-      <p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='calculator'?'':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p></div>
+     <div>{section!=='calculator'&&<p className="system-breadcrumb">MakerCusto / {section==='overview'?'Visão geral':section==='materials'?'Materiais':section==='prints'?'Impressões':title}</p>}<h1>{title}</h1>
+      {section!=='calculator'&&<p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p>}</div>
      
     </div>
-    <div className="system-tabs" role="navigation" aria-label={'Abas de '+title}>
+    {section!=='calculator'&&<div className="system-tabs" role="navigation" aria-label={'Abas de '+title}>
      {section==='overview'&&([
       {id:'general',label:'Visão geral'},
       {id:'activities',label:'Atividades'},
@@ -66,8 +66,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
      </>}
      {section==='prints'&&<button type="button" aria-current="page" className="system-tab-active">Execuções</button>}
      {section==='materials'&&<button type="button" aria-current="page" className="system-tab-active">Bobinas existentes</button>}
-     {section==='calculator'&&<><button type="button" aria-current="page" className="system-tab-active">Calculadora</button><button type="button" disabled>Histórico <small>Em breve</small></button></>}
-    </div>
+    </div>}
     <div className="system-module-body">{children}</div>
     <footer className="system-footer">MakerCusto · Dados da oficina no Supabase · Ambiente em desenvolvimento</footer>
    </div>

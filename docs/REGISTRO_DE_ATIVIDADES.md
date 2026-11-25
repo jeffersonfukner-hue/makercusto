@@ -956,3 +956,10 @@ Implementação inicial: ProductSavePanel 2a042995c7181e648c5d974c299d0695fd1c79
 
 ## 24/11/2026 — Terceiro lote visual (navegação superior)
 Navegação superior responsiva com todos os dez destinos existentes, sem sidebar (36c4366); cabeçalho claro, área integral, proporção da calculadora e rodapé financeiro ajustados (2c16ecf). Destinos exibidos diretamente, agrupamento fino sujeito à homologação. Sem alteração do motor, banco, merge ou deploy. Build/CI não executados conforme BUILD-MANUAL-01. Preview manual para validar navegação desktop/mobile, densidade e rodapé. Fidelidade integral ao Modelo 5 ainda não homologada. Duração não aferida. Comunicação: evitar relatórios intermediários e solicitar intervenção apenas quando indispensável ou lote pronto.
+
+## 25/11/2026 — Lote visual da calculadora logada, Modelo 5
+
+- Conferidos o HEAD remoto, o contrato de trabalho e os registros homologados. Reconstruídos a identificação, as abas, os blocos de custo, o resultado lateral e a adaptação do rodapé. CSS da calculadora consolidado, com ajuda contextual por foco e toque.
+- Atualizadas as regressões Playwright para a navegação superior e para os fluxos de recuperar, cancelar ou confirmar novo cálculo, editar observações e salvar uma peça com o lote e o preço informados. O teste também cobre a barra contextual da aba de composição.
+- Verificado o workflow `Verificações MakerCusto`, com gatilhos `pull_request` e `workflow_dispatch`. Entrega em um lote com `[skip ci]`, sob CI-ECONOMY-01, BUILD-MANUAL-01 e ENTREGA-LOTE-01. Sem merge, deploy, migração operacional, escrita no banco ou créditos Lovable. Duração não aferida.
+- Evidências locais: `npm run check`, `npm run test` (75 aprovados), `npm run build` e Playwright (110 aprovados, desktop e celular com Chromium local). Verificação responsiva em 320, 390, 1024 e 1600 px, incluindo foco/toque na ajuda, detalhamento sem rolagem horizontal da página e rodapé fixo.

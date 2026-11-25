@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
 import {SmartField,formatCatalogName} from './components/SmartField';
 import {FilamentProfilePanel} from './components/FilamentProfilePanel';
+import {CalculatorHelp} from './components/CalculatorHelp';
 import {ProductSavePanel} from './components/ProductSavePanel';
 import {ProductWorkspace} from './components/ProductWorkspace';
 import {MaterialsWorkspace} from './components/MaterialsWorkspace';
@@ -58,14 +59,20 @@ function writeLocalPrinters(printers:PrinterProfile[]):void{
 }
 
 type NumericKey = Exclude<keyof CostInput,'materials'>;
-const fields:{key:NumericKey;label:string;step:string}[] = [
- {key:'hours',label:'Tempo de impressão (horas)',step:'0.01'},
- {key:'quantity',label:'Unidades finalizadas no lote',step:'1'},
- {key:'accessoryPerUnit',label:'Acessórios por unidade (R$)',step:'0.01'},
- {key:'assemblyMinutesPerUnit',label:'Montagem por unidade (min)',step:'0.1'},
- {key:'laborPerHour',label:'Mão de obra (R$/h)',step:'0.01'},
- {key:'salePrice',label:'Preço de venda por unidade (R$)',step:'0.01'}
-];
+const fields = {
+ hours: {label:'Tempo de impressão (horas)',step:'0.01',min:0,help:'Tempo previsto pelo fatiador. Por exemplo, 2 h e 30 min equivalem a 2,5 h.'},
+ quantity: {label:'Unidades finalizadas no lote',step:'1',min:1,help:'Quantidade de unidades prontas produzidas neste lote.'},
+ accessoryPerUnit: {label:'Acessórios por unidade (R$)',step:'0.01',min:0,help:'Custo dos acessórios consumidos por peça.'},
+ assemblyMinutesPerUnit: {label:'Montagem por unidade (min)',step:'0.1',min:0,help:'Tempo de montagem e acabamento de cada unidade.'},
+ laborPerHour: {label:'Mão de obra (R$/h)',step:'0.01',min:0,help:'Valor estimado da hora de trabalho na montagem.'},
+ salePrice: {label:'Preço de venda por unidade (R$)',step:'0.01',min:0,help:'Preço cobrado por unidade.'}
+} as const;
+const calculatorTabs = [
+ ['calculation','Cálculo','▦'],
+ ['composition','Composição / Peças','◇'],
+ ['settings','Configurações','⚙︎'],
+ ['notes','Observações','▤']
+] as const;
 type Unit = 'g' | 'kg';
 type SimpleFilament = { quantity:number; quantityUnit:Unit; price:number; priceUnit:Unit };
 const initialSimple:SimpleFilament = {quantity:151.58,quantityUnit:'g',price:100,priceUnit:'kg'};
@@ -87,6 +94,7 @@ export default function App(){
  const [workspaceId,setWorkspaceId]=useState<string|null>(null);
  const [accountError,setAccountError]=useState('');
  const [workspaceName,setWorkspaceName]=useState('Minha oficina');
+ const [description,setDescription]=useState('');
  const [calculatorTab,setCalculatorTab]=useState<'calculation'|'composition'|'settings'|'notes'>('calculation');
  const [activeSection,setActiveSection]=useState<SystemSection>('overview');
  const [productTab,setProductTab]=useState<ProductTab>('all');
@@ -200,6 +208,7 @@ export default function App(){
  const remove=(id:string)=>{setDetailedMaterials(prev=>prev.filter(m=>m.id!==id));if(editId===id){setDraft(newDraft());setEditId(null);}};
  const reset=()=>{
    setRevisionTarget(null);
+   setLoadedCalculation('');
    if(!sessionStore.get()){setPrinters([...seedPrinters(),...readLocalPrinters()]);setPrinterId('example');}
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
@@ -225,8 +234,9 @@ export default function App(){
   if(data&&data.length){setDetailedMaterials(data);setAdvanced(true);setDetails(true);}
   else{setAdvanced(false);setDetails(false);}
   setAccountError('');
-  setLoadedCalculation('Dados de "'+saved.name+'" carregados. Recalculando com a impressora selecionada; o histórico original foi preservado.');
+  setLoadedCalculation('Dados de "'+saved.name+'" carregados com a impressora selecionada.');
   setRevisionTarget(saved);
+  setCalculatorTab('calculation');
   return true;
  };
  const activeInput:CostInput={
@@ -243,25 +253,56 @@ export default function App(){
  try{result=calculateCost(activeInput)}catch(e){error=(e as Error).message;}
  const used = result ? result.modelGrams+result.wasteGrams : 0;
  const average = result&&used>0?result.material/used*1000:0;
+ const calculationField=(key:keyof typeof fields, showHelp=Boolean(session))=>{
+  const field=fields[key];
+  const label=session&&key==='quantity'?'Lote (unidades)':field.label;
+  return <div className="mc-number-field">
+   <label><span>{label}</span>
+    <input data-testid={key} type="number" min={field.min} step={field.step} value={display(form[key])} onChange={event=>update(key,event.target.value)}/>
+   </label>
+   {showHelp&&<CalculatorHelp label={field.label}>{field.help}</CalculatorHelp>}
+  </div>;
+ };
+ const costLines=result&&[
+  ['Filamentos',result.material],['Energia',result.energy],['Depreciação',result.depreciation],
+  ['Acessórios',result.accessories],['Montagem',result.assembly]
+ ] as const;
+ const percent=(value:number)=>count(Math.round(value*10)/10)+'%';
+ const modeSwitch=<nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>;
  return <>
  {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthOpen(true)}>Entrar / Salvar</button></div></header>}
  <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>
  <main className={session?"app-main":"shell"}>
   {session&&activeSection==='overview'&&<WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
   {(!session||activeSection==='calculator')&&<>
-  {loadedCalculation&&<p role="status" className="product-success">{loadedCalculation}</p>}
-  <section hidden={Boolean(session)} className={session?"intro app-calculator-intro":"intro"}><p className="eyebrow">{session?"FERRAMENTA DE CUSTOS":"IMPRESSÃO 3D SEM COMPLICAÇÃO"}</p><h1>{session?(revisionTarget?.name??"Novo cálculo de produção"):"Descubra seu custo. Venda com confiança."}</h1><p>{session?"Simule custos antes de registrar um produto. Valores ilustrativos permanecem identificados.":"Comece com o essencial. Precisa de mais controle? Ative o Avançado."}</p></section>
-  {session&&<div className="calculator-identity"><ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
+  <div className={session?'mc-calculator':undefined}>
+  {!session&&<section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>}
+  {session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
+   description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity',false)}
+   onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
    onClearRevisionTarget={()=>setRevisionTarget(null)}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
-   onCreateAssembly={()=>setActiveSection('assemblies')}/></div>}
-  {session&&<nav className="mc-calculator-tabs" aria-label="Áreas da calculadora">{([["calculation","Cálculo"],["composition","Composição / Peças"],["settings","Configurações"],["notes","Observações"]] as const).map(([id,label])=><button key={id} type="button" aria-pressed={calculatorTab===id} className={calculatorTab===id?"selected":""} onClick={()=>setCalculatorTab(id)}>{label}</button>)}</nav>}
+   onCreateAssembly={()=>setActiveSection('assemblies')}/>}
+  {loadedCalculation&&<p role="status" className="product-success mc-calculation-status">{loadedCalculation}</p>}
+  {session&&accountError&&<p role="alert" className="error">{accountError}</p>}
+  {session&&<div className="mc-calculator-navigation">
+  <nav className="mc-calculator-tabs" aria-label="Áreas da calculadora">
+   {calculatorTabs.map(([id,label,icon])=><button key={id} type="button" aria-current={calculatorTab===id?'page':undefined} aria-pressed={calculatorTab===id} onClick={()=>setCalculatorTab(id)}>
+    <span aria-hidden="true">{icon}</span>{label}
+   </button>)}
+  </nav>
+  {calculatorTab==='calculation'&&modeSwitch}
+  </div>}
   <div hidden={Boolean(session)&&calculatorTab!=="calculation"}>
-  <nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples <small>Direto ao resultado</small></button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado <small>Cores, impressora e custos extras</small></button></nav>
+  {!session&&modeSwitch}
   <div className="workspace">
-   <section className="panel">
-    <div className="panel-heading"><div><h2>Impressão 3D</h2><p>{advanced?"Ajuste os detalhes sem perder os valores informados.":"Preencha os dados e veja o resultado na hora."}</p></div><button type="button" onClick={reset}>Restaurar exemplo</button></div>
+   <div className={session?'mc-cost-editor':'panel'}>
+    <section className={session?'mc-cost-block mc-print':undefined} aria-labelledby="print-title">
+     {session?<h2 id="print-title">Impressão</h2>:<div className="panel-heading">
+      <div><h2 id="print-title">Impressão 3D</h2><p>{advanced?'Ajuste os detalhes sem perder os valores informados.':'Preencha os dados e veja o resultado na hora.'}</p></div>
+      <button type="button" onClick={reset}>Restaurar exemplo</button>
+     </div>}
     {advanced&&<section className="printer-section" aria-labelledby="printer-title">
      <div className="materials-heading"><h3 id="printer-title">Impressora</h3><button type="button" className="details-button" onClick={()=>setPrinterModal('edit')}>{isReferencePrinter?'Clonar e personalizar':'Editar minha impressora'}</button></div>
      <div className="printer-selector">
@@ -273,9 +314,9 @@ export default function App(){
       </label>
       <button type="button" className="printer-add-action" onClick={addPrinter}><span className="action-plus" aria-hidden="true">+</span><span>Nova impressora</span></button>
      </div>
-     <p className="printer-summary">{count(activePrinter.averageWatts)} W (estimativa quando não informado) · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>{!session&&<p className="footnote">Sem login: suas impressoras são guardadas neste navegador. Entre para salvar na nuvem.</p>}{session&&<p className="footnote">{cloudBusy?"Carregando sua oficina...":workspaceId?"Oficina conectada ao Supabase.":"Conectando oficina..."}</p>}{accountError&&<p role="alert" className="error">{accountError}</p>}
-
-     <p className="footnote">Valores de exemplo são estimativas. Cadastros pessoais são salvos no Supabase após login; sem login, ficam neste navegador.</p>
+     <p className="printer-summary">{count(activePrinter.averageWatts)} W · Equipamento {money(activePrinter.printerPrice)} · Vida útil {count(activePrinter.lifetimeHours)} h · Energia {money(activePrinter.pricePerKwh)}/kWh</p>
+     {(!session||!workspaceId)&&<p className="footnote">{session?(cloudBusy?'Carregando sua oficina…':'Conectando oficina…'):'Sem login: suas impressoras são guardadas neste navegador. Entre para salvar na nuvem.'}</p>}
+     {!session&&accountError&&<p role="alert" className="error">{accountError}</p>}
     </section>}
     <section className="materials" aria-labelledby="materials-title">
      <div className="materials-heading"><h3 id="materials-title">Filamento</h3>{advanced&&<button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button>}</div>
@@ -324,22 +365,69 @@ export default function App(){
       <p className="footnote">A tabela usa quantidade adquirida e preço da embalagem para calcular o preço por grama. Informe purga apenas se ela não estiver incluída no peso usado.</p>
      </div>}
     </section>
-    {advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
-    <div className="mc-production-grid"><section className="calculator-production mc-print"><h3>Produção</h3><div className="fields">{fields.filter(field=>['hours','quantity'].includes(field.key)).map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/><span className="mc-info mc-field-help" tabIndex={0} title={field.key==='hours'?'Tempo previsto pelo slicer, em horas. Ex.: 2 h e 30 min → 2,5 h.':field.key==='quantity'?'Informe quantas unidades prontas saem deste lote.':field.key==='salePrice'?'Preço cobrado por unidade. A margem bruta aparece no resultado.':field.key==='accessoryPerUnit'?'Custo de acessórios consumidos por peça, sem repetir o filamento.':field.key==='assemblyMinutesPerUnit'?'Tempo de montagem de cada unidade, não da impressão.':'Valor estimado da sua hora de trabalho na montagem.'}>ⓘ</span></label>)}</div></section>{advanced&&<section className="calculator-production mc-assembly"><h3>Montagem e acabamento</h3><div className="fields">{fields.filter(field=>['assemblyMinutesPerUnit','laborPerHour'].includes(field.key)).map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/><span className="mc-info mc-field-help" tabIndex={0} title={field.key==='hours'?'Tempo previsto pelo slicer, em horas. Ex.: 2 h e 30 min → 2,5 h.':field.key==='quantity'?'Informe quantas unidades prontas saem deste lote.':field.key==='salePrice'?'Preço cobrado por unidade. A margem bruta aparece no resultado.':field.key==='accessoryPerUnit'?'Custo de acessórios consumidos por peça, sem repetir o filamento.':field.key==='assemblyMinutesPerUnit'?'Tempo de montagem de cada unidade, não da impressão.':'Valor estimado da sua hora de trabalho na montagem.'}>ⓘ</span></label>)}</div></section>}{advanced&&<section className="calculator-production mc-extras"><h3>Adicionais do produto</h3><div className="fields">{fields.filter(field=>field.key==='accessoryPerUnit').map(field=><label key={field.key}>{field.label}<input data-testid={field.key} type="number" min={field.key==='quantity'||field.key==='lifetimeHours'?'1':'0'} step={field.step} value={display(form[field.key])} onChange={e=>update(field.key,e.target.value)}/><span className="mc-info mc-field-help" tabIndex={0} title={field.key==='hours'?'Tempo previsto pelo slicer, em horas. Ex.: 2 h e 30 min → 2,5 h.':field.key==='quantity'?'Informe quantas unidades prontas saem deste lote.':field.key==='salePrice'?'Preço cobrado por unidade. A margem bruta aparece no resultado.':field.key==='accessoryPerUnit'?'Custo de acessórios consumidos por peça, sem repetir o filamento.':field.key==='assemblyMinutesPerUnit'?'Tempo de montagem de cada unidade, não da impressão.':'Valor estimado da sua hora de trabalho na montagem.'}>ⓘ</span></label>)}</div></section>}</div>
-    <p className="footnote">{advanced?"Tarifa, potência e vida útil são hipóteses editáveis, não medições oficiais.":"Energia, desgaste da impressora e outros custos usam valores de exemplo. Confira-os no Avançado antes de definir seu preço final."}</p>
+    {session&&advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
+     <div className="fields">{calculationField('hours')}{!session&&calculationField('quantity')}</div>
+     {!session&&<p className="footnote">Tarifa, potência e vida útil são hipóteses editáveis. Confira os valores no modo Avançado.</p>}
+    </section>
+    {!session&&advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
+    {advanced&&<section className={session?'mc-cost-block mc-assembly':'calculator-production'}>
+     <h3>Montagem e acabamento</h3>
+     <div className="fields">{calculationField('assemblyMinutesPerUnit')}{calculationField('laborPerHour')}</div>
+    </section>}
+    {advanced&&<section className={session?'mc-cost-block mc-extras':'calculator-production'}>
+     <h3>Custos adicionais</h3>
+     <div className="fields">{calculationField('accessoryPerUnit')}</div>
+    </section>}
+   </div>
+   <section className="panel result-panel" aria-labelledby="calculation-result">
+    <h2 id="calculation-result">Resultado do cálculo</h2>
+    {result&&<div className="hero-amount" aria-live="polite">
+     <span>{session?'Custo estimado por unidade':'Custo de produção por unidade'}</span>
+     <strong data-testid="unitCost">{money(result.unitCost)}</strong>
+     <small>Total do lote: {money(result.lotCost)}</small>
+    </div>}
+    {calculationField('salePrice',false)}
+    {error&&<p className="error" role="alert">{error}</p>}
+    {result&&<>
+     {session?<dl className="mc-result-metrics">
+      <div><dt>Lucro bruto/un.</dt><dd data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(form.salePrice-result.unitCost)}</dd></div>
+      <div><dt>Margem bruta</dt><dd data-testid="margin">{percent(result.marginPercent)}</dd></div>
+      <div><dt>Markup</dt><dd>{percent(result.markupPercent)}</dd></div>
+     </dl>:<div className="quick-outcomes">
+      <div><span>Venda por unidade</span><strong data-testid="salePriceSummary">{money(form.salePrice)}</strong></div>
+      <div><span>Sobra por unidade (bruto)</span><strong data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(form.salePrice-result.unitCost)}</strong></div>
+     </div>}
+     <details className="breakdown" open={advanced||Boolean(session)}>
+      <summary>{session?'Composição dos custos':'Entenda seu custo e lucro'}</summary>
+      <div className="breakdown-inner">
+       {!session&&<h3>Composição do lote</h3>}
+       <dl className="cost-list">{costLines?.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}</dl>
+       <div className="summary">
+        <div><span>Faturamento do lote</span><strong>{money(result.lotRevenue)}</strong></div>
+        <div><span>Lucro bruto do lote</span><strong data-testid="grossProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.grossProfit)}</strong></div>
+        {!session&&<><div><span>Margem bruta</span><strong data-testid="margin">{percent(result.marginPercent)}</strong></div><div><span>Markup</span><strong>{percent(result.markupPercent)}</strong></div></>}
+       </div>
+       {session?<div className="mc-result-help"><CalculatorHelp label="Escopo dos custos">Estimativa sem embalagem, frete, taxas de marketplace, tributos e despesas administrativas.</CalculatorHelp></div>:<p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p>}
+      </div>
+     </details>
+    </>}
    </section>
-   <section className="panel result-panel" aria-live="polite"><h2>Resultado do cálculo</h2><label className="mc-sale-price">Preço de venda por unidade (R$)<input data-testid="salePrice" type="number" min="0" step="0.01" value={display(form.salePrice)} onChange={e=>update("salePrice",e.target.value)}/></label>{error?<p className="error" role="alert">{error}</p>:result&&<>
-    <div className="hero-amount"><span>Custo de produção por unidade</span><strong data-testid="unitCost">{money(result.unitCost)}</strong><small>Total do lote: {money(result.lotCost)}</small></div>
-    <div className="quick-outcomes"><div><span>Venda por unidade</span><strong data-testid="salePriceSummary">{money(form.salePrice)}</strong></div><div><span>Sobra por unidade (bruto)</span><strong data-testid="unitProfit" className={result.grossProfit<0?"negative":"positive"}>{money(form.salePrice-result.unitCost)}</strong></div></div>
-    {session&&<div className="mc-result-metrics"><div><small>Margem bruta</small><strong>{result.marginPercent.toFixed(1)}%</strong></div><div><small>Markup</small><strong>{result.markupPercent.toFixed(1)}%</strong></div></div>}<details className="breakdown" open={advanced||Boolean(session)}><summary>Entenda seu custo e lucro</summary><div className="breakdown-inner"><h3>Composição do lote</h3><dl className="cost-list">{([['Filamentos',result.material],['Energia',result.energy],['Depreciação',result.depreciation],['Acessórios',result.accessories],['Montagem',result.assembly]] as const).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}</dl>
-    <div className="summary"><div><span>Faturamento do lote</span><strong>{money(result.lotRevenue)}</strong></div><div><span>Lucro bruto estimado</span><strong data-testid="grossProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.grossProfit)}</strong></div><div><span>Margem bruta</span><strong data-testid="margin">{result.marginPercent.toFixed(1).replace('.',',')}%</strong></div><div><span>Markup</span><strong>{result.markupPercent.toFixed(1).replace('.',',')}%</strong></div></div>
-    <p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p></div></details>
-   </>}</section>
   </div>
   </div>
-  {session&&calculatorTab==="composition"&&<ProductWorkspace workspaceId={workspaceId} tab="component" onCalculate={snapshot=>{if(applySavedCalculation(snapshot))setCalculatorTab("calculation");}}/>}
-  {session&&calculatorTab==="settings"&&<section className="panel"><h2>Configurações do cálculo</h2><p>Impressora selecionada: {activePrinter.name}</p><button type="button" onClick={()=>setPrinterModal("edit")}>Configurar impressora</button><button type="button" onClick={()=>{setAdvanced(true);setCalculatorTab("calculation");}}>Abrir cálculo avançado</button></section>}
-  {session&&calculatorTab==="notes"&&<section className="panel"><h2>Observações</h2><p>Use o campo Descrição na identificação do produto para registrar observações junto ao cadastro.</p><p>Custos estimados não representam lançamentos financeiros. Frete, tributos e taxas não estão incluídos automaticamente.</p></section>}
+  {session&&calculatorTab==="composition"&&<ProductWorkspace workspaceId={workspaceId} tab="component" onCalculate={applySavedCalculation}/>}
+  {session&&calculatorTab==="settings"&&<section className="panel mc-tab-panel">
+   <h2>Configurações do cálculo</h2>
+   <p>Impressora selecionada: {activePrinter.name}</p>
+   <div className="form-actions">
+    <button type="button" onClick={()=>setPrinterModal("edit")}>Configurar impressora</button>
+    <button type="button" onClick={()=>{setAdvanced(true);setCalculatorTab("calculation");}}>Abrir cálculo avançado</button>
+   </div>
+  </section>}
+  {session&&calculatorTab==="notes"&&<section className="panel mc-tab-panel">
+   <h2>Observações</h2>
+   <label>Descrição (opcional)<textarea aria-label="Descrição do produto" maxLength={2000} value={description} onChange={event=>setDescription(event.target.value)}/></label>
+  </section>}
+  </div>
   {!session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    onClearRevisionTarget={()=>setRevisionTarget(null)}

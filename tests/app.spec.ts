@@ -1,5 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 async function openSystemMenuIfMobile(page:Page){const toggle=page.getByRole('button',{name:'Abrir menu do sistema'});if(await toggle.isVisible())await toggle.click();}
+function systemModule(page:Page,name:string){
+ return page.getByRole('navigation',{name:'Módulos do MakerCusto'}).getByRole('button',{name,exact:true});
+}
+test.beforeEach(async({page})=>{
+ await page.route('**/*.supabase.co/rest/v1/mc_catalog?**',route=>route.fulfill({json:[]}));
+});
+
 test('resumo padrão compacto e valores do exemplo',async({page})=>{
  await page.goto('/');
  await expect(page.getByTestId('totalUsed')).toContainText('151,58 g');
@@ -57,7 +64,7 @@ test('valida o formulário sem criar linhas pendentes',async({page})=>{
  await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByRole('button',{name:'Adicionar à tabela'}).click();
- await expect(page.getByRole('alert')).toBeVisible();
+ await expect(page.getByRole('group',{name:'Cadastro compacto de filamento'}).getByRole('alert')).toBeVisible();
  await expect(page.locator('tbody tr')).toHaveCount(3);
  await page.getByRole('button',{name:'Adicionar à tabela'}).click();
  await expect(page.locator('tbody tr')).toHaveCount(3);
@@ -205,11 +212,10 @@ test('login, oficina e cadastro persistente consomem API autenticada',async({pag
  await page.getByRole('textbox',{name:'E-mail'}).fill(user.email);
  await page.getByLabel('Senha').fill('senha-teste');
  await page.getByRole('button',{name:'Entrar',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Visão geral da oficina'})).toBeVisible();
+ await expect(page.getByRole('region',{name:'Painel da oficina'})).toBeVisible();
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Custos',exact:true}).click();
+ await systemModule(page,'Calculadora de custos').click();
  await page.getByRole('button',{name:/Avançado/}).click();
- await expect(page.getByText('Oficina conectada ao Supabase.')).toBeVisible();
  await page.getByRole('button',{name:/Nova impressora/}).click();
  await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Anycubic');
  await page.getByRole('combobox',{name:'Modelo da impressora'}).selectOption('preset:anycubic-kobra-x');
@@ -307,7 +313,7 @@ test('cópias de perfil não sobrescrevem perfis pessoais com nomes iguais',asyn
  await page.getByRole('region',{name:'Configuração de filamento para slicer'}).getByRole('button',{name:'Clonar e personalizar'}).click();
  await page.getByRole('textbox',{name:'Nome da configuração'}).fill('meu pla');
  await page.getByRole('button',{name:'Salvar meu perfil'}).click();
- await expect(page.getByRole('alert')).toContainText('Já existe um perfil com esse nome');
+ await expect(page.getByRole('alert').filter({hasText:'Já existe um perfil com esse nome'})).toBeVisible();
 });
 
 test('autocomplete aceita teclado e mantém no máximo três sugestões',async({page})=>{
@@ -431,7 +437,7 @@ test('visitante preserva última referência selecionada sem criar cópia',async
 
 test('produto exige login para salvar e oferece entrada no modal',async({page})=>{
  await page.goto('/');
- await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Identificação do produto'})).toBeVisible();
  await page.getByRole('button',{name:'Entrar para salvar produto'}).click();
  await expect(page.getByRole('dialog')).toBeVisible();
 });
@@ -458,7 +464,7 @@ test('catálogo abre antes do formulário e salva novo produto na oficina',async
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Produtos',exact:true}).click();
+ await systemModule(page,'Produtos').click();
  await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveCount(0);
  await page.getByRole('button',{name:'+ Novo produto'}).click();
@@ -519,8 +525,8 @@ test('conjunto de três peças: catálogo, criação, custos, edição e duplica
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Produtos',exact:true}).click();
- await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
+ await systemModule(page,'Produtos').click();
+ await page.getByRole('navigation',{name:'Abas de Produtos e componentes'}).getByRole('button',{name:'Conjuntos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Conjuntos'})).toBeVisible();
  await page.getByRole('button',{name:'+ Novo conjunto'}).click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toBeEmpty();
@@ -561,8 +567,8 @@ test('validação impede cadastrar conjunto sem nome das peças',async({page})=>
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Produtos',exact:true}).click();
- await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
+ await systemModule(page,'Produtos').click();
+ await page.getByRole('navigation',{name:'Abas de Produtos e componentes'}).getByRole('button',{name:'Conjuntos',exact:true}).click();
  await page.getByRole('button',{name:'+ Novo conjunto'}).click();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Kit de teste');
  await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
@@ -574,7 +580,7 @@ test('acesso público preserva calculadora sem apresentar sistema privado',async
  await expect(page.getByRole('navigation',{name:'Módulos do MakerCusto'})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Entrar / Salvar'})).toBeVisible();
 });
-test('login transforma a página em sistema com menu lateral e painel de oficina',async({page},testInfo)=>{
+test('login apresenta navegação superior e painel de oficina',async({page},testInfo)=>{
  const workspace='11111111-1111-4111-8111-111111111111',user='22222222-2222-4222-8222-222222222222';
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user,email:'maker@example.test'}
@@ -587,33 +593,32 @@ test('login transforma a página em sistema com menu lateral e painel de oficina
   return route.fulfill({status:200,contentType:'application/json',body:'[]'});
  });
  await page.goto('/');
- await expect(page.getByRole('navigation',{name:'Módulos do MakerCusto'})).toBeAttached();
- await expect(page.getByRole('heading',{name:'Visão geral da oficina'})).toBeVisible();
- await expect(page.getByRole('button',{name:'Visão geral',exact:true})).toHaveAttribute('aria-current','page');
+ await expect(page.getByRole('region',{name:'Painel da oficina'})).toBeVisible();
+ await openSystemMenuIfMobile(page);
+ await expect(systemModule(page,'Visão geral')).toHaveAttribute('aria-current','page');
  await page.getByRole('button',{name:'Atividades',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Cadastros recentes'})).toBeVisible();
  await expect(page.getByText('Esta lista não é um log de alterações ou impressões.')).toBeVisible();
  await page.getByRole('button',{name:'Pendências',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Informações a completar'})).toBeVisible();
  await expect(page.getByText('Custo não apurado')).toBeVisible();
- await page.getByRole('button',{name:'Visão geral',exact:true}).click();
- await expect(page.getByText('Lançador de hélices')).toBeVisible();
+ await page.getByRole('navigation',{name:'Abas de Visão geral'}).getByRole('button',{name:'Visão geral',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Evolução dos custos'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Oficina de Testes'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toHaveCount(0);
- await expect(page.getByRole('button',{name:'Impressões',exact:true})).toBeEnabled();
- await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Produtos',exact:true}).click();
+ await expect(systemModule(page,'Impressões')).toBeEnabled();
+ await systemModule(page,'Produtos').click();
  await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();
  await page.getByRole('button',{name:'Peças',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Peças'})).toBeVisible();
- await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
+ await page.getByRole('navigation',{name:'Abas de Produtos e componentes'}).getByRole('button',{name:'Conjuntos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Conjuntos'})).toBeVisible();
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Custos',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Calculadora de produção'})).toBeVisible();
+ await systemModule(page,'Calculadora de custos').click();
+ await expect(page.getByRole('heading',{name:'Calculadora de Produto'})).toBeVisible();
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Início',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Visão geral da oficina'})).toBeVisible();
+ await systemModule(page,'Visão geral').click();
+ await expect(page.getByRole('region',{name:'Painel da oficina'})).toBeVisible();
  if(testInfo.project.name==='mobile'){
   const button=page.getByRole('button',{name:'Abrir menu do sistema'});
   await expect(button).toBeVisible();
@@ -647,7 +652,7 @@ test('bobina física: inventário na oficina sem criar compra fictícia',async({
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Materiais',exact:true}).click();
+ await systemModule(page,'Filamentos').click();
  await expect(page.getByRole('heading',{name:'Filamentos e bobinas'})).toBeVisible();
  await expect(page.getByText('Nenhuma bobina inventariada nesta oficina.')).toBeVisible();
  await page.getByRole('button',{name:'+ Inventariar bobina'}).click();
@@ -1289,20 +1294,34 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Custos',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Meus produtos'})).toBeVisible();
+ await systemModule(page,'Calculadora de custos').click();
+ await expect(page.getByRole('heading',{name:'Identificação do produto'})).toBeVisible();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Estrela grande');
- await expect(page.locator('.product-name-feature strong')).toHaveText('Estrela grande');
+ await expect(page.locator('.form-action-dock-context strong')).toHaveText('Estrela grande');
+ await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();
+ await page.getByRole('button',{name:'+ Nova peça'}).click();
+ await expect(page.locator('.form-action-dock:visible')).toHaveCount(1);
+ await page.getByRole('button',{name:'Cálculo',exact:true}).click();
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Estrela grande');
+ await page.getByRole('button',{name:'Observações',exact:true}).click();
+ await page.getByRole('textbox',{name:'Descrição do produto'}).fill('Revisar o acabamento');
+ await page.getByRole('button',{name:'Cálculo',exact:true}).click();
+ await page.getByTestId('quantity').fill('3');
+ await page.getByTestId('salePrice').fill('20');
+ await page.getByRole('button',{name:'Novo cálculo',exact:true}).click();
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Estrela grande');
+ await expect(page.getByTestId('quantity')).toHaveValue('3');
  await expect(page.locator('.form-action-dock')).toHaveCSS('position','fixed');
  await page.getByRole('combobox',{name:'Tipo de produto'}).selectOption('component');
- await page.getByRole('button',{name:'Salvar produto e custo'}).click();
- await expect(page.getByText('Produto, versão inicial e custo estimado salvos na sua oficina.')).toBeVisible();
+ await page.getByRole('button',{name:'Salvar peça e custo'}).click();
+ await expect(page.getByText('Peça, versão inicial e custo estimado salvos na sua oficina.')).toBeVisible();
  expect(saved).not.toBeNull();
  expect((saved as unknown as Record<string,unknown>).p_kind).toBe('component');
  expect((saved as unknown as Record<string,unknown>).p_workspace_id).toBe(workspace);
  const params=(saved as unknown as Record<string,unknown>).p_parameters as Record<string,unknown>;
  expect(params.origin).toBe('calculator');
- expect(params.saved_input).toBeTruthy();
+ expect(params.saved_input).toMatchObject({quantity:3,salePrice:20});
+ expect((saved as unknown as Record<string,unknown>).p_description).toBe('Revisar o acabamento');
  expect(params.calculated_result).toBeTruthy();
 });
 
@@ -1346,8 +1365,8 @@ test('conjunto vincula guirlanda, estrela grande e pequena sem duplicar cadastro
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Produtos',exact:true}).click();
- await page.getByRole('button',{name:'Conjuntos',exact:true}).click();
+ await systemModule(page,'Produtos').click();
+ await page.getByRole('navigation',{name:'Abas de Produtos e componentes'}).getByRole('button',{name:'Conjuntos',exact:true}).click();
  await page.getByRole('button',{name:'+ Novo conjunto'}).click();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Guirlanda de Natal');
  await page.getByRole('combobox',{name:'Selecionar peça cadastrada 1'}).selectOption(componentIds[0]);
@@ -1392,16 +1411,21 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Custos',exact:true}).click();
+ await systemModule(page,'Calculadora de custos').click();
  await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toBeVisible();
  await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
- await page.getByRole('button',{name:'Carregar dados na calculadora'}).click();
+ await page.getByRole('button',{name:'Carregar',exact:true}).click();
  await expect(page.getByRole('status').filter({hasText:'Dados de "Guirlanda" carregados'})).toBeVisible();
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('90');
  await expect(page.getByTestId('simplePrice')).toHaveValue('120');
  await expect(page.getByTestId('hours')).toHaveValue('5');
  await expect(page.getByTestId('salePrice')).toHaveValue('40');
  expect(readCalls).toContain('read');
+ page.once('dialog',dialog=>dialog.accept());
+ await page.getByRole('button',{name:'Novo cálculo',exact:true}).click();
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toBeEmpty();
+ await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toHaveValue('');
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
 });
 
 
