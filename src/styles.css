@@ -522,7 +522,7 @@
 .mc-save-feedback:empty {display:none}
 
 .mc-calculator-navigation {display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 12px;border-bottom:1px solid var(--mc-border)}
-.mc-calculator-tabs {display:flex;min-width:0;overflow-x:auto;scrollbar-width:thin}
+.mc-calculator-tabs {display:flex;flex-wrap:wrap;min-width:0}
 .mc-calculator .mc-calculator-tabs button {
  display:flex;align-items:center;gap:7px;min-height:42px;flex:none;white-space:nowrap;
  background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;
@@ -661,6 +661,14 @@
 }
 @media(max-width:900px) {
  .mc-calculator .workspace {grid-template-columns:minmax(0,1fr) minmax(255px,.7fr)}
+}
+@media(max-width:1050px) {
+ .mc-calculator-navigation {display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+ .mc-calculator-navigation .mc-calculator-tools {justify-self:start}
+}
+@media(max-width:540px) {
+ .mc-calculator-tabs {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .mc-calculator .mc-calculator-tabs button {white-space:normal;text-align:left;min-width:0}
 }
 @media(max-width:760px) {
  .mc-calculator .workspace,.calculator-identity .product-save-content {grid-template-columns:minmax(0,1fr)}
@@ -951,4 +959,14 @@
 
 .mc-calculator-input-pane {min-width:0}
 .mc-result-source {display:flex;flex-wrap:wrap;gap:5px;padding-top:8px}
-.mc-result-source button[aria-pressed=true] {border-color:var(--mc-blue);color:var(--mc-blue);font-weight:700}
+.mc-theme .mc-light-action {
+ border:1px solid #b9cbe6;border-radius:7px;background:#edf3ff;color:#194386;
+ font-size:12px;font-weight:700;min-height:38px;padding:6px 9px;
+}
+.mc-theme .mc-light-action:not(:disabled):hover {background:#dfeaff;color:#12366d}
+.mc-theme .mc-light-action:disabled {background:#e8edf5;color:#4b5e79;opacity:1}
+.mc-theme .mc-result-source button[aria-pressed=true] {
+ border-color:var(--mc-blue);background:var(--mc-blue);color:#fff;
+}
+.mc-result-source button {flex:1 1 125px;text-align:center}
+.mc-composition-context p {margin:0 0 10px;color:var(--mc-muted);font-size:13px}

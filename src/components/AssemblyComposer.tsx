@@ -153,8 +153,8 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
      return <li key={item.id}>
       <div><strong>{item.name}</strong>{item.sku&&<small>{item.sku}</small>}</div>
       <div className="mc-assembly-card-actions">
-       <button type="button" className="details-button" onClick={()=>setViewing(item)}>Ver ficha</button>
-       <button type="button" className="details-button" disabled={busy||saved||added||parts.length>=30}
+       <button type="button" className="mc-light-action" onClick={()=>setViewing(item)}>Ver ficha</button>
+       <button type="button" className="mc-light-action" disabled={busy||saved||added||parts.length>=30}
         onClick={()=>add(item.id)}>{added?'Na composição':'Adicionar à composição'}</button>
       </div>
      </li>;
@@ -168,7 +168,7 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
      <div><strong>{partName}</strong><small>{item?.unit_cost==null?'Custo ainda não apurado':brl.format(Number(item.unit_cost))+'/peça'}</small></div>
      <label>Qtd.<input aria-label={'Quantidade de '+partName} type="number" min="1" max="100000" step="1" value={Number.isNaN(part.quantity)?'':part.quantity}
       disabled={busy||saved} onChange={event=>{const quantity=event.target.valueAsNumber;setParts(previous=>previous.map(row=>row.id===part.id?{...row,quantity}:row));}}/></label>
-     <button type="button" className="details-button" disabled={busy||saved} onClick={()=>requestConfirmation({
+     <button type="button" className="mc-light-action" disabled={busy||saved} onClick={()=>requestConfirmation({
        title:'Remover peça da composição',message:'Remover “'+partName+'” deste conjunto?',
        actionLabel:'Remover peça',onConfirm:()=>setParts(previous=>previous.filter(row=>row.id!==part.id))})}
       aria-label={'Remover '+partName}>×</button>

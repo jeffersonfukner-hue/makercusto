@@ -2056,10 +2056,23 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  expect(order).toMatchObject({production_method:'assembly',quantity:15,pieces_per_plate:1,plate_cost:16,partial_plate_cost:0});
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
  await expect(result.getByTestId('unitCost')).toContainText('16,00');
+ await expect(page.getByTestId('simpleQuantity')).toBeHidden();
+ await expect(page.getByRole('region',{name:'Montagem por partes'})).toBeVisible();
+ const originalViewport=page.viewportSize()!;
+ const tabs=page.getByRole('navigation',{name:'Áreas da calculadora'});
+ for(const width of [320,768,820,882,1024,1180]){
+  await page.setViewportSize({width,height:originalViewport.height});
+  expect(await tabs.evaluate(nav=>[...nav.querySelectorAll('button')].every(button=>
+   button.getBoundingClientRect().right<=nav.getBoundingClientRect().right+1&&button.scrollWidth<=button.clientWidth+1
+  )),`Abas completas em ${width}px`).toBe(true);
+ }
+ await page.setViewportSize(originalViewport);
  await page.getByRole('button',{name:'Configurações',exact:true}).click();
  await expect(result.getByTestId('unitCost')).toContainText('16,00');
- await result.getByRole('button',{name:'Impressão direta',exact:true}).click();
+ await page.getByRole('button',{name:'Cálculo',exact:true}).click();
+ await page.getByRole('button',{name:'Editar impressão direta',exact:true}).click();
  await expect(page.getByRole('region',{name:'Resultado do cálculo'})).toBeVisible();
+ await expect(page.getByTestId('simpleQuantity')).toBeVisible();
  await page.getByRole('button',{name:'Composição / Peças',exact:true}).click();
  await expect(page.getByLabel('Quantidade de Base')).toHaveValue('2');
  await expect(result.getByTestId('unitCost')).toContainText('16,00');
@@ -2130,6 +2143,8 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await expect(page.getByRole('button',{name:'Reutilizar parâmetros'})).toHaveCount(2);
  await page.getByText(/5,00\/un\./).locator('..').getByRole('button',{name:'Reutilizar parâmetros'}).click();
  await expect(page.getByTestId('salePrice')).toHaveValue('8');
+ await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toHaveValue(earlier);
+ await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).locator('option:checked')).toContainText('revisão carregada');
  await page.getByText('Planejamento do pedido',{exact:true}).click();
  await page.getByLabel('Quantidade do pedido (peças)').fill('15');
  await expect(page.getByLabel('Item do pedido')).toHaveValue('Chaveiro');

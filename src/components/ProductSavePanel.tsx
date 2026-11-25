@@ -27,7 +27,6 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
  const [lastSavedKind,setLastSavedKind]=useState<'product'|'component'>('product');
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [savedCalculations,setSavedCalculations]=useState<SavedCalculation[]>([]);
- const [selectedCalculation,setSelectedCalculation]=useState('');
  const [busy,setBusy]=useState(false);
  const [loading,setLoading]=useState(false);
  const [message,setMessage]=useState('');
@@ -65,7 +64,6 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
   if(!revisionTarget||!onClearRevisionTarget)return;
   const original=revisionTarget.name;
   setCopySource(original);
-  setSelectedCalculation('');
   setName(availableCopyName(original,registeredNames));
   setSku('');
   setMessage('');setError('');
@@ -101,8 +99,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
     await appendProductCalculation(workspaceId,revisionTarget.product_id,key,payload);
    }else productId=await saveCalculatedProduct(workspaceId,payload);
    setLastSavedProductId(productId);
-   setSelectedCalculation('');
-   setLastSavedKind(kind);setCopySource(null);setName('');setSku('');onDescriptionChange?.('');onKindChange('product');
+    setLastSavedKind(kind);setCopySource(null);setName('');setSku('');onDescriptionChange?.('');onKindChange('product');
    setMessage(revisionTarget?'Nova revisão de custo salva na mesma ficha. O histórico anterior foi preservado.':(kind==='component'?'Peça':'Produto')+', versão inicial e custo estimado salvos na sua oficina.');
    setRequestKey(null);
    if(revisionTarget)onClearRevisionTarget?.();
@@ -116,7 +113,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
   actionLabel:'Iniciar novo cálculo',
   onConfirm:()=>{
    setCopySource(null);setName('');setSku('');onDescriptionChange?.('');onKindChange('product');
-   setSelectedCalculation('');setMessage('');setError('');setRequestKey(null);
+   setMessage('');setError('');setRequestKey(null);
    onNewCalculation?.();
   }
  });
@@ -142,12 +139,13 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
      </details>
     </div>
     <div className="mc-recovery-controls">
-     <select aria-label="Cálculo salvo para reutilizar" value={selectedCalculation} disabled={busy} onChange={event=>{
+     <select aria-label="Cálculo salvo para reutilizar" value={revisionTarget?.snapshot_id??''} disabled={busy} onChange={event=>{
       const item=savedCalculations.find(snapshot=>snapshot.snapshot_id===event.target.value);
-      if(!item){setSelectedCalculation('');return;}
-      if(onLoadCalculation(item))setSelectedCalculation(item.snapshot_id);
+      if(item)onLoadCalculation(item);
      }}>
       <option value="" disabled>Selecione</option>
+      {revisionTarget&&!savedCalculations.some(item=>item.snapshot_id===revisionTarget.snapshot_id)&&
+       <option value={revisionTarget.snapshot_id}>{revisionTarget.name} · revisão carregada</option>}
       {savedCalculations.map(item=><option key={item.snapshot_id} value={item.snapshot_id}>
        {item.kind==='component'?'Peça: ':'Produto: '}{item.name}
       </option>)}
@@ -156,12 +154,12 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
       onClick={startNewCalculation}>+</button>}
     </div>
     {workspaceId&&<CalculationHistory key={workspaceId+'/'+refresh} workspaceId={workspaceId}
-     products={savedCalculations} onLoad={item=>{if(onLoadCalculation(item))setSelectedCalculation('');}}/>}
+     products={savedCalculations} onLoad={onLoadCalculation}/>}
    </section>}
    <section className="panel mc-current-product" aria-labelledby="product-save-title">
     <div className="mc-identity-heading"><h2 id="product-save-title">Identificação do produto</h2>
      <CalculatorHelp label="Salvar produto">O custo é registrado com os parâmetros atuais. Peças diferentes na mesma placa exigem rateio validado. O salvamento não movimenta estoque.</CalculatorHelp>
-     {!composing&&revisionTarget&&onClearRevisionTarget&&<button type="button" className="details-button mc-copy-calculation"
+     {!composing&&revisionTarget&&onClearRevisionTarget&&<button type="button" className="mc-light-action mc-copy-calculation"
       disabled={busy} onClick={draftAsCopy}>Salvar como novo</button>}
     </div>
     <div className="product-save-fields mc-product-identity-fields">

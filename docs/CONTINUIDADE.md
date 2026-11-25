@@ -1102,3 +1102,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Pedidos por composição multiplicam o custo por conjunto, sem apresentar número de mesas. A migração `20261125161652_order_production_method.sql` diferencia esse pedido no histórico e preserva os pedidos antigos como impressão direta. Validada em PostgreSQL descartável, incluindo a rejeição de mesas parciais em pedidos por montagem. Ainda não aplicada ao Supabase de teste.
 - Build local, 82 unitários e 126 testes de navegador aprovados. O cenário da Base e Mão com Microfone confirma um único resultado ao mudar de aba, compartilhamento e orçamento disponíveis, alternância de origem e registro simulado de 15 conjuntos pelo custo unitário de montagem.
 - Migração de método de produção autorizada e aplicada no Supabase de teste como `20261125165814`. O teste autenticado com rollback confirmou pedido direto pelo padrão, pedido de 15 conjuntos com método montagem e bloqueio de mesa parcial para montagem. A consulta após rollback encontrou zero pedidos e usuários descartáveis.
+
+### Ajustes do painel no iPad — 25/11/2026
+
+- Os prints do proprietário comprovaram que a simulação de 12 conjuntos mantinha a origem Montagem por partes ao retornar para Cálculo. A gravação do pedido não foi observada nos prints.
+- As abas têm espaço próprio no tablet e podem quebrar em telas estreitas. Os botões de origem, ficha, inclusão e remoção no compositor, cópia e reset usam cores da interface clara. A origem ativa fica destacada em azul. Quando Montagem por partes está ativa em Cálculo, os campos de impressão direta cedem espaço às ações Editar composição e Editar impressão direta.
+- Recuperar cálculo salvo acompanha a revisão realmente carregada, inclusive quando escolhida pelo histórico. Build, 82 unitários, oito cenários Chromium e dois em WebKit com perfil de iPad passaram. As abas foram verificadas em larguras de 320 a 1180 px.

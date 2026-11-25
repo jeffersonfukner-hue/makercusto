@@ -391,7 +391,7 @@ export default function App(){
  const shareTitle=calculatorName.trim()||revisionTarget?.name||'';
  const shareLines=displayedResult&&resultShareLines(displayedResult,resultQuantity,resultLines,composed);
  const modeSwitch=<div className="mc-calculator-tools"><nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>
-  <button type="button" className="details-button mc-clear-calculation" onClick={requestClearCalculation}>Zerar cálculo</button>
+  <button type="button" className="mc-light-action mc-clear-calculation" onClick={requestClearCalculation}>Zerar cálculo</button>
  </div>;
  return <div className="mc-theme">
  {confirmationDialog}
@@ -408,7 +408,7 @@ export default function App(){
    name={calculatorName} onNameChange={setCalculatorName} sku={calculatorSku} onSkuChange={setCalculatorSku}
    composing={calculatorTab==='composition'} hideCostDock={composed}
    onLogin={()=>setAuthMode('login')} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
-   description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity')}
+   description={description} onDescriptionChange={setDescription} lotField={composed?undefined:calculationField('quantity')}
    onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
    onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
@@ -421,12 +421,20 @@ export default function App(){
     <span aria-hidden="true">{icon}</span>{label}
    </button>)}
   </nav>
-  {calculatorTab==='calculation'&&modeSwitch}
+  {calculatorTab==='calculation'&&!composed&&modeSwitch}
   </div>}
   {!session&&modeSwitch}
   <div className="workspace">
    <div className="mc-calculator-input-pane">
-   <div hidden={Boolean(session)&&calculatorTab!=="calculation"}>
+   {session&&calculatorTab==='calculation'&&composed&&<section className="panel mc-composition-context" aria-labelledby="active-composition-heading">
+    <h2 id="active-composition-heading">Montagem por partes</h2>
+    <p>O resultado e o pedido usam as partes da composição.</p>
+    <div className="form-actions">
+     <button type="button" className="mc-light-action" onClick={()=>setCalculatorTab('composition')}>Editar composição</button>
+     <button type="button" className="mc-light-action" onClick={()=>setPreferComposition(false)}>Editar impressão direta</button>
+    </div>
+   </section>}
+   <div hidden={Boolean(session)&&(calculatorTab!=="calculation"||composed)}>
    <div className="mc-cost-editor">
     <section className="mc-cost-block mc-print" data-detailed={advanced&&details} aria-labelledby="print-title">
      {session?<h2 id="print-title">Impressão</h2>:<div className="panel-heading">
@@ -614,8 +622,8 @@ export default function App(){
     expanded={!composed&&(advanced||Boolean(session))}
     source={session&&calculatorKind==='product'&&(calculatorTab==='composition'||composed||Boolean(compositionSummary?.partsCount))&&
      <div className="mc-result-source" role="group" aria-label="Origem do resultado">
-      <button type="button" className="details-button" aria-pressed={!composed} onClick={()=>setPreferComposition(false)}>Impressão direta</button>
-      <button type="button" className="details-button" aria-pressed={composed} onClick={()=>setPreferComposition(true)}>Montagem por partes</button>
+      <button type="button" className="mc-light-action" aria-pressed={!composed} onClick={()=>setPreferComposition(false)}>Impressão direta</button>
+      <button type="button" className="mc-light-action" aria-pressed={composed} onClick={()=>setPreferComposition(true)}>Montagem por partes</button>
      </div>}
     sourceNotice={composed?(compositionSummary?.partsCount?count(compositionSummary.partsCount)+' partes na composição':'Selecione as partes para começar'):undefined}
     pricing={<>
