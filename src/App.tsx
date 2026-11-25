@@ -16,7 +16,7 @@ import {WorkshopDashboard} from './components/WorkshopDashboard';
 import {SystemNavigation,type ProductTab,type OverviewTab,type SystemSection} from './components/SystemNavigation';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
 import {type Session,type StoredPrinter,type CatalogEntry,type PrinterDraft,type SavedCalculation,sessionStore,signOut,loadPrinterModels,listWorkspaces,createWorkspace,listPrinters,insertPrinter,updateStoredPrinter,listCatalog,insertCatalog} from './data/supabase';
-import { calculateCost, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
+import { calculateCost, materialTotalGrams, referenceCase, type CostInput, type MaterialLine } from './domain/cost';
 
 const money = (value:number) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value);
 const count = (value:number) => value.toLocaleString('pt-BR',{maximumFractionDigits:2});
@@ -199,13 +199,14 @@ export default function App(){
  };
  const update=(field:NumericKey,value:string)=>setForm(prev=>({...prev,[field]:numeric(value)}));
  const setDraftText=(field:'name'|'brand'|'type',value:string)=>{setDraft(prev=>({...prev,[field]:value}));setErrorDraft('');};
- const setDraftNumber=(field:'grams'|'wasteGrams'|'packagePrice'|'packageQuantity',value:string)=>{setDraft(prev=>({...prev,[field]:numeric(value)}));setErrorDraft('');};
+ const setDraftNumber=(field:'grams'|'wasteGrams'|'towerGrams'|'packagePrice'|'packageQuantity',value:string)=>{setDraft(prev=>({...prev,[field]:value===''&&(field==='wasteGrams'||field==='towerGrams')?0:numeric(value)}));setErrorDraft('');};
  const save=()=>{
   if(!draft.name.trim()||!draft.type?.trim()||!Number.isFinite(draft.grams)||draft.grams<=0||
      !Number.isFinite(draft.wasteGrams)||draft.wasteGrams<0||
+     !Number.isFinite(draft.towerGrams??0)||(draft.towerGrams??0)<0||
      !Number.isFinite(draft.packageQuantity)||draft.packageQuantity!<=0||
      !Number.isFinite(draft.packagePrice)||draft.packagePrice!<0){
-       setErrorDraft('Informe tipo, cor, embalagem, preço e quantidade usada válidos.');
+       setErrorDraft('Informe tipo, cor, embalagem, preço e quantidade usada válidos. Purga e torre devem ser iguais ou maiores que zero.');
        return;
   }
   const gramsPurchased=draft.packageQuantity!*(draft.packageUnit==='kg'?1000:1);
@@ -344,7 +345,7 @@ export default function App(){
     <section className="materials" aria-labelledby="materials-title">
      <div className="materials-heading"><div className="mc-field-caption"><h3 id="materials-title">Filamento</h3>
       <CalculatorHelp label="Filamento">
-       {advanced&&details?<>Informe o preço total da embalagem. A tabela calcula o custo pelos gramas usados e só soma a purga quando ela é informada separadamente.
+       {advanced&&details?<>Informe o preço total da embalagem. A tabela calcula o custo pela soma do peso do modelo, da purga (Flush) e da torre de purga (Tower). Use os pesos separados do fatiador.
         {!chooseSlicerProfile(draft.brand??'',draft.type??'')&&<> O perfil técnico ainda não está disponível para este tipo. Consulte as recomendações do fabricante para configurar o fatiador.</>}
        </>:<>Informe o consumo total e o preço do filamento. No Avançado você pode detalhar a compra e o consumo de cada cor.</>}
       </CalculatorHelp>
@@ -385,8 +386,9 @@ export default function App(){
         <fieldset className="mc-filament-form-section mc-filament-consumption">
          <legend>Consumo nesta impressão</legend>
          <div className="mc-filament-form-fields">
-          <FilamentField id="gramsUsed" label="Usado (g)" help="Peso do modelo fornecido pelo fatiador."><input type="number" min="0" step="any" id="gramsUsed" data-testid="gramsUsed" value={display(draft.grams)} onChange={e=>setDraftNumber('grams',e.target.value)}/></FilamentField>
-          <FilamentField id="wasteGrams" label="Purga (g)" help="Só acrescente perdas que ainda não estejam no peso usado."><input type="number" min="0" step="any" id="wasteGrams" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/></FilamentField>
+          <FilamentField id="gramsUsed" label="Modelo (g)" help="Peso do modelo fornecido pelo fatiador."><input type="number" min="0" step="any" id="gramsUsed" data-testid="gramsUsed" value={display(draft.grams)} onChange={e=>setDraftNumber('grams',e.target.value)}/></FilamentField>
+          <FilamentField id="wasteGrams" label="Purga (g)" help="Use a coluna Flush do fatiador. Se a purga já foi registrada junto com a torre em um cálculo anterior, mantenha o total neste campo ou divida os valores ao editar."><input type="number" min="0" step="any" id="wasteGrams" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/></FilamentField>
+          <FilamentField id="towerGrams" label="Torre (g)" help="Use a coluna Tower do fatiador. Deixe em branco se não houver torre."><input type="number" min="0" step="any" id="towerGrams" value={display(draft.towerGrams)} onChange={e=>setDraftNumber('towerGrams',e.target.value)}/></FilamentField>
          </div>
         </fieldset>
        </div>
@@ -394,14 +396,15 @@ export default function App(){
        {errorDraft&&<p className="error" role="alert">{errorDraft}</p>}
       </div>
 
-      <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Usado</th><th>Custo</th><th className="material-actions-cell">Ações</th></tr></thead><tbody>
+      <div className="materials-table-scroll"><table className="materials-table"><thead><tr><th>Filamento</th><th>Marca</th><th>Embalagem</th><th>Preço total</th><th>Consumo total</th><th>Custo</th><th className="material-actions-cell">Ações</th></tr></thead><tbody>
         {detailedMaterials.map(item=>{
          const pkgQty=item.packageQuantity??1,pkgUnit=item.packageUnit??'kg';
-         const spent=(item.grams+item.wasteGrams)*((item.packagePrice??item.pricePerKg*pkgQty*(pkgUnit==='kg'?1:.001))/(pkgQty*(pkgUnit==='kg'?1000:1)));
+         const totalGrams=materialTotalGrams(item);
+         const spent=totalGrams*((item.packagePrice??item.pricePerKg*pkgQty*(pkgUnit==='kg'?1:.001))/(pkgQty*(pkgUnit==='kg'?1000:1)));
          return <tr key={item.id} data-testid={'row-'+item.id}>
           <td><strong>{item.name}</strong>{item.type&&<small className="material-row-type"> · {item.type}</small>}</td>
           <td>{item.brand||'—'}</td><td>{count(pkgQty)} {pkgUnit}</td>
-          <td>{money(calculatedPackagePrice(item))}</td><td>{count(item.grams+item.wasteGrams)} g</td>
+          <td>{money(calculatedPackagePrice(item))}</td><td>{count(totalGrams)} g</td>
           <td className="numeric-cell">{money(spent)}</td>
           <td className="material-actions-cell"><div className="row-actions">
            <button type="button" aria-label={'Editar '+item.name} title="Editar filamento" onClick={()=>edit(item)}>✎</button>

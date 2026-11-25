@@ -792,7 +792,6 @@
 .mc-filament-form-section legend {padding:0 4px;color:var(--mc-muted);font-size:12px;font-weight:650}
 .mc-filament-catalog {grid-column:1/-1}
 .mc-filament-form-fields {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.mc-filament-consumption .mc-filament-form-fields {grid-template-columns:repeat(2,minmax(0,1fr))}
 .mc-filament-form-fields input,.mc-filament-form-fields select {width:100%;height:38px}
 .catalog-field {display:grid;align-content:start;gap:5px;min-width:0}
 .catalog-field-heading {display:flex;align-items:center;gap:5px;min-height:24px}

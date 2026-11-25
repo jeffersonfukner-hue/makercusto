@@ -3,6 +3,7 @@ export interface MaterialLine {
   name: string;
   grams: number;
   wasteGrams: number;
+  towerGrams?: number;
   pricePerKg: number;
   type?: string;
   brand?: string;
@@ -51,6 +52,9 @@ export interface CostResult {
   markupPercent: number;
 }
 const validNonNegative = (value: number): boolean => Number.isFinite(value) && value >= 0;
+export function materialTotalGrams(item: MaterialLine): number {
+  return item.grams + item.wasteGrams + (item.towerGrams ?? 0);
+}
 export function calculateCost(input: CostInput): CostResult {
   const baseNumbers = [
     input.hours, input.averageWatts, input.pricePerKwh, input.printerPrice,
@@ -71,7 +75,7 @@ export function calculateCost(input: CostInput): CostResult {
       materials.some(item =>
         !item.id.trim() || !item.name.trim() ||
         !validNonNegative(item.grams) || !validNonNegative(item.wasteGrams) ||
-        !validNonNegative(item.pricePerKg) ||
+        !validNonNegative(item.towerGrams ?? 0) || !validNonNegative(item.pricePerKg) ||
         ((item.packageQuantity !== undefined || item.packageUnit !== undefined || item.packagePrice !== undefined) &&
           (!Number.isFinite(item.packageQuantity) || (item.packageQuantity ?? 0) <= 0 ||
            !validNonNegative(item.packagePrice ?? NaN) ||
@@ -82,13 +86,14 @@ export function calculateCost(input: CostInput): CostResult {
     const pricePerKg = item.packageQuantity !== undefined && item.packagePrice !== undefined
       ? item.packagePrice / (item.packageQuantity * (item.packageUnit === 'kg' ? 1000 : 1)) * 1000
       : item.pricePerKg;
+    const totalGrams = materialTotalGrams(item);
     return {
     id: item.id,
     name: item.name,
     modelGrams: item.grams,
-    wasteGrams: item.wasteGrams,
-    totalGrams: item.grams + item.wasteGrams,
-    cost: (item.grams + item.wasteGrams) * pricePerKg / 1000,
+    wasteGrams: item.wasteGrams + (item.towerGrams ?? 0),
+    totalGrams,
+    cost: totalGrams * pricePerKg / 1000,
     pricePerKg
   }; });
   const material = materialBreakdown.reduce((sum, item) => sum + item.cost, 0);

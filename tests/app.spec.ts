@@ -41,10 +41,16 @@ test('inclui rolo de 250g com preço total e consumo proporcional',async({page})
  await page.getByRole('combobox',{name:'Unidade da embalagem'}).selectOption('g');
  await page.getByTestId('packagePrice').fill('25');
  await page.getByTestId('gramsUsed').fill('50');
+ await page.getByLabel('Purga (g)',{exact:true}).fill('5');
+ await page.getByLabel('Torre (g)',{exact:true}).fill('2.5');
  await page.getByRole('button',{name:'Adicionar à tabela'}).click();
  await expect(page.getByTestId('row-extra-1')).toContainText('Turquesa');
- await expect(page.getByTestId('row-extra-1')).toContainText('R$ 5,00');
- await expect(page.getByTestId('materialCost')).toContainText('20,16');
+ await expect(page.getByTestId('row-extra-1')).toContainText('57,5 g');
+ await expect(page.getByTestId('row-extra-1')).toContainText('R$ 5,75');
+ await expect(page.getByTestId('materialCost')).toContainText('20,91');
+ await page.getByRole('button',{name:'Editar Turquesa'}).click();
+ await expect(page.getByLabel('Purga (g)',{exact:true})).toHaveValue('5');
+ await expect(page.getByLabel('Torre (g)',{exact:true})).toHaveValue('2.5');
 });
 test('edita uma linha, calcula embalagem 1,3 kg e remove',async({page})=>{
  await page.goto('/');
