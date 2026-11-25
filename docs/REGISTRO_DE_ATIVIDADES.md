@@ -996,3 +996,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Pesquisadas referências de gestão de impressão e produção. Implementados indicadores de execuções disponíveis, barras por etapa e totais de peças confirmadas. Retirado o espaço reservado ao gráfico financeiro vazio.
 - Build, 75 unitários, quatro cenários Playwright e verificação visual responsiva aprovados. Sem deploy, migração operacional ou integração financeira. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Formulário de filamento por cor
+
+- Agrupados os campos e unificados os botões + da área pública e logada. Removidas regras conflitantes do formulário antigo. Build, 75 unitários, 14 cenários Playwright e verificação responsiva aprovados. Commit com `[skip ci]`. Duração não aferida.

@@ -20,9 +20,6 @@
 .material-form{background:#111c2c;border:1px solid #34465f;border-radius:11px;padding:13px;margin-top:14px}
 .material-form-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
 .material-form-title small{color:#99afc4;font-size:11px}
-.compact-inputs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.compact-inputs label{display:flex;flex-direction:column;gap:5px;color:#bbcbda;font-size:11px;min-width:0}
-.compact-inputs input,.compact-inputs select{width:100%;min-width:0;padding:9px 7px;color:#fff;background:#0c1727;border:1px solid #42506a;border-radius:8px;font-size:13px}
 .form-actions{display:flex;align-items:center;gap:8px;margin-top:12px}
 .form-actions button,.row-actions button{border:1px solid #50657c;background:transparent;color:#e0edfc;padding:7px 10px;border-radius:7px;font-size:12px}
 .form-actions .primary-action{background:#117e80;border-color:#278f90}
@@ -35,7 +32,7 @@
 .materials-table .numeric-cell{font-weight:700}
 .row-actions{display:flex;gap:4px}
 .row-actions button{padding:5px 7px}
-@media(max-width:600px){.material-summary strong{font-size:13px}.material-summary>div{padding:10px 7px}.material-summary small{font-size:10px}.compact-inputs{grid-template-columns:repeat(2,minmax(0,1fr))}.materials-table{min-width:650px}}
+@media(max-width:600px){.material-summary strong{font-size:13px}.material-summary>div{padding:10px 7px}.material-summary small{font-size:10px}.materials-table{min-width:650px}}
 
 /* Melhor alcance e toque para controles do detalhamento mobile. */
 .materials-heading{position:relative}
@@ -106,34 +103,10 @@
 .modal-actions button:disabled{opacity:.55}
 @media(max-width:600px){.brand{flex-wrap:wrap;padding:12px 0}.phase{display:none}.account-button{margin-left:auto}.modal-window{max-height:94dvh}.modal-body{padding:15px}.modal-header{padding:15px}}
 
-.compact-inputs label{position:relative}.catalog-add{position:absolute;right:0;top:0;border:1px solid #3b7f80;border-radius:6px;background:#0a605e;color:#fff;font-weight:800;min-width:28px;min-height:25px;font-size:16px;line-height:1}.compact-inputs label input{margin-top:8px}
-
-
-.catalog-field{display:flex;flex-direction:column;gap:5px;min-width:0;color:#bbcbda;font-size:11px}
-.catalog-field-heading{display:flex;justify-content:space-between;align-items:center;min-height:30px}
-.catalog-field .catalog-add{position:static;min-width:40px;min-height:40px;border-radius:9px;touch-action:manipulation}
-.catalog-field input{width:100%;min-width:0;padding:9px 7px;color:#fff;background:#0c1727;border:1px solid #42506a;border-radius:8px;font-size:13px;margin-top:0}
-
-
-/* Em telas pequenas o navegador pode sobrepor a seção de impressora ao formulário ao rolar:
-   manter campos e seus botões + acima das seções anteriores no hit-testing. */
+/* O formulário detalhado mantém sugestões e cadastros acima da tabela. */
 .materials{position:relative;z-index:3}
 .material-form{position:relative;z-index:4;isolation:isolate}
-.catalog-field{position:relative;z-index:5}
-.catalog-field .catalog-add{position:relative;z-index:6;pointer-events:auto}
 
-
-.mobile-catalog-actions{display:none}
-@media(max-width:600px){
- .catalog-field .catalog-add{display:none}
- .mobile-catalog-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
- .mobile-catalog-actions button{min-height:46px;flex:1;border:1px solid #437b83;background:#144f58;color:#e0fcf8;border-radius:10px;font-size:13px;font-weight:700}
-}
-
-/* Ações de inclusão alinhadas à linguagem visual do MakerCusto. */
-.catalog-field-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:30px;color:#bbcbda;font-size:11px}
-.catalog-add{display:grid!important;place-items:center!important;flex:0 0 30px;min-width:30px;min-height:30px;padding:0!important;border:1px solid #31817e!important;border-radius:10px!important;background:linear-gradient(145deg,#17545d,#143b52)!important;color:#aaf9e5!important;font-size:20px!important;font-weight:500!important;line-height:1!important;box-shadow:inset 0 1px 0 #ffffff1a}
-.catalog-add:hover,.printer-add-action:hover{border-color:#62d9ca!important;background:linear-gradient(135deg,#1c6970,#1a4b64)!important}
 .printer-add-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #31817e!important;background:linear-gradient(145deg,#17545d,#143b52)!important;color:#d4fff4!important;padding:7px 12px!important;min-height:42px;border-radius:11px!important;font-weight:650}
 .action-plus{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;background:#ffffff14;color:#9ef5e0;font-size:20px;line-height:1}
 .printer-preset-note{margin:-7px 0 0!important;color:#9cbace!important;font-size:12px!important}
@@ -144,7 +117,7 @@
 .printer-estimates>div{display:flex;justify-content:space-between;gap:9px;font-size:12px;color:#a9c2d4}
 .printer-estimates b{color:#d8fff6;text-align:right}
 .printer-estimates small{color:#99b7c7;line-height:1.5}
-@media(max-width:450px){.catalog-add{min-width:36px;min-height:36px}.printer-add-action{width:100%}}
+@media(max-width:450px){.printer-add-action{width:100%}}
 
 .smart-field{position:relative;min-width:0;display:grid;gap:5px}
 .smart-field input{width:100%;min-width:0;padding:9px 7px;color:#fff;background:#0c1727;border:1px solid #42506a;border-radius:8px;font-size:13px}
@@ -165,22 +138,9 @@
 .filament-profile a{color:#89e7d5}.profile-edit{display:grid;gap:10px;border-top:1px solid #345063;padding-top:12px}.profile-edit label{display:grid;gap:5px;font-size:12px;color:#bdd2e0}
 @media(max-width:400px){.filament-profile-data{grid-template-columns:1fr}}
 
-@media(max-width:600px){.catalog-field .catalog-add{display:none!important}}
-
-/* O painel de perfil deve receber toques acima dos campos catalogáveis no mobile. */
-.filament-profile{position:relative;z-index:12;isolation:isolate}
+/* Mantém os controles do perfil acima da tabela em telas pequenas. */
+.filament-profile{position:relative;z-index:20;isolation:isolate}
 .filament-profile-head button{position:relative;z-index:2;min-height:40px;touch-action:manipulation}
-
-/* A grade de entradas não pode cobrir o painel de perfil no mobile. */
-.compact-inputs{position:relative;z-index:1;isolation:isolate}
-.filament-profile{position:relative;z-index:20}
-
-/* No mobile não há botão + dentro dos campos; remover camadas que capturavam toque sobre a ficha seguinte. */
-@media(max-width:600px){
- .compact-inputs{position:static;z-index:auto;isolation:auto}
- .compact-inputs .catalog-field{position:static;z-index:auto}
- .filament-profile{position:relative;z-index:20;margin-top:22px}
-}
 
 /* Bloco do slicer fora da seção de entradas, sem sobreposição de camadas. */
 .panel>.filament-profile{position:relative;z-index:10;min-width:0;max-width:100%;width:100%;margin:0 0 20px}
@@ -190,7 +150,7 @@
 /* Corrigir largura mínima automática de itens do grid: tabela nunca deve alargar a página. */
 .workspace{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);min-width:0}
 .workspace>.panel,.panel>.materials,.materials>#material-details,
-.material-form,.compact-inputs,.materials-table-scroll,.panel>.filament-profile{min-width:0;max-width:100%}
+.material-form,.materials-table-scroll,.panel>.filament-profile{min-width:0;max-width:100%}
 .materials-table-scroll{width:100%;overflow-x:auto}
 .material-form-title{min-width:0;flex-wrap:wrap}
 @media(max-width:820px){.workspace{grid-template-columns:minmax(0,1fr)}}
@@ -200,7 +160,7 @@
 .smart-field [role="combobox"]:focus-visible{outline:2px solid #8ed9ff;outline-offset:2px}
 
 /* Dicas de preenchimento: discretas e sem interferir no tamanho do campo. */
-.simple-material-fields label>.smart-hint,.compact-inputs label>.smart-hint,.fields label>.smart-hint{font-size:10px;line-height:1.45;color:var(--muted,#94b6c5);margin-top:5px}
+.simple-material-fields label>.smart-hint,.fields label>.smart-hint{font-size:10px;line-height:1.45;color:var(--muted,#94b6c5);margin-top:5px}
 .profile-head-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
 .profile-head-actions .details-button{max-width:100%;white-space:normal}
 @media(max-width:600px){.profile-head-actions{justify-content:stretch;width:100%}.profile-head-actions .details-button{flex:1 1 155px}}
@@ -762,7 +722,7 @@
 .mc-field-caption .mc-tooltip {top:100%;bottom:auto}
 .mc-filament-field>input {width:100%}
 @media(max-width:600px) {
- .compact-inputs .mc-field-caption .mc-tooltip {max-width:min(210px,44vw)}
+ .mc-filament-form-fields .mc-field-caption .mc-tooltip {max-width:min(210px,44vw)}
 }
 @media(max-width:430px) {
  .mc-theme .mc-print-duration-fields input {font-size:16px}
@@ -813,4 +773,32 @@
 .dashboard-bar-track [data-color="gray"] {background:#657992}
 @media(max-width:760px) {
  .dashboard-production {grid-template-columns:minmax(0,1fr)}
+}
+
+
+.mc-filament-form-groups {display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:10px}
+.mc-filament-form-section {margin:0;padding:8px 10px 10px;min-width:0;border:1px solid var(--mc-border);border-radius:8px}
+.mc-filament-form-section legend {padding:0 4px;color:var(--mc-muted);font-size:12px;font-weight:650}
+.mc-filament-catalog {grid-column:1/-1}
+.mc-filament-form-fields {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mc-filament-consumption .mc-filament-form-fields {grid-template-columns:repeat(2,minmax(0,1fr))}
+.mc-filament-form-fields input,.mc-filament-form-fields select {width:100%;height:38px}
+.catalog-field {display:grid;align-content:start;gap:5px;min-width:0}
+.catalog-field-heading {display:flex;align-items:center;gap:5px;min-height:24px}
+.mc-calculator .catalog-field-heading .catalog-add {
+ display:grid;place-items:center;position:relative;width:24px;height:24px;padding:0;
+ background:#eef4ff;color:var(--mc-blue);border:1px solid #bfcee7;border-radius:5px;
+ font-size:15px;line-height:1;touch-action:manipulation;
+}
+.mc-calculator .catalog-field-heading .catalog-add:hover {background:#dceaff}
+.catalog-field .smart-hint {
+ position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;
+}
+.mc-filament-form-fields .mc-field-caption {min-height:24px}
+@media(max-width:900px) {
+ .mc-filament-form-groups {grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:430px) {
+ .mc-filament-form-fields {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .mc-filament-form-fields>:last-child:nth-child(3) {grid-column:1/-1}
 }

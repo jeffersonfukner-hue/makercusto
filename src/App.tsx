@@ -344,7 +344,6 @@ export default function App(){
         <div className="simple-field-combo"><input id="simplePrice" data-testid="simplePrice" type="number" min="0" step="any" value={display(simple.price)} onChange={e=>setSimple(prev=>({...prev,price:numeric(e.target.value)}))}/><select aria-label="Unidade do preço do filamento" value={simple.priceUnit} onChange={e=>setSimple(prev=>({...prev,priceUnit:e.target.value as Unit}))}><option value="kg">R$/kg</option><option value="g">R$/g</option></select></div>
        </FilamentField>
      </div>}
-     {advanced&&details&&<div className="mobile-catalog-actions" aria-label="Cadastros rápidos"><button type="button" aria-label="Cadastrar tipo" onClick={()=>setCatalogModal('tipo')}>+ Tipo</button><button type="button" aria-label="Cadastrar cor" onClick={()=>setCatalogModal('cor')}>+ Cor</button><button type="button" aria-label="Cadastrar marca" onClick={()=>setCatalogModal('marca')}>+ Marca</button></div>}
      <div className="material-summary">
        <div><small>Total utilizado</small><strong data-testid="totalUsed">{result?count(used)+' g':'—'}</strong></div>
        <div><small>Preço médio ponderado</small><strong data-testid="averagePrice">{result?money(average)+'/kg':'—'}</strong></div>
@@ -355,18 +354,32 @@ export default function App(){
       <datalist id="catalog-tipo">{list('tipo').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
       <datalist id="catalog-marca">{list('marca').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
       <div className="material-form" role="group" aria-label="Cadastro compacto de filamento">
-       <div className="material-form-title"><strong>{editId?'Editar filamento':'Adicionar filamento'}</strong><small>Preço da embalagem, não do quilo</small></div>
-       <div className="compact-inputs">
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Tipo</span><button type="button" className="catalog-add" aria-label="Cadastrar tipo" title="Cadastrar outro tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><SmartField label="Tipo de filamento" value={draft.type||''} options={list('tipo')} hint="PLA, PETG, TPU e outros tipos. Use o material indicado na bobina." onBlur={v=>remember('tipo',v)} onChange={v=>setDraftText('type',v)}/></div>
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Cor</span><button type="button" className="catalog-add" aria-label="Cadastrar cor" title="Cadastrar outra cor" onClick={()=>setCatalogModal('cor')}>+</button></div><SmartField label="Cor do filamento" value={draft.name} options={list('cor')} hint="Ex.: Vermelho Fosco. Nomes novos serão padronizados." onBlur={v=>remember('cor',v)} onChange={v=>setDraftText('name',v)}/></div>
-        <div className="catalog-field"><div className="catalog-field-heading"><span>Marca</span><button type="button" className="catalog-add" aria-label="Cadastrar marca" title="Cadastrar outra marca" onClick={()=>setCatalogModal('marca')}>+</button></div><SmartField label="Marca do filamento" value={draft.brand||''} options={list('marca')} hint="Selecione a fabricante da bobina, como Masterprint ou SUNLU." onBlur={v=>remember('marca',v)} onChange={v=>setDraftText('brand',v)}/></div>
-        <FilamentField id="packageQuantity" label="Embalagem" help="Quantidade comprada na unidade indicada ao lado."><input type="number" min="0.001" step="any" id="packageQuantity" data-testid="packageQuantity" value={display(draft.packageQuantity)} onChange={e=>setDraftNumber('packageQuantity',e.target.value)}/></FilamentField>
-        <label>Unid. compra<select aria-label="Unidade da embalagem" value={draft.packageUnit||'kg'} onChange={e=>setDraft(prev=>({...prev,packageUnit:e.target.value as 'kg'|'g'}))}><option value="kg">kg</option><option value="g">g</option></select></label>
-        <FilamentField id="packagePrice" label="Preço total (R$)" help={Number.isFinite(draft.packagePrice)&&Number.isFinite(draft.packageQuantity)&&draft.packageQuantity!>0?'Custo equivalente: '+money(draft.packagePrice!/(draft.packageQuantity!*(draft.packageUnit==='kg'?1:.001)))+'/kg.':'Informe quanto pagou pela embalagem completa.'}><input type="number" min="0" step="any" id="packagePrice" data-testid="packagePrice" value={display(draft.packagePrice)} onChange={e=>setDraftNumber('packagePrice',e.target.value)}/></FilamentField>
-        <FilamentField id="gramsUsed" label="Usado (g)" help="Peso do modelo fornecido pelo fatiador."><input type="number" min="0" step="any" id="gramsUsed" data-testid="gramsUsed" value={display(draft.grams)} onChange={e=>setDraftNumber('grams',e.target.value)}/></FilamentField>
-        <FilamentField id="wasteGrams" label="Purga (g)" help="Só acrescente perdas que ainda não estejam no peso usado."><input type="number" min="0" step="any" id="wasteGrams" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/></FilamentField>
+       <div className="material-form-title"><strong>{editId?'Editar filamento':'Adicionar filamento'}</strong></div>
+       <div className="mc-filament-form-groups">
+        <fieldset className="mc-filament-form-section mc-filament-catalog">
+         <legend>Identificação</legend>
+         <div className="mc-filament-form-fields">
+          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-type">Tipo</label><button type="button" className="catalog-add" aria-label="Cadastrar tipo" title="Cadastrar outro tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><SmartField id="filament-type" label="Tipo de filamento" value={draft.type||''} options={list('tipo')} hint="PLA, PETG, TPU e outros tipos. Use o material indicado na bobina." onBlur={v=>remember('tipo',v)} onChange={v=>setDraftText('type',v)}/></div>
+          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-color">Cor</label><button type="button" className="catalog-add" aria-label="Cadastrar cor" title="Cadastrar outra cor" onClick={()=>setCatalogModal('cor')}>+</button></div><SmartField id="filament-color" label="Cor do filamento" value={draft.name} options={list('cor')} hint="Ex.: Vermelho Fosco. Nomes novos serão padronizados." onBlur={v=>remember('cor',v)} onChange={v=>setDraftText('name',v)}/></div>
+          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-brand">Marca</label><button type="button" className="catalog-add" aria-label="Cadastrar marca" title="Cadastrar outra marca" onClick={()=>setCatalogModal('marca')}>+</button></div><SmartField id="filament-brand" label="Marca do filamento" value={draft.brand||''} options={list('marca')} hint="Selecione a fabricante da bobina, como Masterprint ou SUNLU." onBlur={v=>remember('marca',v)} onChange={v=>setDraftText('brand',v)}/></div>
+         </div>
+        </fieldset>
+        <fieldset className="mc-filament-form-section mc-filament-purchase">
+         <legend>Compra da bobina</legend>
+         <div className="mc-filament-form-fields">
+          <FilamentField id="packageQuantity" label="Embalagem" help="Quantidade comprada na unidade indicada ao lado."><input type="number" min="0.001" step="any" id="packageQuantity" data-testid="packageQuantity" value={display(draft.packageQuantity)} onChange={e=>setDraftNumber('packageQuantity',e.target.value)}/></FilamentField>
+          <label className="mc-filament-field"><span className="mc-field-caption">Unidade</span><select aria-label="Unidade da embalagem" value={draft.packageUnit||'kg'} onChange={e=>setDraft(prev=>({...prev,packageUnit:e.target.value as 'kg'|'g'}))}><option value="kg">kg</option><option value="g">g</option></select></label>
+          <FilamentField id="packagePrice" label="Preço total (R$)" help={Number.isFinite(draft.packagePrice)&&Number.isFinite(draft.packageQuantity)&&draft.packageQuantity!>0?'Custo equivalente: '+money(draft.packagePrice!/(draft.packageQuantity!*(draft.packageUnit==='kg'?1:.001)))+'/kg.':'Informe quanto pagou pela embalagem completa.'}><input type="number" min="0" step="any" id="packagePrice" data-testid="packagePrice" value={display(draft.packagePrice)} onChange={e=>setDraftNumber('packagePrice',e.target.value)}/></FilamentField>
+         </div>
+        </fieldset>
+        <fieldset className="mc-filament-form-section mc-filament-consumption">
+         <legend>Consumo nesta impressão</legend>
+         <div className="mc-filament-form-fields">
+          <FilamentField id="gramsUsed" label="Usado (g)" help="Peso do modelo fornecido pelo fatiador."><input type="number" min="0" step="any" id="gramsUsed" data-testid="gramsUsed" value={display(draft.grams)} onChange={e=>setDraftNumber('grams',e.target.value)}/></FilamentField>
+          <FilamentField id="wasteGrams" label="Purga (g)" help="Só acrescente perdas que ainda não estejam no peso usado."><input type="number" min="0" step="any" id="wasteGrams" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/></FilamentField>
+         </div>
+        </fieldset>
        </div>
-       
        <div className="form-actions"><button type="button" className="primary-action" onClick={save}>{editId?'Salvar alteração':'Adicionar à tabela'}</button>{editId&&<button type="button" onClick={()=>{setEditId(null);setDraft(newDraft());setErrorDraft('');}}>Cancelar edição</button>}</div>
        {errorDraft&&<p className="error" role="alert">{errorDraft}</p>}
       </div>

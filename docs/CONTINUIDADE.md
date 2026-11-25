@@ -957,3 +957,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Referências: [Prusa Connect](https://connect.prusa3d.com/), [3DPrinterOS](https://intercom.help/3DPrinterOS/en/articles/9712569-actions-available-for-print-jobs) e [Análise de produção do Odoo](https://www.odoo.com/documentation/18.0/applications/inventory_and_mrp/manufacturing/reporting/production_analysis.html).
 - Build, 75 unitários, quatro cenários Playwright e layout responsivo verificado em 320, 390, 1024 e 1600 px. As duas colunas de gráficos foram verificadas em 1024 e 1600 px e a altura do cabeçalho nesses tamanhos permanece definida pelo título.
 - Pendentes: homologação dos ajustes da Visão geral, miniaturas na lista de Produtos, validação da galeria após autorização da migração e pesquisa das impressoras. O painel usa apenas leitura das APIs existentes.
+
+### Refinamento do filamento por cor
+
+- A edição em Avançado → Detalhar por cor foi dividida em Identificação, Compra da bobina e Consumo nesta impressão. Os botões + de Tipo, Cor e Marca ficam junto aos rótulos em todos os tamanhos, com área de interação de 24 × 24 px. Sugestões, cadastro por modal e cálculo foram preservados.
+- Build, 75 testes unitários e 14 cenários Playwright aprovados. Abertura do cadastro por toque ou clique e ausência de rolagem horizontal da página verificadas em 320, 390, 1024 e 1600 px, nas calculadoras pública e logada. Ajuste incluído na branch para homologação visual.
