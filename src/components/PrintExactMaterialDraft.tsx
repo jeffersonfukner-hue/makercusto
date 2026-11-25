@@ -1,3 +1,4 @@
+import {CalculatorHelp} from './CalculatorHelp';
 import {useEffect,useRef,useState} from 'react';
 import {getL4ExactOrigins,type ExactConsumptionOrigins} from '../data/supabase';
 import {reconcileExactMaterialCategories,type MaterialCategory,type MaterialReconciliationDraft,type SourceAssignment} from '../domain/l4-category-reconciliation';
@@ -63,8 +64,7 @@ export function PrintExactMaterialDraft({workspaceId,executionId,outputs,lines}:
  const complete=data&&draft&&data.historical_rows_without_capture===0&&data.origins.length>0&&
   draft.expectedAssignments>0&&draft.totalCents!==null&&draft.issues.length===0;
  return <section className="panel" aria-label="Conciliação exata de material L4">
-  <h4>Conciliação exata de filamento por categoria</h4>
-  <p className="footnote">Conferência local dos dados P06 congelados por bobina. Agrupa todas as fontes da mesma categoria e arredonda uma única vez. O resultado permanece provisório mesmo quando a distribuição de material está completa.</p>
+  <div className="mc-help-heading"><h4>Conciliação exata de filamento por categoria</h4><CalculatorHelp label="Conciliação exata de filamento por categoria">Conferência local dos dados P06 congelados por bobina. Agrupa todas as fontes da mesma categoria e arredonda uma única vez. O resultado permanece provisório mesmo quando a distribuição de material está completa.</CalculatorHelp></div>
   <button type="button" onClick={inspect} disabled={busy||!workspaceId||!executionId}>
    {busy?'Consultando origem exata…':'Conferir valores exatos do material'}
   </button>

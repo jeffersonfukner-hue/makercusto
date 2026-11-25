@@ -1077,3 +1077,5 @@
 .mc-help-heading {position:relative}
 .mc-help-heading>.mc-help {position:static}
 .mc-help-heading .mc-tooltip {left:0;bottom:auto;top:100%;max-width:min(260px,calc(100vw - 48px))}
+.mc-help-heading :is(h4,h5) {margin:0}
+.mc-print-simulation {margin:0;color:var(--mc-muted);font-size:12px}

@@ -1,4 +1,4 @@
-import {CalculatorHelp} from './CalculatorHelp';
+import {CalculatorHelp,FieldWithHelp} from './CalculatorHelp';
 import {useEffect,useRef,useState} from 'react';
 import {getEnergyEvidence,registerEnergyTariff,recordEnergyInterval,getIntegralEnergy,recordIntegralEnergy,reviseIntegralEnergy,type IntegralEnergyRevision,type IntegralEnergyEvidence,type EnergyEvidence,type EnergyEvidenceInterval} from '../data/supabase';
 import {prepareRecordedEnergy} from '../domain/p07-recorded-energy';
@@ -89,9 +89,8 @@ export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation,onI
    </div>
    <details><summary>Medição integral da execução</summary>
     <label><input type="checkbox" checked={integralEnabled} disabled={!!savedIntegral} onChange={e=>{setIntegralEnabled(e.target.checked);setDraft(null);onInvalidateAllocation?.();}}/> Tenho medição real que cobre todo o período informado</label>
-    <p className="footnote">A medição integral substitui a soma das fases, não é adicionada a ela. Confirme que o medidor cobre exatamente o início e fim da execução. O registro preserva a medição original; não confirma custo financeiro.</p>
     {integralEnabled&&<div className="product-save-fields">
-     <label>Consumo integral medido (kWh)<input inputMode="decimal" readOnly={!!savedIntegral} value={integralKwh} onChange={e=>{setIntegralKwh(e.target.value);setDraft(null);onInvalidateAllocation?.();}}/></label>
+     <FieldWithHelp label="Consumo integral medido (kWh)" help="Informe a medição de todo o período. Ela substitui a soma dos intervalos.">{id=><input id={id} inputMode="decimal" readOnly={!!savedIntegral} value={integralKwh} onChange={e=>{setIntegralKwh(e.target.value);setDraft(null);onInvalidateAllocation?.();}}/>}</FieldWithHelp>
      <label>Referência do medidor<input readOnly={!!savedIntegral} value={integralRef} onChange={e=>{setIntegralRef(e.target.value);setDraft(null);onInvalidateAllocation?.();}}/></label>
     </div>}
     {savedIntegral?<p>Registro preservado: {savedIntegral.reference} · {savedIntegral.kwh} kWh · {savedIntegral.start_at} — {savedIntegral.end_at}. Correções exigem revisão auditável.</p>:integralEnabled&&<button type="button" disabled={busy||!(data.start_at||periodStart)||!(data.end_at||periodEnd)||!integralKwh.trim()||!integralRef.trim()} onClick={()=>void load(()=>recordIntegralEnergy(workspaceId,executionId,{start:data.start_at??iso(periodStart),end:data.end_at??iso(periodEnd),kwh:integralKwh,reference:integralRef}))}>Registrar medição integral</button>}

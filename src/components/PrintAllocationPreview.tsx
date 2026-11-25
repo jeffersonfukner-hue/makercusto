@@ -1,3 +1,4 @@
+import {CalculatorHelp,FieldWithHelp} from './CalculatorHelp';
 import {useEffect,useRef,useState} from 'react';
 import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource,type StoredPrinter,getL4MachineOrigin,type MachineOriginEvidence} from '../data/supabase';
 import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory} from '../domain/print-allocation';
@@ -183,12 +184,12 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
   catch(e){setError((e as Error).message);}
  };
  return <section className="panel materials-form" aria-label="Prévia L4 de rateio" onFocusCapture={onActivate} onClickCapture={onActivate}>
-  <h3>Prévia de rateio L4 — mesa compartilhada</h3>
-  <p className="footnote"><strong>SIMULAÇÃO NÃO SALVA.</strong> Os valores são informados manualmente, não representam preços reais automaticamente recuperados das bobinas. Nenhuma baixa, lançamento financeiro, snapshot ou encerramento é realizado. Custos desconhecidos e categorias ausentes permanecem pendentes.</p>
+  <div className="mc-help-heading"><h3>Prévia de rateio L4 — mesa compartilhada</h3><CalculatorHelp label="Prévia de rateio L4">Confira a distribuição dos valores informados. Categorias ausentes e custos desconhecidos ficam pendentes.</CalculatorHelp></div>
+  <p className="mc-print-simulation"><strong>SIMULAÇÃO NÃO SALVA.</strong></p>
   <div className="product-save-fields">
-   <label>Impressão registrada<select aria-label="Impressão para prévia de rateio" value={printId} onChange={e=>{onActivate();changePrint(e.target.value);}}>
+   <FieldWithHelp label="Impressão registrada" help="Somente saídas com quantidades já confirmadas aparecem como destinos.">{id=><select id={id} aria-label="Impressão para prévia de rateio" value={printId} onChange={e=>{onActivate();changePrint(e.target.value);}}>
     <option value="">Selecione</option>{prints.map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}
-   </select><small>Somente saídas com quantidades já confirmadas aparecem como destinos.</small></label>
+   </select>}</FieldWithHelp>
   </div>
   {print&&<div>
    <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onUseForAllocation={useP07Energy} onInvalidateAllocation={invalidateP07Energy}/>
@@ -232,15 +233,12 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
     <div className="product-save-fields">
      <label>Categoria<select aria-label="Categoria de custo L4" value={category} disabled={sourceVersion!=='entrada-local-1'} onChange={e=>{setCategory(e.target.value as AllocationCategory);setPreview(null);}}>
       {categories.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
-     <label>Custo total da categoria (R$)<input aria-label="Valor da categoria L4" placeholder="Ex.: 1.235" readOnly={sourceVersion!=='entrada-local-1'} value={amount} onChange={e=>setAmount(e.target.value)} />
-      <small>Use ponto decimal; a categoria é fechada em centavos apenas uma vez.</small></label>
-     <label>Fonte do custo<input aria-label="Fonte do custo L4" value={source} readOnly={sourceVersion!=='entrada-local-1'} onChange={e=>setSource(e.target.value)} placeholder="Ex.: lote e pesagem, tarifa e medidor" />
-      <small>Não presuma preço da bobina ou energia. Informe a origem real ou estimada.</small></label>
-     <label>Critério<select aria-label="Método de rateio L4" value={method} onChange={e=>setMethod(e.target.value as 'direct'|'shared')}>
+     <FieldWithHelp label="Custo total da categoria (R$)" help="Use ponto decimal; a categoria é fechada em centavos apenas uma vez.">{id=><input id={id} aria-label="Valor da categoria L4" placeholder="Ex.: 1.235" readOnly={sourceVersion!=='entrada-local-1'} value={amount} onChange={e=>setAmount(e.target.value)} />}</FieldWithHelp>
+     <FieldWithHelp label="Fonte do custo" help="Não presuma preço da bobina ou energia. Informe a origem real ou estimada.">{id=><input id={id} aria-label="Fonte do custo L4" value={source} readOnly={sourceVersion!=='entrada-local-1'} onChange={e=>setSource(e.target.value)} placeholder="Ex.: lote e pesagem, tarifa e medidor" />}</FieldWithHelp>
+     <FieldWithHelp label="Critério" help="Direto: atribua base 1 a um destino. Compartilhado: informe pesos positivos em pelo menos dois destinos.">{id=><select id={id} aria-label="Método de rateio L4" value={method} onChange={e=>setMethod(e.target.value as 'direct'|'shared')}>
       <option value="direct">Atribuição direta (um destino)</option><option value="shared">Compartilhado (base explícita)</option>
-     </select></label>
-     <label>Justificativa e unidade da base<input aria-label="Justificativa do rateio L4" value={rationale} onChange={e=>setRationale(e.target.value)} placeholder="Ex.: massa medida em gramas ou tempo atribuível" />
-      <small>Na distribuição compartilhada, explique a base e se é medição ou estimativa.</small></label>
+     </select>}</FieldWithHelp>
+     <FieldWithHelp label="Justificativa e unidade da base" help="Na distribuição compartilhada, explique a base e se é medição ou estimativa.">{id=><input id={id} aria-label="Justificativa do rateio L4" value={rationale} onChange={e=>setRationale(e.target.value)} placeholder="Ex.: massa medida em gramas ou tempo atribuível" />}</FieldWithHelp>
     </div>
     {sourceVersion!=='entrada-local-1'&&<p className="footnote">Fonte histórica ou evidência P07 selecionada: valor indicativo protegido contra edição. É preciso informar o destino e uma base válida. <button type="button" onClick={resetImportedSource}>Usar entrada manual</button></p>}
     {(category==='purge'||category==='loss')&&<label><input type="checkbox" checked={separate} disabled={sourceVersion!=='entrada-local-1'} onChange={e=>setSeparate(e.target.checked)} />
@@ -251,10 +249,8 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
       placeholder={method==='direct'?'1 para atribuir aqui':'Peso proporcional positivo'}
       onChange={e=>setBasis(v=>({...v,[o.id]:e.target.value}))}/>
     </label>)}</div>
-    <p className="footnote">Direto: preencha somente um destino com base 1. Compartilhado: preencha pelo menos dois destinos com pesos positivos. Não envie custo de peças rejeitadas automaticamente às boas.</p>
     <button type="button" onClick={addLine}>+ Incluir categoria na prévia</button>
-    <h4>Revisão das demais categorias de custo</h4>
-    <p className="footnote">Ausência de lançamento não significa custo zero. Declarações locais exigem confirmação futura e não encerram a impressão.</p>
+    <div className="mc-help-heading"><h4>Revisão das demais categorias de custo</h4><CalculatorHelp label="Revisão das demais categorias de custo">Ausência de lançamento não significa custo zero. Declarações locais exigem confirmação futura e não encerram a impressão.</CalculatorHelp></div>
     <div className="materials-spool-grid">{reviewCategories.map(c=>{
      const review=reviews[c.id];
      const hasCost=lines.some(l=>l.category===c.id);

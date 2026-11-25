@@ -1861,6 +1861,10 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
  const panel=page.getByRole('region',{name:'Prévia L4 de rateio'});
  await expect(panel.getByText('SIMULAÇÃO NÃO SALVA.')).toBeVisible();
  await panel.getByRole('combobox',{name:'Impressão para prévia de rateio'}).selectOption(execution);
+ const sourceHelp=panel.getByRole('button',{name:'Ajuda: Fonte do custo',exact:true});
+ await sourceHelp.focus();
+ await expect(panel.getByRole('tooltip').filter({hasText:'Informe a origem real ou estimada.'})).toBeVisible();
+ await sourceHelp.press('Escape');
  await expect(page.getByRole('group',{name:'Ações de Prévia L4'})).toBeVisible();
  await panel.getByRole('combobox',{name:'Categoria de custo L4'}).selectOption('energy');
  await panel.getByRole('textbox',{name:'Valor da categoria L4'}).fill('10.00');

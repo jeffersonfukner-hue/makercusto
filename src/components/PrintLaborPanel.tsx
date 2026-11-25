@@ -99,8 +99,7 @@ export function PrintLaborPanel({workspaceId,executionId,onImport,onInvalidate}:
    </details>}
   </li>)}</ul>}
   {revision&&<section aria-label="Revisão de mão de obra">
-   <h5>Registrar revisão de evidência</h5>
-   <p className="footnote">O registro original será preservado. A revisão altera somente minutos, tarifa declarada e base do tempo; não gera lançamento financeiro.</p>
+   <div className="mc-help-heading"><h5>Registrar revisão de evidência</h5><CalculatorHelp label="Registrar revisão de evidência">O registro original será preservado. A revisão altera somente minutos, tarifa declarada e base do tempo; não gera lançamento financeiro.</CalculatorHelp></div>
    <div className="product-save-fields">
     <label>Minutos revisados<input disabled={busy} value={revision.minutes} onChange={e=>changeRevision({minutes:e.target.value})} inputMode="decimal"/></label>
     <label>Tarifa revisada R$/h<input disabled={busy} value={revision.hourlyRate} onChange={e=>changeRevision({hourlyRate:e.target.value})} inputMode="decimal"/></label>

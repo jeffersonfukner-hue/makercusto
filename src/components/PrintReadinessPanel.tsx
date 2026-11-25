@@ -1,3 +1,4 @@
+import {CalculatorHelp} from './CalculatorHelp';
 import {useEffect,useRef,useState} from 'react';
 import {getL4CloseReadiness,type L4CloseReadiness} from '../data/supabase';
 
@@ -46,8 +47,7 @@ export function PrintReadinessPanel({workspaceId,executionId}:Props){
   }).finally(()=>{if(current===requestRef.current)setBusy(false);});
  };
  return <section className="panel" aria-label="Dossiê de prontidão financeira L4">
-  <h4>Dossiê de prontidão financeira</h4>
-  <p className="footnote">Consulta atual dos impedimentos no servidor, sem alterar custos, estoque ou produção. Não substitui a prévia de rateio nem autoriza fechamento.</p>
+  <div className="mc-help-heading"><h4>Dossiê de prontidão financeira</h4><CalculatorHelp label="Dossiê de prontidão financeira">Consulta atual dos impedimentos no servidor, sem alterar custos, estoque ou produção. Não substitui a prévia de rateio nem autoriza fechamento.</CalculatorHelp></div>
   <button type="button" disabled={!workspaceId||busy} onClick={refresh}>
    {busy?'Consultando impedimentos…':result?'Atualizar dossiê':'Consultar impedimentos'}
   </button>

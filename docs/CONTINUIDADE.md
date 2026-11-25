@@ -1174,3 +1174,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A calculadora foi definida pelo proprietário como referência visual. A auditoria encontrou botões de estilos antigos fora da calculadora, fichas de contato com espaço excessivo e ajuda dispersa principalmente em Impressões e Filamentos. Controles padrão agora usam tokens comuns; navegação, ações em barra escura e controles especializados conservam suas variantes.
 - Clientes e Fornecedores passaram a usar linhas compactas. Pedidos e Calculadora reutilizam `MetricGrid`. Filamentos, Impressões e o campo de custo adicional em Produtos usam ajuda contextual reaproveitada para campos e títulos; erros e consequências de confirmações seguem visíveis. As orientações foram registradas em AGENTS.md e docs/PADROES.md.
 - Build, 82 unitários e 130 cenários de navegador passaram durante a auditoria. Após os ajustes finais de ajuda, 16 cenários direcionados e três em WebKit com perfil de iPad Pro passaram. Falta homologar visualmente o lote no Preview e continuar a revisão das telas especializadas.
+
+## 25/11/2026 — Ajuda contextual nas telas especializadas de Impressões
+
+- Energia, Mão de obra, Rateio, Conciliação de filamento e Dossiê de prontidão usam os mesmos tooltips da calculadora. Na prévia de rateio, a orientação fica ao lado da impressão, do valor, da fonte e do critério. O estado de simulação e as pendências de fechamento continuam visíveis.
+- Build, 82 unitários e seis cenários de navegador em desktop e celular passaram. Mudança de apresentação, sem migração. Preview visual pendente para o próximo lote.

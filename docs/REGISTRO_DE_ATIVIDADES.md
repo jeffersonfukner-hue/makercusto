@@ -1064,3 +1064,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Auditoria visual compartilhada
 
 - Unificados controles, indicadores e ajuda contextual com a calculadora como referência. Compactadas as listas de contatos e a orientação nos formulários. Build e regressões em desktop, celular e WebKit com perfil de iPad aprovados.
+
+### 25/11/2026 — Ajuda contextual em Impressões
+
+- Compactadas as orientações de energia, mão de obra, rateio e conciliação. Build, 82 unitários e regressões L3 e L4 aprovados.
