@@ -425,7 +425,7 @@
 .system-top-navigation .system-brand strong,.system-top-navigation .system-workshop-name,.system-top-navigation .system-email{color:#172b45}
 .system-top-navigation .system-brand small{color:#52647b}
 .system-top-navigation .system-account button{background:#f1f5fa;color:#24364b;border-color:#dce3ed}
-.system-horizontal-menu{display:flex;gap:3px;overflow-x:auto;align-items:center;padding:6px clamp(12px,2vw,32px);background:#172b45;color:white}
+.system-horizontal-menu{display:flex;gap:3px;align-items:center;padding:6px clamp(12px,2vw,32px);background:#172b45;color:white}
 .system-horizontal-menu button{display:flex;align-items:center;gap:6px;white-space:nowrap;background:transparent;color:#e4edf9;border:1px solid transparent;border-radius:5px;padding:8px 6px;font-size:13px;font-weight:600}
 .system-horizontal-menu button:hover,.system-horizontal-menu button.system-nav-active{background:#2459eb;color:#fff}
 .system-top-navigation .system-content{max-width:none;padding-inline:clamp(12px,2vw,32px)}
@@ -445,6 +445,18 @@
  .product-workspace-grid{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:430px){.system-top-navigation .system-topbar{gap:8px}}
+
+
+.system-nav-group {position:relative;min-width:0}
+.system-nav-submenu:not([hidden]) {display:grid;gap:3px;min-width:170px;padding:6px;background:#172b45;border-radius:7px;box-shadow:0 8px 18px #172b4540}
+@media(min-width:1251px){
+ .system-nav-submenu {position:absolute;top:100%;left:0;width:max-content}
+}
+@media(max-width:1250px){
+ .system-horizontal-menu.mobile-open {align-items:start}
+ .system-nav-group>button {width:100%;justify-content:space-between}
+ .system-nav-submenu:not([hidden]) {min-width:0;padding:0 0 0 6px;box-shadow:none;border-left:1px solid #647893}
+}
 
 /* Calculadora da oficina — Modelo 5 */
 .mc-theme {
@@ -983,3 +995,8 @@
  border-color:var(--mc-blue);background:var(--mc-blue);color:#fff;
 }
 .mc-result-source button {flex:1 1 125px;text-align:center}
+
+.mc-order-customer {min-width:0;margin:10px 0;padding:8px;border:1px solid var(--mc-border);border-radius:8px}
+.mc-order-customer legend {font-size:12px;font-weight:700}
+.mc-order-customer-choice {display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.mc-order-customer-choice select {flex:1 1 120px;min-width:0}

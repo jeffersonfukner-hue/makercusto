@@ -1043,3 +1043,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Disposição do Montar conjunto
 
 - Organizados o catálogo e as partes adicionadas em áreas responsivas, com ações alinhadas. Build e seis cenários Playwright aprovados.
+
+### 25/11/2026 — Clientes, pedidos e navegação agrupada
+
+- Implementado o fluxo de Clientes na calculadora e na área dedicada, com pedidos vinculados e grupos no menu. Validados build, testes de navegador e isolamento em PostgreSQL local. Migração de teste pendente de autorização.
+- Migração de Clientes aplicada no Supabase de teste. A verificação autenticada com rollback confirmou cadastro, edição, vínculo e isolamento. Os três pedidos existentes permaneceram sem vínculo.

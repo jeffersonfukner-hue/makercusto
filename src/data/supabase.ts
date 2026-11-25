@@ -439,14 +439,38 @@ export const listCalculationHistory=(workspaceId:string,productId:string,offset:
   encodeURIComponent(workspaceId)+'&product_id=eq.'+encodeURIComponent(productId)+
   '&parameters->>origin=in.(calculator,assembly-revision)&order=confirmed_at.desc,id.desc&limit=20&offset='+offset);
 
+export type CustomerDraft={name:string;whatsapp:string|null;email:string|null};
+export type WorkshopCustomer=CustomerDraft&{id:string};
+export async function listWorkshopCustomers(workspaceId:string){
+ const customers:WorkshopCustomer[]=[];
+ const pageSize=200;
+ const path='mc_customers?select=id,name,whatsapp,email&workspace_id=eq.'+
+  encodeURIComponent(workspaceId)+'&order=name.asc,id.asc&limit='+pageSize;
+ for(let offset=0;;offset+=pageSize){
+  const rows=await api<WorkshopCustomer[]>(path+'&offset='+offset);
+  customers.push(...rows);
+  if(rows.length<pageSize)return customers;
+ }
+}
+export async function saveWorkshopCustomer(workspaceId:string,id:string,draft:CustomerDraft,editing:boolean){
+ const path='mc_customers?id=eq.'+encodeURIComponent(id)+'&workspace_id=eq.'+encodeURIComponent(workspaceId);
+ const rows=editing
+  ? await api<WorkshopCustomer[]>(path,'PATCH',draft,'return=representation')
+  : await api<WorkshopCustomer[]>('mc_customers?on_conflict=id','POST',{...draft,id,workspace_id:workspaceId},
+   'resolution=ignore-duplicates,return=representation');
+ const saved=rows?.[0]??(!editing?(await api<WorkshopCustomer[]>(path))[0]:undefined);
+ if(!saved)throw new Error('O cadastro não está disponível.');
+ return saved;
+}
+
 export type CustomerOrderDraft = {
- id:string;snapshot_id:string|null;product_name:string;status:'planned'|'sold';quantity:number;
+ id:string;snapshot_id:string|null;customer_id?:string;product_name:string;status:'planned'|'sold';quantity:number;
  pieces_per_plate:number;plate_cost:number;partial_plate_cost:number;sale_price:number;production_method?:'direct'|'assembly';
 };
-export type CustomerOrder=CustomerOrderDraft&{created_at:string};
-export const listCustomerOrders=(workspaceId:string,offset:number)=>
- api<CustomerOrder[]>('mc_customer_orders?select=id,snapshot_id,product_name,status,quantity,pieces_per_plate,plate_cost,partial_plate_cost,sale_price,created_at,production_method&workspace_id=eq.'+
-  encodeURIComponent(workspaceId)+'&order=created_at.desc,id.desc&limit=20&offset='+offset);
+export type CustomerOrder=CustomerOrderDraft&{created_at:string;customer?:{name:string}|null};
+export const listCustomerOrders=(workspaceId:string,offset:number,customerId?:string)=>
+ api<CustomerOrder[]>('mc_customer_orders?select=id,snapshot_id,product_name,status,quantity,pieces_per_plate,plate_cost,partial_plate_cost,sale_price,created_at,production_method,customer:mc_customers(name)&workspace_id=eq.'+
+  encodeURIComponent(workspaceId)+(customerId?'&customer_id=eq.'+encodeURIComponent(customerId):'')+'&order=created_at.desc,id.desc&limit=20&offset='+offset);
 export const saveCustomerOrder=(workspaceId:string,draft:CustomerOrderDraft)=>
  api<void>('mc_customer_orders?on_conflict=id','POST',{...draft,workspace_id:workspaceId},'resolution=ignore-duplicates,return=minimal');
 

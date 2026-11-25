@@ -1139,3 +1139,11 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - O proprietário priorizou área dedicada de Clientes, seleção no pedido da calculadora e cadastro rápido em modal. O pedido já reúne os estados Planejado e Vendido. A proposta mantém esses estados na mesma área comercial junto com Clientes.
 - O backlog registra o fluxo para preservar o cálculo enquanto se cadastra o cliente, o vínculo opcional para manter pedidos existentes e uma proposta de agrupamento da navegação. Próxima implementação começa pelo fluxo de Clientes e Pedidos, seguida do menu agrupado. Esta revisão é documental.
+
+## 25/11/2026 — Clientes e menu por grupos
+
+- A área Clientes permite cadastro, edição, busca por nome ou contato e consulta dos pedidos vinculados. Na calculadora, o cadastro em modal preserva o rascunho e seleciona o cliente ao concluir. O pedido pode continuar sem cliente.
+- Visão geral e Calculadora continuam como acessos diretos. Comercial, Produção, Oficina e Recursos agrupam os demais módulos, inclusive no menu compacto. Escape fecha primeiro o grupo e devolve o foco ao botão correspondente.
+- A migração `20261125174500_workshop_customers.sql` usa RLS e chave estrangeira composta para impedir vínculos entre oficinas. PostgreSQL local confirmou cadastro, edição, preservação do pedido antigo e bloqueios de acesso anônimo e entre oficinas. A aplicação ao Supabase de teste depende de autorização específica.
+- Build, 82 unitários e os 128 testes de navegador passaram durante o lote. Após acrescentar a regressão de reenvio do cadastro e edição do cliente, os quatro cenários de navegação e pedido em desktop/celular passaram novamente. Commit local, Preview pendente.
+- Migração autorizada e aplicada no Supabase de teste. O arquivo local `20261125174500_workshop_customers.sql` corresponde à versão remota `20261125174745`. A verificação autenticada com rollback confirmou cadastro, edição, vínculo com pedido e isolamento entre oficinas. Após rollback, os três pedidos anteriores continuam sem vínculo, com zero clientes e zero usuários descartáveis. Preview manual pendente.

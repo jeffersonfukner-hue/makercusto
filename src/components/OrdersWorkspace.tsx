@@ -1,23 +1,23 @@
 import {useEffect,useState} from 'react';
-import {listCustomerOrders,type CustomerOrder} from '../data/supabase';
+import {listCustomerOrders,type CustomerOrder,type WorkshopCustomer} from '../data/supabase';
 import {calculateOrderPlan} from '../domain/order-plan';
 
 const money=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const date=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'});
 
-export function OrdersWorkspace({workspaceId}:{workspaceId:string}){
+export function OrdersWorkspace({workspaceId,customer}:{workspaceId:string;customer?:WorkshopCustomer}){
  const [offset,setOffset]=useState(0);
  const [page,setPage]=useState<{offset:number;orders:CustomerOrder[];error?:string}>();
  useEffect(()=>{
   let active=true;
-  void listCustomerOrders(workspaceId,offset)
+  void listCustomerOrders(workspaceId,offset,customer?.id)
    .then(orders=>{if(active)setPage({offset,orders});})
    .catch(error=>{if(active)setPage({offset,orders:[],error:(error as Error).message});});
   return ()=>{active=false;};
- },[workspaceId,offset]);
+ },[workspaceId,offset,customer?.id]);
  const current=page?.offset===offset?page:undefined;
  return <section className="panel" aria-label="Histórico de pedidos">
-  <h2>Histórico de pedidos</h2>
+  <h2>{customer?'Pedidos de '+customer.name:'Histórico de pedidos'}</h2>
   {!current&&<p role="status">Carregando pedidos…</p>}
   {current?.error&&<p role="alert">Não foi possível consultar pedidos. {current.error}</p>}
   {current&&!current.error&&current.orders.length===0&&<p>Nenhum pedido nesta página. Use Planejamento do pedido na calculadora para registrar um.</p>}
@@ -26,6 +26,7 @@ export function OrdersWorkspace({workspaceId}:{workspaceId:string}){
     order.quantity,Number(order.partial_plate_cost));
    return <article key={order.id} className="product-detail mc-order-record">
     <h3>{order.product_name}</h3>
+    {order.customer&&<p>Cliente: {order.customer.name}</p>}
     <p>{order.status==='sold'?'Vendido':'Planejado'} · {date.format(new Date(order.created_at))}</p>
     <p>{order.production_method==='assembly'?order.quantity+' conjuntos montados':<>
      {order.quantity} peças · {plan.totalPlates} {plan.totalPlates===1?'mesa':'mesas'}

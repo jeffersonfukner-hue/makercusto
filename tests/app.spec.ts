@@ -3,6 +3,14 @@ async function openSystemMenuIfMobile(page:Page){const toggle=page.getByRole('bu
 function systemModule(page:Page,name:string){
  return page.getByRole('navigation',{name:'Módulos do MakerCusto'}).getByRole('button',{name,exact:true});
 }
+async function openSystemGroup(page:Page,name:string){
+ const toggle=systemModule(page,name);
+ if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
+}
+async function navigateSystemModule(page:Page,name:string,group:string){
+ await openSystemGroup(page,group);
+ await systemModule(page,name).click();
+}
 test.beforeEach(async({page})=>{
  await page.route('**/*.supabase.co/rest/v1/mc_catalog?**',route=>route.fulfill({json:[]}));
  await page.route('**/storage/v1/object/list/mc-product-photos',route=>route.fulfill({json:[]}));
@@ -673,7 +681,7 @@ test('catálogo abre antes do formulário e salva novo produto na oficina',async
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await systemModule(page,'Produtos').click();
+ await navigateSystemModule(page,'Produtos','Produção');
  await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveCount(0);
  await page.getByRole('button',{name:'+ Novo produto'}).click();
@@ -728,7 +736,7 @@ test('conjunto de três peças: catálogo, criação, custos, edição e duplica
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await systemModule(page,'Produtos').click();
+ await navigateSystemModule(page,'Produtos','Produção');
  await page.getByRole('navigation',{name:'Abas de Produtos e componentes'}).getByRole('button',{name:'Conjuntos',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Conjuntos'})).toBeVisible();
  await page.getByRole('button',{name:'+ Novo conjunto'}).click();
@@ -777,7 +785,7 @@ test('validação impede cadastrar conjunto sem nome das peças',async({page})=>
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await systemModule(page,'Produtos').click();
+ await navigateSystemModule(page,'Produtos','Produção');
  await page.getByRole('navigation',{name:'Abas de Produtos e componentes'}).getByRole('button',{name:'Conjuntos',exact:true}).click();
  await page.getByRole('button',{name:'+ Novo conjunto'}).click();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Kit de teste');
@@ -856,8 +864,9 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(page.getByRole('heading',{name:'Oficina de Testes'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toHaveCount(0);
  await openSystemMenuIfMobile(page);
+ await openSystemGroup(page,'Produção');
  await expect(systemModule(page,'Impressões')).toBeEnabled();
- await systemModule(page,'Produtos').click();
+ await navigateSystemModule(page,'Produtos','Produção');
  await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();
  await expect(page.locator('.product-catalog-card')).toHaveCount(12);
  for(const width of [320,768,882,1024,1180,1250,1251,1366]){
@@ -872,7 +881,11 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
   expect(layout,`Cabeçalho e catálogo em ${width}px`).toEqual({top:0,overflow:false,desktopMenuRows:1,menuFits:true});
   if(width<=1250){
    await menuToggle.click();
+   await openSystemGroup(page,'Comercial');
    await expect(systemModule(page,'Pedidos')).toBeVisible();
+   await expect(systemModule(page,'Clientes')).toBeVisible();
+   await page.keyboard.press('Escape');
+   await expect(systemModule(page,'Comercial')).toBeFocused();
    await page.keyboard.press('Escape');
    await expect(menuToggle).toBeFocused();
   }
@@ -922,7 +935,7 @@ test('bobina física: inventário na oficina sem criar compra fictícia',async({
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await systemModule(page,'Filamentos').click();
+ await navigateSystemModule(page,'Filamentos','Oficina');
  await expect(page.getByRole('heading',{name:'Filamentos e bobinas'})).toBeVisible();
  await expect(page.getByText('Nenhuma bobina inventariada nesta oficina.')).toBeVisible();
  await page.getByRole('button',{name:'+ Inventariar bobina'}).click();
@@ -969,7 +982,7 @@ test('Impressões: registra L2 sem consumo e mostra a execução na oficina', as
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await expect(page.getByRole('heading',{name:'Impressões da oficina',level:1})).toBeVisible();
  await page.getByRole('combobox',{name:'Impressora física'}).selectOption(printer);
  await page.getByRole('combobox',{name:'Peça a imprimir'}).selectOption(product);
@@ -1017,7 +1030,7 @@ test('Impressões L3: confirmação incremental mantém chave no retry e respeit
   return respond([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await page.getByRole('combobox',{name:'Impressão para confirmar'}).selectOption(production);
  await page.getByRole('combobox',{name:'Peça confirmada'}).selectOption(output);
  await page.getByRole('combobox',{name:'Bobina consumida'}).selectOption(lot);
@@ -1061,7 +1074,7 @@ test('Impressões L3: bloqueia deltas fracionários e quantidade superior ao pla
   return respond([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await page.getByRole('combobox',{name:'Impressão para confirmar'}).selectOption(production);
  await page.getByRole('combobox',{name:'Peça confirmada'}).selectOption(output);
  await page.getByRole('combobox',{name:'Bobina consumida'}).selectOption(lot);
@@ -1118,7 +1131,7 @@ test('Reserva P01: disponibilidade desconta reservas, valida saldo e reenvia a m
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await expect(page.getByRole('combobox',{name:'Bobina para reservar',exact:true}).getByRole('option',{name:/Bobina PETG — disponíveis 40.000 g/})).toHaveCount(1);
  await page.getByRole('combobox',{name:'Impressão para reservar'}).selectOption(production);
  await page.getByRole('combobox',{name:'Bobina para reservar',exact:true}).selectOption(lot);
@@ -1176,7 +1189,7 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await expect(page.getByText(/Revisão vencida \(reserva mantida\)/)).toBeVisible();
  await page.getByRole('combobox',{name:'Reserva para revisar'}).selectOption(reservation);
  await expect(page.getByRole('group',{name:'Ações de Prazo da reserva'})).toBeVisible();
@@ -1244,7 +1257,7 @@ test('P01-E: redução parcial preserva peças confirmadas e exige liberação e
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await page.getByRole('combobox',{name:'Impressão para redução parcial'}).selectOption(production);
  await page.getByRole('combobox',{name:'Peça a reduzir'}).selectOption(output);
  await expect(page.getByRole('group',{name:'Ações de Redução parcial'})).toBeVisible();
@@ -1303,7 +1316,7 @@ test('P01-D: troca de bobina preserva preços antigos e reenvia mesma chave sem 
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await page.getByRole('combobox',{name:'Reserva de origem para troca'}).selectOption(reservation);
  await page.getByRole('combobox',{name:'Nova bobina para reservar'}).selectOption(lotB);
  await expect(page.getByRole('group',{name:'Ações de Trocar bobina reservada'})).toBeVisible();
@@ -1361,7 +1374,7 @@ test('GAP01: ocorrência acima do saldo não cria baixa e retry mantém idempot�
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await expect(page.getByText('Registrada, aguardando análise')).toBeVisible();
  await page.getByRole('combobox',{name:'Impressão da ocorrência'}).selectOption(production);
  await page.getByRole('textbox',{name:'Material observado'}).fill('PETG branco');
@@ -1425,7 +1438,7 @@ test('GAP01-B/F: investigação mantém observação original, histórico e retr
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await expect(page.getByText('Ainda não há evidência de origem, aguardando inspeção.')).toBeVisible();
  await page.getByRole('combobox',{name:'Ocorrência para investigar'}).selectOption(occurrence);
  await expect(page.getByRole('group',{name:'Ações de Investigação da ocorrência'})).toBeVisible();
@@ -1492,7 +1505,7 @@ test('GAP01-C: proposta de 50 g não baixa estoque e reenvio usa chave idempoten
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await expect(page.getByRole('list',{name:'Propostas de inventário pendentes'})).toContainText('Pendente de decisão');
  await page.getByRole('combobox',{name:'Ocorrência para proposta de inventário'}).selectOption(occurrence);
  await page.getByRole('combobox',{name:'Bobina da proposta de ajuste'}).selectOption(lot);
@@ -1560,7 +1573,7 @@ test('GAP01-D/E: dossiê mostra reservas alheias e consumo histórico sem aciona
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  await page.getByRole('combobox',{name:'Ocorrência para dossiê'}).selectOption(occurrence);
  await expect(page.getByRole('group',{name:'Ações de Dossiê de conciliação'})).toBeVisible();
  await expect(page.getByRole('button',{name:'Registrar proposta sem alterar estoque'})).toHaveCount(0);
@@ -1674,7 +1687,7 @@ test('conjunto vincula guirlanda, estrela grande e pequena sem duplicar cadastro
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await systemModule(page,'Produtos').click();
+ await navigateSystemModule(page,'Produtos','Produção');
  await page.getByRole('navigation',{name:'Abas de Produtos e componentes'}).getByRole('button',{name:'Conjuntos',exact:true}).click();
  await page.getByRole('button',{name:'+ Novo conjunto'}).click();
  await page.getByRole('textbox',{name:'Nome do produto'}).fill('Guirlanda de Natal');
@@ -1837,7 +1850,7 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
   return send([]);
  });
  await page.goto('/');await openSystemMenuIfMobile(page);
- await page.getByRole('button',{name:'Impressões',exact:true}).click();
+ await navigateSystemModule(page,'Impressões','Produção');
  const panel=page.getByRole('region',{name:'Prévia L4 de rateio'});
  await expect(panel.getByText('SIMULAÇÃO NÃO SALVA.')).toBeVisible();
  await panel.getByRole('combobox',{name:'Impressão para prévia de rateio'}).selectOption(execution);
@@ -1947,7 +1960,7 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  });
  await page.goto('/');
  await openSystemMenuIfMobile(page);
- await systemModule(page,'Produtos').click();
+ await navigateSystemModule(page,'Produtos','Produção');
  await page.getByRole('article').filter({has:page.getByRole('heading',{name:'Urso',exact:true})}).getByRole('button',{name:'Ver ficha'}).click();
  const gallery=page.getByRole('region',{name:'Fotos do produto'});
  await gallery.getByLabel('Adicionar fotos').setInputFiles([
@@ -1968,12 +1981,12 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await expect(gallery.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
  expect(primary).toBe(folder+filenames[1]);
  await openSystemMenuIfMobile(page);
- await systemModule(page,'Biblioteca STL').click();
+ await navigateSystemModule(page,'Biblioteca STL','Recursos');
  await page.getByLabel('Produto da oficina').selectOption(product);
  await expect(gallery.getByRole('img')).toHaveCount(2);
  await expect(gallery.getByLabel('Adicionar fotos')).toHaveCount(0);
  await openSystemMenuIfMobile(page);
- await systemModule(page,'Produtos').click();
+ await navigateSystemModule(page,'Produtos','Produção');
  const bearCard=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Urso',exact:true})});
  await expect(bearCard.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
  await expect(page.getByRole('article').filter({hasText:'Produto sem foto'}).getByRole('img')).toHaveCount(0);
@@ -2152,6 +2165,8 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  const product='33333333-3333-4333-8333-333333333333';
  const recent='44444444-4444-4444-8444-444444444444';
  const earlier='55555555-5555-4555-8555-555555555555';
+ const customer={id:'66666666-6666-4666-8666-666666666666',name:'Maria da Silva',whatsapp:null,email:null as string|null};
+ let registered=false;
  const requests:Array<Record<string,unknown>>=[];
  let failFirstSave!:()=>void;
  const firstSave=new Promise<void>(resolve=>{failFirstSave=resolve;});
@@ -2168,6 +2183,25 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
    {id:recent,confirmed_at:'2026-11-25T11:00:00Z',quantity:2,total_cost:8,parameters:{saved_input:{quantity:2,salePrice:9}}},
    {id:earlier,confirmed_at:'2026-11-24T11:00:00Z',quantity:2,total_cost:10,parameters:{saved_input:{quantity:2,salePrice:8}}}
   ]});
+  if(path.endsWith('/mc_customers')){
+   if(route.request().method()==='POST'){
+    const draft=route.request().postDataJSON();
+    expect(draft).toMatchObject({workspace_id:workspace,name:customer.name});
+    if(registered){
+     expect(draft.id).toBe(customer.id);
+     return route.fulfill({json:[]});
+    }
+    customer.id=draft.id;
+    registered=true;
+    return route.fulfill({status:503,json:{message:'Resposta perdida após registrar cliente'}});
+   }
+   if(route.request().method()==='PATCH'){
+    expect(new URL(route.request().url()).searchParams.get('id')).toBe('eq.'+customer.id);
+    customer.email=route.request().postDataJSON().email;
+    return route.fulfill({json:[customer]});
+   }
+   return route.fulfill({json:registered?[customer]:[]});
+  }
   if(path.endsWith('/mc_customer_orders')){
    if(route.request().method()==='POST'){
     requests.push(route.request().postDataJSON());
@@ -2177,7 +2211,7 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
     }
     return route.fulfill({status:204});
    }
-   return route.fulfill({json:[{...requests.at(-1),created_at:'2026-11-25T11:30:00Z'}]});
+   return route.fulfill({json:[{...requests.at(-1),customer:{name:customer.name},created_at:'2026-11-25T11:30:00Z'}]});
   }
   return route.fulfill({json:[]});
  });
@@ -2195,6 +2229,19 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await page.getByLabel('Quantidade do pedido (peças)').fill('15');
  await expect(page.getByLabel('Item do pedido')).toHaveValue('Chaveiro');
  await page.getByLabel('Situação').selectOption('sold');
+ await page.getByRole('button',{name:'Novo cliente',exact:true}).click();
+ const customerModal=page.getByRole('dialog',{name:'Novo cliente'});
+ await customerModal.getByLabel('Nome do cliente').fill('Rascunho cancelado');
+ await customerModal.getByRole('button',{name:'Cancelar',exact:true}).click();
+ expect(registered).toBe(false);
+ await expect(page.getByLabel('Quantidade do pedido (peças)')).toHaveValue('15');
+ await page.getByRole('button',{name:'Novo cliente',exact:true}).click();
+ await customerModal.getByLabel('Nome do cliente').fill(customer.name);
+ await customerModal.getByRole('button',{name:'Salvar cliente'}).click();
+ await expect(customerModal.getByRole('alert')).toHaveText('Não foi possível salvar o cliente.');
+ await customerModal.getByRole('button',{name:'Salvar cliente'}).click();
+ await expect(page.getByLabel('Cliente do pedido')).toHaveValue(customer.id);
+ await expect(page.getByLabel('Situação')).toHaveValue('sold');
  await page.getByRole('button',{name:'Registrar pedido'}).click();
  await expect(page.getByText('Aguardando o registro do pedido…')).toBeVisible();
  await expect(page.getByRole('button',{name:'Registrando…',exact:true})).toBeDisabled();
@@ -2205,12 +2252,25 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await expect(page.getByText('Falha temporária',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Registrar pedido'}).click();
  await expect(page.getByText('Pedido registrado no histórico da oficina.')).toBeVisible();
- expect(requests[1]).toMatchObject({id:requests[0].id,workspace_id:workspace,snapshot_id:earlier,status:'sold',quantity:15,pieces_per_plate:2,sale_price:8});
+ expect(requests[1]).toMatchObject({id:requests[0].id,workspace_id:workspace,snapshot_id:earlier,customer_id:customer.id,status:'sold',quantity:15,pieces_per_plate:2,sale_price:8});
  await page.getByRole('button',{name:'Ver pedidos'}).click();
  const order=page.getByRole('article').filter({hasText:'Chaveiro'});
  await expect(order).toContainText('Vendido');
+ await expect(order).toContainText(customer.name);
  await expect(order).toContainText('15 peças · 8 mesas · última mesa: 1 un.');
  await expect(order.getByText('Faturamento do pedido').locator('..')).toContainText('120,00');
+ await openSystemMenuIfMobile(page);
+ await navigateSystemModule(page,'Clientes','Comercial');
+ await page.getByRole('searchbox',{name:'Buscar cliente'}).fill('Silva');
+ const historyRequest=page.waitForRequest(request=>new URL(request.url()).searchParams.get('customer_id')==='eq.'+customer.id);
+ await page.getByRole('button',{name:'Ver pedidos de '+customer.name}).click();
+ await historyRequest;
+ await expect(page.getByRole('heading',{name:'Pedidos de '+customer.name})).toBeVisible();
+ await page.getByRole('button',{name:'Editar cliente'}).click();
+ const edit=page.getByRole('dialog',{name:'Editar cliente'});
+ await edit.getByLabel('E-mail (opcional)').fill('maria@example.test');
+ await edit.getByRole('button',{name:'Salvar cliente'}).click();
+ await expect(page.getByText('maria@example.test',{exact:true})).toBeVisible();
 });
 
 test('recupera margem da composição e mantém o preço da peça única independente',async({page})=>{
