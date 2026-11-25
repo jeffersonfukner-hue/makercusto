@@ -967,3 +967,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Apresentação do tempo de impressão
 
 - A partir das fotos do Preview, limitado a duas casas decimais o tempo exibido fora de edição. O teste de salvamento comprova que `11.233333333333333` continua no snapshot após a exibição compacta. Build, 75 unitários e quatro cenários Playwright aprovados localmente. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Tema compartilhado, duração e cópia de cálculo
+
+- Aplicado o padrão Modelo 5 à área pública e aos módulos autenticados. Reutilizados os blocos de custo, os estilos de campos e painéis e o controle de duração. Ajuda de filamento compactada na linha dos rótulos.
+- Verificados conversão de 6 h 5 min na calculadora e no registro previsto, limite de minutos, leitura de tempo histórico, cópia numerada em caso de colisão, foco no nome e rejeição do nome original. Compactados consulta com contagem de peças e retorno do salvamento.
+- Build aprovado, 75 unitários, 110 cenários na rodada completa e 10 na regressão focada após os últimos ajustes. Verificação responsiva local com mocks. Commit com `[skip ci]`, sem merge, deploy, banco operacional ou gastos. Duração não aferida.

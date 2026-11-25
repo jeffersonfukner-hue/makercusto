@@ -1,3 +1,5 @@
+import type {ReactNode} from 'react';
+import {PrintDurationFields,printDurationInHours,splitPrintDuration,type DurationDraft} from './components/PrintDurationFields';
 import { useEffect, useState } from 'react';
 import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
 import {SmartField,formatCatalogName} from './components/SmartField';
@@ -60,7 +62,6 @@ function writeLocalPrinters(printers:PrinterProfile[]):void{
 
 type NumericKey = Exclude<keyof CostInput,'materials'>;
 const fields = {
- hours: {label:'Tempo de impressão (horas)',step:'0.01',min:0,help:'Tempo previsto pelo fatiador. Por exemplo, 2 h e 30 min equivalem a 2,5 h.'},
  quantity: {label:'Unidades finalizadas no lote',step:'1',min:1,help:'Quantidade de unidades prontas produzidas neste lote.'},
  accessoryPerUnit: {label:'Acessórios por unidade (R$)',step:'0.01',min:0,help:'Custo dos acessórios consumidos por peça.'},
  assemblyMinutesPerUnit: {label:'Montagem por unidade (min)',step:'0.1',min:0,help:'Tempo de montagem e acabamento de cada unidade.'},
@@ -81,8 +82,14 @@ const perKg = (price:number,unit:Unit) => price * (unit==='g'?1000:1);
 const newDraft = ():MaterialLine => ({id:'',name:'',type:'PLA',brand:'',grams:NaN,wasteGrams:0,pricePerKg:0,packageQuantity:1,packageUnit:'kg',packagePrice:NaN});
 const seeded = () => referenceCase.materials!.map(m=>({...m,type:'PETG',brand:'',packageQuantity:1,packageUnit:'kg' as const,packagePrice:100}));
 const calculatedPackagePrice = (item:MaterialLine):number => item.packagePrice ?? item.pricePerKg*(item.packageQuantity??1)*(item.packageUnit==='g'?.001:1);
+function FilamentField({id,label,help,children}:{id:string;label:string;help:string;children:ReactNode}){
+ return <div className="mc-filament-field">
+  <div className="mc-field-caption"><label htmlFor={id}>{label}</label><CalculatorHelp label={label}>{help}</CalculatorHelp></div>
+  {children}
+ </div>;
+}
 export default function App(){
- const [editingPrintHours,setEditingPrintHours]=useState(false);
+ const [printDurationDraft,setPrintDurationDraft]=useState<DurationDraft|null>(null);
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
  const [printers,setPrinters]=useState<PrinterProfile[]>(()=>sessionStore.get()?seedPrinters():[...seedPrinters(),...readLocalPrinters()]);
  const [printerId,setPrinterId]=useState(()=>sessionStore.get()?'example':readSelectedPrinter('guest',[...seedPrinters(),...readLocalPrinters()]));
@@ -210,6 +217,7 @@ export default function App(){
  const reset=()=>{
    setRevisionTarget(null);
    setLoadedCalculation('');
+   setPrintDurationDraft(null);
    if(!sessionStore.get()){setPrinters([...seedPrinters(),...readLocalPrinters()]);setPrinterId('example');}
    setForm({...referenceCase,materials:undefined});
    setSimple(initialSimple);
@@ -230,6 +238,7 @@ export default function App(){
   try{calculateCost(testInput);}
   catch(e){setAccountError('Este cálculo salvo não pode ser reutilizado: '+(e as Error).message);return false;}
   setForm({...restored,materials:undefined});
+  setPrintDurationDraft(null);
   setSimple({quantity:Number(restored.grams),quantityUnit:'g',
    price:Number(restored.pricePerKg),priceUnit:'kg'});
   if(data&&data.length){setDetailedMaterials(data);setAdvanced(true);setDetails(true);}
@@ -257,20 +266,17 @@ export default function App(){
  const calculationField=(key:keyof typeof fields, showHelp=Boolean(session))=>{
   const field=fields[key];
   const label=session&&key==='quantity'?'Lote (unidades)':field.label;
-  const compactPrintHours=Boolean(session)&&key==='hours';
-  const value=display(form[key]);
-  const shownValue=compactPrintHours&&!editingPrintHours&&typeof value==='number'
-   ? Number(value.toFixed(2))
-   : value;
   return <div className="mc-number-field">
    <label><span>{label}</span>
-    <input data-testid={key} type="number" min={field.min} step={field.step} value={shownValue}
-     onFocus={compactPrintHours?()=>setEditingPrintHours(true):undefined}
-     onBlur={compactPrintHours?()=>setEditingPrintHours(false):undefined}
-     onChange={event=>update(key,event.target.value)}/>
+    <input data-testid={key} type="number" min={field.min} step={field.step} value={display(form[key])} onChange={event=>update(key,event.target.value)}/>
    </label>
    {showHelp&&<CalculatorHelp label={field.label}>{field.help}</CalculatorHelp>}
   </div>;
+ };
+ const printDuration=printDurationDraft??splitPrintDuration(form.hours);
+ const setPrintDuration=(next:DurationDraft)=>{
+  setPrintDurationDraft(next);
+  setForm(previous=>({...previous,hours:printDurationInHours(next)??NaN}));
  };
  const costLines=result&&[
   ['Filamentos',result.material],['Energia',result.energy],['Depreciação',result.depreciation],
@@ -278,19 +284,19 @@ export default function App(){
  ] as const;
  const percent=(value:number)=>count(Math.round(value*10)/10)+'%';
  const modeSwitch=<nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>;
- return <>
+ return <div className="mc-theme">
  {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthOpen(true)}>Entrar / Salvar</button></div></header>}
  <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>
  <main className={session?"app-main":"shell"}>
   {session&&activeSection==='overview'&&<WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
   {(!session||activeSection==='calculator')&&<>
-  <div className={session?'mc-calculator':undefined}>
+  <div className="mc-calculator">
   {!session&&<section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>}
   {session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity',false)}
    onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
-   onClearRevisionTarget={()=>setRevisionTarget(null)}
+   onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
    onCreateAssembly={()=>setActiveSection('assemblies')}/>}
   {loadedCalculation&&<p role="status" className="product-success mc-calculation-status">{loadedCalculation}</p>}
@@ -306,10 +312,10 @@ export default function App(){
   <div hidden={Boolean(session)&&calculatorTab!=="calculation"}>
   {!session&&modeSwitch}
   <div className="workspace">
-   <div className={session?'mc-cost-editor':'panel'}>
-    <section className={session?'mc-cost-block mc-print':undefined} aria-labelledby="print-title">
+   <div className="mc-cost-editor">
+    <section className="mc-cost-block mc-print" aria-labelledby="print-title">
      {session?<h2 id="print-title">Impressão</h2>:<div className="panel-heading">
-      <div><h2 id="print-title">Impressão 3D</h2><p>{advanced?'Ajuste os detalhes sem perder os valores informados.':'Preencha os dados e veja o resultado na hora.'}</p></div>
+      <h2 id="print-title">Impressão 3D</h2>
       <button type="button" onClick={reset}>Restaurar exemplo</button>
      </div>}
     {advanced&&<section className="printer-section" aria-labelledby="printer-title">
@@ -330,12 +336,12 @@ export default function App(){
     <section className="materials" aria-labelledby="materials-title">
      <div className="materials-heading"><h3 id="materials-title">Filamento</h3>{advanced&&<button className="details-button" type="button" aria-expanded={details} aria-controls="material-details" onClick={()=>setDetails(v=>!v)}>{details?'Usar total de filamento':'Detalhar por cor'} <span aria-hidden="true">{details?'▴':'▾'}</span></button>}</div>
      {(!advanced||!details)&&<div className="simple-material-fields">
-       <label>Filamento utilizado
-         <div className="simple-field-combo"><input data-testid="simpleQuantity" type="number" min="0" step="any" value={display(simple.quantity)} onChange={e=>setSimple(prev=>({...prev,quantity:numeric(e.target.value)}))}/><select aria-label="Unidade do total utilizado" value={simple.quantityUnit} onChange={e=>setSimple(prev=>({...prev,quantityUnit:e.target.value as Unit}))}><option value="g">g</option><option value="kg">kg</option></select></div>{session?<span className="mc-inline-help" tabIndex={0} aria-label={simple.quantityUnit==='kg'?'Informe o peso total em quilogramas, não em gramas.':'Use a estimativa de consumo informada pelo slicer, em gramas.'}>ⓘ<span className="mc-tooltip" role="tooltip">{simple.quantityUnit==='kg'?'Informe o peso total em quilogramas, não em gramas.':'Use a estimativa de consumo informada pelo slicer, em gramas.'}</span></span>:<small className="smart-hint">{simple.quantityUnit==='kg'?'Informe o peso total em quilogramas, não em gramas.':'Use a estimativa de consumo informada pelo slicer, em gramas.'}</small>}
-       </label>
-       <label>Preço do filamento
-         <div className="simple-field-combo"><input data-testid="simplePrice" type="number" min="0" step="any" value={display(simple.price)} onChange={e=>setSimple(prev=>({...prev,price:numeric(e.target.value)}))}/><select aria-label="Unidade do preço do filamento" value={simple.priceUnit} onChange={e=>setSimple(prev=>({...prev,priceUnit:e.target.value as Unit}))}><option value="kg">R$/kg</option><option value="g">R$/g</option></select></div>{session?<span className="mc-inline-help" tabIndex={0} aria-label={simple.priceUnit==='kg'?'Informe o preço por quilo. Ex.: rolo de 1 kg por R$ 100 → R$ 100/kg.':'Informe o preço por grama. Ex.: R$ 100/kg equivalem a R$ 0,10/g.'}>ⓘ<span className="mc-tooltip" role="tooltip">{simple.priceUnit==='kg'?'Informe o preço por quilo. Ex.: rolo de 1 kg por R$ 100 → R$ 100/kg.':'Informe o preço por grama. Ex.: R$ 100/kg equivalem a R$ 0,10/g.'}</span></span>:<small className="smart-hint">{simple.priceUnit==='kg'?'Informe o preço por quilo. Ex.: rolo de 1 kg por R$ 100 → R$ 100/kg.':'Informe o preço por grama. Ex.: R$ 100/kg equivalem a R$ 0,10/g.'}</small>}
-       </label>
+       <FilamentField id="simpleQuantity" label="Filamento utilizado" help={simple.quantityUnit==='kg'?'Informe o peso total em quilogramas.':'Use o total em gramas informado pelo fatiador.'}>
+        <div className="simple-field-combo"><input id="simpleQuantity" data-testid="simpleQuantity" type="number" min="0" step="any" value={display(simple.quantity)} onChange={e=>setSimple(prev=>({...prev,quantity:numeric(e.target.value)}))}/><select aria-label="Unidade do total utilizado" value={simple.quantityUnit} onChange={e=>setSimple(prev=>({...prev,quantityUnit:e.target.value as Unit}))}><option value="g">g</option><option value="kg">kg</option></select></div>
+       </FilamentField>
+       <FilamentField id="simplePrice" label="Preço do filamento" help={simple.priceUnit==='kg'?'Informe o preço por quilo.':'Informe o preço por grama.'}>
+        <div className="simple-field-combo"><input id="simplePrice" data-testid="simplePrice" type="number" min="0" step="any" value={display(simple.price)} onChange={e=>setSimple(prev=>({...prev,price:numeric(e.target.value)}))}/><select aria-label="Unidade do preço do filamento" value={simple.priceUnit} onChange={e=>setSimple(prev=>({...prev,priceUnit:e.target.value as Unit}))}><option value="kg">R$/kg</option><option value="g">R$/g</option></select></div>
+       </FilamentField>
      </div>}
      {advanced&&details&&<div className="mobile-catalog-actions" aria-label="Cadastros rápidos"><button type="button" aria-label="Cadastrar tipo" onClick={()=>setCatalogModal('tipo')}>+ Tipo</button><button type="button" aria-label="Cadastrar cor" onClick={()=>setCatalogModal('cor')}>+ Cor</button><button type="button" aria-label="Cadastrar marca" onClick={()=>setCatalogModal('marca')}>+ Marca</button></div>}
      <div className="material-summary">
@@ -353,11 +359,11 @@ export default function App(){
         <div className="catalog-field"><div className="catalog-field-heading"><span>Tipo</span><button type="button" className="catalog-add" aria-label="Cadastrar tipo" title="Cadastrar outro tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><SmartField label="Tipo de filamento" value={draft.type||''} options={list('tipo')} hint="PLA, PETG, TPU e outros tipos. Use o material indicado na bobina." onBlur={v=>remember('tipo',v)} onChange={v=>setDraftText('type',v)}/></div>
         <div className="catalog-field"><div className="catalog-field-heading"><span>Cor</span><button type="button" className="catalog-add" aria-label="Cadastrar cor" title="Cadastrar outra cor" onClick={()=>setCatalogModal('cor')}>+</button></div><SmartField label="Cor do filamento" value={draft.name} options={list('cor')} hint="Ex.: Vermelho Fosco. Nomes novos serão padronizados." onBlur={v=>remember('cor',v)} onChange={v=>setDraftText('name',v)}/></div>
         <div className="catalog-field"><div className="catalog-field-heading"><span>Marca</span><button type="button" className="catalog-add" aria-label="Cadastrar marca" title="Cadastrar outra marca" onClick={()=>setCatalogModal('marca')}>+</button></div><SmartField label="Marca do filamento" value={draft.brand||''} options={list('marca')} hint="Selecione a fabricante da bobina, como Masterprint ou SUNLU." onBlur={v=>remember('marca',v)} onChange={v=>setDraftText('brand',v)}/></div>
-        <label>Embalagem<input type="number" min="0.001" step="any" data-testid="packageQuantity" value={display(draft.packageQuantity)} onChange={e=>setDraftNumber('packageQuantity',e.target.value)}/>{session?<span className="mc-inline-help" tabIndex={0} aria-label="Quantidade comprada na unidade indicada ao lado.">ⓘ<span className="mc-tooltip" role="tooltip">Quantidade comprada na unidade indicada ao lado.</span></span>:<small className="smart-hint">Quantidade comprada na unidade indicada ao lado.</small>}</label>
+        <FilamentField id="packageQuantity" label="Embalagem" help="Quantidade comprada na unidade indicada ao lado."><input type="number" min="0.001" step="any" id="packageQuantity" data-testid="packageQuantity" value={display(draft.packageQuantity)} onChange={e=>setDraftNumber('packageQuantity',e.target.value)}/></FilamentField>
         <label>Unid. compra<select aria-label="Unidade da embalagem" value={draft.packageUnit||'kg'} onChange={e=>setDraft(prev=>({...prev,packageUnit:e.target.value as 'kg'|'g'}))}><option value="kg">kg</option><option value="g">g</option></select></label>
-        <label>Preço total (R$)<input type="number" min="0" step="any" data-testid="packagePrice" value={display(draft.packagePrice)} onChange={e=>setDraftNumber('packagePrice',e.target.value)}/>{session?<span className="mc-inline-help" tabIndex={0} aria-label={Number.isFinite(draft.packagePrice)&&Number.isFinite(draft.packageQuantity)&&draft.packageQuantity!>0?'Custo equivalente: '+money(draft.packagePrice!/(draft.packageQuantity!*(draft.packageUnit==='kg'?1:.001)))+'/kg.':'Informe quanto pagou pela embalagem completa, não o preço por kg.'}>ⓘ<span className="mc-tooltip" role="tooltip">{Number.isFinite(draft.packagePrice)&&Number.isFinite(draft.packageQuantity)&&draft.packageQuantity!>0?'Custo equivalente: '+money(draft.packagePrice!/(draft.packageQuantity!*(draft.packageUnit==='kg'?1:.001)))+'/kg.':'Informe quanto pagou pela embalagem completa, não o preço por kg.'}</span></span>:<small className="smart-hint">{Number.isFinite(draft.packagePrice)&&Number.isFinite(draft.packageQuantity)&&draft.packageQuantity!>0?'Custo equivalente: '+money(draft.packagePrice!/(draft.packageQuantity!*(draft.packageUnit==='kg'?1:.001)))+'/kg.':'Informe quanto pagou pela embalagem completa, não o preço por kg.'}</small>}</label>
-        <label>Usado (g)<input type="number" min="0" step="any" data-testid="gramsUsed" value={display(draft.grams)} onChange={e=>setDraftNumber('grams',e.target.value)}/>{session?<span className="mc-inline-help" tabIndex={0} aria-label="Peso do modelo fornecido pelo slicer.">ⓘ<span className="mc-tooltip" role="tooltip">Peso do modelo fornecido pelo slicer.</span></span>:<small className="smart-hint">Peso do modelo fornecido pelo slicer.</small>}</label>
-        <label>Purga (g)<input type="number" min="0" step="any" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/>{session?<span className="mc-inline-help" tabIndex={0} aria-label="Só acrescente perdas que ainda não estejam no peso usado.">ⓘ<span className="mc-tooltip" role="tooltip">Só acrescente perdas que ainda não estejam no peso usado.</span></span>:<small className="smart-hint">Só acrescente perdas que ainda não estejam no peso usado.</small>}</label>
+        <FilamentField id="packagePrice" label="Preço total (R$)" help={Number.isFinite(draft.packagePrice)&&Number.isFinite(draft.packageQuantity)&&draft.packageQuantity!>0?'Custo equivalente: '+money(draft.packagePrice!/(draft.packageQuantity!*(draft.packageUnit==='kg'?1:.001)))+'/kg.':'Informe quanto pagou pela embalagem completa.'}><input type="number" min="0" step="any" id="packagePrice" data-testid="packagePrice" value={display(draft.packagePrice)} onChange={e=>setDraftNumber('packagePrice',e.target.value)}/></FilamentField>
+        <FilamentField id="gramsUsed" label="Usado (g)" help="Peso do modelo fornecido pelo fatiador."><input type="number" min="0" step="any" id="gramsUsed" data-testid="gramsUsed" value={display(draft.grams)} onChange={e=>setDraftNumber('grams',e.target.value)}/></FilamentField>
+        <FilamentField id="wasteGrams" label="Purga (g)" help="Só acrescente perdas que ainda não estejam no peso usado."><input type="number" min="0" step="any" id="wasteGrams" data-testid="wasteGrams" value={display(draft.wasteGrams)} onChange={e=>setDraftNumber('wasteGrams',e.target.value)}/></FilamentField>
        </div>
        
        <div className="form-actions"><button type="button" className="primary-action" onClick={save}>{editId?'Salvar alteração':'Adicionar à tabela'}</button>{editId&&<button type="button" onClick={()=>{setEditId(null);setDraft(newDraft());setErrorDraft('');}}>Cancelar edição</button>}</div>
@@ -374,16 +380,18 @@ export default function App(){
       <p className="footnote">A tabela usa quantidade adquirida e preço da embalagem para calcular o preço por grama. Informe purga apenas se ela não estiver incluída no peso usado.</p>
      </div>}
     </section>
-    {session&&advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
-     <div className="fields">{calculationField('hours')}{!session&&calculationField('quantity')}</div>
+    {advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
+     <PrintDurationFields label="Tempo de impressão" value={printDuration} onChange={setPrintDuration}>
+      {printDurationDraft&&!Number.isFinite(form.hours)&&<p className="error" role="alert">Informe horas inteiras e minutos de 0 a 59.</p>}
+     </PrintDurationFields>
+     {!session&&calculationField('quantity',false)}
      {!session&&<p className="footnote">Tarifa, potência e vida útil são hipóteses editáveis. Confira os valores no modo Avançado.</p>}
     </section>
-    {!session&&advanced&&details&&<FilamentProfilePanel brand={draft.brand??''} material={draft.type??''}/>}
-    {advanced&&<section className={session?'mc-cost-block mc-assembly':'calculator-production'}>
+    {advanced&&<section className="mc-cost-block mc-assembly">
      <h3>Montagem e acabamento</h3>
      <div className="fields">{calculationField('assemblyMinutesPerUnit')}{calculationField('laborPerHour')}</div>
     </section>}
-    {advanced&&<section className={session?'mc-cost-block mc-extras':'calculator-production'}>
+    {advanced&&<section className="mc-cost-block mc-extras">
      <h3>Custos adicionais</h3>
      <div className="fields">{calculationField('accessoryPerUnit')}</div>
     </section>}
@@ -391,31 +399,26 @@ export default function App(){
    <section className="panel result-panel" aria-labelledby="calculation-result">
     <h2 id="calculation-result">Resultado do cálculo</h2>
     {result&&<div className="hero-amount" aria-live="polite">
-     <span>{session?'Custo estimado por unidade':'Custo de produção por unidade'}</span>
+     <span>Custo estimado por unidade</span>
      <strong data-testid="unitCost">{money(result.unitCost)}</strong>
      <small>Total do lote: {money(result.lotCost)}</small>
     </div>}
     {calculationField('salePrice',false)}
     {error&&<p className="error" role="alert">{error}</p>}
     {result&&<>
-     {session?<dl className="mc-result-metrics">
+     <dl className="mc-result-metrics">
       <div><dt>Lucro bruto/un.</dt><dd data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(form.salePrice-result.unitCost)}</dd></div>
       <div><dt>Margem bruta</dt><dd data-testid="margin">{percent(result.marginPercent)}</dd></div>
       <div><dt>Markup</dt><dd>{percent(result.markupPercent)}</dd></div>
-     </dl>:<div className="quick-outcomes">
-      <div><span>Venda por unidade</span><strong data-testid="salePriceSummary">{money(form.salePrice)}</strong></div>
-      <div><span>Sobra por unidade (bruto)</span><strong data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(form.salePrice-result.unitCost)}</strong></div>
-     </div>}
+     </dl>
      <details className="breakdown" open={advanced||Boolean(session)}>
-      <summary>{session?'Composição dos custos':'Entenda seu custo e lucro'}</summary>
+      <summary>Composição dos custos</summary>
       <div className="breakdown-inner">
-       {!session&&<h3>Composição do lote</h3>}
        <dl className="cost-list">{costLines?.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}</dl>
        <div className="summary">
         <div><span>Faturamento do lote</span><strong>{money(result.lotRevenue)}</strong></div>
         <div><span>Lucro bruto do lote</span><strong data-testid="grossProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.grossProfit)}</strong></div>
-        {!session&&<><div><span>Margem bruta</span><strong data-testid="margin">{percent(result.marginPercent)}</strong></div><div><span>Markup</span><strong>{percent(result.markupPercent)}</strong></div></>}
-       </div>
+        </div>
        {session?<div className="mc-result-help"><CalculatorHelp label="Escopo dos custos">Estimativa sem embalagem, frete, taxas de marketplace, tributos e despesas administrativas.</CalculatorHelp></div>:<p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p>}
       </div>
      </details>
@@ -439,7 +442,7 @@ export default function App(){
   </div>
   {!session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
-   onClearRevisionTarget={()=>setRevisionTarget(null)}
+   onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
    onCreateAssembly={()=>setActiveSection('assemblies')}/>}
   </>}
@@ -456,5 +459,5 @@ export default function App(){
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
  {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?(stored.find(p=>p.id===printerId)??{id:activePrinter.id,workspace_id:workspaceId??'',model_id:models.find(m=>activePrinter.name.includes(m.name))?.id??null,name:activePrinter.name,purchase_price:activePrinter.printerPrice,average_watts:activePrinter.averageWatts,lifetime_hours:activePrinter.lifetimeHours,active:true}):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
  {catalogModal&&<CatalogModal title={catalogTitles[catalogModal]} onClose={()=>setCatalogModal(null)} onSave={saveCatalog}/>}
- </>;
+ </div>;
 }

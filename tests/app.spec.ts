@@ -144,7 +144,7 @@ test('jornada progressiva apresenta essencial, avancado preserva dados e ao volt
  await page.goto('/');
  await expect(page.getByRole('button',{name:/Simples/})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByTestId('simpleQuantity')).toBeVisible();
- await expect(page.getByTestId('hours')).toBeVisible();
+ await expect(page.getByRole('group',{name:'Tempo de impressão'})).toBeVisible();
  await expect(page.getByTestId('quantity')).toBeVisible();
  await expect(page.getByTestId('salePrice')).toBeVisible();
  await expect(page.getByRole('heading',{name:'Impressora'})).toHaveCount(0);
@@ -394,9 +394,11 @@ test('outros materiais de catálogo têm pontos de partida visíveis no slicer',
 test('preço da embalagem explica custo por quilo e preserva cálculo',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByTestId('packagePrice').fill('120');
- await expect(page.getByText(/Custo equivalente:/)).toContainText('R$ 120,00/kg');
+ await page.getByRole('button',{name:'Ajuda: Preço total (R$)'}).focus();
+ await expect(page.getByRole('tooltip')).toContainText('R$ 120,00/kg');
  await page.getByTestId('packageQuantity').fill('0.5');
- await expect(page.getByText(/Custo equivalente:/)).toContainText('R$ 240,00/kg');
+ await page.getByRole('button',{name:'Ajuda: Preço total (R$)'}).focus();
+ await expect(page.getByRole('tooltip')).toContainText('R$ 240,00/kg');
 });
 
 test('visitante preserva impressora pessoal e seleção após recarregar',async({page})=>{
@@ -690,7 +692,7 @@ test('Impressões: registra L2 sem consumo e mostra a execução na oficina', as
   if(u.includes('mc_printers?'))return respond([{id:printer,workspace_id:ws,name:'Impressora 1',model_id:null,purchase_price:null,average_watts:null,lifetime_hours:null,active:true}]);
   if(u.includes('mc_products?'))return respond([{id:product,workspace_id:ws,name:'Hélice',sku:null,kind:'component',description:null,sale_price:null,active:true,created_at:new Date().toISOString()}]);
   if(u.includes('rpc/mc_list_prints'))return respond(saved?[{id:'55555555-5555-4555-8555-555555555555',
-   status:'draft',printer_id:printer,printer_name:'Impressora 1',planned_hours:null,actual_hours:null,notes:null,
+   status:'draft',printer_id:printer,printer_name:'Impressora 1',planned_hours:saved.p_planned_hours,actual_hours:null,notes:null,
    created_at:new Date().toISOString(),outputs:[{id:'66666666-6666-4666-8666-666666666666',
    product_id:product,name:'Hélice',planned:3,good:0,failed:0}]}]:[]);
   if(u.includes('rpc/mc_create_print')){saved=route.request().postDataJSON() as Record<string,unknown>;return respond('55555555-5555-4555-8555-555555555555');}
@@ -705,12 +707,16 @@ test('Impressões: registra L2 sem consumo e mostra a execução na oficina', as
  await page.getByRole('combobox',{name:'Peça a imprimir'}).selectOption(product);
  await page.getByRole('spinbutton',{name:'Quantidade planejada'}).fill('3');
  await page.getByRole('button',{name:'+ Adicionar peça à mesa'}).click();
+ const plannedDuration=page.getByRole('group',{name:'Tempo previsto (opcional)'});
+ await plannedDuration.getByRole('spinbutton',{name:'Horas'}).fill('6');
+ await plannedDuration.getByRole('spinbutton',{name:'Minutos'}).fill('5');
  await page.getByRole('button',{name:'Registrar impressão sem baixa'}).click();
  await expect(page.getByText('Impressão registrada como rascunho.')).toBeVisible();
  expect(saved).not.toBeNull();
  const payload=saved as unknown as Record<string,unknown>;
  expect(payload.p_outputs).toEqual([{product_id:product,quantity:3}]);
- expect(payload.p_planned_hours).toBeNull();
+ expect(payload.p_planned_hours).toBe(6.0833);
+ await expect(page.getByText(/Tempo previsto: 6 h 5 min/)).toBeVisible();
  await expect(page.getByText('Hélice: planejadas 3, boas 0, rejeitadas 0')).toBeVisible();
 });
 
@@ -752,7 +758,9 @@ test('Impressões L3: confirmação incremental mantém chave no retry e respeit
  await page.getByRole('spinbutton',{name:'Perda adicional'}).fill('0');
  await page.getByRole('spinbutton',{name:'Peças boas adicionais'}).fill('1');
  await page.getByRole('spinbutton',{name:'Peças rejeitadas adicionais'}).fill('0');
- await page.getByRole('spinbutton',{name:'Tempo real adicional'}).fill('1.25');
+ const actualDuration=page.getByRole('group',{name:'Tempo real adicional (opcional)'});
+ await actualDuration.getByRole('spinbutton',{name:'Horas',exact:true}).fill('1');
+ await actualDuration.getByRole('spinbutton',{name:'Minutos',exact:true}).fill('15');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
  await expect(page.getByRole('alert').last()).toContainText('Falha de rede simulada');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
@@ -798,11 +806,12 @@ test('Impressões L3: bloqueia deltas fracionários e quantidade superior ao pla
  await expect(page.getByRole('alert').last()).toContainText('excede as peças ainda pendentes');
  await page.getByRole('spinbutton',{name:'Peças boas adicionais'}).fill('0');
  await page.getByRole('spinbutton',{name:'Peças rejeitadas adicionais'}).fill('1');
- await page.getByRole('spinbutton',{name:'Tempo real adicional'}).fill('1.12345');
+ const minutes=page.getByRole('group',{name:'Tempo real adicional (opcional)'}).getByRole('spinbutton',{name:'Minutos',exact:true});
+ await minutes.fill('60');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
- await expect(page.getByRole('alert').last()).toContainText('até quatro casas decimais');
+ await expect(page.getByRole('alert').last()).toContainText('minutos de 0 a 59');
  expect(called).toBe(false);
- await page.getByRole('spinbutton',{name:'Tempo real adicional'}).fill('0.5');
+ await minutes.fill('30');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
  await expect(page.getByText('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.')).toBeVisible();
  expect(called).toBe(true);
@@ -1306,13 +1315,13 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  await page.getByRole('button',{name:'Observações',exact:true}).click();
  await page.getByRole('textbox',{name:'Descrição do produto'}).fill('Revisar o acabamento');
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
- const printHours=page.getByTestId('hours');
- const exactPrintHours='11.233333333333333';
- await printHours.fill(exactPrintHours);
- await printHours.blur();
- await expect(printHours).toHaveValue('11.23');
- await printHours.focus();
- await expect(printHours).toHaveValue(exactPrintHours);
+ const printHours=page.getByRole('spinbutton',{name:'Horas',exact:true});
+ const printMinutes=page.getByRole('spinbutton',{name:'Minutos',exact:true});
+ await printHours.fill('6');
+ await printMinutes.fill('60');
+ await expect(page.getByText('Informe horas inteiras e minutos de 0 a 59.')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Salvar produto e custo'})).toBeDisabled();
+ await printMinutes.fill('5');
  await page.getByTestId('quantity').fill('3');
  await page.getByTestId('salePrice').fill('20');
  await page.getByRole('button',{name:'Novo cálculo',exact:true}).click();
@@ -1327,7 +1336,7 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  expect((saved as unknown as Record<string,unknown>).p_workspace_id).toBe(workspace);
  const params=(saved as unknown as Record<string,unknown>).p_parameters as Record<string,unknown>;
  expect(params.origin).toBe('calculator');
- expect(params.saved_input).toMatchObject({quantity:3,salePrice:20,hours:Number(exactPrintHours)});
+ expect(params.saved_input).toMatchObject({quantity:3,salePrice:20,hours:6+5/60});
  expect((saved as unknown as Record<string,unknown>).p_description).toBe('Revisar o acabamento');
  expect(params.calculated_result).toBeTruthy();
 });
@@ -1396,18 +1405,24 @@ test('conjunto vincula guirlanda, estrela grande e pequena sem duplicar cadastro
 test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',async ({page})=>{
  const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
  const savedInput={...{
-  hours:5,quantity:1,grams:90,pricePerKg:120,printerPrice:1000,
+  hours:5.225,quantity:1,grams:90,pricePerKg:120,printerPrice:1000,
   averageWatts:120,lifetimeHours:1000,pricePerKwh:0.9,salePrice:40,
   accessoryPerUnit:0,assemblyMinutesPerUnit:0,laborPerHour:0
  }};
  const readCalls:string[]=[];
+ const created:Record<string,unknown>[]=[];
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
  })),{user});
  await page.route('**/rest/v1/**',async route=>{
   const url=route.request().url(),send=(data:unknown)=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
   if(url.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina Maker',owner_id:user}]);
-  if(url.includes('mc_printers?')||url.includes('mc_catalog?')||url.includes('mc_products?'))return send([]);
+  if(url.includes('mc_printers?')||url.includes('mc_catalog?'))return send([]);
+  if(url.includes('mc_products?'))return send([{id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',name:'Guirlanda — cópia',kind:'component',sku:null,sale_price:null}]);
+  if(url.includes('rpc/mc_save_calculated_product')){
+   created.push(route.request().postDataJSON() as Record<string,unknown>);
+   return send('dddddddd-dddd-4ddd-8ddd-dddddddddddd');
+  }
   if(url.includes('rpc/mc_list_saved_calculations')){
    readCalls.push('read');
    return send([{product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -1425,9 +1440,25 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
  await expect(page.getByRole('status').filter({hasText:'Dados de "Guirlanda" carregados'})).toBeVisible();
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('90');
  await expect(page.getByTestId('simplePrice')).toHaveValue('120');
- await expect(page.getByTestId('hours')).toHaveValue('5');
+ await expect(page.getByRole('spinbutton',{name:'Horas',exact:true})).toHaveValue('5');
+ await expect(page.getByRole('spinbutton',{name:'Minutos',exact:true})).toHaveValue('14');
  await expect(page.getByTestId('salePrice')).toHaveValue('40');
  expect(readCalls).toContain('read');
+ await page.getByRole('button',{name:'Salvar como novo',exact:true}).click();
+ const productName=page.getByRole('textbox',{name:'Nome do produto'});
+ await expect(productName).toBeFocused();
+ await expect(productName).toHaveValue('Guirlanda — cópia 2');
+ await expect(page.getByRole('textbox',{name:'SKU do produto'})).toBeEmpty();
+ await productName.fill('Guirlanda');
+ await page.getByRole('button',{name:'Salvar peça e custo'}).click();
+ await expect(page.getByRole('alert')).toContainText('Já existe um cadastro com esse nome');
+ expect(created).toHaveLength(0);
+ await productName.fill('Guirlanda — cópia 2');
+ await page.getByRole('button',{name:'Salvar peça e custo'}).click();
+ await expect(page.getByRole('status').filter({hasText:'versão inicial e custo estimado salvos'})).toBeVisible();
+ expect(created).toHaveLength(1);
+ expect(created[0]).toMatchObject({p_name:'Guirlanda — cópia 2',p_parameters:{saved_input:{hours:5.225}}});
+ await page.getByRole('button',{name:'Carregar',exact:true}).click();
  page.once('dialog',dialog=>dialog.accept());
  await page.getByRole('button',{name:'Novo cálculo',exact:true}).click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toBeEmpty();

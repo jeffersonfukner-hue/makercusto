@@ -915,3 +915,12 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - As imagens do deploy `0953ce82` mostram o Modelo 5 em uso e o campo Tempo de impressão com uma dízima em horas. Na calculadora logada, o campo exibe até duas casas decimais fora de edição e recupera o valor original ao receber foco. O cálculo e o snapshot continuam usando as horas com a precisão armazenada.
 - Build local, 75 unitários e quatro cenários Playwright de salvamento e recuperação em desktop e celular aprovados. Ajuste acumulado para o próximo lote visual, sem solicitar um deploy isolado.
+
+### Modelo 5 nas áreas pública e logada
+
+- O proprietário solicitou o mesmo padrão visual na área pública e nos módulos da oficina, entrada de duração em horas e minutos, ajuda de filamento ao lado dos rótulos e correção de Salvar como novo após recuperar um cálculo.
+- O tema claro, os campos, os cartões e os estados das ações são compartilhados. O acesso aos módulos e a autenticação continuam regidos pelo fluxo existente. Os tooltips de filamento ficam na linha dos rótulos, inclusive no detalhamento.
+- Calculadoras pública e logada e formulários de impressão prevista e real usam Horas e Minutos. A calculadora mantém o valor decimal de cálculos recuperados até uma edição explícita. A persistência de impressões conserva o contrato existente de quatro casas decimais em horas e aceita tempo desconhecido.
+- Salvar como novo sugere um nome disponível com sufixo de cópia, limpa o SKU e foca o nome editável. O fluxo bloqueia reutilização do nome original ou de um nome conhecido na oficina. A consulta de cadastros exibe a quantidade de peças quando há registros e o retorno do salvamento usa uma linha compacta.
+- Build e 75 unitários passaram. A regressão Playwright completa teve 110 aprovados. Depois dos ajustes finais, passaram 10 cenários focados em desktop e celular. Testes adicionais de navegador verificaram as duas calculadoras de 320 a 1600 px e os módulos logados em 320, 1024 e 1600 px com serviços simulados.
+- Próximo passo: deploy manual do proprietário para homologar o lote. P07, L4-G04 e L4-G05 permanecem pausados.

@@ -476,7 +476,8 @@
 @media(max-width:430px){.system-top-navigation .system-email{display:none}.system-top-navigation .system-topbar{gap:8px}.system-horizontal-menu button{flex-basis:120px}}
 
 /* Calculadora da oficina — Modelo 5 */
-.system-calculator {
+.mc-theme {
+ min-height:100vh;background:#f5f8fc;color:#172943;
  --mc-ink:#172943;
  --mc-muted:#485e78;
  --mc-border:#d4dfed;
@@ -484,35 +485,36 @@
  --mc-navy:#142744;
  --mc-surface:#fff;
 }
-.system-calculator .system-content {background:#f5f8fc;color:var(--mc-ink);padding-top:14px}
+.mc-theme .system-content {background:#f5f8fc;color:var(--mc-ink)}
+.system-calculator .system-content {padding-top:14px}
 .system-calculator .system-section-header {margin-bottom:12px}
 .system-calculator .system-section-header h1 {font-size:23px;margin:0}
-.system-calculator .system-logo {background:#2358ce}
+.mc-theme :is(.system-logo,.brand-mark,.system-avatar) {background:#2358ce}
 .mc-calculator {min-width:0;color:var(--mc-ink)}
 .mc-calculator [hidden] {display:none!important}
-.mc-calculator .panel {
+.mc-theme .panel {
  background:var(--mc-surface);color:var(--mc-ink);border:1px solid var(--mc-border);
  border-radius:10px;box-shadow:none;padding:14px;min-width:0;
 }
 .mc-calculator h2,.mc-calculator h3 {margin:0;font-size:16px;line-height:1.25}
-.mc-calculator label {color:var(--mc-ink);font-size:12px;font-weight:600;min-width:0}
-.mc-calculator :is(input:not([type=checkbox]),select,textarea) {
+.mc-theme :is(main,.modal-window) label {color:var(--mc-ink);font-size:12px;font-weight:600;min-width:0}
+.mc-theme :is(main,.modal-window) :is(input:not([type=checkbox]),select,textarea) {
  min-height:36px;min-width:0;border:1px solid #a9bbd1;border-radius:6px;
  background:#fff;color:var(--mc-ink);padding:7px 9px;font:inherit;color-scheme:light;
 }
-.mc-calculator :is(input,textarea)::placeholder {color:#586f89;opacity:1}
-.mc-calculator :is(input,select,textarea):disabled {background:#ecf1f7;color:#3e546e;opacity:1;cursor:not-allowed}
-.mc-calculator :focus-visible {outline:2px solid var(--mc-blue);outline-offset:2px}
+.mc-theme :is(input,textarea)::placeholder {color:#586f89;opacity:1}
+.mc-theme :is(main,.modal-window) :is(input,select,textarea):disabled {background:#ecf1f7;color:#3e546e;opacity:1;cursor:not-allowed}
+.mc-theme :focus-visible {outline:2px solid var(--mc-blue);outline-offset:2px}
 .mc-calculator button:not(.primary-action,.secondary-action) {
  border:1px solid #b9c9e2;border-radius:6px;background:#f7faff;color:#194386;
  padding:7px 10px;font-size:12px;font-weight:650;line-height:1.25;
 }
 .mc-calculator button:not(.primary-action,.secondary-action):disabled {background:#eaf0f7;color:#51647e;opacity:1;cursor:not-allowed}
-.mc-calculator .primary-action {background:var(--mc-blue);border-color:var(--mc-blue);color:white}
-.mc-calculator :is(.footnote,.smart-hint,.printer-summary,.material-form-title small) {color:var(--mc-muted)}
-.mc-calculator .product-success {color:#17603c}
-.mc-calculator .error,.mc-calculator .negative {color:#a52224}
-.mc-calculator .positive {color:#156239}
+.mc-theme :is(main,.modal-window) .primary-action {background:var(--mc-blue);border-color:var(--mc-blue);color:white}
+.mc-theme :is(.footnote,.smart-hint,.printer-summary,.material-form-title small) {color:var(--mc-muted)}
+.mc-theme .product-success {color:#17603c}
+.mc-theme .error,.mc-theme .negative {color:#a52224}
+.mc-theme .positive {color:#156239}
 
 .calculator-identity .product-save-content {
  grid-template-columns:minmax(235px,1fr) minmax(0,2.5fr);gap:10px;align-items:start;
@@ -528,7 +530,7 @@
 .mc-recovery .product-list[open] {flex-basis:100%}
 .mc-recovery .product-list :is(li,li span) {color:var(--mc-ink);overflow-wrap:anywhere}
 .mc-product-identity-fields {grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) minmax(72px,.65fr) minmax(0,1.3fr);align-items:end;gap:8px}
-.mc-current-product .product-name-input input {
+.mc-theme .mc-current-product .product-name-input input {
  font-size:clamp(18px,1.65vw,24px);font-weight:750;line-height:1.2;min-height:40px;
 }
 .mc-product-identity-fields label {align-content:end}
@@ -536,6 +538,8 @@
 .mc-revision,.mc-calculation-status {margin:7px 0 0;font-size:12px}
 .mc-revision {color:var(--mc-muted)}
 .mc-save-feedback {grid-column:1/-1}
+.mc-save-confirmation {display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px}
+.mc-save-confirmation p {margin:0}
 .mc-save-feedback:empty {display:none}
 
 .mc-calculator-navigation {display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 12px;border-bottom:1px solid var(--mc-border)}
@@ -563,6 +567,10 @@
 .mc-print:only-of-type {grid-column:1/-1;grid-row:auto}
 .mc-assembly {background:#f1ebfb;border-color:#ded3ef}
 .mc-extras {background:#fff5dc;border-color:#e9d8ad}
+.mc-print-duration {margin:0;padding:0;border:0;min-width:0}
+.mc-print-duration legend {padding:0;margin-bottom:5px;font-size:13px;font-weight:700}
+.mc-print-duration-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mc-print-duration-fields label {display:grid;gap:5px}
 .mc-number-field {position:relative;min-width:0}
 .mc-number-field label {display:grid;gap:5px}
 .mc-number-field input,.mc-tab-panel textarea {width:100%}
@@ -583,9 +591,7 @@
 .mc-cost-block .materials-table :is(thead,tfoot th) {background:#e4eefb;color:var(--mc-ink)}
 .mc-calculator .smart-suggestions button {background:#182f47;color:#fff}
 .mc-calculator .smart-suggestions button[aria-selected=true] {background:#245263;color:#fff}
-.mc-calculator :is(.filament-profile,.product-list) .footnote {color:inherit}
-.mc-calculator .filament-profile {color:#edf5ff;margin:10px 0 0}
-.mc-calculator .filament-profile label {color:#e0eefb}
+.mc-calculator .filament-profile {margin:10px 0 8px}
 .mc-cost-block .materials-heading button.details-button {background:white!important;color:#194386!important;border:1px solid #b9c9e2!important;min-height:34px}
 
 .mc-help,.mc-inline-help {position:relative;display:inline-flex;align-items:center;justify-content:center;color:var(--mc-muted);width:22px;height:22px;flex-shrink:0}
@@ -682,5 +688,67 @@
  .mc-product-identity-fields>label:last-child {grid-column:1/-1}
 }
 
-.shell .result-panel .mc-number-field {margin:10px 0}
-.shell .result-panel .mc-number-field input {background:#0c1727;color:#fff;border:1px solid #42506a;border-radius:8px;padding:10px}
+/* Superfícies e controles compartilhados entre a oficina e o acesso público. */
+.mc-theme .system-shell {background:#f5f8fc;color:var(--mc-ink)}
+.mc-theme .site-header {background:white;color:var(--mc-ink);border-color:var(--mc-border)}
+.mc-theme .shell {width:calc(100% - clamp(24px,4vw,64px));max-width:none}
+.mc-theme :is(.brand small,.intro p,.footer,.system-footer,.system-section-header p,
+ .dashboard-note,.dashboard-welcome p:not(.eyebrow),.dashboard-metric span,.dashboard-metric small,.dashboard-card p,
+ .dashboard-activity-list small,.product-workspace-heading p,.product-catalog-card p,.product-catalog-meta,
+ .product-detail-head p,.product-detail-stats small,.product-detail-scroll :is(th,td small),
+ .materials-spool-card :is(p,dt,small),.materials-workspace .product-save-fields small,
+ .assembly-detail-heading p,.assembly-detail-stats dt,.assembly-detail-table :is(th,small),
+ .filament-profile-head small,.filament-profile-data span,.modal-body p) {color:var(--mc-muted)}
+.mc-theme .eyebrow,.mc-theme .filament-profile a {color:var(--mc-blue)}
+.mc-theme :is(.phase,.product-kind,.assembly-detail-heading span) {background:#eae5fa;color:#473287;border-color:#dbd0f2}
+.mc-theme :is(.dashboard-metric,.dashboard-actions button,.dashboard-activity-list li,
+ .product-catalog-card,.product-detail,.product-editor,.product-workspace-search,.materials-spool-card,
+ .assembly-details,.filament-profile,.modal-window) {
+ background:white;color:var(--mc-ink);border-color:var(--mc-border);border-radius:10px;
+}
+.mc-theme :is(.dashboard-metric strong,.dashboard-shortcuts button .dashboard-shortcut-icon,.filament-profile-head strong,
+ .assembly-detail-heading h4,.assembly-details h5,.assembly-detail-stats dd,.product-component-editor legend) {color:var(--mc-ink)}
+.mc-theme .dashboard-chart-empty {
+ color:var(--mc-muted);border-color:var(--mc-border);
+ background:repeating-linear-gradient(to bottom,transparent 0,transparent 36px,#dce5f1 37px,#dce5f1 38px);
+}
+.mc-theme :is(.filament-profile-data>div,.product-detail-stats>div,.assembly-detail-stats>div,.product-name-feature,.product-cost-preview) {
+ background:#edf3fc;color:var(--mc-ink);border-color:var(--mc-border);
+}
+.mc-theme :is(.product-name-feature span,.product-workspace-search span) {color:var(--mc-muted)}
+.mc-theme :is(.product-detail-scroll :is(th,td),.assembly-detail-table :is(th,td),.product-catalog-meta,
+ .materials-spool-card dl>div,.product-component-editor fieldset,.profile-edit,.modal-header,.system-tabs,.product-list) {
+ border-color:var(--mc-border);
+}
+.mc-theme :is(.dashboard-welcome button,.dashboard-actions button,.dashboard-activity-list button,.product-catalog-card>button,
+ .product-workspace-buttons button:not(.primary-action),.materials-workspace .secondary-action,.modal-actions button:not(.primary-action),
+ .modal-section-switch button,.modal-close,.account-button) {
+ background:#eef4ff;color:#194386;border-color:#bdcde7;
+}
+.mc-theme :is(.intro,.shell .footer) {padding-block:18px}
+.mc-theme .intro h1 {font-size:clamp(25px,3vw,38px);max-width:none;color:var(--mc-ink)}
+.mc-theme .shell .mode-switch {width:max-content;max-width:100%;margin-bottom:10px}
+.mc-theme .system-tabs button {color:var(--mc-muted)}
+.mc-theme .system-tabs .system-tab-active {color:var(--mc-blue);border-bottom-color:var(--mc-blue)}
+.mc-theme .system-top-navigation .form-action-dock {background:#101d30;color:white;border-color:#293f69}
+.mc-theme .system-top-navigation .form-action-dock .primary-action {background:var(--mc-blue);border-color:#5e8aeb}
+.mc-theme .form-action-dock :focus-visible {outline-color:#8ed9ff}
+.mc-theme .product-workspace .form-action-dock .secondary-action {background:#263752;color:#dce8f8;border-color:#586a87}
+.mc-theme .mc-print-duration input {width:100%}
+.mc-theme .mc-print-duration>small {display:block;margin-top:5px;color:var(--mc-muted)}
+.mc-calculator .mc-print-duration+.mc-number-field {margin-top:8px}
+.mc-calculator .mode-switch small {color:var(--mc-muted)}
+.mc-calculator .mode-switch button {text-align:center}
+.mc-filament-field {display:grid;align-content:start;gap:5px;min-width:0}
+.mc-field-caption {position:relative;display:flex;align-items:center;gap:4px;min-height:22px}
+.mc-field-caption .mc-help {position:static}
+.mc-field-caption .mc-tooltip {top:100%;bottom:auto}
+.mc-filament-field>input {width:100%}
+@media(max-width:600px) {
+ .compact-inputs .mc-field-caption .mc-tooltip {max-width:min(210px,44vw)}
+}
+@media(max-width:430px) {
+ .mc-theme .mc-print-duration-fields input {font-size:16px}
+ .mc-theme .dashboard-welcome {flex-wrap:wrap}
+ .mc-theme .product-workspace-search {flex-wrap:wrap}
+}

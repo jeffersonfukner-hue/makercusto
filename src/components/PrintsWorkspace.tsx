@@ -1,3 +1,4 @@
+import {PrintDurationFields,emptyDuration,printDurationInHours,splitPrintDuration} from './PrintDurationFields';
 import {useEffect,useRef,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
 import {PrintAllocationPreview} from './PrintAllocationPreview';
@@ -11,7 +12,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [printers,setPrinters]=useState<StoredPrinter[]>([]),[products,setProducts]=useState<ProductRecord[]>([]);
  const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]),[reservations,setReservations]=useState<PrintReservation[]>([]),[occurrences,setOccurrences]=useState<PhysicalConsumptionOccurrence[]>([]);
  const [printer,setPrinter]=useState(''),[product,setProduct]=useState(''),[quantity,setQuantity]=useState('1');
- const [hours,setHours]=useState(''),[source,setSource]=useState<'slicer'|'measured'|'informed'|'estimated'>('slicer');
+ const [plannedDuration,setPlannedDuration]=useState(emptyDuration),[source,setSource]=useState<'slicer'|'measured'|'informed'|'estimated'>('slicer');
  const [notes,setNotes]=useState(''),[outputs,setOutputs]=useState<{product_id:string;quantity:number;name:string}[]>([]);
  const [selected,setSelected]=useState(''),[selectedOutput,setSelectedOutput]=useState(''),[lot,setLot]=useState(''),[mass,setMass]=useState(''),[purge,setPurge]=useState(''),[loss,setLoss]=useState(''),[good,setGood]=useState(''),[failed,setFailed]=useState('0');
  const [reservePrintId,setReservePrintId]=useState(''),[reserveLot,setReserveLot]=useState(''),[reserveGrams,setReserveGrams]=useState('');
@@ -44,7 +45,16 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  const [dueReservation,setDueReservation]=useState(''),[dueLocal,setDueLocal]=useState('');
  const [cancelTarget,setCancelTarget]=useState(''),[cancelReason,setCancelReason]=useState('');
  const cancelKey=useRef(newKey());
- const [basis,setBasis]=useState<'weighed'|'slicer'|'estimated'>('slicer'),[actualHours,setActualHours]=useState('');
+ const [basis,setBasis]=useState<'weighed'|'slicer'|'estimated'>('slicer'),[actualDuration,setActualDuration]=useState(emptyDuration);
+ const plannedValue=printDurationInHours(plannedDuration), actualValue=printDurationInHours(actualDuration);
+ const hours=plannedValue===null?'':plannedValue.toFixed(4);
+ const actualHours=actualValue===null?'':actualValue.toFixed(4);
+ const formatDuration=(value:number|null)=>{
+  if(value===null)return 'não informado';
+  const {hours,minutes}=splitPrintDuration(value);
+  return hours+' h '+minutes+' min';
+ };
+
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const [reload,setReload]=useState(0),operation=useRef(newKey());
  useEffect(()=>{
@@ -66,7 +76,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   try{
    await createPrint(workspaceId,{printerId:printer,outputs,plannedHours:hours===''?null:Number(hours),notes,source});
    setMessage('Impressão registrada como rascunho. Nenhuma bobina foi consumida.');
-   setOutputs([]);setNotes('');setHours('');setReload(x=>x+1);
+   setOutputs([]);setNotes('');setPlannedDuration(emptyDuration);setReload(x=>x+1);
   }catch(e){setError((e as Error).message)}finally{setBusy(false)}
  };
  const remainingReserved=(lotId:string)=>reservations.filter(x=>x.lot_id===lotId&&x.status==='active').reduce((sum,x)=>sum+Number(x.remaining),0);
@@ -280,7 +290,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }
   if(!Number.isInteger(Number(good))||!Number.isInteger(Number(failed))){setError('As peças devem ser números inteiros.');return;}
   if(actualHours!==''&&(!valid(actualHours)||Number(actualHours)>100000||Math.abs(Number(actualHours)*10000-Math.round(Number(actualHours)*10000))>0.000001)){
-   setError('Informe tempo real adicional válido, em horas, com até quatro casas decimais, ou deixe vazio.');return;
+   setError('Informe horas inteiras e minutos de 0 a 59 para o tempo real adicional, ou deixe vazio.');return;
   }
   if(!selectedPrint.outputs.some(o=>o.id===selectedOutput)){setError('Selecione a peça à qual pertencem as unidades confirmadas. Material compartilhado permanece sem rateio financeiro até L4.');return;}
   const output=selectedPrint.outputs.find(o=>o.id===selectedOutput)!;
@@ -297,7 +307,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     consumptions:[{lot_id:lot,model_g:Number(mass),purge_g:Number(purge),loss_g:Number(loss),basis}],actualHours:actualHours===''?null:Number(actualHours)});
    operation.current=newKey();
    setMessage('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.');
-   setMass('');setPurge('');setLoss('');setGood('');setFailed('0');setActualHours('');setReload(v=>v+1);
+   setMass('');setPurge('');setLoss('');setGood('');setFailed('0');setActualDuration(emptyDuration);setReload(v=>v+1);
   }catch(e){setError('Confirmação recusada: '+(e as Error).message)}finally{setBusy(false)}
  };
  return <section className="materials-workspace" aria-label="Registro real de impressões">
@@ -311,8 +321,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      <small>É a unidade da oficina, não o modelo global.</small></label>
     <label>Fonte dos dados<select aria-label="Fonte dos dados de impressão" value={source} onChange={e=>setSource(e.target.value as typeof source)}>
      <option value="slicer">Fatiador</option><option value="measured">Medição</option><option value="informed">Informado</option><option value="estimated">Estimado</option></select></label>
-    <label>Tempo previsto (horas, opcional)<input aria-label="Tempo previsto" type="number" min="0" step=".0001" value={hours} onChange={e=>setHours(e.target.value)}/>
-     <small>Não presumimos tempos nem consumo.</small></label>
+    <PrintDurationFields label="Tempo previsto (opcional)" value={plannedDuration} onChange={setPlannedDuration}/>
     <label>Observações<input aria-label="Observações da impressão" value={notes} maxLength={2000} onChange={e=>setNotes(e.target.value)}/></label>
     <label>Peça<select aria-label="Peça a imprimir" value={product} onChange={e=>setProduct(e.target.value)}>
      <option value="">Selecione</option>{products.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
@@ -359,7 +368,9 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Purga adicional (g)<input aria-label="Purga adicional" type="number" step=".001" min="0" value={purge} onChange={e=>setPurge(e.target.value)}/><small>Informe 0 se já estiver incluída no peso do modelo.</small></label>
     <label>Perda adicional (g)<input aria-label="Perda adicional" type="number" step=".001" min="0" value={loss} onChange={e=>setLoss(e.target.value)}/><small>Informe 0 quando não houver perda adicional; nunca conte a mesma massa duas vezes.</small></label>
     <label>Fonte do consumo<select aria-label="Fonte do consumo" value={basis} onChange={e=>setBasis(e.target.value as typeof basis)}><option value="weighed">Pesado</option><option value="slicer">Fatiador</option><option value="estimated">Estimado</option></select></label>
-    <label>Tempo real adicional (h, opcional)<input aria-label="Tempo real adicional" type="number" step=".0001" min="0" value={actualHours} onChange={e=>setActualHours(e.target.value)}/><small>Informe somente o tempo novo desta confirmação. Em falha, registre o tempo efetivo mesmo com zero peças boas. Deixe vazio se desconhecido; nunca repetimos períodos anteriores.</small></label>
+    <PrintDurationFields label="Tempo real adicional (opcional)" value={actualDuration} onChange={setActualDuration}>
+     <small>Informe somente o tempo novo desta confirmação. Em falha, registre o tempo efetivo mesmo com zero peças boas. Deixe vazio se desconhecido.</small>
+    </PrintDurationFields>
     <label>Peças boas adicionais<input aria-label="Peças boas adicionais" type="number" min="0" step="1" value={good} onChange={e=>setGood(e.target.value)}/></label>
     <label>Peças rejeitadas adicionais<input aria-label="Peças rejeitadas adicionais" type="number" min="0" step="1" value={failed} onChange={e=>setFailed(e.target.value)}/></label>
    </div>
@@ -588,7 +599,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   {prints.length===0?<p>Nenhuma impressão registrada nesta oficina.</p>:<div className="materials-spool-grid">{prints.map(p=><article className="materials-spool-card" key={p.id}>
    <h4>{p.printer_name||'Impressora sem nome'}</h4><p>Status: {p.status} · {new Date(p.created_at).toLocaleString('pt-BR')}</p>
    <ul>{p.outputs.map(o=><li key={o.id}>{o.name}: planejadas {o.planned}, boas {o.good}, rejeitadas {o.failed}</li>)}</ul>
-   <small>Tempo previsto: {p.planned_hours===null?'não informado':p.planned_hours+' h'}. Tempo registrado: {p.actual_hours===null?'não informado':p.actual_hours+' h'}.</small>
+   <small>Tempo previsto: {formatDuration(p.planned_hours)}. Tempo registrado: {formatDuration(p.actual_hours)}.</small>
    {(p.status==='draft'||p.status==='partial')&&
     <button type="button" disabled={busy} aria-label={'Cancelar impressão '+p.outputs.map(o=>o.name).join(' + ')}
     onClick={()=>{setCancelTarget(p.id);setCancelReason('');cancelKey.current=newKey();setError('');setActivePrimaryForm('cancel');}}>
