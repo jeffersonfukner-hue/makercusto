@@ -1620,6 +1620,7 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  const workspace='11111111-1111-4111-8111-111111111111';
  const user='22222222-2222-4222-8222-222222222222';
  const product='33333333-3333-4333-8333-333333333333';
+ const productWithoutPhoto='55555555-5555-4555-8555-555555555555';
  const snapshot='44444444-4444-4444-8444-444444444444';
  const folder=workspace+'/'+product+'/';
  const filenames:string[]=[];
@@ -1631,7 +1632,8 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await page.route('**/rest/v1/**',async route=>{
   const url=new URL(route.request().url());
   if(url.pathname.endsWith('/mc_workspaces'))return route.fulfill({json:[{id:workspace,name:'Oficina teste',owner_id:user}]});
-  if(url.pathname.endsWith('/mc_products'))return route.fulfill({json:[{id:product,workspace_id:workspace,name:'Urso',sku:null,kind:'product',description:null,sale_price:null,active:true,created_at:'2026-11-25T00:00:00Z'}]});
+  if(url.pathname.endsWith('/mc_products'))return route.fulfill({json:[{id:product,workspace_id:workspace,name:'Urso',sku:null,kind:'product',description:null,sale_price:null,active:true,created_at:'2026-11-25T00:00:00Z'},
+   {id:productWithoutPhoto,workspace_id:workspace,name:'Produto sem foto',sku:null,kind:'product',description:null,sale_price:null,active:true,created_at:'2026-11-25T00:00:00Z'}]});
   if(url.pathname.endsWith('/mc_list_saved_calculations'))return route.fulfill({json:[{
    product_id:product,snapshot_id:snapshot,name:'Urso',kind:'product',sku:null,saved_input:{hours:2},saved_at:'2026-11-25T00:00:00Z'
   }]});
@@ -1650,6 +1652,7 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
   expect(route.request().headers().authorization).toBe('Bearer mock');
   if(path.includes('/list/')){
    const {prefix,limit,offset}=route.request().postDataJSON();
+   if(prefix.endsWith('/'+productWithoutPhoto))return route.fulfill({json:[]});
    expect(prefix+'/').toBe(folder);
    return route.fulfill({json:filenames.slice(offset,offset+limit).map(name=>({name,id:name}))});
   }
@@ -1661,7 +1664,7 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await page.goto('/');
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Produtos').click();
- await page.getByRole('button',{name:'Ver ficha'}).click();
+ await page.getByRole('article').filter({has:page.getByRole('heading',{name:'Urso',exact:true})}).getByRole('button',{name:'Ver ficha'}).click();
  const gallery=page.getByRole('region',{name:'Fotos do produto'});
  await gallery.getByLabel('Adicionar fotos').setInputFiles([
   {name:'urso-frente.png',mimeType:'image/png',buffer:png},
@@ -1676,6 +1679,11 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await page.getByLabel('Produto da oficina').selectOption(product);
  await expect(gallery.getByRole('img')).toHaveCount(2);
  await expect(gallery.getByLabel('Adicionar fotos')).toHaveCount(0);
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Produtos').click();
+ const bearCard=page.getByRole('article').filter({has:page.getByRole('heading',{name:'Urso',exact:true})});
+ await expect(bearCard.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
+ await expect(page.getByRole('article').filter({hasText:'Produto sem foto'}).getByRole('img')).toHaveCount(0);
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
  await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(snapshot);

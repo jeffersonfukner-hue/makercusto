@@ -1,4 +1,4 @@
-import {ProductPhotos} from './ProductPhotos';
+import {ProductPhotos,ProductThumbnail} from './ProductPhotos';
 import {useEffect,useMemo,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
 import {
@@ -158,7 +158,10 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
     <span>{loading?'Atualizando…':visible.length+' cadastros'}</span></div>
    {loading?<p role="status">Carregando produtos…</p>:visible.length===0?<p>Nenhum cadastro encontrado nesta categoria.</p>:
    <div className="product-workspace-grid">{visible.map(p=><article className="product-catalog-card" key={p.id}>
-    <div><span className="product-kind">{label(p)}</span><h3>{p.name}</h3><p>{p.description||'Sem descrição cadastrada'}</p></div>
+    <div className="product-card-identity">
+     {workspaceId&&<ProductThumbnail workspaceId={workspaceId} productId={p.id} name={p.name} defer/>}
+     <div className="product-card-text"><span className="product-kind">{label(p)}</span><h3>{p.name}</h3><p>{p.description||'Sem descrição cadastrada'}</p></div>
+    </div>
     <div className="product-catalog-meta"><span>{p.kind==='kit'?(kits.find(x=>x.id===p.id)?.parts.length??'—')+' peças':p.sku??'Sem referência'}</span><span>{p.sale_price===null?'Sem preço':brl(p.sale_price)}</span></div>
     <button type="button" onClick={()=>open(p.id)}>Ver ficha</button>
    </article>)}</div>}

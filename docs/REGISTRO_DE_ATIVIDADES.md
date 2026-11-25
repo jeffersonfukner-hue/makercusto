@@ -1000,3 +1000,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Formulário de filamento por cor
 
 - Agrupados os campos e unificados os botões + da área pública e logada. Removidas regras conflitantes do formulário antigo. Build, 75 unitários, 14 cenários Playwright e verificação responsiva aprovados. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Miniaturas nos cartões de Produtos
+
+- Reutilizada a foto principal da galeria privada, com consulta ao aproximar o cartão da área visível. Conferidos cartões com e sem foto, com quatro imagens ilustrativas em uma oficina simulada.
+- Build, 75 unitários, seis cenários Playwright e demonstrações em desktop e celular aprovados. Commit com `[skip ci]`. Sem deploy, migração ou armazenamento operacional. Duração não aferida.

@@ -962,3 +962,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - A edição em Avançado → Detalhar por cor foi dividida em Identificação, Compra da bobina e Consumo nesta impressão. Os botões + de Tipo, Cor e Marca ficam junto aos rótulos em todos os tamanhos, com área de interação de 24 × 24 px. Sugestões, cadastro por modal e cálculo foram preservados.
 - Build, 75 testes unitários e 14 cenários Playwright aprovados. Abertura do cadastro por toque ou clique e ausência de rolagem horizontal da página verificadas em 320, 390, 1024 e 1600 px, nas calculadoras pública e logada. Ajuste incluído na branch para homologação visual.
+
+### Miniaturas na lista de Produtos
+
+- Os cartões de produtos, peças e conjuntos mostram a foto principal junto ao nome. As consultas das fotos começam perto da área visível. Um cadastro sem foto ou com imagem indisponível mantém o cartão compacto.
+- Validado com fotos ilustrativas em uma oficina simulada em 390 e 1440 px. As fotos de demonstração ficaram fora do repositório e do armazenamento real. Build, 75 testes unitários e seis cenários Playwright aprovados, incluindo troca de foto principal e retorno à lista.
+- A migração e o teste da galeria real continuam pendentes de autorização. Próximo item da fila: pesquisa por fabricante e modelo de impressora.

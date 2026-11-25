@@ -1,18 +1,33 @@
-import {useEffect,useState,type ChangeEvent} from 'react';
+import {useEffect,useRef,useState,type ChangeEvent} from 'react';
 import {listProductPhotos,productPhotoLimit,productPhotoTypes,setPrimaryProductPhoto,uploadProductPhoto,type ProductPhoto} from '../data/supabase';
 
 type ProductPhotosProps={workspaceId:string;productId:string;name:string};
-export function ProductThumbnail({workspaceId,productId,name}:ProductPhotosProps){
+export function ProductThumbnail({workspaceId,productId,name,defer=false}:ProductPhotosProps&{defer?:boolean}){
  const [photo,setPhoto]=useState<ProductPhoto>();
+ const anchor=useRef<HTMLSpanElement>(null);
  useEffect(()=>{
   let active=true;
   setPhoto(undefined);
-  void listProductPhotos(workspaceId,productId,true)
+  const load=()=>void listProductPhotos(workspaceId,productId,true)
    .then(([primary])=>{if(active)setPhoto(primary);}).catch(()=>{});
-  return()=>{active=false;};
- },[workspaceId,productId]);
- return photo&&<img className="mc-product-thumbnail" src={photo.url} alt={'Foto principal de '+name}
-  referrerPolicy="no-referrer" onError={()=>setPhoto(undefined)}/>;
+  const target=anchor.current?.parentElement;
+  if(!defer||!target||typeof IntersectionObserver==='undefined'){
+   load();
+   return()=>{active=false;};
+  }
+  const observer=new IntersectionObserver(entries=>{
+   if(entries.some(entry=>entry.isIntersecting)){
+    observer.disconnect();
+    load();
+   }
+  },{rootMargin:'120px'});
+  observer.observe(target);
+  return()=>{active=false;observer.disconnect();};
+ },[workspaceId,productId,defer]);
+ return <span ref={anchor} className="mc-product-thumbnail-slot">
+  {photo&&<img className="mc-product-thumbnail" src={photo.url} alt={'Foto principal de '+name}
+   referrerPolicy="no-referrer" onError={()=>setPhoto(undefined)}/>}
+ </span>;
 }
 
 export function ProductPhotos({workspaceId,productId,name,readOnly=false}:ProductPhotosProps&{readOnly?:boolean}){
