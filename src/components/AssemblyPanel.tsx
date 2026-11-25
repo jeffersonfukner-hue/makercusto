@@ -1,3 +1,4 @@
+import {formatCatalogName} from '../domain/catalogName';
 import {useEffect,useState} from 'react';
 import {createAssembly,listAssemblies,type AssemblyRecord,type AssemblyPartDraft,type Session} from '../data/supabase';
 
@@ -43,8 +44,8 @@ export function AssemblyPanel({session,workspaceId,onLogin}:Props){
   if(parsed!==null&&(!Number.isFinite(parsed)||parsed<0||parsed>100000000)){setError('Confira o preço de venda ou deixe em branco.');return;}
   setBusy(true);
   try{
-   await createAssembly(workspaceId,{name:name.trim(),sku:sku.trim(),description:description.trim(),salePrice:parsed,
-    parts:parts.map(p=>({...p,name:p.name.trim(),notes:p.notes.trim()}))});
+   await createAssembly(workspaceId,{name:formatCatalogName(name),sku:sku.trim(),description:description.trim(),salePrice:parsed,
+    parts:parts.map(p=>({...p,name:formatCatalogName(p.name),notes:p.notes.trim()}))});
    setFeedback('Conjunto e '+parts.length+' peças salvos na oficina. Nenhum custo ou estoque foi inventado.');
    setName('');setSku('');setDescription('');setPrice('');setParts([
     {name:'',quantity:1,notes:'',grams:null},{name:'',quantity:1,notes:'',grams:null}

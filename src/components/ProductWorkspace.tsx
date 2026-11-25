@@ -1,3 +1,4 @@
+import {formatCatalogName} from '../domain/catalogName';
 import {ProductPhotos,ProductThumbnail} from './ProductPhotos';
 import {useEffect,useMemo,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
@@ -122,10 +123,10 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
   }
   setBusy(true);
   try{
-   const basic={name:name.trim(),sku:sku.trim(),description:description.trim(),salePrice:price};
+   const basic={name:formatCatalogName(name),sku:sku.trim(),description:description.trim(),salePrice:price};
    let id:string;
    if(kind==='kit'){
-    const cleanParts=parts.map(p=>({...p,name:p.name.trim(),notes:p.notes.trim()}));
+    const cleanParts=parts.map(p=>({...p,name:p.product_id?p.name.trim():formatCatalogName(p.name),notes:p.notes.trim()}));
     if(cleanParts.some(p=>p.product_id)){
      id=await saveAssemblyWithComponents(workspaceId,mode==='edit'?selected:null,{...basic,parts:cleanParts});
     }else if(mode==='edit'&&selected){

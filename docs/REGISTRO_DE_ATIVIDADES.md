@@ -1010,3 +1010,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Pesquisados materiais, cores, acabamentos e marcas. Referências incluídas no catálogo padrão do frontend para uso público e logado. Implementado acesso por clique/toque com lista curta e rolável e preservadas sugestões durante a digitação e cadastro personalizado.
 - Build, 75 unitários e 16 cenários Playwright aprovados. Sem publicação ou alteração operacional. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Cores combinadas e escrita de nomes
+
+- Pesquisadas linhas multicoloridas e adicionadas as combinações ao catálogo. Consolidada a formatação de nomes usados nos cadastros e adicionada sugestão de grafia próxima no modal de tipo, cor e marca.
+- Build, 78 testes unitários e 16 cenários Playwright aprovados. Sem deploy, migração ou reescrita de registros existentes. Commit com `[skip ci]`. Duração não aferida.

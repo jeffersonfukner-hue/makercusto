@@ -1,3 +1,4 @@
+import {formatCatalogName} from '../domain/catalogName';
 import {ProductThumbnail} from './ProductPhotos';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {CalculatorHelp} from './CalculatorHelp';
@@ -82,7 +83,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   setBusy(true);
   try{
    const payload={
-    name:name.trim(),sku:sku.trim(),description:description.trim(),kind,
+    name:formatCatalogName(name),sku:sku.trim(),description:description.trim(),kind,
     salePrice:input.salePrice,quantity:input.quantity,totalCost:result.lotCost,
     parameters:{origin:'calculator',source:'user-and-estimates',saved_input:input,calculated_result:result}
    };

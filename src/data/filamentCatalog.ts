@@ -8,7 +8,7 @@ export const filamentTypes = [
  'PA6','PA12','PA6/66','PA-CF','PA-GF','PA6-CF','PA6-GF','PA12-CF','PA12-GF',
  'PC-ABS','PC-CF','PC-GF','PC ESD','PVB','BVOH','PP','PP-CF','PP-GF','PE','PE-CF','HDPE',
  'PHA','PCL','PMMA','POM','PPA','PPA-CF','PPA-GF','PPS','PPS-CF','PEEK','PEEK-CF',
- 'PEKK','PEKK-CF','PEI','PEI 1010','PEI 9085','PPSU','PSU','PVDF','Outro'
+ 'PEKK','PEKK-CF','PEI','PEI 1010','PEI 9085','PPSU','PSU','PVDF','PLA Silk Duo','PLA Silk Tricolor','PLA Silk Quadricolor','PLA+ Silk Duo','Outro'
 ];
 
 export const filamentColors = [
@@ -53,7 +53,12 @@ export const filamentColors = [
  'Alumínio','Titânio','Aço Escovado','Mármore','Mármore Branco','Mármore Cinza','Granito','Madeira','Madeira Clara','Madeira Escura',
  'Cristal','Fumê','Âmbar','Incolor','Translúcido','Fosforescente Verde','Fosforescente Azul',
  'Fosforescente Amarelo','Arco-Íris','Arco-Íris Pastel','Arco-Íris Neon','Multicolorido','Camaleão',
- 'Dourado e Vermelho','Vermelho e Verde','Vermelho, Azul e Verde','Vermelho, Amarelo e Azul',
+ 'Dourado e Vermelho','Vermelho e Verde','Verde e Azul','Vermelho e Marrom','Azul Claro e Verde',
+ 'Vermelho e Azul','Roxo e Verde','Preto e Vermelho','Preto e Branco','Preto e Verde',
+ 'Preto e Azul','Preto e Roxo','Preto e Dourado','Amarelo e Verde','Vermelho Rosado e Azul',
+ 'Rosa e Roxo','Rosa e Dourado','Dourado e Branco','Dourado e Prata','Dourado e Roxo',
+ 'Prata e Azul','Amarelo e Azul','Verde Limão e Magenta','Dourado e Magenta',
+ 'Azul Safira, Dourado e Verde','Azul, Verde e Roxo','Azul, Roxo, Vermelho e Dourado','Vermelho, Azul e Verde','Vermelho, Amarelo e Azul',
  'Laranja, Azul e Verde','Preto, Roxo e Azul'
 ];
 

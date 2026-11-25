@@ -1,3 +1,4 @@
+import {formatCatalogName} from '../domain/catalogName';
 import {useEffect,useRef,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
 import {listExistingSpools,registerExistingSpool,type ExistingSpool,type ExistingSpoolDraft} from '../data/supabase';
@@ -43,7 +44,7 @@ export function MaterialsWorkspace({workspaceId}:Props){
   }
   setBusy(true);
   try{
-   await registerExistingSpool(workspaceId,{idempotencyKey:key.current,name:name.trim(),label:label.trim(),grams:parsedMass,basis,remainingCost:parsedCost,notes:notes.trim()});
+   await registerExistingSpool(workspaceId,{idempotencyKey:key.current,name:formatCatalogName(name),label:label.trim(),grams:parsedMass,basis,remainingCost:parsedCost,notes:notes.trim()});
    setFeedback('Bobina inventariada. Entrada física registrada uma única vez; nenhuma compra ou fornecedor fictício foi criado.');
    key.current=newKey();setShow(false);setName('');setLabel('');setMass('');setCost('');setNotes('');setBasis('informed');
    setReload(v=>v+1);

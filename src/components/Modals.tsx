@@ -1,3 +1,4 @@
+import {similarCatalogName} from '../domain/catalogName';
 import {useEffect,useState,type FormEvent,type ReactNode} from 'react';
 import {type CatalogEntry,type PrinterDraft,type StoredPrinter,signIn,signUp} from '../data/supabase';
 import {printerPresets,printerPresetLabel,printerReferences,printerEstimatedCosts} from '../data/printerPresets';
@@ -53,7 +54,7 @@ export function PrinterModal({models,initial,onClose,onSave}:{models:CatalogEntr
   if(!name.trim()){setError('Informe o nome da sua impressora.');return;}
   if(!Number.isFinite(p)||p<0||!Number.isFinite(w)||w<0||!Number.isFinite(l)||l<=0){setError('Confira os custos e a vida útil.');return;}
   setBusy(true);setError('');
-  try{await onSave({name:formatCatalogName(name),model_id:modelId.startsWith('preset:')?(models.find(m=>m.manufacturer===selectedPreset?.brand&&matchKey(m.name)===matchKey(selectedPreset?.model??''))?.id??null):modelId||null,purchase_price:p,average_watts:w,lifetime_hours:l});onClose();}
+  try{await onSave({name:formatCatalogName(name,selectedPreset?[printerPresetLabel(selectedPreset)]:[]),model_id:modelId.startsWith('preset:')?(models.find(m=>m.manufacturer===selectedPreset?.brand&&matchKey(m.name)===matchKey(selectedPreset?.model??''))?.id??null):modelId||null,purchase_price:p,average_watts:w,lifetime_hours:l});onClose();}
   catch(err){setError((err as Error).message);}finally{setBusy(false);}
  };
  return <Modal title={initial?'Personalizar impressora':'Cadastrar impressora'} onClose={onClose}>
@@ -84,15 +85,16 @@ export function PrinterModal({models,initial,onClose,onSave}:{models:CatalogEntr
  </Modal>;
 }
 
-export function CatalogModal({title,onClose,onSave}:{title:string;onClose:()=>void;onSave:(name:string)=>Promise<void>}){
+export function CatalogModal({title,options,onClose,onSave}:{title:string;options:string[];onClose:()=>void;onSave:(name:string)=>Promise<void>}){
  const [name,setName]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const similar=similarCatalogName(name,options);
  const submit=async(e:FormEvent)=>{e.preventDefault();if(!name.trim()){setError('Informe um nome.');return;}setBusy(true);setError('');
-  try{await onSave(formatCatalogName(name.trim()));onClose();}catch(err){setError((err as Error).message);}finally{setBusy(false);}
+  try{await onSave(formatCatalogName(name,options));onClose();}catch(err){setError((err as Error).message);}finally{setBusy(false);}
  };
  return <Modal title={'Cadastrar '+title.toLowerCase()} onClose={onClose}>
   <form className="modal-body" onSubmit={submit}>
    <label>Nome<input required autoFocus value={name} onChange={e=>setName(e.target.value)} aria-label={'Nome de '+title.toLowerCase()}/></label>
-   <p>Seu cadastro pessoal não altera o catálogo oficial.</p>
+   {similar&&<p role="status">Já existe uma opção parecida: <strong>{similar}</strong>. Confira a grafia antes de salvar.</p>}
    {error&&<p role="alert" className="error">{error}</p>}
    <div className="modal-actions"><button type="submit" className="primary-action" disabled={busy}>{busy?'Salvando...':'Salvar cadastro'}</button><button type="button" onClick={onClose}>Cancelar</button></div>
   </form>

@@ -93,14 +93,14 @@ test('catálogo de filamento abre no clique com materiais, cores e marcas',async
  await expect(type).toHaveValue('PLA');
  await type.click();
  const options=page.getByRole('listbox',{name:'Sugestões disponíveis'});
- for(const label of ['PLA','PLA+','PETG','TPU','ABS','PEEK'])await expect(options.getByRole('option',{name:label,exact:true})).toHaveCount(1);
+ for(const label of ['PLA','PLA+','PETG','TPU','ABS','PEEK','PLA Silk Duo'])await expect(options.getByRole('option',{name:label,exact:true})).toHaveCount(1);
  await options.getByRole('option',{name:'PLA+',exact:true}).click();
  await expect(type).toHaveValue('PLA+');
  const color=page.getByRole('combobox',{name:'Cor do filamento'});
  await color.click();
  expect(await options.getByRole('option').count()).toBeGreaterThanOrEqual(200);
  expect(await options.evaluate(list=>list.scrollHeight>list.clientHeight)).toBe(true);
- for(const label of ['Madeira','Mármore'])await expect(options.getByRole('option',{name:label,exact:true})).toHaveCount(1);
+ for(const label of ['Madeira','Mármore','Verde e Azul','Vermelho e Marrom'])await expect(options.getByRole('option',{name:label,exact:true})).toHaveCount(1);
  await color.fill('água-mar');
  await options.getByRole('option',{name:'Água-Marinha',exact:true}).click();
  await expect(color).toHaveValue('Água-Marinha');
@@ -210,7 +210,9 @@ test('botões mais abrem modal de cadastro reutilizável',async({page})=>{
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByRole('button',{name:'Cadastrar cor'}).click();
  await expect(page.getByRole('dialog',{name:'Cadastrar cor'})).toBeVisible();
- await page.getByRole('textbox',{name:'Nome de cor'}).fill('Turquesa Única');
+ await page.getByRole('textbox',{name:'Nome de cor'}).fill('azul clrao');
+ await expect(page.getByRole('status').filter({hasText:'Já existe uma opção parecida'})).toContainText('Azul Claro');
+ await page.getByRole('textbox',{name:'Nome de cor'}).fill('turquesa única');
  await page.getByRole('button',{name:'Salvar cadastro'}).click();
  await page.getByLabel('Cor do filamento').click();
  await expect(page.getByRole('option',{name:'Turquesa Única',exact:true})).toHaveCount(1);
@@ -577,7 +579,7 @@ test('conjunto de três peças: catálogo, criação, custos, edição e duplica
  await expect(page.getByText('R$ 4,50 (informado)')).toBeVisible();
  await page.getByRole('button',{name:'Salvar produto',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Ficha do produto'})).toBeVisible();
- await expect(page.locator('.product-detail-head h3')).toHaveText('Brinquedo lançador de hélices');
+ await expect(page.locator('.product-detail-head h3')).toHaveText('Brinquedo Lançador de Hélices');
  await expect(page.locator('.form-action-dock')).toBeVisible();
  await expect(page.locator('.form-action-dock')).toHaveCSS('position','fixed');
  await expect(page.getByText('R$ 4,50 (informado)')).toBeVisible();
@@ -588,7 +590,7 @@ test('conjunto de três peças: catálogo, criação, custos, edição e duplica
  await expect(page.getByText('R$ 4,80 (informado)')).toBeVisible();
  expect(revisions).toBe(1);
  await page.getByRole('button',{name:'Duplicar'}).click();
- await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Brinquedo lançador de hélices — cópia');
+ await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Brinquedo Lançador de Hélices — cópia');
  await expect(page.getByRole('spinbutton',{name:'Custo da peça 1'})).toBeEmpty();
 });
 test('validação impede cadastrar conjunto sem nome das peças',async({page})=>{
@@ -1379,6 +1381,7 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  await expect(page.getByText('Peça, versão inicial e custo estimado salvos na sua oficina.')).toBeVisible();
  expect(saved).not.toBeNull();
  expect((saved as unknown as Record<string,unknown>).p_kind).toBe('component');
+ expect((saved as unknown as Record<string,unknown>).p_name).toBe('Estrela Grande');
  expect((saved as unknown as Record<string,unknown>).p_workspace_id).toBe(workspace);
  const params=(saved as unknown as Record<string,unknown>).p_parameters as Record<string,unknown>;
  expect(params.origin).toBe('calculator');
