@@ -1147,3 +1147,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A migração `20261125174500_workshop_customers.sql` usa RLS e chave estrangeira composta para impedir vínculos entre oficinas. PostgreSQL local confirmou cadastro, edição, preservação do pedido antigo e bloqueios de acesso anônimo e entre oficinas. A aplicação ao Supabase de teste depende de autorização específica.
 - Build, 82 unitários e os 128 testes de navegador passaram durante o lote. Após acrescentar a regressão de reenvio do cadastro e edição do cliente, os quatro cenários de navegação e pedido em desktop/celular passaram novamente. Commit local, Preview pendente.
 - Migração autorizada e aplicada no Supabase de teste. O arquivo local `20261125174500_workshop_customers.sql` corresponde à versão remota `20261125174745`. A verificação autenticada com rollback confirmou cadastro, edição, vínculo com pedido e isolamento entre oficinas. Após rollback, os três pedidos anteriores continuam sem vínculo, com zero clientes e zero usuários descartáveis. Preview manual pendente.
+
+## 25/11/2026 — Fornecedores
+
+- Oficina → Fornecedores lista e pesquisa fornecedores ativos e permite cadastrar e editar nome, WhatsApp e e-mail. Reutiliza os componentes de Clientes e a tabela existente `mc_suppliers`, já prevista em Compras. A edição preserva outras chaves existentes no contato.
+- Build, 82 unitários e seis cenários em desktop e celular aprovados. PostgreSQL descartável confirmou atualização, reenvio sem duplicata e isolamento entre oficinas. No Supabase de teste, a verificação foi somente leitura e confirmou RLS habilitada e ausência de políticas anônimas. Sem migração ou deploy, lote local enquanto o Preview anterior é homologado.

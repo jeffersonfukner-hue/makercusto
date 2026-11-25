@@ -2332,3 +2332,47 @@ test('recupera margem da composição e mantém o preço da peça única indepen
  await expect(composition.getByRole('spinbutton',{name:'Margem bruta desejada (%)'})).toHaveValue('60');
  await expect(composition.locator('.mc-calculated-sale-price')).toContainText('40,00');
 });
+
+test('Fornecedores: cadastra, pesquisa e edita no menu Oficina',async({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111',user='22222222-2222-4222-8222-222222222222';
+ let supplier:{id:string;name:string;contact:Record<string,unknown>}|undefined;
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=new URL(route.request().url());
+  if(url.pathname.endsWith('/mc_workspaces'))return route.fulfill({json:[{id:workspace,name:'Oficina de teste',owner_id:user}]});
+  if(!url.pathname.endsWith('/mc_suppliers'))return route.fulfill({json:[]});
+  if(route.request().method()==='POST'){
+   const payload=route.request().postDataJSON();
+   expect(payload).toMatchObject({workspace_id:workspace,name:'Filamentos do Sul',contact:{email:'contato@example.test'}});
+   supplier={id:payload.id,name:payload.name,contact:{...payload.contact,reference:'legado'}};
+  }else if(route.request().method()==='PATCH'){
+   expect(url.searchParams.get('workspace_id')).toBe('eq.'+workspace);
+   expect(url.searchParams.get('id')).toBe('eq.'+supplier?.id);
+   const payload=route.request().postDataJSON();
+   expect(payload.contact).toMatchObject({email:'vendas@example.test',reference:'legado'});
+   supplier={id:supplier!.id,...payload};
+  }
+  return route.fulfill({json:supplier?[supplier]:[]});
+ });
+ await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await navigateSystemModule(page,'Fornecedores','Oficina');
+ await expect(page.getByText('Nenhum fornecedor cadastrado.')).toBeVisible();
+ await page.getByRole('button',{name:'Novo fornecedor'}).click();
+ const create=page.getByRole('dialog',{name:'Novo fornecedor'});
+ await create.getByLabel('Nome do fornecedor').fill('Filamentos do Sul');
+ await create.getByLabel('E-mail (opcional)').fill('contato@example.test');
+ await create.getByRole('button',{name:'Salvar fornecedor'}).click();
+ await expect(page.getByRole('heading',{name:'Filamentos do Sul'})).toBeVisible();
+ const search=page.getByRole('searchbox',{name:'Buscar fornecedor'});
+ await search.fill('ausente');
+ await expect(page.getByText('Nenhum fornecedor encontrado.')).toBeVisible();
+ await search.fill('do sul');
+ await page.getByRole('button',{name:'Editar fornecedor'}).click();
+ const edit=page.getByRole('dialog',{name:'Editar fornecedor'});
+ await edit.getByLabel('E-mail (opcional)').fill('vendas@example.test');
+ await edit.getByRole('button',{name:'Salvar fornecedor'}).click();
+ await expect(page.getByText('vendas@example.test',{exact:true})).toBeVisible();
+});

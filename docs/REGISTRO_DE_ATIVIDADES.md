@@ -1048,3 +1048,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Implementado o fluxo de Clientes na calculadora e na área dedicada, com pedidos vinculados e grupos no menu. Validados build, testes de navegador e isolamento em PostgreSQL local. Migração de teste pendente de autorização.
 - Migração de Clientes aplicada no Supabase de teste. A verificação autenticada com rollback confirmou cadastro, edição, vínculo e isolamento. Os três pedidos existentes permaneceram sem vínculo.
+
+### 25/11/2026 — Fornecedores
+
+- Criada a área em Oficina com busca, cadastro e edição. Build, 82 unitários, seis testes de navegador e validação local de acesso ao banco passaram.

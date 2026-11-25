@@ -1,4 +1,4 @@
-import {CustomerEditor} from './CustomerEditor';
+import {ContactEditor} from './ContactEditor';
 import {OperationFeedback} from './OperationFeedback';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {listWorkshopCustomers,saveCustomerOrder,type CustomerOrderDraft,type WorkshopCustomer} from '../data/supabase';
@@ -68,7 +68,7 @@ export function SaveOrderForm({workspaceId,productName,draft,onViewOrders}:{
   {saved&&<p role="status">Pedido registrado no histórico da oficina.</p>}
   <OperationFeedback pending={busy} pendingMessage="Aguardando o registro do pedido…" error={error} failureMessage="Não foi possível registrar o pedido."/>
  </form>
- {editingCustomer&&<CustomerEditor workspaceId={workspaceId} onClose={()=>setEditingCustomer(false)}
+ {editingCustomer&&<ContactEditor kind="cliente" workspaceId={workspaceId} onClose={()=>setEditingCustomer(false)}
   onSaved={customer=>{setCustomers(previous=>[...previous,customer]);setCustomerId(customer.id);setQuery('');setEditingCustomer(false);}}/>}
  </>;
 }

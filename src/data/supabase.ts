@@ -441,27 +441,43 @@ export const listCalculationHistory=(workspaceId:string,productId:string,offset:
 
 export type CustomerDraft={name:string;whatsapp:string|null;email:string|null};
 export type WorkshopCustomer=CustomerDraft&{id:string};
-export async function listWorkshopCustomers(workspaceId:string){
- const customers:WorkshopCustomer[]=[];
+export type WorkshopSupplier=WorkshopCustomer&{contact:Record<string,unknown>};
+type SupplierRow={id:string;name:string;contact:Record<string,unknown>};
+const toSupplier=({id,name,contact}:SupplierRow):WorkshopSupplier=>({
+ id,name,contact,
+ whatsapp:typeof contact?.whatsapp==='string'?contact.whatsapp:null,
+ email:typeof contact?.email==='string'?contact.email:null
+});
+async function listWorkshopContacts<T>(path:string){
+ const contacts:T[]=[];
  const pageSize=200;
- const path='mc_customers?select=id,name,whatsapp,email&workspace_id=eq.'+
-  encodeURIComponent(workspaceId)+'&order=name.asc,id.asc&limit='+pageSize;
  for(let offset=0;;offset+=pageSize){
-  const rows=await api<WorkshopCustomer[]>(path+'&offset='+offset);
-  customers.push(...rows);
-  if(rows.length<pageSize)return customers;
+  const rows=await api<T[]>(path+'&order=name.asc,id.asc&limit='+pageSize+'&offset='+offset);
+  contacts.push(...rows);
+  if(rows.length<pageSize)return contacts;
  }
 }
-export async function saveWorkshopCustomer(workspaceId:string,id:string,draft:CustomerDraft,editing:boolean){
- const path='mc_customers?id=eq.'+encodeURIComponent(id)+'&workspace_id=eq.'+encodeURIComponent(workspaceId);
+export const listWorkshopCustomers=(workspaceId:string)=>
+ listWorkshopContacts<WorkshopCustomer>('mc_customers?select=id,name,whatsapp,email&workspace_id=eq.'+encodeURIComponent(workspaceId));
+export const listWorkshopSuppliers=async(workspaceId:string)=>
+ (await listWorkshopContacts<SupplierRow>('mc_suppliers?select=id,name,contact&active=eq.true&workspace_id=eq.'+encodeURIComponent(workspaceId))).map(toSupplier);
+
+async function saveWorkshopContact<T>(table:'mc_customers'|'mc_suppliers',workspaceId:string,id:string,draft:object,editing:boolean){
+ const path=table+'?id=eq.'+encodeURIComponent(id)+'&workspace_id=eq.'+encodeURIComponent(workspaceId);
  const rows=editing
-  ? await api<WorkshopCustomer[]>(path,'PATCH',draft,'return=representation')
-  : await api<WorkshopCustomer[]>('mc_customers?on_conflict=id','POST',{...draft,id,workspace_id:workspaceId},
+  ? await api<T[]>(path,'PATCH',draft,'return=representation')
+  : await api<T[]>(table+'?on_conflict=id','POST',{...draft,id,workspace_id:workspaceId},
    'resolution=ignore-duplicates,return=representation');
- const saved=rows?.[0]??(!editing?(await api<WorkshopCustomer[]>(path))[0]:undefined);
+ const saved=rows?.[0]??(!editing?(await api<T[]>(path))[0]:undefined);
  if(!saved)throw new Error('O cadastro não está disponível.');
  return saved;
 }
+export const saveWorkshopCustomer=(workspaceId:string,id:string,draft:CustomerDraft,editing:boolean)=>
+ saveWorkshopContact<WorkshopCustomer>('mc_customers',workspaceId,id,draft,editing);
+export const saveWorkshopSupplier=async(workspaceId:string,id:string,draft:CustomerDraft,previous?:WorkshopSupplier)=>
+ toSupplier(await saveWorkshopContact<SupplierRow>('mc_suppliers',workspaceId,id,{
+  name:draft.name,contact:{...previous?.contact,whatsapp:draft.whatsapp,email:draft.email}
+ },Boolean(previous)));
 
 export type CustomerOrderDraft = {
  id:string;snapshot_id:string|null;customer_id?:string;product_name:string;status:'planned'|'sold';quantity:number;

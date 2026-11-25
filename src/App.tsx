@@ -1,7 +1,7 @@
 import {AssemblyComposer,compositionNumbers,type CompositionSummary} from './components/AssemblyComposer';
 import {CalculationResultPanel,resultShareLines,type ResultLine} from './components/CalculationResultPanel';
 import type {OrderPlanInput} from './domain/order-plan';
-import {CustomersWorkspace} from './components/CustomersWorkspace';
+import {ContactsWorkspace} from './components/ContactsWorkspace';
 import {OrdersWorkspace} from './components/OrdersWorkspace';
 import {useConfirmation} from './components/ConfirmationDialog';
 import {CalculationPrintSummary} from './components/CalculationShare';
@@ -673,7 +673,7 @@ export default function App(){
   </div>
   </>}
   {session&&activeSection==='printers'&&<section className="panel"><h2>Minhas impressoras</h2><button type="button" onClick={addPrinter}>Nova impressora</button>{stored.length===0?<p>Nenhuma impressora cadastrada.</p>:<ul className="dashboard-activity-list">{stored.map(p=><li key={p.id}><strong>{p.name}</strong><button type="button" onClick={()=>{setPrinterId(p.id);setPrinterModal('edit');}}>Editar</button></li>)}</ul>}</section>}
-  {session&&activeSection==='customers'&&workspaceId&&<CustomersWorkspace key={workspaceId} workspaceId={workspaceId}/>}
+  {session&&(activeSection==='customers'||activeSection==='suppliers')&&workspaceId&&<ContactsWorkspace key={workspaceId+'/'+activeSection} workspaceId={workspaceId} kind={activeSection==='suppliers'?'fornecedor':'cliente'}/>}
   {session&&activeSection==='orders'&&workspaceId&&<OrdersWorkspace key={workspaceId} workspaceId={workspaceId}/>}
   {session&&activeSection==='workshop'&&<section className="panel"><h2>{workspaceName}</h2><p>Configurações e tarifas da oficina: integração pendente.</p></section>}
   {session&&activeSection==='library'&&<LibraryWorkspace workspaceId={workspaceId}/>}

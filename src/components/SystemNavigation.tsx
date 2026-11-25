@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 
-export type SystemSection='overview'|'products'|'assemblies'|'materials'|'prints'|'orders'|'customers'|'calculator'|'printers'|'workshop'|'library'|'tips';
+export type SystemSection='overview'|'products'|'assemblies'|'materials'|'prints'|'orders'|'customers'|'suppliers'|'calculator'|'printers'|'workshop'|'library'|'tips';
 export type ProductTab='all'|'parts';
 export type OverviewTab='general'|'activities'|'pending';
 type Props={
@@ -18,6 +18,7 @@ const menu=[
  {label:'Impressões',symbol:'▧',section:'prints'},
  {label:'Pedidos',symbol:'▤',section:'orders'},
  {label:'Clientes',symbol:'▣',section:'customers'},
+ {label:'Fornecedores',symbol:'◇',section:'suppliers'},
  {label:'Conjuntos',symbol:'◇',section:'assemblies'},
  {label:'Oficina',symbol:'⚙',section:'workshop'},
  {label:'Biblioteca STL',symbol:'▥',section:'library'},
@@ -26,7 +27,7 @@ const menu=[
 const groups=[
  {label:'Comercial',sections:['orders','customers']},
  {label:'Produção',sections:['prints','products','assemblies']},
- {label:'Oficina',sections:['workshop','printers','materials']},
+ {label:'Oficina',sections:['workshop','printers','materials','suppliers']},
  {label:'Recursos',sections:['library','tips']}
 ] as const;
 const overviewShortcutSections=['calculator','orders','library','tips'] as const;
@@ -58,7 +59,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
   };
  },[open,activeGroup]);
  if(!authenticated)return <>{children}</>;
- const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Calculadora de Produto':section==='prints'?'Impressões da oficina':section==='orders'?'Pedidos e vendas':section==='customers'?'Clientes':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
+ const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Calculadora de Produto':section==='prints'?'Impressões da oficina':section==='orders'?'Pedidos e vendas':section==='customers'?'Clientes':section==='suppliers'?'Fornecedores':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
  const navigate=(next:SystemSection)=>{onNavigate(next);setOpen(false);setActiveGroup('');};
  const destination=(id:SystemSection)=>{
   const item=menu.find(entry=>entry.section===id)!;
