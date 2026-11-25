@@ -808,3 +808,18 @@
  .mc-filament-form-fields {grid-template-columns:repeat(2,minmax(0,1fr))}
  .mc-filament-form-fields>:last-child:nth-child(3) {grid-column:1/-1}
 }
+
+.materials:has(.catalog-field [aria-expanded="true"]) {z-index:25}
+.catalog-field .smart-suggestions {
+ position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:30;display:block;
+ max-height:min(106px,36dvh);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+ background:#fff;border-color:var(--mc-border);box-shadow:0 8px 18px #172b4526;
+}
+.mc-calculator .catalog-field .smart-suggestions button {
+ display:block;width:100%;min-height:32px;padding:5px 7px;border:0;
+ background:transparent;color:var(--mc-ink);overflow-wrap:anywhere;
+}
+.mc-calculator .catalog-field .smart-suggestions button:hover,
+.mc-calculator .catalog-field .smart-suggestions button[aria-selected=true] {
+ background:#e8f1ff;color:var(--mc-blue);box-shadow:none;
+}

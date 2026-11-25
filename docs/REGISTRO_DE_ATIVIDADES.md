@@ -1005,3 +1005,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Reutilizada a foto principal da galeria privada, com consulta ao aproximar o cartão da área visível. Conferidos cartões com e sem foto, com quatro imagens ilustrativas em uma oficina simulada.
 - Build, 75 unitários, seis cenários Playwright e demonstrações em desktop e celular aprovados. Commit com `[skip ci]`. Sem deploy, migração ou armazenamento operacional. Duração não aferida.
+
+### 25/11/2026 — Catálogo de filamentos e lista rolável
+
+- Pesquisados materiais, cores, acabamentos e marcas. Referências incluídas no catálogo padrão do frontend para uso público e logado. Implementado acesso por clique/toque com lista curta e rolável e preservadas sugestões durante a digitação e cadastro personalizado.
+- Build, 75 unitários e 16 cenários Playwright aprovados. Sem publicação ou alteração operacional. Commit com `[skip ci]`. Duração não aferida.

@@ -1,9 +1,10 @@
+import {filamentBrands,filamentColors,filamentTypes} from './data/filamentCatalog';
 import {LibraryWorkspace} from './components/LibraryWorkspace';
 import type {ReactNode} from 'react';
 import {PrintDurationFields,printDurationInHours,splitPrintDuration,type DurationDraft} from './components/PrintDurationFields';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {AuthModal,PrinterModal,CatalogModal} from './components/Modals';
-import {SmartField,formatCatalogName} from './components/SmartField';
+import {SmartField,formatCatalogName,matchKey as normalize} from './components/SmartField';
 import {FilamentProfilePanel} from './components/FilamentProfilePanel';
 import {CalculatorHelp} from './components/CalculatorHelp';
 import {ProductSavePanel} from './components/ProductSavePanel';
@@ -21,14 +22,10 @@ const money = (value:number) => new Intl.NumberFormat('pt-BR',{style:'currency',
 const count = (value:number) => value.toLocaleString('pt-BR',{maximumFractionDigits:2});
 const numeric = (value:string) => value.trim() === '' ? NaN : Number(value);
 const display = (value:number | undefined) => value !== undefined && Number.isFinite(value) ? value : '';
-const normalize = (value:string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]/g,'');
-const colors = ['Branco','Preto','Cinza','Prata','Azul','Azul Claro','Azul Marinho','Vermelho','Vermelho Fosco','Verde','Verde Claro','Verde Escuro','Amarelo','Laranja','Rosa','Roxo','Lilás','Marrom','Bege','Dourado','Cobre','Transparente','Natural','Grafite','Preto Fosco','Branco Fosco','Rosa Bebê','Verde Militar','Azul Petróleo','Prata Metálico','Dourado Metálico'];
-const types = ['PLA','PLA+','PETG','ABS','ASA','TPU','PA','PC','PVA','Outro'];
-const brands = ['Masterprint','SUNLU','eSUN','Bambu Lab','Creality','Anycubic','Elegoo','Polymaker','Prusament','Overture','Flashforge','Voxelab','3D Fila','3D Lab','3D Prime','Voolt3D','GTMax3D','Printalot','Sakata 3D','Cliever','Filacomp','3D Fuel','ColorFabb','Fillamentum','Fiberlogy','Hatchbox','Inland','Jayo','Kingroon','Geeetech','Eryone','Amolen','Sovol','QIDI Tech','FormFutura','AzureFilm','Extrudr','Nobufil','Spectrum Filaments','Recreus','Dremel','Raise3D','Ultimaker','MatterHackers','Proto-pasta','NinjaTek'];
 type Catalog = 'cor' | 'tipo' | 'marca';
-const defaults:Record<Catalog,string[]> = {cor:colors,tipo:types,marca:brands};
+const defaults:Record<Catalog,string[]> = {cor:filamentColors,tipo:filamentTypes,marca:filamentBrands};
 const key = (catalog:Catalog) => 'makercusto:catalogo:'+catalog+':v1';
-const unique = (values:string[]) => { const used=new Set<string>(); return values.map(v=>formatCatalogName(v,defaults?.cor??[])).filter(v=>{const k=normalize(v);if(!k||used.has(k))return false; used.add(k);return true;});};
+const unique = (values:string[]) => { const used=new Set<string>(); return values.map(value=>value.trim().replace(/\s+/g,' ')).filter(v=>{const k=normalize(v);if(!k||used.has(k))return false; used.add(k);return true;});};
 function readCatalog(catalog:Catalog):string[] {
  try { const value:unknown=JSON.parse(localStorage.getItem(key(catalog))||'[]');return Array.isArray(value)?unique(value.filter((v):v is string=>typeof v==='string').slice(0,100)):[]; }catch { return []; }
 }
@@ -188,10 +185,15 @@ export default function App(){
    if(result.status==='fulfilled')setCatalog(prev=>({...prev,[types[i]]:unique([...prev[types[i]],...result.value.map(x=>x.name)])}));
   });
  };void load();},[workspaceId]);
- const list = (c:Catalog) => unique([...defaults[c],...catalog[c]]);
+ const catalogOptions=useMemo(()=>({
+  cor:unique([...defaults.cor,...catalog.cor]),
+  tipo:unique([...defaults.tipo,...catalog.tipo]),
+  marca:unique([...defaults.marca,...catalog.marca])
+ }),[catalog]);
+ const list=(c:Catalog)=>catalogOptions[c];
  const remember=(c:Catalog,value:string)=>{
    if(!value.trim()||list(c).some(item=>normalize(item)===normalize(value)))return;
-   const next=unique([...catalog[c],value]);
+   const next=unique([...catalog[c],formatCatalogName(value,defaults[c])]);
    setCatalog(old=>({...old,[c]:next}));
    try{localStorage.setItem(key(c),JSON.stringify(next));}catch{/* fallback em memória */}
  };
@@ -350,18 +352,15 @@ export default function App(){
        <div><small>Custo do filamento</small><strong data-testid="materialCost">{result?money(result.material):'—'}</strong></div>
      </div>
      {advanced&&<div id="material-details" hidden={!details}>
-      <datalist id="catalog-cor">{list('cor').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
-      <datalist id="catalog-tipo">{list('tipo').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
-      <datalist id="catalog-marca">{list('marca').map(x=><option key={normalize(x)} value={x}/>)}</datalist>
       <div className="material-form" role="group" aria-label="Cadastro compacto de filamento">
        <div className="material-form-title"><strong>{editId?'Editar filamento':'Adicionar filamento'}</strong></div>
        <div className="mc-filament-form-groups">
         <fieldset className="mc-filament-form-section mc-filament-catalog">
          <legend>Identificação</legend>
          <div className="mc-filament-form-fields">
-          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-type">Tipo</label><button type="button" className="catalog-add" aria-label="Cadastrar tipo" title="Cadastrar outro tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><SmartField id="filament-type" label="Tipo de filamento" value={draft.type||''} options={list('tipo')} hint="PLA, PETG, TPU e outros tipos. Use o material indicado na bobina." onBlur={v=>remember('tipo',v)} onChange={v=>setDraftText('type',v)}/></div>
-          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-color">Cor</label><button type="button" className="catalog-add" aria-label="Cadastrar cor" title="Cadastrar outra cor" onClick={()=>setCatalogModal('cor')}>+</button></div><SmartField id="filament-color" label="Cor do filamento" value={draft.name} options={list('cor')} hint="Ex.: Vermelho Fosco. Nomes novos serão padronizados." onBlur={v=>remember('cor',v)} onChange={v=>setDraftText('name',v)}/></div>
-          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-brand">Marca</label><button type="button" className="catalog-add" aria-label="Cadastrar marca" title="Cadastrar outra marca" onClick={()=>setCatalogModal('marca')}>+</button></div><SmartField id="filament-brand" label="Marca do filamento" value={draft.brand||''} options={list('marca')} hint="Selecione a fabricante da bobina, como Masterprint ou SUNLU." onBlur={v=>remember('marca',v)} onChange={v=>setDraftText('brand',v)}/></div>
+          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-type">Tipo</label><button type="button" className="catalog-add" aria-label="Cadastrar tipo" title="Cadastrar outro tipo" onClick={()=>setCatalogModal('tipo')}>+</button></div><SmartField browseOnFocus id="filament-type" label="Tipo de filamento" value={draft.type||''} options={list('tipo')} hint="PLA, PETG, TPU e outros tipos. Use o material indicado na bobina." onBlur={v=>remember('tipo',v)} onChange={v=>setDraftText('type',v)}/></div>
+          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-color">Cor</label><button type="button" className="catalog-add" aria-label="Cadastrar cor" title="Cadastrar outra cor" onClick={()=>setCatalogModal('cor')}>+</button></div><SmartField browseOnFocus id="filament-color" label="Cor do filamento" value={draft.name} options={list('cor')} hint="Ex.: Vermelho Fosco. Nomes novos serão padronizados." onBlur={v=>remember('cor',v)} onChange={v=>setDraftText('name',v)}/></div>
+          <div className="catalog-field"><div className="catalog-field-heading"><label htmlFor="filament-brand">Marca</label><button type="button" className="catalog-add" aria-label="Cadastrar marca" title="Cadastrar outra marca" onClick={()=>setCatalogModal('marca')}>+</button></div><SmartField browseOnFocus id="filament-brand" label="Marca do filamento" value={draft.brand||''} options={list('marca')} hint="Selecione a fabricante da bobina, como Masterprint ou SUNLU." onBlur={v=>remember('marca',v)} onChange={v=>setDraftText('brand',v)}/></div>
          </div>
         </fieldset>
         <fieldset className="mc-filament-form-section mc-filament-purchase">

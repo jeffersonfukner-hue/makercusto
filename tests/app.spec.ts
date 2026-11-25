@@ -76,11 +76,41 @@ test('memoriza cor personalizada sem duplicar opção padrão',async({page})=>{
  await page.getByRole('button',{name:/Detalhar por cor/}).click();
  const c=page.getByLabel('Cor do filamento');
  await c.fill('Turquesa Especial');await c.blur();
- await expect(page.locator('#catalog-cor option[value="Turquesa Especial"]')).toHaveCount(1);
+ await page.getByLabel('Cor do filamento').click();
+ await expect(page.getByRole('option',{name:'Turquesa Especial',exact:true})).toHaveCount(1);
  await page.reload();await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
- await expect(page.locator('#catalog-cor option[value="Turquesa Especial"]')).toHaveCount(1);
+ await page.getByLabel('Cor do filamento').click();
+ await expect(page.getByRole('option',{name:'Turquesa Especial',exact:true})).toHaveCount(1);
  const c2=page.getByLabel('Cor do filamento');await c2.fill('aZuL');await c2.blur();
- await expect(page.locator('#catalog-cor option[value="Azul"]')).toHaveCount(1);
+ await c2.click();
+ await expect(page.getByRole('option',{name:'Azul',exact:true})).toHaveCount(1);
+});
+test('catálogo de filamento abre no clique com materiais, cores e marcas',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:/Avançado/}).click();
+ await page.getByRole('button',{name:/Detalhar por cor/}).click();
+ const type=page.getByRole('combobox',{name:'Tipo de filamento'});
+ await expect(type).toHaveValue('PLA');
+ await type.click();
+ const options=page.getByRole('listbox',{name:'Sugestões disponíveis'});
+ for(const label of ['PLA','PLA+','PETG','TPU','ABS','PEEK'])await expect(options.getByRole('option',{name:label,exact:true})).toHaveCount(1);
+ await options.getByRole('option',{name:'PLA+',exact:true}).click();
+ await expect(type).toHaveValue('PLA+');
+ const color=page.getByRole('combobox',{name:'Cor do filamento'});
+ await color.click();
+ expect(await options.getByRole('option').count()).toBeGreaterThanOrEqual(200);
+ expect(await options.evaluate(list=>list.scrollHeight>list.clientHeight)).toBe(true);
+ for(const label of ['Madeira','Mármore'])await expect(options.getByRole('option',{name:label,exact:true})).toHaveCount(1);
+ await color.fill('água-mar');
+ await options.getByRole('option',{name:'Água-Marinha',exact:true}).click();
+ await expect(color).toHaveValue('Água-Marinha');
+ await color.fill('');
+ await expect(options.getByRole('option',{name:'Mármore',exact:true})).toHaveCount(1);
+ const brand=page.getByRole('combobox',{name:'Marca do filamento'});
+ await brand.click();
+ for(const label of ['Masterprint','SUNLU','Comlab','3D Fila','Elegoo','Creality'])await expect(options.getByRole('option',{name:label,exact:true})).toHaveCount(1);
+ await brand.press('Escape');
+ await expect(options).toHaveCount(0);
 });
 test('alterações de preço afetam lucro e restauração preserva cenário inicial',async({page})=>{
  await page.goto('/');
@@ -182,7 +212,8 @@ test('botões mais abrem modal de cadastro reutilizável',async({page})=>{
  await expect(page.getByRole('dialog',{name:'Cadastrar cor'})).toBeVisible();
  await page.getByRole('textbox',{name:'Nome de cor'}).fill('Turquesa Única');
  await page.getByRole('button',{name:'Salvar cadastro'}).click();
- await expect(page.locator('#catalog-cor option[value="Turquesa Única"]')).toHaveCount(1);
+ await page.getByLabel('Cor do filamento').click();
+ await expect(page.getByRole('option',{name:'Turquesa Única',exact:true})).toHaveCount(1);
  await expect(page.getByRole('button',{name:'Cadastrar tipo'})).toBeVisible();
  await expect(page.getByRole('button',{name:'Cadastrar marca'})).toBeVisible();
 });
@@ -260,7 +291,7 @@ test('fabricante filtra modelos e cópia herda estimativas',async({page})=>{
 test('nome de cor é normalizado e sugestões são limitadas',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();await page.getByRole('button',{name:/Detalhar por cor/}).click();
  await page.getByLabel('Cor do filamento').fill('verm');
- await expect(page.locator('.smart-suggestions').getByRole('option')).toHaveCount(2);
+ await expect(page.locator('.smart-suggestions').getByRole('option')).toHaveCount(3);
  await page.getByLabel('Cor do filamento').fill('vermelho fosco');
  await page.getByTestId('packagePrice').fill('100');await page.getByTestId('gramsUsed').fill('10');
  await page.getByRole('button',{name:'Adicionar à tabela'}).click();
