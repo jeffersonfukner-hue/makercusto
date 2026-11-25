@@ -87,6 +87,7 @@ export default function App(){
  const [workspaceId,setWorkspaceId]=useState<string|null>(null);
  const [accountError,setAccountError]=useState('');
  const [workspaceName,setWorkspaceName]=useState('Minha oficina');
+ const [calculatorTab,setCalculatorTab]=useState<'calculation'|'composition'|'settings'|'notes'>('calculation');
  const [activeSection,setActiveSection]=useState<SystemSection>('overview');
  const [productTab,setProductTab]=useState<ProductTab>('all');
  const [overviewTab,setOverviewTab]=useState<OverviewTab>('general');
@@ -255,6 +256,8 @@ export default function App(){
    onClearRevisionTarget={()=>setRevisionTarget(null)}
    onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
    onCreateAssembly={()=>setActiveSection('assemblies')}/></div>}
+  {session&&<nav className="mc-calculator-tabs" aria-label="Áreas da calculadora">{([["calculation","Cálculo"],["composition","Composição / Peças"],["settings","Configurações"],["notes","Observações"]] as const).map(([id,label])=><button key={id} type="button" aria-pressed={calculatorTab===id} className={calculatorTab===id?"selected":""} onClick={()=>setCalculatorTab(id)}>{label}</button>)}</nav>}
+  <div hidden={Boolean(session)&&calculatorTab!=="calculation"}>
   <nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples <small>Direto ao resultado</small></button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado <small>Cores, impressora e custos extras</small></button></nav>
   <div className="workspace">
    <section className="panel">
@@ -333,6 +336,10 @@ export default function App(){
     <p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p></div></details>
    </>}</section>
   </div>
+  </div>
+  {session&&calculatorTab==="composition"&&<ProductWorkspace workspaceId={workspaceId} tab="component" onCalculate={snapshot=>{if(applySavedCalculation(snapshot))setCalculatorTab("calculation");}}/>}
+  {session&&calculatorTab==="settings"&&<section className="panel"><h2>Configurações do cálculo</h2><p>Impressora selecionada: {activePrinter.name}</p><button type="button" onClick={()=>setPrinterModal("edit")}>Configurar impressora</button><button type="button" onClick={()=>{setAdvanced(true);setCalculatorTab("calculation");}}>Abrir cálculo avançado</button></section>}
+  {session&&calculatorTab==="notes"&&<section className="panel"><h2>Observações</h2><p>Use o campo Descrição na identificação do produto para registrar observações junto ao cadastro.</p><p>Custos estimados não representam lançamentos financeiros. Frete, tributos e taxas não estão incluídos automaticamente.</p></section>}
   {!session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    onClearRevisionTarget={()=>setRevisionTarget(null)}
@@ -346,7 +353,7 @@ export default function App(){
   {session&&activeSection==='tips'&&<section className="panel"><h2>Dicas de impressão</h2><p>Conteúdo em desenvolvimento.</p></section>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
-  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCalculate={snapshot=>{if(applySavedCalculation(snapshot))setActiveSection('calculator');}}/>} 
+  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCalculate={snapshot=>{if(applySavedCalculation(snapshot)){setCalculatorTab("calculation");setActiveSection('calculator');}}}/>} 
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>
  {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
