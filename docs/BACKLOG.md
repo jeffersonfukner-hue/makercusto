@@ -9,7 +9,8 @@
 - [x] Manter acesso ao menu durante a rolagem, usar os mesmos grupos no menu compacto de tablet e celular e testar navegação por toque e teclado, indicação do módulo ativo e ausência de rolagem horizontal.
 
 - [x] Aplicar a migração de Clientes no Supabase de teste.
-- [ ] Homologar cadastro, vínculo e menu no Preview.
+- [x] Confirmar no Preview desktop a exibição do pedido vinculado em Clientes e no histórico geral, junto aos pedidos antigos sem cliente.
+- [ ] Homologar o cadastro pelo modal da calculadora e a navegação no iPad no Preview.
 
 ## Etapa 1 — Fundação e cálculo inicial (PR #1)
 - [x] Documentação, arquitetura, contrato e regras de trabalho

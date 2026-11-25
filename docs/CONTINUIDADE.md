@@ -1157,3 +1157,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - O histórico de pedidos e o de custos mostram espera, detalhes de falha e nova tentativa mantendo a consulta selecionada. Ao carregar uma revisão de composição, a seleção de outro cálculo pelo histórico aguarda o fim da consulta.
 - Build, 82 unitários e oito cenários de navegador passaram. A regressão simula falha e recuperação das duas consultas. Lote local com Fornecedores enquanto o Preview anterior é homologado.
+
+## 25/11/2026 — Validação de Clientes e Pedidos no Preview
+
+- As fotos enviadas pelo proprietário mostram o menu agrupado no desktop e o mesmo pedido planejado de 12 conjuntos na ficha do cliente e no histórico geral de Pedidos e vendas. O histórico também mostra pedidos anteriores sem vínculo e diferencia montagem por partes de impressão com mesas.
+- As imagens confirmam a consulta do vínculo. A abertura e a gravação pelo modal da calculadora, a navegação no iPad e a área de Fornecedores permanecem sem evidência visual nesta validação.
