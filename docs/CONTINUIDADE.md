@@ -1042,3 +1042,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - O pedido mostra custo, faturamento, lucro bruto e margem no preço de venda selecionado. Por padrão a mesa parcial tem custo proporcional identificado como estimativa. O usuário pode informar o custo calculado em outro fatiamento. Se mudar a capacidade ou a quantidade da mesa parcial, o valor anterior é limpo.
 - A quantidade do pedido e o custo opcional são armazenados no snapshot quando o cálculo é salvo. O planejamento não lança vendas, impressões ou movimentos de estoque.
 - Build local, 82 testes unitários e 120 cenários Playwright aprovados em desktop e mobile. Casos exercitados incluem 15 peças em mesas de 2, 14 em mesas de 3, múltiplo exato, mesa unitária e custo informado para a última mesa.
+
+### Pedidos e histórico de custos — 25/11/2026
+
+- A calculadora logada volta a oferecer Histórico de custos por produto, com data, quantidade e custo unitário de cada revisão. Reutilizar parâmetros carrega o cálculo para simular novamente e mantém o snapshot original. A consulta utiliza as permissões financeiras existentes.
+- O planejamento da calculadora permite registrar um pedido de um produto como Planejado ou Vendido. A área Pedidos consulta os registros da oficina. Cada pedido guarda quantidade, custo por mesa, custo da última mesa, preço unitário e revisão de origem quando disponível. Mudanças futuras no produto não recalculam esses dados. Nenhum movimento de estoque é feito pelo registro.
+- Migração local `20261125142601_customer_orders.sql` preparada. O PostgreSQL descartável via PGlite confirmou autor derivado da sessão, retry idempotente, isolamento entre oficinas e bloqueios de alteração e acesso anônimo. Build, 82 unitários e dez cenários Playwright passaram, com API simulada para o fluxo de registro.
+- A migração de Pedidos ainda aguarda autorização específica para o Supabase de teste. A permissão anterior foi para a galeria. A calculadora aritmética e o bloco de notas rápidas ficaram no backlog.

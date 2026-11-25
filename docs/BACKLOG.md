@@ -206,3 +206,13 @@ Não ampliar escopo sem homologação.
 - [ ] **Feedback de operações demoradas.** Mostrar carregamento, etapa atual, falha e opção Detalhes. Usar porcentagem apenas quando a operação expuser progresso mensurável. Em operações sem total conhecido, mostrar estado indeterminado e a última etapa confirmada.
 - [ ] **Suporte por WhatsApp.** Permitir configurar o número de suporte na futura área administrativa e oferecer um link nas mensagens de erro pertinentes. O usuário pode revisar o texto que será encaminhado. Sistema de tickets fica para etapa posterior.
 - [ ] **Ajuda por contexto.** Nas próximas revisões de interface, mover explicações auxiliares para o ícone de informação junto ao título, rótulo ou ação. Deixar erros e informações necessárias para agir à vista.
+
+## Calculadora aritmética de bolso
+
+- [ ] Disponibilizar uma calculadora de operações básicas, acessível pelo ícone junto ao nome do usuário na área logada e por um atalho equivalente na versão gratuita. O atalho abre a calculadora sem sair da tela atual ou perder os dados em edição. Escopo inicial: soma, subtração, multiplicação e divisão.
+- [ ] Acrescentar um pequeno bloco de notas para anotações rápidas ao lado da calculadora aritmética. Entregar em etapa posterior às prioridades atuais.
+
+## Organização da oficina
+
+- [ ] Consolidar os cadastros em telas de consulta e gestão próprias para cada entidade. Preservar os atalhos rápidos na calculadora e reaproveitar a mesma lógica de cadastro.
+- [ ] Homologar o registro de pedidos por produto, histórico de revisões de custo e isolamento por oficina no Preview após autorização específica para a migração de Pedidos.

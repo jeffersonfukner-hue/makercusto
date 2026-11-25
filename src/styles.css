@@ -895,3 +895,9 @@
 .mc-order-plan p,.mc-order-plan small {font-size:12px}
 .mc-order-plan .cost-list>div {padding:6px 0;border-color:var(--mc-border)}
 .mc-order-plan .cost-list dt {color:var(--mc-muted)}
+.mc-calc-history label {display:grid;gap:5px;margin-top:8px}
+.mc-calc-history ul {list-style:none;padding:0}
+.mc-calc-history li {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0}
+.mc-order-record {margin:8px 0}
+.mc-order-record .cost-list>div {border-color:var(--mc-border)}
+.mc-order-record .cost-list dt {color:var(--mc-muted)}

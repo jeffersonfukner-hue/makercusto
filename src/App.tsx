@@ -1,3 +1,4 @@
+import {OrdersWorkspace} from './components/OrdersWorkspace';
 import {OrderPlanning} from './components/OrderPlanning';
 import {useConfirmation} from './components/ConfirmationDialog';
 import {CustomerQuote} from './components/CustomerQuote';
@@ -597,7 +598,9 @@ export default function App(){
       </div>
      </details>
      <OrderPlanning piecesPerPlate={activeInput.quantity} result={result} input={form.orderPlan??{}}
-      onChange={orderPlan=>setForm(previous=>({...previous,orderPlan}))}/>
+      onChange={orderPlan=>setForm(previous=>({...previous,orderPlan}))}
+      orderRegistration={session&&workspaceId?{workspaceId,snapshotId:revisionTarget?.snapshot_id??null,
+       productName:revisionTarget?.name,onViewOrders:()=>setActiveSection('orders')}:undefined}/>
      {shareLines&&<CalculationShare title={shareTitle} lines={shareLines}/>}
      <CustomerQuote key={revisionTarget?.snapshot_id??'new-quote'} name={revisionTarget?.name}
       quantity={activeInput.quantity} salePrice={activeInput.salePrice}
@@ -626,6 +629,7 @@ export default function App(){
   </div>
   </>}
   {session&&activeSection==='printers'&&<section className="panel"><h2>Minhas impressoras</h2><button type="button" onClick={addPrinter}>Nova impressora</button>{stored.length===0?<p>Nenhuma impressora cadastrada.</p>:<ul className="dashboard-activity-list">{stored.map(p=><li key={p.id}><strong>{p.name}</strong><button type="button" onClick={()=>{setPrinterId(p.id);setPrinterModal('edit');}}>Editar</button></li>)}</ul>}</section>}
+  {session&&activeSection==='orders'&&workspaceId&&<OrdersWorkspace key={workspaceId} workspaceId={workspaceId}/>}
   {session&&activeSection==='workshop'&&<section className="panel"><h2>{workspaceName}</h2><p>Configurações e tarifas da oficina: integração pendente.</p></section>}
   {session&&activeSection==='library'&&<LibraryWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='tips'&&<section className="panel"><h2>Dicas de impressão</h2><p>Conteúdo em desenvolvimento.</p></section>}

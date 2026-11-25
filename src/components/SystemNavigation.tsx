@@ -1,6 +1,6 @@
 import {useEffect,useState,type ReactNode} from 'react';
 
-export type SystemSection='overview'|'products'|'assemblies'|'materials'|'prints'|'calculator'|'printers'|'workshop'|'library'|'tips';
+export type SystemSection='overview'|'products'|'assemblies'|'materials'|'prints'|'orders'|'calculator'|'printers'|'workshop'|'library'|'tips';
 export type ProductTab='all'|'parts';
 export type OverviewTab='general'|'activities'|'pending';
 type Props={
@@ -16,6 +16,7 @@ const menu=[
  {label:'Impressoras',symbol:'▤',section:'printers'},
  {label:'Filamentos',symbol:'◈',section:'materials'},
  {label:'Impressões',symbol:'▧',section:'prints'},
+ {label:'Pedidos',symbol:'▤',section:'orders'},
  {label:'Oficina',symbol:'⚙',section:'workshop'},
  {label:'Biblioteca STL',symbol:'▥',section:'library'},
  {label:'Dicas de impressão',symbol:'◇',section:'tips'}
@@ -34,7 +35,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
   return()=>window.removeEventListener('keydown',close);
  },[open]);
  if(!authenticated)return <>{children}</>;
- const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Calculadora de Produto':section==='prints'?'Impressões da oficina':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
+ const title=section==='printers'?'Impressoras':section==='workshop'?'Oficina':section==='library'?'Biblioteca STL':section==='tips'?'Dicas de impressão':section==='overview'?'Visão geral':section==='calculator'?'Calculadora de Produto':section==='prints'?'Impressões da oficina':section==='orders'?'Pedidos e vendas':section==='materials'?'Materiais e filamentos':'Produtos e componentes';
  const navigate=(next:SystemSection)=>{onNavigate(next);setOpen(false);};
  return <div className={'system-shell system-top-navigation'+(section==='calculator'?' system-calculator':'')}>
   <header className="system-topbar">
@@ -71,6 +72,7 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
       <button type="button" className={section==='assemblies'?'system-tab-active':''} aria-current={section==='assemblies'?'page':undefined} onClick={()=>navigate('assemblies')}>Conjuntos</button>
       <button type="button" disabled title="Biblioteca STL em desenvolvimento">Biblioteca STL <small>Em breve</small></button>
      </>}
+     {section==='orders'&&<button type="button" aria-current="page" className="system-tab-active">Histórico</button>}
      {section==='prints'&&<button type="button" aria-current="page" className="system-tab-active">Execuções</button>}
      {section==='materials'&&<button type="button" aria-current="page" className="system-tab-active">Bobinas existentes</button>}
     </div>}

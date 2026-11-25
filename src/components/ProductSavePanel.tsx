@@ -1,3 +1,4 @@
+import {CalculationHistory} from './CalculationHistory';
 import {useConfirmation} from './ConfirmationDialog';
 import {formatCatalogName} from '../domain/catalogName';
 import {ProductThumbnail} from './ProductPhotos';
@@ -147,6 +148,8 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
      {onNewCalculation&&<button type="button" className="mc-new-calculation" aria-label="Novo cálculo" disabled={busy}
       onClick={startNewCalculation}>+</button>}
     </div>
+    {workspaceId&&<CalculationHistory key={workspaceId+'/'+refresh} workspaceId={workspaceId}
+     products={savedCalculations} onLoad={item=>{if(onLoadCalculation(item))setSelectedCalculation('');}}/>}
    </section>}
    <section className="panel mc-current-product" aria-labelledby="product-save-title">
     <div className="mc-identity-heading"><h2 id="product-save-title">Identificação do produto</h2>

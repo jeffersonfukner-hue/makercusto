@@ -1871,3 +1871,57 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await expect(page.getByText('Orçamento pronto com a foto principal.')).toBeVisible();
  await expect(page.getByRole('button',{name:'Baixar imagem'})).toBeVisible();
 });
+
+test('recupera revisão antiga e registra pedido vendido no histórico da oficina',async({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111';
+ const user='22222222-2222-4222-8222-222222222222';
+ const product='33333333-3333-4333-8333-333333333333';
+ const recent='44444444-4444-4444-8444-444444444444';
+ const earlier='55555555-5555-4555-8555-555555555555';
+ const requests:Array<Record<string,unknown>>=[];
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path.endsWith('/mc_workspaces'))return route.fulfill({json:[{id:workspace,name:'Oficina teste',owner_id:user}]});
+  if(path.endsWith('/mc_list_saved_calculations'))return route.fulfill({json:[
+   {product_id:product,snapshot_id:recent,name:'Chaveiro',kind:'product',sku:null,saved_input:{quantity:2,salePrice:9},saved_at:'2026-11-25T11:00:00Z'}
+  ]});
+  if(path.endsWith('/mc_cost_snapshots'))return route.fulfill({json:[
+   {id:recent,confirmed_at:'2026-11-25T11:00:00Z',quantity:2,total_cost:8,parameters:{saved_input:{quantity:2,salePrice:9}}},
+   {id:earlier,confirmed_at:'2026-11-24T11:00:00Z',quantity:2,total_cost:10,parameters:{saved_input:{quantity:2,salePrice:8}}}
+  ]});
+  if(path.endsWith('/mc_customer_orders')){
+   if(route.request().method()==='POST'){
+    requests.push(route.request().postDataJSON());
+    if(requests.length===1)return route.fulfill({status:500,json:{message:'Falha temporária'}});
+    return route.fulfill({status:204});
+   }
+   return route.fulfill({json:[{...requests.at(-1),created_at:'2026-11-25T11:30:00Z'}]});
+  }
+  return route.fulfill({json:[]});
+ });
+ await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Calculadora de custos').click();
+ await page.getByText('Histórico de custos',{exact:true}).click();
+ await page.getByLabel('Produto do histórico').selectOption(product);
+ await expect(page.getByRole('button',{name:'Reutilizar parâmetros'})).toHaveCount(2);
+ await page.getByText(/5,00\/un\./).locator('..').getByRole('button',{name:'Reutilizar parâmetros'}).click();
+ await expect(page.getByTestId('salePrice')).toHaveValue('8');
+ await page.getByText('Planejamento do pedido',{exact:true}).click();
+ await page.getByLabel('Quantidade do pedido (peças)').fill('15');
+ await expect(page.getByLabel('Item do pedido')).toHaveValue('Chaveiro');
+ await page.getByLabel('Situação').selectOption('sold');
+ await page.getByRole('button',{name:'Registrar pedido'}).click();
+ await expect(page.getByText(/Falha temporária/)).toBeVisible();
+ await page.getByRole('button',{name:'Registrar pedido'}).click();
+ await expect(page.getByText('Pedido registrado no histórico da oficina.')).toBeVisible();
+ expect(requests[1]).toMatchObject({id:requests[0].id,workspace_id:workspace,snapshot_id:earlier,status:'sold',quantity:15,pieces_per_plate:2,sale_price:8});
+ await page.getByRole('button',{name:'Ver pedidos'}).click();
+ const order=page.getByRole('article').filter({hasText:'Chaveiro'});
+ await expect(order).toContainText('Vendido');
+ await expect(order).toContainText('15 peças · 8 mesas · última mesa: 1 un.');
+ await expect(order.getByText('Faturamento do pedido').locator('..')).toContainText('120,00');
+});

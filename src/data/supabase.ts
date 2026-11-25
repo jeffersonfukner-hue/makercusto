@@ -396,3 +396,23 @@ export function uploadProductPhoto(workspaceId:string,productId:string,file:File
 export const setPrimaryProductPhoto=(workspaceId:string,productId:string,path:string)=>
  api<unknown>('mc_product_photo_preferences?on_conflict=product_id,workspace_id','POST',
   {workspace_id:workspaceId,product_id:productId,primary_path:path},'resolution=merge-duplicates,return=minimal');
+
+export type CalculationHistoryRow = {
+ id:string;confirmed_at:string;quantity:number;total_cost:number|null;
+ parameters:{saved_input:Record<string,unknown>};
+};
+export const listCalculationHistory=(workspaceId:string,productId:string,offset:number)=>
+ api<CalculationHistoryRow[]>('mc_cost_snapshots?select=id,confirmed_at,quantity,total_cost,parameters&workspace_id=eq.'+
+  encodeURIComponent(workspaceId)+'&product_id=eq.'+encodeURIComponent(productId)+
+  '&parameters->>origin=eq.calculator&order=confirmed_at.desc,id.desc&limit=20&offset='+offset);
+
+export type CustomerOrderDraft = {
+ id:string;snapshot_id:string|null;product_name:string;status:'planned'|'sold';quantity:number;
+ pieces_per_plate:number;plate_cost:number;partial_plate_cost:number;sale_price:number;
+};
+export type CustomerOrder=CustomerOrderDraft&{created_at:string};
+export const listCustomerOrders=(workspaceId:string,offset:number)=>
+ api<CustomerOrder[]>('mc_customer_orders?select=id,snapshot_id,product_name,status,quantity,pieces_per_plate,plate_cost,partial_plate_cost,sale_price,created_at&workspace_id=eq.'+
+  encodeURIComponent(workspaceId)+'&order=created_at.desc,id.desc&limit=20&offset='+offset);
+export const saveCustomerOrder=(workspaceId:string,draft:CustomerOrderDraft)=>
+ api<void>('mc_customer_orders?on_conflict=id','POST',{...draft,workspace_id:workspaceId},'resolution=ignore-duplicates,return=minimal');

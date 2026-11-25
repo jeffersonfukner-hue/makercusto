@@ -1,3 +1,4 @@
+import {SaveOrderForm} from './SaveOrderForm';
 import {calculateOrderPlan,type OrderPlanInput} from '../domain/order-plan';
 import type {CostResult} from '../domain/cost';
 
@@ -7,8 +8,9 @@ const numberOrUndefined=(value:string)=>value===''?undefined:Number(value);
 const pieceLabel=(count:number)=>count+(count===1?' peça':' peças');
 const plateLabel=(count:number)=>count+(count===1?' mesa':' mesas');
 
-export function OrderPlanning({piecesPerPlate,result,input,onChange}:{
- piecesPerPlate:number;result:CostResult;input:OrderPlanInput;onChange:(next:OrderPlanInput)=>void
+export function OrderPlanning({piecesPerPlate,result,input,onChange,orderRegistration}:{
+ piecesPerPlate:number;result:CostResult;input:OrderPlanInput;onChange:(next:OrderPlanInput)=>void;
+ orderRegistration?:{workspaceId:string;snapshotId:string|null;productName?:string;onViewOrders:()=>void}
 }){
  const {quantity,partialPlateCost}=input;
  let plan:ReturnType<typeof calculateOrderPlan>|undefined;
@@ -44,6 +46,10 @@ export function OrderPlanning({piecesPerPlate,result,input,onChange}:{
     <div><dt>Lucro bruto do pedido</dt><dd>{money.format(plan.grossProfit)}</dd></div>
     <div><dt>Margem bruta do pedido</dt><dd>{percent.format(plan.marginPercent)}%</dd></div>
    </dl>
+   {orderRegistration&&quantity!==undefined&&<SaveOrderForm key={orderRegistration.workspaceId+'/'+orderRegistration.snapshotId}
+    workspaceId={orderRegistration.workspaceId} productName={orderRegistration.productName} onViewOrders={orderRegistration.onViewOrders}
+    draft={{snapshot_id:orderRegistration.snapshotId,quantity,pieces_per_plate:piecesPerPlate,plate_cost:result.lotCost,
+     partial_plate_cost:plan.lastPlateCost,sale_price:result.salePrice}}/>}
   </>}
  </details>;
 }
