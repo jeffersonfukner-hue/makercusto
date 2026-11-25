@@ -210,7 +210,8 @@ Não ampliar escopo sem homologação.
 ## Calculadora aritmética de bolso
 
 - [ ] Disponibilizar uma calculadora de operações básicas, acessível pelo ícone junto ao nome do usuário na área logada e por um atalho equivalente na versão gratuita. O atalho abre a calculadora sem sair da tela atual ou perder os dados em edição. Escopo inicial: soma, subtração, multiplicação e divisão.
-- [ ] Acrescentar um pequeno bloco de notas para anotações rápidas ao lado da calculadora aritmética. Entregar em etapa posterior às prioridades atuais.
+- [ ] Acrescentar um pequeno bloco de notas ao lado da calculadora e acessível dentro dela para anotar valores e contas rápidas sem sair da tela em edição.
+- [ ] Estudar uma conversão estimada entre USD e BRL na calculadora de bolso. Usar como cenário o orçamento de 12 itens para um cliente nos Estados Unidos, com valor unitário, quantidade, total e cotação aplicada. Avaliar fonte da cotação, data e hora da referência e a possibilidade de informar uma taxa manual. Manter calculadora, notas e conversão atrás das prioridades atuais de Pedidos e histórico de custos.
 
 ## Organização da oficina
 
