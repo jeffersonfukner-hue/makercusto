@@ -83,8 +83,8 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     </div>
     
    </div>}
-   {revisionTarget&&<div className="product-reuse-panel" role="status"><strong>Nova revisão: {revisionTarget.name}</strong><p className="footnote">Este cálculo será anexado à ficha existente, sem criar outro produto. O preço de venda da ficha será atualizado; os custos históricos permanecem intactos.</p>{onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo cadastro</button>}</div>}
-   <div className="product-save-fields">
+   {revisionTarget&&<div className="product-reuse-panel mc-revision" role="status"><strong>Nova revisão: {revisionTarget.name}</strong><span className="mc-info" tabIndex={0} title="A revisão atualiza o preço de venda e preserva os custos históricos."> ⓘ</span>{onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo cadastro</button>}</div>}
+   <div className="product-save-fields mc-product-identity-fields">
     <label className="product-wide product-name-input">Nome {kind==='component'?'da peça':'do produto'}<input aria-label="Nome do produto" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={e=>setName(e.target.value)} placeholder="Ex.: Guirlanda natalina"/></label>
     <label>SKU / referência (opcional) <input aria-label="SKU do produto" maxLength={100} value={sku} disabled={Boolean(revisionTarget)} onChange={e=>setSku(e.target.value)} placeholder="Ex.: CH-GALO-01" /></label>
     <label>Tipo <select aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)} onChange={e=>setKind(e.target.value as typeof kind)}><option value="product">Produto final</option><option value="component">Peça / componente</option></select></label>
