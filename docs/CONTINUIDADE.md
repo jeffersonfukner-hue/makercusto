@@ -888,3 +888,6 @@ Implementação inicial: ProductSavePanel 2a042995c7181e648c5d974c299d0695fd1c79
 
 ## Modelo 5 — lote visual para Preview manual
 Blocos de produção, montagem e adicionais, preço editável no resultado, margem/markup, lucro no rodapé, abas internas e revisão estática implementados. Composição consulta peças, ainda sem agregação automática; observações usam descrição existente. Sem build ou CI; Preview manual autorizado para homologação visual conforme BUILD-MANUAL-01. Sem merge, deploy pelo agente, banco ou gastos. Duração não aferida.
+
+## Refinamento visual após Preview 24/11/2026
+Nove fotografias do Preview confirmam renderização dos modos Simples/Avançado, carregamento do Urso - Porta Vinho, listagem/ficha de peças e configurações. Não constituem teste de persistência. Corrigidos contraste, identificação em duas colunas, seletores compactos e indicadores separados no rodapé; removida duplicação visual de margem/markup no detalhamento. Nova homologação pendente. Sem CI, merge, deploy pelo agente ou alteração de dados. Duração não aferida.
