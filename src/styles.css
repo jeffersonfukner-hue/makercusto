@@ -756,16 +756,18 @@
 .product-card-identity:has(img) h3 {margin-top:6px}
 
 
-.overview-shortcuts {display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px;min-width:0}
+.overview-shortcuts {display:grid;grid-template-columns:repeat(6,max-content);justify-items:start;gap:5px;flex:none}
 .overview-shortcuts button {
- display:inline-flex;align-items:center;gap:5px;min-height:34px;white-space:nowrap;
- padding:5px 9px;border:1px solid #bdcde7;border-radius:7px;background:#eef4ff;
+ display:inline-flex;align-items:center;justify-content:flex-start;gap:4px;min-height:34px;white-space:nowrap;
+ padding:4px 7px;border:1px solid #bdcde7;border-radius:7px;background:#eef4ff;
  color:#194386;font-size:12px;font-weight:650;
 }
 .overview-shortcuts button:hover {background:#dfeaff}
+@media(max-width:900px) {
+ .overview-shortcuts {grid-template-columns:repeat(2,max-content)}
+}
 @media(max-width:760px) {
  .system-section-header:has(.overview-shortcuts) {flex-direction:column}
- .overview-shortcuts {justify-content:flex-start}
  .overview-shortcuts button {min-height:40px}
 }
 

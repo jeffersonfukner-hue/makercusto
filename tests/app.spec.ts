@@ -661,6 +661,19 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Rejeitadas1');
  const shortcuts=page.getByRole('navigation',{name:'Acesso rápido'});
  await expect(shortcuts.getByRole('button')).toHaveCount(6);
+ const originalViewport=page.viewportSize()!;
+ for(const [width,expectedRows] of [[320,[2,2,2]],[900,[2,2,2]],[901,[6]],[1280,[6]]] as const){
+  await page.setViewportSize({width,height:originalViewport.height});
+  const layout=await shortcuts.evaluate(nav=>{
+   const buttons=Array.from(nav.querySelectorAll('button'),button=>button.getBoundingClientRect());
+   const rows=new Map<number,number>();
+   for(const button of buttons)rows.set(button.top,(rows.get(button.top)??0)+1);
+   const header=nav.parentElement!.getBoundingClientRect();
+   return {rows:[...rows.values()],insideHeader:buttons.every(button=>button.left>=header.left&&button.right<=header.right)};
+  });
+  expect(layout,`Atalhos da Visão geral em ${width}px`).toEqual({rows:expectedRows,insideHeader:true});
+ }
+ await page.setViewportSize(originalViewport);
  await shortcuts.getByRole('button',{name:'Calculadora',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Calculadora de Produto'})).toBeVisible();
  await openSystemMenuIfMobile(page);
