@@ -1,3 +1,4 @@
+import {useConfirmation} from './ConfirmationDialog';
 import {Modal} from './Modals';
 import {ProductPhotos} from './ProductPhotos';
 import {useEffect,useState} from 'react';
@@ -70,6 +71,7 @@ function AssemblyResults({parts,library,snapshots,price}:{
 }
 
 export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspaceId:string;active:boolean;onViewAssemblies:()=>void}){
+ const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [library,setLibrary]=useState<ComponentLibraryItem[]>();
  const [snapshots,setSnapshots]=useState<Record<string,ComponentCostSnapshot|undefined>>({});
  const [parts,setParts]=useState<Part[]>([]);
@@ -116,6 +118,7 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
   finally{setBusy(false);}
  };
  return <div className="workspace mc-assembly-composer">
+  {confirmationDialog}
   <section className="panel mc-assembly-inputs" aria-label="Montar conjunto com peças salvas">
    <h2>Montar conjunto</h2>
    <label>Nome do conjunto<input value={name} maxLength={150} disabled={busy||saved} onChange={event=>setName(event.target.value)}/></label>
@@ -143,7 +146,9 @@ export function AssemblyComposer({workspaceId,active,onViewAssemblies}:{workspac
      <div><strong>{partName}</strong><small>{item?.unit_cost==null?'Custo ainda não apurado':brl.format(Number(item.unit_cost))+'/peça'}</small></div>
      <label>Qtd.<input aria-label={'Quantidade de '+partName} type="number" min="1" max="100000" step="1" value={Number.isNaN(part.quantity)?'':part.quantity}
       disabled={busy||saved} onChange={event=>{const quantity=event.target.valueAsNumber;setParts(previous=>previous.map(row=>row.id===part.id?{...row,quantity}:row));}}/></label>
-     <button type="button" className="details-button" disabled={busy||saved} onClick={()=>setParts(previous=>previous.filter(row=>row.id!==part.id))}
+     <button type="button" className="details-button" disabled={busy||saved} onClick={()=>requestConfirmation({
+       title:'Remover peça da composição',message:'Remover “'+partName+'” deste conjunto?',
+       actionLabel:'Remover peça',onConfirm:()=>setParts(previous=>previous.filter(row=>row.id!==part.id))})}
       aria-label={'Remover '+partName}>×</button>
     </li>;
    })}</ul>}

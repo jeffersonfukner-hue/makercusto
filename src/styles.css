@@ -938,3 +938,6 @@
 .mc-assembly-card-actions {display:flex;flex-wrap:wrap;gap:4px}
 .mc-assembly-card-actions button {min-height:38px}
 .mc-assembly-inputs h3 {font-size:14px;margin:12px 0 0}
+.mc-upload-progress {margin:8px 0}
+.mc-upload-progress p {overflow-wrap:anywhere}
+.mc-upload-progress progress {width:min(100%,260px);accent-color:var(--mc-blue)}

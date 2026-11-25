@@ -1,3 +1,4 @@
+import {useConfirmation} from './ConfirmationDialog';
 import {useEffect,useRef,useState,type ChangeEvent} from 'react';
 import {listProductPhotos,productPhotoLimit,productPhotoTypes,setPrimaryProductPhoto,uploadProductPhoto,type ProductPhoto} from '../data/supabase';
 
@@ -31,6 +32,9 @@ export function ProductThumbnail({workspaceId,productId,name,defer=false}:Produc
 }
 
 export function ProductPhotos({workspaceId,productId,name,readOnly=false}:ProductPhotosProps&{readOnly?:boolean}){
+ const {requestConfirmation,confirmationDialog}=useConfirmation();
+ const [uploadProgress,setUploadProgress]=useState<{sent:number;total:number;current:string}|null>(null);
+ const [failureDetail,setFailureDetail]=useState('');
  const [photos,setPhotos]=useState<ProductPhoto[]>([]);
  const [error,setError]=useState('');
  const [loading,setLoading]=useState(true);
@@ -52,19 +56,23 @@ export function ProductPhotos({workspaceId,productId,name,readOnly=false}:Produc
   if(files.some(file=>!productPhotoTypes.some(type=>type===file.type)||file.size===0||file.size>productPhotoLimit)){
    setError('Escolha fotos JPEG, PNG ou WebP de até 6 MB cada.');return;
   }
-  setError('');setBusy(true);
+  setError('');setFailureDetail('');setBusy(true);
   let sent=0;
   try{
-   for(const file of files){await uploadProductPhoto(workspaceId,productId,file);sent++;}
-  }catch{
+   for(const file of files){
+    setUploadProgress({sent,total:files.length,current:file.name});
+    await uploadProductPhoto(workspaceId,productId,file);sent++;
+   }
+  }catch(cause){
+   setFailureDetail((cause as Error).message);
    setError(sent?sent+' foto(s) enviada(s). As demais não foram enviadas.':'Não foi possível enviar as fotos.');
   }finally{
-   setBusy(false);
+   setBusy(false);setUploadProgress(null);
    if(sent)setReload(value=>value+1);
   }
  };
  const makePrimary=async(path:string)=>{
-  setError('');setBusy(true);
+  setError('');setFailureDetail('');setBusy(true);
   try{
    await setPrimaryProductPhoto(workspaceId,productId,path);
    setPhotos(previous=>previous.map(photo=>({...photo,primary:photo.path===path})));
@@ -72,17 +80,24 @@ export function ProductPhotos({workspaceId,productId,name,readOnly=false}:Produc
   finally{setBusy(false);}
  };
  return <section className="mc-product-photos" aria-label="Fotos do produto">
+  {confirmationDialog}
   <h4>Fotos do produto</h4>
   {!readOnly&&<label>Adicionar fotos
    <input type="file" accept={productPhotoTypes.join(',')} multiple disabled={busy||loading} onChange={event=>void upload(event)}/>
   </label>}
-  {busy&&<p role="status">Salvando fotos…</p>}
+  {uploadProgress?<div className="mc-upload-progress">
+   <p role="status">{uploadProgress.sent} de {uploadProgress.total} fotos enviadas. Enviando {uploadProgress.current}…</p>
+   <progress aria-label="Fotos enviadas" value={uploadProgress.sent} max={uploadProgress.total}/>
+  </div>:busy&&<p role="status">Atualizando a foto principal…</p>}
   {loading&&<p role="status">Carregando fotos…</p>}
   {error&&<p className="error" role="alert">{error}</p>}
+  {error&&failureDetail&&<details><summary>Detalhes da falha</summary><p>{failureDetail}</p></details>}
   {!loading&&!error&&photos.length===0&&<p className="footnote">Nenhuma foto cadastrada.</p>}
   {photos.length>0&&<ul>{photos.map((photo,index)=><li key={photo.path}>
    <img src={photo.url} alt={(photo.primary?'Foto principal de ':'Foto '+(index+1)+' de ')+name} loading="lazy" referrerPolicy="no-referrer"/>
-   {photo.primary?<span>Principal</span>:!readOnly&&<button type="button" disabled={busy} onClick={()=>void makePrimary(photo.path)}>Definir como principal</button>}
+   {photo.primary?<span>Principal</span>:!readOnly&&<button type="button" disabled={busy} onClick={()=>requestConfirmation({
+    title:'Alterar foto principal',message:'Usar a foto '+(index+1)+' como principal de “'+name+'”?',
+    actionLabel:'Definir foto principal',onConfirm:()=>void makePrimary(photo.path)})}>Definir como principal</button>}
   </li>)}</ul>}
  </section>;
 }

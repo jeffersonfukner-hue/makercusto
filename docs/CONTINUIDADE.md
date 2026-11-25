@@ -1078,3 +1078,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A composição lista apenas cadastros do tipo Peça, com busca por nome e referência. Ver ficha abre os dados e a galeria acima do formulário. Adicionar à composição está disponível na lista e na ficha. Após adicionar, a quantidade é ajustada na linha de composição e o botão sinaliza que a peça já está incluída.
 - Conjuntos oferece o mesmo formulário dentro do módulo. A montagem é salva como conjunto por meio da operação existente, reutilizando os IDs das peças.
 - Build, 82 unitários e 126 cenários Playwright aprovados. O cenário do troféu valida a aba por tipo, a consulta da ficha, a inclusão pelas duas entradas e a preservação das peças ao alternar de aba.
+
+### Confirmações nos cadastros e progresso da galeria — 25/11/2026
+
+- Revisões de produtos, peças e conjuntos e revisões de custos recuperados pedem confirmação com o nome do cadastro. Edições da impressora própria, troca da foto principal e remoção de peça da composição usam o mesmo diálogo. Cancelar conserva os campos ou o registro. Clonar uma referência de impressora segue pelo fluxo de criação.
+- O envio de fotos informa o arquivo atual e quantos arquivos foram concluídos. A barra representa arquivos enviados, e não bytes. Em erro de envio, há resumo, quantidade enviada quando houver e detalhes expansíveis.
+- A tentativa de deploy anterior no Cloudflare para `9fa112e` falhou em Initialize em 2 s, com a mensagem Unable to submit Build Job. O log do deploy `ed9f83af-3082-4ac0-a0df-76882ed8fba0` mostra que as etapas de clone, build e deploy não foram iniciadas. O proprietário pediu juntar a nova tentativa com o lote de confirmações.
+- Build aprovado, com aviso de tamanho do bundle, 82 testes unitários e 126 cenários Playwright aprovados. A regressão verificou que cancelar preserva campos e registros, Esc fecha apenas a confirmação ao editar a impressora e a galeria mostra progresso durante um upload pendente.

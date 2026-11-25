@@ -202,8 +202,9 @@ Não ampliar escopo sem homologação.
 
 ## Confirmações, progresso e suporte
 
-- [ ] **Confirmações de alteração.** Auditar os fluxos existentes e aplicar confirmação antes de salvar edições ou excluir dados nos demais módulos. Nomear o item e manter a edição ou o registro intacto ao cancelar. A tabela de filamento e a edição dos perfis de fatiador já têm confirmação.
-- [ ] **Feedback de operações demoradas.** Mostrar carregamento, etapa atual, falha e opção Detalhes. Usar porcentagem apenas quando a operação expuser progresso mensurável. Em operações sem total conhecido, mostrar estado indeterminado e a última etapa confirmada.
+- [x] **Confirmações de alteração em cadastros.** Revisões de produtos, peças e conjuntos, revisão de custo na calculadora, edição de impressora própria, troca de foto principal e remoção de peças da composição pedem confirmação no padrão do site. Cancelar preserva o rascunho ou o registro.
+- [ ] **Confirmações em Impressões.** Revisar os fluxos operacionais de alteração e cancelamento e integrar o mesmo padrão aos pontos pertinentes, preservando justificativas, idempotência e controles já existentes.
+- [ ] **Feedback de operações demoradas.** Mostrar carregamento, etapa atual, falha e opção Detalhes. Usar porcentagem apenas quando a operação expuser progresso mensurável. Em operações sem total conhecido, mostrar estado indeterminado e a última etapa confirmada. Envio de fotos já mostra o arquivo atual, a quantidade concluída e detalhes de falha.
 - [ ] **Suporte por WhatsApp.** Permitir configurar o número de suporte na futura área administrativa e oferecer um link nas mensagens de erro pertinentes. O usuário pode revisar o texto que será encaminhado. Sistema de tickets fica para etapa posterior.
 - [ ] **Ajuda por contexto.** Nas próximas revisões de interface, mover explicações auxiliares para o ícone de informação junto ao título, rótulo ou ação. Deixar erros e informações necessárias para agir à vista.
 

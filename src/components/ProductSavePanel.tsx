@@ -72,7 +72,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,re
   focusCopyName.current=true;
   onClearRevisionTarget();
  };
- const save=async()=>{
+ const save=async(confirmed=false)=>{
   setError('');setMessage('');
   if(!session||!workspaceId){onLogin();return;}
   if(!result){setError('Corrija os valores do cálculo antes de salvar.');return;}
@@ -80,6 +80,11 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,input,re
   if(!revisionTarget&&copySource&&(comparableName(name)===comparableName(copySource)||registeredNames.has(comparableName(name)))){
    setError('Já existe um cadastro com esse nome. Escolha outro nome para a cópia.');
    nameInput.current?.focus();
+   return;
+  }
+  if(revisionTarget&&!confirmed){
+   requestConfirmation({title:'Salvar revisão de custo',message:'Salvar uma nova revisão de “'+revisionTarget.name+'”? As revisões anteriores continuam no histórico.',
+    actionLabel:'Salvar nova revisão',onConfirm:()=>void save(true)});
    return;
   }
   setBusy(true);

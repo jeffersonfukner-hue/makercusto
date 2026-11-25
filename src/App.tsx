@@ -667,7 +667,7 @@ export default function App(){
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>
  {authMode&&<AuthModal initialSignup={authMode==='signup'} onClose={()=>setAuthMode(null)} onSuccess={()=>{setAuthMode(null);void loadAccount();}}/>}
- {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?(stored.find(p=>p.id===printerId)??{id:activePrinter.id,workspace_id:workspaceId??'',model_id:models.find(m=>activePrinter.name.includes(m.name))?.id??null,name:activePrinter.name,purchase_price:activePrinter.printerPrice,average_watts:activePrinter.averageWatts,lifetime_hours:activePrinter.lifetimeHours,active:true}):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
+ {printerModal&&<PrinterModal models={models} confirmChanges={printerModal==='edit'&&!isReferencePrinter} initial={printerModal==="edit"?(stored.find(p=>p.id===printerId)??{id:activePrinter.id,workspace_id:workspaceId??'',model_id:models.find(m=>activePrinter.name.includes(m.name))?.id??null,name:activePrinter.name,purchase_price:activePrinter.printerPrice,average_watts:activePrinter.averageWatts,lifetime_hours:activePrinter.lifetimeHours,active:true}):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
  {catalogModal&&<CatalogModal title={catalogTitles[catalogModal]} options={list(catalogModal)} onClose={()=>setCatalogModal(null)} onSave={saveCatalog}/>}
  </div>;
 }

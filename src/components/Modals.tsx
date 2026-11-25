@@ -1,10 +1,11 @@
+import {useConfirmation} from './ConfirmationDialog';
 import {similarCatalogName} from '../domain/catalogName';
 import {useEffect,useState,type FormEvent,type ReactNode} from 'react';
 import {type CatalogEntry,type PrinterDraft,type StoredPrinter,signIn,signUp} from '../data/supabase';
 import {printerPresets,printerPresetLabel,printerReferences,printerEstimatedCosts} from '../data/printerPresets';
 import {SmartField,formatCatalogName,matchKey} from './SmartField';
 export function Modal({title,onClose,children}: {title:string;onClose:()=>void;children:ReactNode}){
- useEffect(()=>{const handler=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',handler);return()=>document.removeEventListener('keydown',handler);},[onClose]);
+ useEffect(()=>{const handler=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!document.querySelector('dialog[open]'))onClose();};document.addEventListener('keydown',handler);return()=>document.removeEventListener('keydown',handler);},[onClose]);
  return <div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}>
   <section className="modal-window" role="dialog" aria-modal="true" aria-label={title}>
    <div className="modal-header"><h2>{title}</h2><button type="button" className="modal-close" onClick={onClose} aria-label="Fechar modal">×</button></div>
@@ -28,7 +29,8 @@ export function AuthModal({onClose,onSuccess,initialSignup=false}:{onClose:()=>v
   </form>
  </Modal>;
 }
-export function PrinterModal({models,initial,onClose,onSave}:{models:CatalogEntry[];initial?:StoredPrinter;onClose:()=>void;onSave:(draft:PrinterDraft)=>Promise<void>}){
+export function PrinterModal({models,initial,confirmChanges=false,onClose,onSave}:{models:CatalogEntry[];initial?:StoredPrinter;confirmChanges?:boolean;onClose:()=>void;onSave:(draft:PrinterDraft)=>Promise<void>}){
+ const {requestConfirmation,confirmationDialog}=useConfirmation();
  const manufacturerNames=[...new Set([...printerPresets.map(p=>p.brand),...models.map(m=>m.manufacturer).filter((v):v is string=>Boolean(v))])];
  const inferredPreset=printerPresets.find(p=>initial?.name.toLocaleLowerCase('pt-BR').includes(printerPresetLabel(p).toLocaleLowerCase('pt-BR')));
  const matchedModel=models.find(m=>m.id===initial?.model_id);
@@ -49,15 +51,20 @@ export function PrinterModal({models,initial,onClose,onSave}:{models:CatalogEntr
   else if(m){setName([m.manufacturer,m.name].filter(Boolean).join(' '));setModelSearch('');}
   if(!initial){setPrice(String(printerEstimatedCosts.purchasePrice));setWatts(String(printerEstimatedCosts.averageWatts));setLife(String(printerEstimatedCosts.lifetimeHours));}
  };
- const submit=async(e:FormEvent)=>{e.preventDefault();
+ const submit=(e:FormEvent)=>{e.preventDefault();
   const p=Number(price),w=Number(watts),l=Number(life);
   if(!name.trim()){setError('Informe o nome da sua impressora.');return;}
   if(!Number.isFinite(p)||p<0||!Number.isFinite(w)||w<0||!Number.isFinite(l)||l<=0){setError('Confira os custos e a vida útil.');return;}
-  setBusy(true);setError('');
-  try{await onSave({name:formatCatalogName(name,selectedPreset?[printerPresetLabel(selectedPreset)]:[]),model_id:modelId.startsWith('preset:')?(models.find(m=>m.manufacturer===selectedPreset?.brand&&matchKey(m.name)===matchKey(selectedPreset?.model??''))?.id??null):modelId||null,purchase_price:p,average_watts:w,lifetime_hours:l});onClose();}
-  catch(err){setError((err as Error).message);}finally{setBusy(false);}
+  const save=async()=>{
+   setBusy(true);setError('');
+   try{await onSave({name:formatCatalogName(name,selectedPreset?[printerPresetLabel(selectedPreset)]:[]),model_id:modelId.startsWith('preset:')?(models.find(m=>m.manufacturer===selectedPreset?.brand&&matchKey(m.name)===matchKey(selectedPreset?.model??''))?.id??null):modelId||null,purchase_price:p,average_watts:w,lifetime_hours:l});onClose();}
+   catch(err){setError((err as Error).message);}finally{setBusy(false);}
+  };
+  if(confirmChanges&&initial)requestConfirmation({title:'Salvar alterações da impressora',
+   message:'Salvar as alterações de “'+initial.name+'”?',actionLabel:'Salvar alterações',onConfirm:()=>void save()});
+  else void save();
  };
- return <Modal title={initial?'Personalizar impressora':'Cadastrar impressora'} onClose={onClose}>
+ return <><Modal title={initial?'Personalizar impressora':'Cadastrar impressora'} onClose={onClose}>
   <form className="modal-body" onSubmit={submit}>
    <label>Fabricante<select aria-label="Fabricante da impressora" value={manufacturer} onChange={e=>{setManufacturer(e.target.value);setModelId('');setModelSearch('');}}>
     <option value="">Selecione o fabricante</option>{manufacturerNames.map(m=><option key={m} value={m}>{m}</option>)}
@@ -82,7 +89,7 @@ export function PrinterModal({models,initial,onClose,onSave}:{models:CatalogEntr
    {error&&<p className="error" role="alert">{error}</p>}
    <div className="modal-actions"><button type="submit" className="primary-action" disabled={busy}>{busy?'Salvando...':initial?'Salvar personalização':'Salvar impressora'}</button><button type="button" onClick={onClose}>Cancelar</button></div>
   </form>
- </Modal>;
+ </Modal>{confirmationDialog}</>;
 }
 
 export function CatalogModal({title,options,onClose,onSave}:{title:string;options:string[];onClose:()=>void;onSave:(name:string)=>Promise<void>}){

@@ -606,6 +606,17 @@ test('visitante preserva impressora pessoal e seleção após recarregar',async(
  await expect(restored.locator('option',{hasText:'Aninha'})).toHaveCount(1);
  await expect(restored.locator('option:checked')).toHaveText('Aninha');
  await expect(page.locator('.printer-summary')).toContainText('150 W');
+ await page.getByRole('button',{name:'Editar minha impressora'}).click();
+ await page.getByRole('textbox',{name:'Nome da minha impressora'}).fill('Aninha Revisada');
+ await page.getByRole('button',{name:'Salvar personalização'}).click();
+ const confirmation=page.getByRole('dialog',{name:'Salvar alterações da impressora'});
+ await expect(confirmation).toContainText('Aninha');
+ await page.keyboard.press('Escape');
+ await expect(confirmation).toBeHidden();
+ await expect(page.getByRole('textbox',{name:'Nome da minha impressora'})).toHaveValue('Aninha Revisada');
+ await page.getByRole('button',{name:'Salvar personalização'}).click();
+ await confirmation.getByRole('button',{name:'Salvar alterações'}).click();
+ await expect(restored.locator('option:checked')).toHaveText('Aninha Revisada');
 });
 test('restaurar exemplo não exclui impressoras pessoais do visitante',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();
@@ -743,6 +754,13 @@ test('conjunto de três peças: catálogo, criação, custos, edição e duplica
  await page.getByRole('button',{name:'Editar',exact:true}).click();
  await page.getByRole('spinbutton',{name:'Custo da peça 2'}).fill('1.10');
  await page.getByRole('button',{name:'Salvar nova revisão'}).click();
+ const editConfirmation=page.getByRole('dialog',{name:'Salvar nova revisão'});
+ await expect(editConfirmation).toContainText('Brinquedo Lançador de Hélices');
+ await editConfirmation.getByRole('button',{name:'Cancelar'}).click();
+ expect(revisions).toBe(0);
+ await expect(page.getByRole('spinbutton',{name:'Custo da peça 2'})).toHaveValue('1.10');
+ await page.getByRole('button',{name:'Salvar nova revisão'}).click();
+ await editConfirmation.getByRole('button',{name:'Salvar alterações'}).click();
  await expect(page.getByText('R$ 4,80 (informado)')).toBeVisible();
  expect(revisions).toBe(1);
  await page.getByRole('button',{name:'Duplicar'}).click();
@@ -1865,6 +1883,8 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  const folder=workspace+'/'+product+'/';
  const filenames:string[]=[];
  let primary:string|undefined;
+ let finishFirstUpload!:()=>void;
+ const firstUpload=new Promise<void>(resolve=>{finishFirstUpload=resolve;});
  const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64');
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@test.local'}
@@ -1898,6 +1918,7 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
   }
   if(path.includes('/sign/'))return route.fulfill({json:{signedURL:path.replace('/storage/v1','')+'?token=fake'}});
   expect(path).toContain('/mc-product-photos/'+folder);
+  if(filenames.length===0)await firstUpload;
   filenames.push(path.split('/').at(-1)!);
   return route.fulfill({json:{Key:path}});
  });
@@ -1910,8 +1931,17 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
   {name:'urso-frente.png',mimeType:'image/png',buffer:png},
   {name:'urso-lado.png',mimeType:'image/png',buffer:png}
  ]);
+ try{
+  await expect(gallery.getByRole('progressbar',{name:'Fotos enviadas'})).toHaveAttribute('max','2');
+  await expect(gallery.getByText('0 de 2 fotos enviadas. Enviando urso-frente.png…')).toBeVisible();
+ }finally{finishFirstUpload();}
  await expect(gallery.getByRole('img')).toHaveCount(2);
  await gallery.getByRole('button',{name:'Definir como principal'}).click();
+ const photoConfirmation=page.getByRole('dialog',{name:'Alterar foto principal'});
+ await photoConfirmation.getByRole('button',{name:'Cancelar'}).click();
+ expect(primary).toBeUndefined();
+ await gallery.getByRole('button',{name:'Definir como principal'}).click();
+ await photoConfirmation.getByRole('button',{name:'Definir foto principal'}).click();
  await expect(gallery.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
  expect(primary).toBe(folder+filenames[1]);
  await openSystemMenuIfMobile(page);

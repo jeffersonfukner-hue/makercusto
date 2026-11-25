@@ -1,3 +1,4 @@
+import {useConfirmation} from './ConfirmationDialog';
 import {AssemblyComposer} from './AssemblyComposer';
 import {formatCatalogName} from '../domain/catalogName';
 import {ProductPhotos,ProductThumbnail} from './ProductPhotos';
@@ -17,6 +18,7 @@ const template=()=>[blank(),blank()];
 const moneyValue=(s:string):number|null=>s.trim()===''?null:Number(s);
 const partDraft=(p:AssemblyRecord['parts'][number]):AssemblyPartDraft=>({id:p.id,product_id:p.product_id??null,name:p.name,quantity:Number(p.quantity),notes:p.notes??'',grams:p.grams===null?null:Number(p.grams),unit_cost:p.unit_cost});
 export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
+ const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [kits,setKits]=useState<AssemblyRecord[]>([]);
  const [library,setLibrary]=useState<ComponentLibraryItem[]>([]);
@@ -111,7 +113,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
   }catch(e){setError('Não foi possível abrir o cálculo: '+(e as Error).message);}
   finally{setOpeningCalculation(false);}
  };
- const save=async()=>{
+ const save=async(confirmed=false)=>{
   setError('');setFeedback('');
   if(!workspaceId){setError('A oficina não está conectada.');return;}
   if(name.trim().length<2){setError('Informe o nome do produto.');return;}
@@ -121,6 +123,11 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
    p.quantity<1||p.quantity>100000||(p.grams!==null&&(!Number.isFinite(p.grams)||p.grams<0||p.grams>100000))||
    (p.unit_cost!==null&&p.unit_cost!==undefined&&(!Number.isFinite(p.unit_cost)||p.unit_cost<0||p.unit_cost>100000000))))){
    setError('Informe pelo menos duas peças válidas. Quantidades devem ser inteiras, e pesos e custos não podem ser negativos.');return;
+  }
+  if(mode==='edit'&&!confirmed){
+   requestConfirmation({title:'Salvar nova revisão',message:'Salvar as alterações de “'+name.trim()+'”?',
+    actionLabel:'Salvar alterações',onConfirm:()=>void save(true)});
+   return;
   }
   setBusy(true);
   try{
@@ -149,6 +156,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
  const heading=tab==='assemblies'?'Conjuntos':tab==='component'?'Peças':'Produtos da oficina';
  const label=(p:ProductRecord)=>p.kind==='kit'?'Conjunto':p.kind==='component'?'Peça':'Produto';
  return <section className="product-workspace" aria-label="Gestão de produtos">
+  {confirmationDialog}
   <div className="product-workspace-heading">
    <div><h2>{mode==='catalog'?heading:mode==='view'?'Ficha do produto':mode==='edit'?'Editar produto':'Novo produto'}</h2>
     <p>{mode==='catalog'?'Selecione um cadastro para consultar, editar ou duplicar.':mode==='view'?'Detalhes registrados na oficina.':'Preencha somente os dados que você conhece.'}</p></div>
@@ -228,7 +236,9 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
       <label>Custo/un. informado (R$, opcional)<input aria-label={'Custo da peça '+(i+1)} type="number" min="0" step=".01" disabled={Boolean(p.product_id)} value={p.unit_cost??''} onChange={e=>changePart(i,{unit_cost:e.target.value===''?null:Number(e.target.value)})}/></label>
       <label className="product-wide">Observações<input aria-label={'Observações da peça '+(i+1)} value={p.notes} maxLength={1000} onChange={e=>changePart(i,{notes:e.target.value})}/></label>
      </div>
-     <button type="button" className="secondary-action remove-part-action" disabled={parts.length<=2} onClick={()=>setParts(prev=>prev.filter((_,n)=>n!==i))}>Remover peça {i+1}</button>
+     <button type="button" className="secondary-action remove-part-action" disabled={parts.length<=2} onClick={()=>requestConfirmation({
+      title:'Remover peça do conjunto',message:'Remover “'+(p.name.trim()||'Peça '+(i+1))+'” desta composição?',
+      actionLabel:'Remover peça',onConfirm:()=>setParts(prev=>prev.filter((_,n)=>n!==i))})}>Remover peça {i+1}</button>
     </fieldset>)}
     <p className="product-cost-preview">Custo do conjunto: <strong>{totalCost(parts)===null?'Não apurado — há peças sem custo':brl(totalCost(parts)!)+' (informado)'}</strong></p>
     <p className="footnote">Peças selecionadas do catálogo usam o custo da ficha original quando houver snapshot; custos desconhecidos continuam desconhecidos. Peças diferentes na mesma placa não recebem rateio automático de tempo ou energia. Não há baixa de estoque; revisões preservam o histórico.</p>
