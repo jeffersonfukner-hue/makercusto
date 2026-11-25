@@ -1,3 +1,4 @@
+import {ProductPhotos} from './ProductPhotos';
 import {useEffect,useMemo,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
 import {
@@ -167,6 +168,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
     <p>{product.description||'Sem descrição cadastrada'}</p></div>
 
    </div>
+   {workspaceId&&<ProductPhotos key={product.id} workspaceId={workspaceId} productId={product.id} name={product.name}/>}
    <div className="product-detail-stats">
     <div><small>Referência</small><strong>{product.sku??'Não informada'}</strong></div>
     <div><small>Preço de venda</small><strong>{product.sale_price===null?'Não informado':brl(product.sale_price)}</strong></div>

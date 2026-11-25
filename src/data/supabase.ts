@@ -346,3 +346,53 @@ export type LaborEvidenceResponse={workspace_id:string;execution_id:string;posti
 export const getL4Labor=(workspaceId:string,executionId:string)=>api<LaborEvidenceResponse>('rpc/mc_get_l4_labor','POST',{p_workspace_id:workspaceId,p_production_id:executionId});
 export const recordL4Labor=(workspaceId:string,executionId:string,a:import('../domain/l4-labor-draft').LaborActivity)=>api<string>('rpc/mc_record_l4_labor','POST',{
  p_workspace_id:workspaceId,p_production_id:executionId,p_request_key:a.id,p_activity:a.activity,p_minutes:a.minutes,p_hourly_rate:a.hourlyRate,p_basis:a.basis,p_reference:a.reference,p_service_id:a.serviceId??null});
+
+const productPhotosBucket='mc-product-photos';
+export const productPhotoTypes=['image/jpeg','image/png','image/webp'] as const;
+export const productPhotoLimit=6*1024*1024;
+export type ProductPhoto={path:string;url:string;primary:boolean};
+
+async function productPhotoStorage<T>(path:string,body:File|Record<string,unknown>):Promise<T>{
+ const session=await freshSession();
+ if(!session)throw new Error('Entre na sua conta para acessar as fotos.');
+ const file=body instanceof File;
+ return response<T>(await fetch(SUPABASE_URL+'/storage/v1/object/'+path,{
+  method:'POST',headers:{...jsonHeaders,Authorization:'Bearer '+session.access_token,
+   'Content-Type':file?body.type:'application/json'},body:file?body:JSON.stringify(body)
+ }));
+}
+const productPhotoFolder=(workspaceId:string,productId:string)=>encodeURIComponent(workspaceId)+'/'+encodeURIComponent(productId);
+export async function listProductPhotos(workspaceId:string,productId:string,primaryOnly=false):Promise<ProductPhoto[]>{
+ const prefix=productPhotoFolder(workspaceId,productId);
+ const preferences=await api<{primary_path:string}[]>('mc_product_photo_preferences?workspace_id=eq.'+encodeURIComponent(workspaceId)+'&product_id=eq.'+encodeURIComponent(productId)+'&select=primary_path');
+ const paths:string[]=[];
+ const pageSize=100;
+ for(let offset=0;;offset+=pageSize){
+  const rows=await productPhotoStorage<{name:string;id:string|null}[]>('list/'+productPhotosBucket,{
+   prefix,limit:primaryOnly?1:pageSize,offset,sortBy:{column:'created_at',order:'asc'}
+  });
+  paths.push(...rows.filter(row=>row.id!==null).map(row=>prefix+'/'+row.name));
+  if(primaryOnly||rows.length<pageSize)break;
+ }
+ const preferred=preferences[0]?.primary_path;
+ const selected=preferred?.startsWith(prefix+'/')&&(primaryOnly||paths.includes(preferred))?preferred:paths[0];
+ const sign=async(path:string):Promise<ProductPhoto>=>{
+  const result=await productPhotoStorage<{signedURL:string}>('sign/'+productPhotosBucket+'/'+path,{expiresIn:3600});
+  return {path,url:SUPABASE_URL+'/storage/v1'+result.signedURL,primary:path===selected};
+ };
+ if(primaryOnly){
+  if(!selected)return [];
+  try{return [await sign(selected)];}
+  catch(error){if(paths[0]&&paths[0]!==selected)return [await sign(paths[0])];throw error;}
+ }
+ return Promise.all(paths.map(sign));
+}
+export function uploadProductPhoto(workspaceId:string,productId:string,file:File){
+ const extension=file.type==='image/jpeg'?'jpg':file.type==='image/png'?'png':file.type==='image/webp'?'webp':null;
+ if(!extension||file.size===0||file.size>productPhotoLimit)throw new Error('Escolha uma foto JPEG, PNG ou WebP de até 6 MB.');
+ const path=productPhotoFolder(workspaceId,productId)+'/'+crypto.randomUUID()+'.'+extension;
+ return productPhotoStorage<unknown>(productPhotosBucket+'/'+path,file);
+}
+export const setPrimaryProductPhoto=(workspaceId:string,productId:string,path:string)=>
+ api<unknown>('mc_product_photo_preferences?on_conflict=product_id,workspace_id','POST',
+  {workspace_id:workspaceId,product_id:productId,primary_path:path},'resolution=merge-duplicates,return=minimal');

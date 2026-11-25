@@ -5,6 +5,7 @@ function systemModule(page:Page,name:string){
 }
 test.beforeEach(async({page})=>{
  await page.route('**/*.supabase.co/rest/v1/mc_catalog?**',route=>route.fulfill({json:[]}));
+ await page.route('**/storage/v1/object/list/mc-product-photos',route=>route.fulfill({json:[]}));
 });
 
 test('resumo padrão compacto e valores do exemplo',async({page})=>{
@@ -1599,4 +1600,71 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
  await expect(exact).toContainText('Fechamento financeiro: PENDENTE.');
  expect(reads.filter(u=>u.includes('mc_get_l4_exact_origins'))).toHaveLength(1);
  expect(writes).toEqual([]);
+});
+
+test('galeria privada permite anexar fotos, definir principal e consultar em outras telas',async({page})=>{
+ const workspace='11111111-1111-4111-8111-111111111111';
+ const user='22222222-2222-4222-8222-222222222222';
+ const product='33333333-3333-4333-8333-333333333333';
+ const snapshot='44444444-4444-4444-8444-444444444444';
+ const folder=workspace+'/'+product+'/';
+ const filenames:string[]=[];
+ let primary:string|undefined;
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+xhZkAAAAASUVORK5CYII=','base64');
+ await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
+  access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@test.local'}
+ })),{user});
+ await page.route('**/rest/v1/**',async route=>{
+  const url=new URL(route.request().url());
+  if(url.pathname.endsWith('/mc_workspaces'))return route.fulfill({json:[{id:workspace,name:'Oficina teste',owner_id:user}]});
+  if(url.pathname.endsWith('/mc_products'))return route.fulfill({json:[{id:product,workspace_id:workspace,name:'Urso',sku:null,kind:'product',description:null,sale_price:null,active:true,created_at:'2026-11-25T00:00:00Z'}]});
+  if(url.pathname.endsWith('/mc_list_saved_calculations'))return route.fulfill({json:[{
+   product_id:product,snapshot_id:snapshot,name:'Urso',kind:'product',sku:null,saved_input:{hours:2},saved_at:'2026-11-25T00:00:00Z'
+  }]});
+  if(url.pathname.endsWith('/mc_product_photo_preferences')){
+   if(route.request().method()==='POST'){
+    primary=route.request().postDataJSON().primary_path;
+    return route.fulfill({status:204});
+   }
+   return route.fulfill({json:primary?[{primary_path:primary}]:[]});
+  }
+  return route.fulfill({json:[]});
+ });
+ await page.route('**/storage/v1/object/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(route.request().method()==='GET')return route.fulfill({body:png,contentType:'image/png'});
+  expect(route.request().headers().authorization).toBe('Bearer mock');
+  if(path.includes('/list/')){
+   const {prefix,limit,offset}=route.request().postDataJSON();
+   expect(prefix+'/').toBe(folder);
+   return route.fulfill({json:filenames.slice(offset,offset+limit).map(name=>({name,id:name}))});
+  }
+  if(path.includes('/sign/'))return route.fulfill({json:{signedURL:path.replace('/storage/v1','')+'?token=fake'}});
+  expect(path).toContain('/mc-product-photos/'+folder);
+  filenames.push(path.split('/').at(-1)!);
+  return route.fulfill({json:{Key:path}});
+ });
+ await page.goto('/');
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Produtos').click();
+ await page.getByRole('button',{name:'Ver ficha'}).click();
+ const gallery=page.getByRole('region',{name:'Fotos do produto'});
+ await gallery.getByLabel('Adicionar fotos').setInputFiles([
+  {name:'urso-frente.png',mimeType:'image/png',buffer:png},
+  {name:'urso-lado.png',mimeType:'image/png',buffer:png}
+ ]);
+ await expect(gallery.getByRole('img')).toHaveCount(2);
+ await gallery.getByRole('button',{name:'Definir como principal'}).click();
+ await expect(gallery.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
+ expect(primary).toBe(folder+filenames[1]);
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Biblioteca STL').click();
+ await page.getByLabel('Produto da oficina').selectOption(product);
+ await expect(gallery.getByRole('img')).toHaveCount(2);
+ await expect(gallery.getByLabel('Adicionar fotos')).toHaveCount(0);
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Calculadora de custos').click();
+ await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(snapshot);
+ await page.getByRole('button',{name:'Carregar',exact:true}).click();
+ await expect(page.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
 });

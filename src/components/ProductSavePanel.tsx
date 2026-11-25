@@ -1,3 +1,4 @@
+import {ProductThumbnail} from './ProductPhotos';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {CalculatorHelp} from './CalculatorHelp';
 import {FormActionDock} from './FormActionDock';
@@ -140,7 +141,10 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     </div>
     <div className="product-save-fields mc-product-identity-fields">
      <label className="product-name-input">Nome {kind==='component'?'da peça':'do produto'}
-      <input ref={nameInput} aria-label="Nome do produto" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={event=>setName(event.target.value)} placeholder="Ex.: Guirlanda natalina"/>
+      <span className="mc-product-name-row">
+       {workspaceId&&revisionTarget&&<ProductThumbnail key={revisionTarget.product_id} workspaceId={workspaceId} productId={revisionTarget.product_id} name={revisionTarget.name}/>}
+       <input ref={nameInput} aria-label="Nome do produto" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={event=>setName(event.target.value)} placeholder="Ex.: Guirlanda natalina"/>
+      </span>
      </label>
      <label>Tipo
       <select aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)||busy} onChange={event=>setKind(event.target.value as typeof kind)}>

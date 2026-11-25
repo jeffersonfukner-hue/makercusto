@@ -1,0 +1,73 @@
+import {useEffect,useState,type ChangeEvent} from 'react';
+import {listProductPhotos,productPhotoLimit,productPhotoTypes,setPrimaryProductPhoto,uploadProductPhoto,type ProductPhoto} from '../data/supabase';
+
+type ProductPhotosProps={workspaceId:string;productId:string;name:string};
+export function ProductThumbnail({workspaceId,productId,name}:ProductPhotosProps){
+ const [photo,setPhoto]=useState<ProductPhoto>();
+ useEffect(()=>{
+  let active=true;
+  setPhoto(undefined);
+  void listProductPhotos(workspaceId,productId,true)
+   .then(([primary])=>{if(active)setPhoto(primary);}).catch(()=>{});
+  return()=>{active=false;};
+ },[workspaceId,productId]);
+ return photo&&<img className="mc-product-thumbnail" src={photo.url} alt={'Foto principal de '+name}
+  referrerPolicy="no-referrer" onError={()=>setPhoto(undefined)}/>;
+}
+
+export function ProductPhotos({workspaceId,productId,name,readOnly=false}:ProductPhotosProps&{readOnly?:boolean}){
+ const [photos,setPhotos]=useState<ProductPhoto[]>([]);
+ const [error,setError]=useState('');
+ const [loading,setLoading]=useState(true);
+ const [busy,setBusy]=useState(false);
+ const [reload,setReload]=useState(0);
+ useEffect(()=>{
+  let active=true;
+  setLoading(true);
+  void listProductPhotos(workspaceId,productId)
+   .then(rows=>{if(active)setPhotos(rows);})
+   .catch(()=>{if(active)setError('Não foi possível carregar as fotos deste cadastro.');})
+   .finally(()=>{if(active)setLoading(false);});
+  return()=>{active=false;};
+ },[workspaceId,productId,reload]);
+ const upload=async(event:ChangeEvent<HTMLInputElement>)=>{
+  const files=Array.from(event.target.files??[]);
+  event.target.value='';
+  if(!files.length)return;
+  if(files.some(file=>!productPhotoTypes.some(type=>type===file.type)||file.size===0||file.size>productPhotoLimit)){
+   setError('Escolha fotos JPEG, PNG ou WebP de até 6 MB cada.');return;
+  }
+  setError('');setBusy(true);
+  let sent=0;
+  try{
+   for(const file of files){await uploadProductPhoto(workspaceId,productId,file);sent++;}
+  }catch{
+   setError(sent?sent+' foto(s) enviada(s). As demais não foram enviadas.':'Não foi possível enviar as fotos.');
+  }finally{
+   setBusy(false);
+   if(sent)setReload(value=>value+1);
+  }
+ };
+ const makePrimary=async(path:string)=>{
+  setError('');setBusy(true);
+  try{
+   await setPrimaryProductPhoto(workspaceId,productId,path);
+   setPhotos(previous=>previous.map(photo=>({...photo,primary:photo.path===path})));
+  }catch{setError('Não foi possível definir a foto principal.');}
+  finally{setBusy(false);}
+ };
+ return <section className="mc-product-photos" aria-label="Fotos do produto">
+  <h4>Fotos do produto</h4>
+  {!readOnly&&<label>Adicionar fotos
+   <input type="file" accept={productPhotoTypes.join(',')} multiple disabled={busy||loading} onChange={event=>void upload(event)}/>
+  </label>}
+  {busy&&<p role="status">Salvando fotos…</p>}
+  {loading&&<p role="status">Carregando fotos…</p>}
+  {error&&<p className="error" role="alert">{error}</p>}
+  {!loading&&!error&&photos.length===0&&<p className="footnote">Nenhuma foto cadastrada.</p>}
+  {photos.length>0&&<ul>{photos.map((photo,index)=><li key={photo.path}>
+   <img src={photo.url} alt={(photo.primary?'Foto principal de ':'Foto '+(index+1)+' de ')+name} loading="lazy" referrerPolicy="no-referrer"/>
+   {photo.primary?<span>Principal</span>:!readOnly&&<button type="button" disabled={busy} onClick={()=>void makePrimary(photo.path)}>Definir como principal</button>}
+  </li>)}</ul>}
+ </section>;
+}

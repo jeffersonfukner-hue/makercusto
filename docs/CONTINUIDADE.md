@@ -930,3 +930,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Depois da foto do Preview, a impressão passou a ocupar a largura da área de edição, com tempo ao lado do filamento quando há espaço. Montagem e adicionais ficam lado a lado abaixo da impressão. O resultado permanece à direita em telas largas.
 - O cadastro e a recuperação de cálculo atuais não expõem uma foto de produto. A distribuição foi resolvida com os campos existentes, sem reservar espaço para mídia.
 - Build, 75 testes unitários, oito cenários Playwright e verificação visual responsiva de 320 a 1600 px nas duas calculadoras aprovados. Ajuste acumulado para o próximo lote visual.
+
+### Galeria privada de fotos por produto
+
+- A ficha de um produto, peça ou conjunto cadastrado aceita várias fotos JPEG, PNG ou WebP de até 6 MiB cada. A primeira é a principal até que a oficina escolha outra. A calculadora mostra a miniatura junto ao nome ao carregar um cálculo que tenha foto.
+- A Biblioteca STL consulta a mesma galeria pelo ID do cadastro. Upload de arquivos STL e links de vídeo ficam para etapas posteriores.
+- A migração `20261125025716_product_photo_gallery.sql` cria o bucket privado e as preferências por oficina e produto. Os links de leitura expiram. A migração precisa de autorização e aplicação no ambiente de teste antes de validar a integração de ponta a ponta.
+- Build, 75 unitários e seis cenários Playwright com API simulada passaram. O teste de rollback em PostgreSQL 17 descartável, com esquema Storage simulado, verificou mudança de foto principal e isolamento entre oficinas. A integração com o serviço Storage real aguarda validação em ambiente autorizado. Sem alterações operacionais.

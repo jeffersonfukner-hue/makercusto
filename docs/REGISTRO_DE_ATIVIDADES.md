@@ -977,3 +977,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Distribuição dos blocos de cálculo
 
 - Reorganizados impressão, montagem e adicionais após feedback sobre a coluna vazia. Verificados build, 75 unitários, oito cenários Playwright e layout nas larguras de 320, 390, 1024 e 1600 px, nos acessos público e logado. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Fotos de produtos
+
+- Implementada galeria privada com seleção múltipla, foto principal, miniatura na calculadora e consulta pela Biblioteca STL. Migração somente versionada.
+- Verificados build, 75 unitários, seis cenários Playwright com API simulada e regressão SQL de isolamento em PostgreSQL descartável com esquema Storage simulado. Sem aplicação operacional, deploy, merge ou gastos. Commit com `[skip ci]`. Duração não aferida.
