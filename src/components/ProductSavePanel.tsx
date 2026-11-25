@@ -63,15 +63,15 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
   finally{setBusy(false);}
  };
  return <section className="panel product-save-panel" aria-labelledby="product-save-title">
-  <div className="panel-heading"><div><h2 id="product-save-title">Salvar cálculo na oficina</h2>
-   <p>Salve o cálculo como um produto da oficina. Os custos anteriores ficam registrados em um snapshot.</p></div></div>
+  <div className="panel-heading"><div><h2 id="product-save-title">Identificação do produto</h2>
+   <span className="mc-info" tabIndex={0} title="Os custos anteriores ficam registrados em um snapshot.">ⓘ</span></div></div>
   {!session?<div><p className="footnote">Entre na sua conta para salvar e consultar os produtos na nuvem.</p>
    <button type="button" className="primary-action" onClick={onLogin}>Entrar para salvar produto</button></div>:
   <div className="product-save-content">
-   {savedCalculations.length>0&&onLoadCalculation&&<div className="product-reuse-panel" aria-label="Reutilizar cálculo salvo">
-    <h3>Reutilizar dados de uma peça ou produto</h3>
+   {onLoadCalculation&&<div className="product-reuse-panel" aria-label="Reutilizar cálculo salvo">
+    
     <div className="product-save-fields">
-     <label>Escolha um cálculo salvo<select aria-label="Cálculo salvo para reutilizar" value={selectedCalculation}
+     <label><span>Escolha um cálculo salvo <span className="mc-info" tabIndex={0} title="Reaproveita parâmetros do cálculo escolhido. A máquina atual pode alterar o resultado; o histórico não é reescrito.">ⓘ</span></span><select aria-label="Cálculo salvo para reutilizar" value={selectedCalculation}
       onChange={e=>setSelectedCalculation(e.target.value)}>
       <option value="">Selecione</option>{savedCalculations.map(x=><option key={x.snapshot_id} value={x.snapshot_id}>
        {x.kind==='component'?'Peça: ':'Produto: '}{x.name}
@@ -79,20 +79,19 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
      <button type="button" disabled={!selectedCalculation} onClick={()=>{
       const item=savedCalculations.find(x=>x.snapshot_id===selectedCalculation);
       if(item)onLoadCalculation(item);
-     }}>Carregar dados na calculadora</button>
+     }}>Carregar</button>
     </div>
-    <p className="footnote">Reaproveita parâmetros do cálculo escolhido. A máquina atual pode alterar o novo resultado; o custo histórico salvo não é reescrito.</p>
+    
    </div>}
    {revisionTarget&&<div className="product-reuse-panel" role="status"><strong>Nova revisão: {revisionTarget.name}</strong><p className="footnote">Este cálculo será anexado à ficha existente, sem criar outro produto. O preço de venda da ficha será atualizado; os custos históricos permanecem intactos.</p>{onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo cadastro</button>}</div>}
-   <div className="product-name-feature"><span>{revisionTarget?'Revisão de custo':kind==='component'?'Cadastro de peça':'Cadastro de produto'}</span><strong>{name.trim()||'Dê um nome ao produto'}</strong></div>
    <div className="product-save-fields">
     <label className="product-wide product-name-input">Nome {kind==='component'?'da peça':'do produto'}<input aria-label="Nome do cadastro" maxLength={150} value={name} disabled={Boolean(revisionTarget)||busy} onChange={e=>setName(e.target.value)} placeholder="Ex.: Guirlanda natalina"/></label>
     <label>SKU / referência (opcional) <input aria-label="SKU do produto" maxLength={100} value={sku} disabled={Boolean(revisionTarget)} onChange={e=>setSku(e.target.value)} placeholder="Ex.: CH-GALO-01" /></label>
     <label>Tipo <select aria-label="Tipo de produto" value={kind} disabled={Boolean(revisionTarget)} onChange={e=>setKind(e.target.value as typeof kind)}><option value="product">Produto final</option><option value="component">Peça / componente</option></select></label>
-    <label>Descrição (opcional) <input aria-label="Descrição do produto" maxLength={2000} value={description} onChange={e=>setDescription(e.target.value)} /></label>
+    <label className="mc-description">Descrição (opcional) <input aria-label="Descrição do produto" maxLength={2000} value={description} onChange={e=>setDescription(e.target.value)} /></label>
    </div>
-   <p className="footnote">Uma placa com peças diferentes precisa de distribuição de custos validada antes de salvar cada peça. Conjuntos são montados a partir de peças cadastradas.</p>
-   <p className="footnote">O custo salvo será uma estimativa do cálculo atual ({result?currency(result.lotCost):'inválido'} por lote). Não há baixa automática de estoque.</p>
+   <span className="mc-info mc-save-help" tabIndex={0} title="Peças diferentes na mesma placa exigem rateio validado. Conjuntos usam peças cadastradas. Não há baixa automática de estoque.">ⓘ Sobre o salvamento</span>
+   
 
    <div aria-live="polite">{message&&<div><p className="product-success" role="status">{message}</p>
     <div className="product-workspace-buttons">
@@ -103,7 +102,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     <ul>{visibleItems.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
    </details>
   </div>}
-  {session&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={revisionTarget?'Nova revisão em cadastro existente':'Salvar cálculo como produto ou peça'}>
+  {session&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?`Custo: ${currency(result.unitCost)} · Venda: ${currency(input.salePrice)} · Margem: ${result.marginPercent.toFixed(1)}%`: 'Cálculo inválido'}>
    {revisionTarget&&onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo</button>}
    <button className="primary-action" type="button" disabled={busy||!result||!workspaceId||name.trim().length<2} onClick={()=>void save()}>{busy?'Salvando…':revisionTarget?'Salvar nova revisão':kind==='component'?'Salvar peça e custo':'Salvar produto e custo'}</button>
   </FormActionDock>}
