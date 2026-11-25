@@ -102,7 +102,7 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
     <ul>{visibleItems.map(item=><li key={item.id}><strong>{item.name}</strong><span>{item.kind==='kit'?'Kit':item.kind==='component'?'Componente':'Produto'} · {item.sku||'Sem SKU'} · {item.sale_price===null?'Sem preço':currency(item.sale_price)}</span></li>)}</ul>}
    </details>
   </div>}
-  {session&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?`Custo: ${currency(result.unitCost)} · Venda: ${currency(input.salePrice)} · Margem: ${result.marginPercent.toFixed(1)}%`: 'Cálculo inválido'}>
+  {session&&<FormActionDock title={name.trim()||'Produto sem nome'} subtitle={result?`Custo: ${currency(result.unitCost)} · Venda: ${currency(input.salePrice)} · Lucro bruto/un.: ${currency(input.salePrice-result.unitCost)} · Margem: ${result.marginPercent.toFixed(1)}%`: 'Cálculo inválido'}>
    {revisionTarget&&onClearRevisionTarget&&<button type="button" className="secondary-action" onClick={onClearRevisionTarget}>Salvar como novo</button>}
    <button className="primary-action" type="button" disabled={busy||!result||!workspaceId||name.trim().length<2} onClick={()=>void save()}>{busy?'Salvando…':revisionTarget?'Salvar nova revisão':kind==='component'?'Salvar peça e custo':'Salvar produto e custo'}</button>
   </FormActionDock>}
