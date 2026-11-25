@@ -891,3 +891,6 @@ Blocos de produção, montagem e adicionais, preço editável no resultado, marg
 
 ## Refinamento visual após Preview 24/11/2026
 Nove fotografias do Preview confirmam renderização dos modos Simples/Avançado, carregamento do Urso - Porta Vinho, listagem/ficha de peças e configurações. Não constituem teste de persistência. Corrigidos contraste, identificação em duas colunas, seletores compactos e indicadores separados no rodapé; removida duplicação visual de margem/markup no detalhamento. Nova homologação pendente. Sem CI, merge, deploy pelo agente ou alteração de dados. Duração não aferida.
+
+### Segundo lote visual — pronto para Preview manual
+Compactação de indicadores, composição com marcadores coloridos, ajuda contextual de filamento por foco/hover e ajustes do rodapé. Alterações estáticas, sem build/CI; verificar toque, contraste, responsividade e ausência de sobreposição de barras no Preview. Não implica homologação funcional. Sem alterações no banco ou deploy pelo agente.
