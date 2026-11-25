@@ -20,6 +20,9 @@ const menu=[
  {label:'Biblioteca STL',symbol:'▥',section:'library'},
  {label:'Dicas de impressão',symbol:'◇',section:'tips'}
 ] as const;
+const overviewShortcutSections:ReadonlySet<SystemSection>=new Set(['calculator','products','printers','materials','library','tips']);
+const overviewShortcuts=menu.filter(item=>overviewShortcutSections.has(item.section));
+
 export function SystemNavigation({authenticated,workspaceName,email,section,productTab,onProductTab,overviewTab,onOverviewTab,onNavigate,onLogout,children}:Props){
  const [open,setOpen]=useState(false);
 
@@ -49,7 +52,11 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
     <div className="system-section-header">
      <div>{section!=='calculator'&&<p className="system-breadcrumb">MakerCusto / {section==='overview'?'Visão geral':section==='materials'?'Materiais':section==='prints'?'Impressões':title}</p>}<h1>{title}</h1>
       {section!=='calculator'&&<p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p>}</div>
-     
+     {section==='overview'&&overviewTab==='general'&&<nav className="overview-shortcuts" aria-label="Acesso rápido">
+      {overviewShortcuts.map(item=><button key={item.section} type="button" onClick={()=>navigate(item.section)}>
+       <span aria-hidden="true">{item.symbol}</span>{item.section==='calculator'?'Calculadora':item.label}
+      </button>)}
+     </nav>}
     </div>
     {section!=='calculator'&&<div className="system-tabs" role="navigation" aria-label={'Abas de '+title}>
      {section==='overview'&&([

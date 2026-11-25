@@ -607,8 +607,15 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(page.getByText('Custo não apurado')).toBeVisible();
  await page.getByRole('navigation',{name:'Abas de Visão geral'}).getByRole('button',{name:'Visão geral',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Evolução dos custos'})).toBeVisible();
+ const shortcuts=page.getByRole('navigation',{name:'Acesso rápido'});
+ await expect(shortcuts.getByRole('button')).toHaveCount(6);
+ await shortcuts.getByRole('button',{name:'Calculadora',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Calculadora de Produto'})).toBeVisible();
+ await openSystemMenuIfMobile(page);
+ await systemModule(page,'Visão geral').click();
  await expect(page.getByRole('heading',{name:'Oficina de Testes'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toHaveCount(0);
+ await openSystemMenuIfMobile(page);
  await expect(systemModule(page,'Impressões')).toBeEnabled();
  await systemModule(page,'Produtos').click();
  await expect(page.getByRole('heading',{name:'Produtos da oficina'})).toBeVisible();

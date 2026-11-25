@@ -944,3 +944,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Filamento e Tempo de impressão compartilham a mesma altura de título, rótulos e campos nas larguras em que ficam lado a lado, tanto no Simples como no Avançado. Build, 75 testes unitários e oito cenários Playwright passaram. Verificação responsiva nos acessos público e logado em 320, 390, 1024 e 1600 px.
 - Sequência decidida para o próximo lote: mostrar a miniatura principal nos cartões da lista de Produtos, aproveitando a galeria privada quando estiver disponível. O cartão deve seguir compacto quando o cadastro não tiver foto. A lista atual ainda não mostra miniaturas. Manter a migração da galeria pendente de autorização para o ambiente de teste.
 - Lote seguinte: pesquisar impressoras por fabricante e modelo, começando pelos que já aparecem no seletor. Registrar fonte e data de cada especificação oficial, distinguir potência nominal de consumo em impressão e separar preços, vida útil, consumo estimado e medições da oficina. Preencher apenas valores comprovados ou estimativas claramente rotuladas e manter a personalização por equipamento. Nenhum dado de impressora foi alterado neste lote.
+
+### Visão geral — atalhos e sequência de homologação
+
+- Os seis atalhos agora ficam ao lado do título da Visão geral em desktop, com quebra de linha no celular. O painel abaixo concentra indicadores e gráficos.
+- Sequência acordada: testar os atalhos enquanto se pesquisa e implementa o painel com dados disponíveis, incorporar correções dos testes, depois retomar miniaturas em Produtos e pesquisa das impressoras. A migração da galeria permanece pendente de autorização.
+- Build, 75 testes unitários e dois cenários Playwright de navegação aprovados.

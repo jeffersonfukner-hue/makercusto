@@ -987,3 +987,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Implementados carregamento ao selecionar, botão + com confirmação, consulta de cadastros no cabeçalho, tooltips de identificação e alinhamento dos campos de impressão.
 - Verificados build, 75 testes unitários, oito cenários Playwright e larguras de 320 a 1600 px. Registrada a ordem pedida para miniaturas na lista de Produtos e pesquisa de impressoras. Sem deploy, migração operacional ou mudança na lista de Produtos. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Atalhos da Visão geral
+
+- Reposicionados os seis destinos de Acesso rápido para o cabeçalho. Build, 75 unitários e navegação Playwright no desktop e celular aprovados. Commit com `[skip ci]`. Duração não aferida.

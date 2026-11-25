@@ -458,7 +458,7 @@
 }
 
 /* Visão geral homologada — 24/11/2026 */
-.system-sidebar{background:#202e3d}.system-sidebar nav>button.system-nav-active{background:#3b5268}.dashboard-shortcuts{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.dashboard-shortcuts button{min-height:112px;justify-items:center;align-content:center;text-align:center;gap:10px}.dashboard-shortcuts button .dashboard-shortcut-icon{font-size:32px;color:#80b6e4;line-height:1}.dashboard-chart-empty{min-height:150px;display:grid;place-items:center;color:#a6b9ce;background:repeating-linear-gradient(to bottom,transparent 0,transparent 36px,#ffffff12 37px,#ffffff12 38px);border-bottom:1px solid #40516e;text-align:center}.dashboard-chart h2{margin-top:0}@media(max-width:700px){.dashboard-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.system-sidebar{background:#202e3d}.system-sidebar nav>button.system-nav-active{background:#3b5268}.dashboard-chart-empty{min-height:150px;display:grid;place-items:center;color:#a6b9ce;background:repeating-linear-gradient(to bottom,transparent 0,transparent 36px,#ffffff12 37px,#ffffff12 38px);border-bottom:1px solid #40516e;text-align:center}.dashboard-chart h2{margin-top:0}
 
 /* Navegação superior da oficina */
 .system-top-navigation .system-frame{display:block;min-height:calc(100vh - 56px)}
@@ -726,7 +726,7 @@
  .assembly-details,.filament-profile,.modal-window) {
  background:white;color:var(--mc-ink);border-color:var(--mc-border);border-radius:10px;
 }
-.mc-theme :is(.dashboard-metric strong,.dashboard-shortcuts button .dashboard-shortcut-icon,.filament-profile-head strong,
+.mc-theme :is(.dashboard-metric strong,.filament-profile-head strong,
  .assembly-detail-heading h4,.assembly-details h5,.assembly-detail-stats dd,.product-component-editor legend) {color:var(--mc-ink)}
 .mc-theme .dashboard-chart-empty {
  color:var(--mc-muted);border-color:var(--mc-border);
@@ -788,3 +788,17 @@
 .mc-product-photos button {border:1px solid var(--mc-border);border-radius:6px;padding:6px;background:#eef4ff;color:#194386}
 .mc-product-name-row {display:flex;align-items:center;gap:8px;min-width:0}
 .mc-product-name-row .mc-product-thumbnail {flex:none}
+
+
+.overview-shortcuts {display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px;min-width:0}
+.overview-shortcuts button {
+ display:inline-flex;align-items:center;gap:5px;min-height:34px;white-space:nowrap;
+ padding:5px 9px;border:1px solid #bdcde7;border-radius:7px;background:#eef4ff;
+ color:#194386;font-size:12px;font-weight:650;
+}
+.overview-shortcuts button:hover {background:#dfeaff}
+@media(max-width:760px) {
+ .system-section-header:has(.overview-shortcuts) {flex-direction:column}
+ .overview-shortcuts {justify-content:flex-start}
+ .overview-shortcuts button {min-height:40px}
+}

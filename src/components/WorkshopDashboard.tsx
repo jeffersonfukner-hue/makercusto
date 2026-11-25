@@ -41,9 +41,6 @@ export function WorkshopDashboard({tab,workspaceId,workspaceName,busy,onNavigate
    <div className="dashboard-metric"><span>Resultados</span><strong>R$ —</strong><small>Dados financeiros a integrar</small></div>
   </div>
   <section className="panel dashboard-card dashboard-chart"><h2>Evolução dos custos</h2><div className="dashboard-chart-empty"><span>Sem série financeira disponível</span></div><p>O gráfico será preenchido com custos comprovados da oficina.</p></section>
-  <section className="dashboard-card"><h2>Acesso rápido</h2><div className="dashboard-actions dashboard-shortcuts">
-   {([{label:'Calculadora de custos',symbol:'◷',view:'calculator'},{label:'Produtos',symbol:'▣',view:'products'},{label:'Impressoras',symbol:'▤',view:'printers'},{label:'Filamentos',symbol:'◈',view:'materials'},{label:'Biblioteca STL',symbol:'▥',view:'library'},{label:'Dicas de impressão',symbol:'◇',view:'tips'}] as const).map(item=><button key={item.view} type="button" onClick={()=>onNavigate(item.view)}><span className="dashboard-shortcut-icon" aria-hidden="true">{item.symbol}</span><strong>{item.label}</strong></button>)}
-  </div></section>
   </>}
   {tab==='activities'&&<section className="panel dashboard-card dashboard-tab-panel" aria-label="Atividades da oficina">
    <h2>Cadastros recentes</h2><p>Registros de produtos cadastrados na oficina, ordenados pela data de criação. Esta lista não é um log de alterações ou impressões.</p>
