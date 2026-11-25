@@ -910,3 +910,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A aba Cálculo organiza impressão, montagem/acabamento e adicionais por contexto. O painel lateral concentra custo unitário e de lote, venda editável, lucro, margem, markup e composição. A navegação superior e a barra financeira fixa permanecem acessíveis, com a barra da ficha de peça assumindo o espaço quando aberta na Composição.
 - O motor, os contratos de salvamento e o histórico foram preservados. O próximo passo é o deploy manual pelo proprietário para homologar o Modelo 5. P07, L4-G04 e L4-G05 permanecem pausados até a homologação visual.
 - Validação local aprovada: TypeScript, build Vite, 75 testes unitários e 110 cenários Playwright em desktop e celular com Chromium local. A rodada final de layout confirmou os painéis, o rodapé fixo, a ajuda contextual, o detalhamento de filamento e a edição das observações em 320, 390, 1024 e 1600 px, com serviços simulados. Homologação no Preview pendente.
+
+### Ajuste após fotos do Preview
+
+- As imagens do deploy `0953ce82` mostram o Modelo 5 em uso e o campo Tempo de impressão com uma dízima em horas. Na calculadora logada, o campo exibe até duas casas decimais fora de edição e recupera o valor original ao receber foco. O cálculo e o snapshot continuam usando as horas com a precisão armazenada.
+- Build local, 75 unitários e quatro cenários Playwright de salvamento e recuperação em desktop e celular aprovados. Ajuste acumulado para o próximo lote visual, sem solicitar um deploy isolado.

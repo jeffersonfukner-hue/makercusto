@@ -1306,6 +1306,13 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  await page.getByRole('button',{name:'Observações',exact:true}).click();
  await page.getByRole('textbox',{name:'Descrição do produto'}).fill('Revisar o acabamento');
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
+ const printHours=page.getByTestId('hours');
+ const exactPrintHours='11.233333333333333';
+ await printHours.fill(exactPrintHours);
+ await printHours.blur();
+ await expect(printHours).toHaveValue('11.23');
+ await printHours.focus();
+ await expect(printHours).toHaveValue(exactPrintHours);
  await page.getByTestId('quantity').fill('3');
  await page.getByTestId('salePrice').fill('20');
  await page.getByRole('button',{name:'Novo cálculo',exact:true}).click();
@@ -1320,7 +1327,7 @@ test('calculadora logada oferece salvar cálculo como peça com snapshot',async 
  expect((saved as unknown as Record<string,unknown>).p_workspace_id).toBe(workspace);
  const params=(saved as unknown as Record<string,unknown>).p_parameters as Record<string,unknown>;
  expect(params.origin).toBe('calculator');
- expect(params.saved_input).toMatchObject({quantity:3,salePrice:20});
+ expect(params.saved_input).toMatchObject({quantity:3,salePrice:20,hours:Number(exactPrintHours)});
  expect((saved as unknown as Record<string,unknown>).p_description).toBe('Revisar o acabamento');
  expect(params.calculated_result).toBeTruthy();
 });

@@ -963,3 +963,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Atualizadas as regressões Playwright para a navegação superior e para os fluxos de recuperar, cancelar ou confirmar novo cálculo, editar observações e salvar uma peça com o lote e o preço informados. O teste também cobre a barra contextual da aba de composição.
 - Verificado o workflow `Verificações MakerCusto`, com gatilhos `pull_request` e `workflow_dispatch`. Entrega em um lote com `[skip ci]`, sob CI-ECONOMY-01, BUILD-MANUAL-01 e ENTREGA-LOTE-01. Sem merge, deploy, migração operacional, escrita no banco ou créditos Lovable. Duração não aferida.
 - Evidências locais: `npm run check`, `npm run test` (75 aprovados), `npm run build` e Playwright (110 aprovados, desktop e celular com Chromium local). Verificação responsiva em 320, 390, 1024 e 1600 px, incluindo foco/toque na ajuda, detalhamento sem rolagem horizontal da página e rodapé fixo.
+
+### 25/11/2026 — Apresentação do tempo de impressão
+
+- A partir das fotos do Preview, limitado a duas casas decimais o tempo exibido fora de edição. O teste de salvamento comprova que `11.233333333333333` continua no snapshot após a exibição compacta. Build, 75 unitários e quatro cenários Playwright aprovados localmente. Commit com `[skip ci]`. Duração não aferida.

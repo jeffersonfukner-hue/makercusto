@@ -82,6 +82,7 @@ const newDraft = ():MaterialLine => ({id:'',name:'',type:'PLA',brand:'',grams:Na
 const seeded = () => referenceCase.materials!.map(m=>({...m,type:'PETG',brand:'',packageQuantity:1,packageUnit:'kg' as const,packagePrice:100}));
 const calculatedPackagePrice = (item:MaterialLine):number => item.packagePrice ?? item.pricePerKg*(item.packageQuantity??1)*(item.packageUnit==='g'?.001:1);
 export default function App(){
+ const [editingPrintHours,setEditingPrintHours]=useState(false);
  const [form,setForm]=useState<CostInput>(()=>({...referenceCase,materials:undefined}));
  const [printers,setPrinters]=useState<PrinterProfile[]>(()=>sessionStore.get()?seedPrinters():[...seedPrinters(),...readLocalPrinters()]);
  const [printerId,setPrinterId]=useState(()=>sessionStore.get()?'example':readSelectedPrinter('guest',[...seedPrinters(),...readLocalPrinters()]));
@@ -256,9 +257,17 @@ export default function App(){
  const calculationField=(key:keyof typeof fields, showHelp=Boolean(session))=>{
   const field=fields[key];
   const label=session&&key==='quantity'?'Lote (unidades)':field.label;
+  const compactPrintHours=Boolean(session)&&key==='hours';
+  const value=display(form[key]);
+  const shownValue=compactPrintHours&&!editingPrintHours&&typeof value==='number'
+   ? Number(value.toFixed(2))
+   : value;
   return <div className="mc-number-field">
    <label><span>{label}</span>
-    <input data-testid={key} type="number" min={field.min} step={field.step} value={display(form[key])} onChange={event=>update(key,event.target.value)}/>
+    <input data-testid={key} type="number" min={field.min} step={field.step} value={shownValue}
+     onFocus={compactPrintHours?()=>setEditingPrintHours(true):undefined}
+     onBlur={compactPrintHours?()=>setEditingPrintHours(false):undefined}
+     onChange={event=>update(key,event.target.value)}/>
    </label>
    {showHelp&&<CalculatorHelp label={field.label}>{field.help}</CalculatorHelp>}
   </div>;
