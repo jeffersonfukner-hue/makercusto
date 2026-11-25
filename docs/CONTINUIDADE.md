@@ -1179,3 +1179,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Energia, Mão de obra, Rateio, Conciliação de filamento e Dossiê de prontidão usam os mesmos tooltips da calculadora. Na prévia de rateio, a orientação fica ao lado da impressão, do valor, da fonte e do critério. O estado de simulação e as pendências de fechamento continuam visíveis.
 - Build, 82 unitários e seis cenários de navegador em desktop e celular passaram. Mudança de apresentação, sem migração. Preview visual pendente para o próximo lote.
+
+## 25/11/2026 — Fichas técnicas de cinco modelos de impressora
+
+- Adicionadas referências de volume e limites térmicos verificados para Anycubic Kobra 3 Max, Anycubic Kobra S1, Creality K1C, Creality K2 Plus e Flashforge Adventurer 5M Pro. As fichas apontam para as referências oficiais consultadas em 25/11/2026. A temperatura da mesa da 5M Pro ficou em branco porque as fontes do fabricante divergem.
+- Os valores operacionais permanecem identificados como estimativas editáveis. Build e quatro cenários de navegador passaram. Lote local com os ajustes de Impressões, sem migração.

@@ -494,6 +494,12 @@ test('fichas técnicas adicionais exibem referências verificadas do fabricante'
  await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Prusa');
  await page.getByRole('combobox',{name:'Modelo da impressora'}).selectOption('preset:prusa-mk4s');
  await expect(page.getByText('250 × 210 × 220 mm')).toBeVisible();
+ await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Creality');
+ await page.getByRole('combobox',{name:'Modelo da impressora'}).selectOption('preset:creality-k2-plus');
+ await expect(page.getByText('350 × 350 × 350 mm')).toBeVisible();
+ await expect(page.getByText('Mesa até 120 °C')).toBeVisible();
+ await expect(page.getByRole('link',{name:'Fonte do fabricante'})).toHaveAttribute('href','https://www.creality.com/eu/products/k2-series-3d-printer');
+ await expect(page.getByText(/Custos abaixo são estimativas editáveis/)).toBeVisible();
 });
 test('cópias de perfil não sobrescrevem perfis pessoais com nomes iguais',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Avançado/}).click();

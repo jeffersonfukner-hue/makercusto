@@ -1068,3 +1068,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Ajuda contextual em Impressões
 
 - Compactadas as orientações de energia, mão de obra, rateio e conciliação. Build, 82 unitários e regressões L3 e L4 aprovados.
+
+### 25/11/2026 — Fichas de impressoras
+
+- Acrescentadas cinco referências de Anycubic, Creality e Flashforge, com links oficiais. Build e quatro cenários Playwright aprovados.

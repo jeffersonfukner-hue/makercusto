@@ -40,6 +40,11 @@ export const printerReferences:Record<string,PrinterReference>={
  'creality-ender-3-v3-se':{buildVolume:'220 × 220 × 250 mm',maxNozzleTemp:260,source:'https://store.creality.com/blogs/all/ender-series-3d-printers-parameter-comparison',sourceKind:'fabricante'},
  'creality-ender-3-v3':{buildVolume:'220 × 220 × 250 mm',source:'https://store.creality.com/blogs/all/ender-3-v3-vs-v3-se-vs-v3-ke',sourceKind:'fabricante'},
  'creality-ender-3-v3-ke':{buildVolume:'220 × 220 × 240 mm',source:'https://store.creality.com/ca/blogs/all/creality-ender-3-pro-v2-s1-s1-pro-v3-ke-detailed-comparative-analysis',sourceKind:'fabricante'},
+ 'anycubic-kobra-3-max':{buildVolume:'420 × 420 × 500 mm',nozzleDiameter:0.4,maxNozzleTemp:300,maxBedTemp:90,source:'https://eu.anycubic.com/products/anycubic-kobra-3-max',sourceKind:'fabricante'},
+ 'anycubic-kobra-s1':{buildVolume:'250 × 250 × 250 mm',maxNozzleTemp:320,maxBedTemp:120,source:'https://eu.anycubic.com/products/kobra-s1',sourceKind:'fabricante'},
+ 'creality-k1c':{buildVolume:'220 × 220 × 250 mm',maxNozzleTemp:300,maxBedTemp:100,source:'https://www.creality.com/compare/compare-k1-flagship-series',sourceKind:'fabricante'},
+ 'creality-k2-plus':{buildVolume:'350 × 350 × 350 mm',nozzleDiameter:0.4,maxNozzleTemp:350,maxBedTemp:120,source:'https://www.creality.com/eu/products/k2-series-3d-printer',sourceKind:'fabricante'},
+ 'flashforge-adventurer-5m-pro':{buildVolume:'220 × 220 × 220 mm',nozzleDiameter:0.4,maxNozzleTemp:280,source:'https://en.fss.flashforge.com/10000/software/2346c48a6b3ba38d89250594ca29b2f2.pdf',sourceKind:'fabricante'},
  'elegoo-neptune-4-pro':{buildVolume:'225 × 225 × 265 mm',source:'https://eu.elegoo.com/es-ax/products/elegoo-neptune-4-pro-fdm-3d-printer',sourceKind:'fabricante'}
 };
 export const printerEstimatedCosts={purchasePrice:3500,averageWatts:150,lifetimeHours:3000} as const;
