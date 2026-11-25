@@ -1,3 +1,4 @@
+import {OperationFeedback} from './OperationFeedback';
 import {useRef,useState,type FormEvent} from 'react';
 import {saveCustomerOrder,type CustomerOrderDraft} from '../data/supabase';
 
@@ -23,7 +24,7 @@ export function SaveOrderForm({workspaceId,productName,draft,onViewOrders}:{
   try{
    await saveCustomerOrder(workspaceId,{...payload,id:request.current.id});
    setSavedKey(key);
-  }catch(cause){setError('Não foi possível registrar o pedido. '+(cause as Error).message);}
+  }catch(cause){setError((cause as Error).message||'A solicitação falhou.');}
   finally{setBusy(false);}
  };
  return <form onSubmit={event=>void submit(event)}>
@@ -36,6 +37,6 @@ export function SaveOrderForm({workspaceId,productName,draft,onViewOrders}:{
    {saved&&<button type="button" onClick={onViewOrders}>Ver pedidos</button>}
   </div>
   {saved&&<p role="status">Pedido registrado no histórico da oficina.</p>}
-  {error&&<p className="error" role="alert">{error}</p>}
+  <OperationFeedback pending={busy} pendingMessage="Aguardando o registro do pedido…" error={error} failureMessage="Não foi possível registrar o pedido."/>
  </form>;
 }

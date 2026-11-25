@@ -1035,3 +1035,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Confirmações em Impressões
 
 - Integrados os diálogos e indicadores de espera aos fluxos de Impressões. Build, 82 unitários e 128 testes Playwright passaram. Commit local, com validação visual e envio em lote pendentes.
+
+### 25/11/2026 — Feedback ao salvar cálculos, composições e pedidos
+
+- Adicionados estado de espera e detalhes recolhíveis de falha. Build, 82 unitários e seis testes Playwright aprovados. Commit local para o próximo lote.

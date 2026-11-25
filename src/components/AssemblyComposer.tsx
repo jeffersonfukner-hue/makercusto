@@ -1,3 +1,4 @@
+import {OperationFeedback} from './OperationFeedback';
 import {useConfirmation} from './ConfirmationDialog';
 import {Modal} from './Modals';
 import {ProductPhotos} from './ProductPhotos';
@@ -75,6 +76,7 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
  const [salePrice,setSalePrice]=useState('');
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
+ const [saveError,setSaveError]=useState('');
  const [saved,setSaved]=useState(false);
  const initialized=useRef(false);
  useEffect(()=>{
@@ -126,7 +128,7 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
     actionLabel:'Salvar composição',onConfirm:()=>void save(true)});
    return;
   }
-  setBusy(true);setError('');
+  setBusy(true);setSaveError('');
   const nameToSave=identity?.productId?name.trim():formatCatalogName(name);
   try{
    const componentParts=parts.map(part=>({product_id:part.id,name:catalog.find(item=>item.id===part.id)!.name,
@@ -137,7 +139,7 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
    const savedProductId=identity&&!identity.productId?await createComposedProduct(workspaceId,draft):
     await saveAssemblyWithComponents(workspaceId,identity?.productId??null,draft);
    setSaved(true);onSaved?.(nameToSave,savedProductId);
-  }catch(cause){setError('Não foi possível salvar o conjunto. '+(cause as Error).message);}
+  }catch(cause){setSaveError((cause as Error).message||'A solicitação falhou.');}
   finally{setBusy(false);}
  };
  return <div className={identity?"mc-assembly-composer":"workspace mc-assembly-composer"}>
@@ -181,6 +183,7 @@ export function AssemblyComposer({workspaceId,active,identity,onSaved,onViewAsse
     disabled={busy||saved} onChange={event=>setSalePrice(event.target.value)}/></label>}
    {!quantitiesValid&&<p role="alert" className="error">Informe uma quantidade inteira válida para cada peça.</p>}
    {error&&<p role="alert" className="error">{error}</p>}
+   <OperationFeedback pending={busy} pendingMessage="Aguardando o salvamento da composição…" error={saveError} failureMessage="Não foi possível salvar o conjunto."/>
    {saved&&<p role="status" className="product-success">Conjunto salvo na oficina.</p>}
    {active&&viewing&&<Modal title={viewing.name} onClose={()=>setViewing(null)}>
     <div className="modal-body">

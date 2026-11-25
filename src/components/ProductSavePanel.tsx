@@ -1,3 +1,4 @@
+import {OperationFeedback} from './OperationFeedback';
 import {CalculationHistory} from './CalculationHistory';
 import {useConfirmation} from './ConfirmationDialog';
 import {formatCatalogName} from '../domain/catalogName';
@@ -28,6 +29,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [savedCalculations,setSavedCalculations]=useState<SavedCalculation[]>([]);
  const [busy,setBusy]=useState(false);
+ const [saveError,setSaveError]=useState('');
  const [loading,setLoading]=useState(false);
  const [message,setMessage]=useState('');
  const [error,setError]=useState('');
@@ -66,12 +68,12 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
   setCopySource(original);
   setName(availableCopyName(original,registeredNames));
   setSku('');
-  setMessage('');setError('');
+  setMessage('');setError('');setSaveError('');
   focusCopyName.current=true;
   onClearRevisionTarget();
  };
  const save=async(confirmed=false)=>{
-  setError('');setMessage('');
+  setError('');setSaveError('');setMessage('');
   if(!session||!workspaceId){onLogin();return;}
   if(!result){setError('Corrija os valores do cálculo antes de salvar.');return;}
   if(!revisionTarget&&name.trim().length<2){setError('Informe um nome com pelo menos 2 caracteres.');return;}
@@ -104,7 +106,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
    setRequestKey(null);
    if(revisionTarget)onClearRevisionTarget?.();
    setRefresh(n=>n+1);
-  }catch(e){setError('Não foi possível salvar o produto: '+(e as Error).message);}
+  }catch(e){setSaveError((e as Error).message||'A solicitação falhou.');}
   finally{setBusy(false);}
  };
  const startNewCalculation=()=>requestConfirmation({
@@ -113,7 +115,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
   actionLabel:'Iniciar novo cálculo',
   onConfirm:()=>{
    setCopySource(null);setName('');setSku('');onDescriptionChange?.('');onKindChange('product');
-   setMessage('');setError('');setRequestKey(null);
+   setMessage('');setError('');setSaveError('');setRequestKey(null);
    onNewCalculation?.();
   }
  });
@@ -190,7 +192,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
      </div>
     </div>
    </section>
-   <div className="mc-save-feedback" aria-live="polite">{message&&<div className="mc-save-confirmation"><p className="product-success" role="status">{message}</p>
+   <div className="mc-save-feedback"><OperationFeedback pending={busy} pendingMessage="Aguardando o salvamento do cálculo…" error={saveError} failureMessage="Não foi possível salvar o cálculo."/>{message&&<div className="mc-save-confirmation"><p className="product-success" role="status">{message}</p>
     <div className="product-workspace-buttons">
      {onViewSaved&&<button type="button" onClick={()=>onViewSaved(lastSavedKind)}>Ver cadastros da oficina</button>}
      {kind==='product'&&lastSavedKind==='product'&&lastSavedCalculation&&onCreateAssembly&&<button type="button" onClick={()=>onCreateAssembly(lastSavedCalculation)}>Montar conjunto com peças</button>}

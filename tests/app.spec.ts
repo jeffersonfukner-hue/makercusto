@@ -2137,6 +2137,8 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  const recent='44444444-4444-4444-8444-444444444444';
  const earlier='55555555-5555-4555-8555-555555555555';
  const requests:Array<Record<string,unknown>>=[];
+ let failFirstSave!:()=>void;
+ const firstSave=new Promise<void>(resolve=>{failFirstSave=resolve;});
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user}
  })),{user});
@@ -2153,7 +2155,10 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
   if(path.endsWith('/mc_customer_orders')){
    if(route.request().method()==='POST'){
     requests.push(route.request().postDataJSON());
-    if(requests.length===1)return route.fulfill({status:500,json:{message:'Falha temporária'}});
+    if(requests.length===1){
+     await firstSave;
+     return route.fulfill({status:500,json:{message:'Falha temporária'}});
+    }
     return route.fulfill({status:204});
    }
    return route.fulfill({json:[{...requests.at(-1),created_at:'2026-11-25T11:30:00Z'}]});
@@ -2175,7 +2180,13 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await expect(page.getByLabel('Item do pedido')).toHaveValue('Chaveiro');
  await page.getByLabel('Situação').selectOption('sold');
  await page.getByRole('button',{name:'Registrar pedido'}).click();
- await expect(page.getByText(/Falha temporária/)).toBeVisible();
+ await expect(page.getByText('Aguardando o registro do pedido…')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Registrando…',exact:true})).toBeDisabled();
+ failFirstSave();
+ await expect(page.getByRole('alert').filter({hasText:'Não foi possível registrar o pedido.'})).toBeVisible();
+ await expect(page.getByText('Falha temporária',{exact:true})).toBeHidden();
+ await page.getByLabel('Item do pedido').locator('xpath=ancestor::form').getByText('Detalhes',{exact:true}).click();
+ await expect(page.getByText('Falha temporária',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Registrar pedido'}).click();
  await expect(page.getByText('Pedido registrado no histórico da oficina.')).toBeVisible();
  expect(requests[1]).toMatchObject({id:requests[0].id,workspace_id:workspace,snapshot_id:earlier,status:'sold',quantity:15,pieces_per_plate:2,sale_price:8});

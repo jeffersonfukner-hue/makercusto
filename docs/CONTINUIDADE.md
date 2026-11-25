@@ -1123,3 +1123,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - O diálogo padrão do site confirma consumo incremental, troca de bobina, redução parcial e cancelamento. Validações ocorrem antes do diálogo. Fechá-lo preserva a edição. Falha de comunicação preserva os dados e a chave para tentar de novo.
 - Impressões informa quando aguarda o servidor e quando atualiza impressões e reservas. Nenhuma migração foi necessária.
 - Build, 82 unitários e 128 testes de navegador passaram. O teste de cancelamento simula a operação em espera, desistência sem requisição e reenvio após falha. Homologação visual deste lote fica para depois da validação do Preview da calculadora. Lote mantido localmente para agrupar com as próximas pendências.
+
+## 25/11/2026 — Feedback ao salvar cálculos, composições e pedidos
+
+- Os três salvamentos informam quando aguardam resposta. Em caso de falha, apresentam uma mensagem curta e deixam a resposta técnica acessível em Detalhes. A espera fica sem percentual porque essas requisições não informam progresso mensurável.
+- Build, 82 testes unitários e seis cenários de navegador passaram. A regressão de Pedidos confirma espera, proteção contra segundo envio, detalhe da falha e repetição com o mesmo identificador.
+- Commit local para o lote seguinte ao Preview da calculadora. Resta estender o padrão às demais operações pertinentes. Nenhuma migração necessária.
