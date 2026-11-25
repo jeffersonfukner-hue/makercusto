@@ -990,3 +990,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Salvar uma edição ou remover um filamento deste cálculo exige confirmação. Cancelar mantém a tabela intacta e conserva o rascunho de edição. Salvar alterações de um perfil pessoal de fatiador também pede confirmação.
 - Orientações de preço, uso e purga e o aviso de perfil indisponível ficaram no ícone do bloco Filamento. O perfil disponível conserva parâmetros, fonte e link de referência.
 - Build, 78 unitários e 14 cenários Playwright aprovados. Confirmações nos demais módulos, feedback de operações longas e WhatsApp configurável estão registrados no backlog.
+
+### Resultado compartilhado e simulação pública
+
+- O mesmo painel público e logado destaca margem em reais por unidade, margem bruta em porcentagem, markup, faturamento e lucro bruto do lote. Valores negativos permanecem em vermelho. O ícone do resultado explica as três medidas e o escopo da composição fica na ajuda contextual.
+- A página pública é uma simulação avulsa. Em vez de painéis de salvamento e montagem, o resultado oferece Criar conta e o cabeçalho oferece Entrar. Salvar cálculo permanece disponível na oficina autenticada. Cobrança segue pendente de definição e histórico ficou para uma etapa separada.
+- Build, 78 unitários e 16 cenários Playwright aprovados. Confirmados contraste de valores negativos, tipografia e tabela compacta de 320 a 1600 px nas duas áreas.

@@ -589,7 +589,12 @@
 .mc-result-help {display:flex;margin-top:4px}
 
 .mc-calculator .result-panel {padding:0 12px 12px}
-.mc-calculator .result-panel h2 {background:var(--mc-navy);color:white;padding:12px;margin:0 -12px 10px;border-radius:9px 9px 0 0}
+.mc-result-heading {
+ display:flex;align-items:center;justify-content:space-between;gap:8px;
+ background:var(--mc-navy);color:white;padding:10px 12px;margin:0 -12px 10px;border-radius:9px 9px 0 0;
+}
+.mc-calculator .mc-result-heading .mc-help button {color:#dbeafe}
+.mc-result-heading .mc-tooltip {top:100%;bottom:auto;left:auto;right:0}
 .mc-calculator .hero-amount {
  display:grid;gap:2px;margin:0 0 10px;padding:10px 12px;background:#e9f7ef;
  border-color:#c8e8d6;color:#135a37;
@@ -599,7 +604,7 @@
 .mc-result-metrics {display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:5px;margin:9px 0 0}
 .mc-result-metrics>div {min-width:0;padding:7px;background:#eef3fa;border-radius:6px}
 .mc-result-metrics dt {color:var(--mc-muted);font-size:11px}
-.mc-result-metrics dd {margin:3px 0 0;font-size:14px;font-weight:750;overflow-wrap:anywhere}
+.mc-result-metrics dd {margin:3px 0 0;font-size:clamp(17px,1.4vw,22px);font-weight:750;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .mc-calculator .result-panel .breakdown {border-color:var(--mc-border);overflow:visible}
 .mc-calculator .result-panel .breakdown summary {background:#edf3fb;color:var(--mc-ink);min-height:0;padding:8px;border-radius:8px}
 .mc-calculator .breakdown-inner {padding:6px 8px}
@@ -607,7 +612,7 @@
 .mc-calculator :is(.cost-list,.summary)>div {padding:5px 0;border-color:var(--mc-border)}
 .mc-calculator :is(.cost-list dt,.summary span) {color:var(--mc-muted)}
 .mc-calculator .summary {margin-top:5px}
-.mc-calculator .summary strong {font-size:13px}
+.mc-calculator .summary strong {font-size:clamp(16px,1.2vw,20px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .mc-calculator .cost-list dt::before {content:'';display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;background:#3069c9}
 .mc-calculator .cost-list div:nth-child(2) dt::before {background:#956400}
 .mc-calculator .cost-list div:nth-child(3) dt::before {background:#7651ad}
@@ -837,3 +842,8 @@
  .materials-table .material-actions-cell {position:sticky;right:0;background:#fff;box-shadow:-3px 0 5px #172b4510}
  .mc-cost-block .materials-table :is(thead,tfoot) .material-actions-cell {background:#e4eefb}
 }
+
+
+.mc-public-account {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--mc-border)}
+.mc-public-account span {font-size:12px;color:var(--mc-muted)}
+.mc-public-account button {border:1px solid var(--mc-blue);border-radius:6px;padding:7px 10px;font-size:12px;font-weight:650}

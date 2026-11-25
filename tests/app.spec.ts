@@ -249,10 +249,10 @@ test('login, oficina e cadastro persistente consomem API autenticada',async({pag
   await json([]);
  });
  await page.goto('/');
- await page.getByRole('button',{name:'Entrar / Salvar'}).click();
+ await page.getByRole('button',{name:'Entrar',exact:true}).click();
  await page.getByRole('textbox',{name:'E-mail'}).fill(user.email);
  await page.getByLabel('Senha').fill('senha-teste');
- await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ await page.getByRole('dialog',{name:'Entrar no MakerCusto'}).getByRole('button',{name:'Entrar',exact:true}).click();
  await expect(page.getByRole('region',{name:'Painel da oficina'})).toBeVisible();
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
@@ -484,11 +484,16 @@ test('visitante preserva última referência selecionada sem criar cópia',async
  await expect(page.getByRole('combobox',{name:'Selecionar impressora'})).toHaveValue('reference:creality-k1c');
 });
 
-test('produto exige login para salvar e oferece entrada no modal',async({page})=>{
+test('calculadora pública mostra resultado e chamada de cadastro',async({page})=>{
  await page.goto('/');
- await expect(page.getByRole('heading',{name:'Identificação do produto'})).toBeVisible();
- await page.getByRole('button',{name:'Entrar para salvar produto'}).click();
- await expect(page.getByRole('dialog')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Salvar produto e custo'})).toHaveCount(0);
+ await page.getByRole('button',{name:'Ajuda: Indicadores do resultado'}).focus();
+ await expect(page.getByRole('tooltip')).toContainText('Markup é essa diferença em relação ao custo');
+ await page.getByTestId('salePrice').fill('1');
+ await expect(page.getByTestId('unitProfit')).toHaveClass(/negative/);
+ await expect(page.getByTestId('margin')).toHaveClass(/negative/);
+ await page.getByRole('button',{name:'Criar conta',exact:true}).click();
+ await expect(page.getByRole('dialog',{name:'Criar minha conta'})).toBeVisible();
 });
 test('catálogo abre antes do formulário e salva novo produto na oficina',async({page})=>{
  const workspace='11111111-1111-4111-8111-111111111111';
@@ -525,12 +530,6 @@ test('catálogo abre antes do formulário e salva novo produto na oficina',async
  expect(posted?.p_workspace_id).toBe(workspace);
  expect(posted?.p_kind).toBe('product');
  expect(posted?.p_product_id).toBeNull();
-});
-test('visitante vê fluxo de montagem e pode abrir login',async({page})=>{
- await page.goto('/');
- await expect(page.getByRole('heading',{name:'Produtos com várias peças'})).toBeVisible();
- await page.getByRole('button',{name:'Entrar para montar produto'}).click();
- await expect(page.getByRole('dialog')).toBeVisible();
 });
 test('conjunto de três peças: catálogo, criação, custos, edição e duplicação',async({page})=>{
  const workspace='11111111-1111-4111-8111-111111111111';
@@ -627,7 +626,7 @@ test('acesso público preserva calculadora sem apresentar sistema privado',async
  await page.goto('/');
  await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Módulos do MakerCusto'})).toHaveCount(0);
- await expect(page.getByRole('button',{name:'Entrar / Salvar'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeVisible();
 });
 test('login apresenta navegação superior e painel de oficina',async({page},testInfo)=>{
  const workspace='11111111-1111-4111-8111-111111111111',user='22222222-2222-4222-8222-222222222222';

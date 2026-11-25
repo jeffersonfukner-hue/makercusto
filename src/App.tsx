@@ -12,7 +12,6 @@ import {ProductSavePanel} from './components/ProductSavePanel';
 import {ProductWorkspace} from './components/ProductWorkspace';
 import {MaterialsWorkspace} from './components/MaterialsWorkspace';
 import {PrintsWorkspace} from './components/PrintsWorkspace';
-import {AssemblyPanel} from './components/AssemblyPanel';
 import {WorkshopDashboard} from './components/WorkshopDashboard';
 import {SystemNavigation,type ProductTab,type OverviewTab,type SystemSection} from './components/SystemNavigation';
 import {printerEstimatedCosts,printerPresets,printerPresetLabel} from './data/printerPresets';
@@ -93,7 +92,7 @@ export default function App(){
  const [printers,setPrinters]=useState<PrinterProfile[]>(()=>sessionStore.get()?seedPrinters():[...seedPrinters(),...readLocalPrinters()]);
  const [printerId,setPrinterId]=useState(()=>sessionStore.get()?'example':readSelectedPrinter('guest',[...seedPrinters(),...readLocalPrinters()]));
  const [session,setSession]=useState<Session|null>(()=>sessionStore.get());
- const [authOpen,setAuthOpen]=useState(false);
+ const [authMode,setAuthMode]=useState<'login'|'signup'|null>(null);
  const [printerModal,setPrinterModal]=useState<'new'|'edit'|null>(null);
  const [models,setModels]=useState<CatalogEntry[]>([]);
  const [catalogModal,setCatalogModal]=useState<Catalog|null>(null);
@@ -294,7 +293,7 @@ export default function App(){
  const percent=(value:number)=>count(Math.round(value*10)/10)+'%';
  const modeSwitch=<nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>;
  return <div className="mc-theme">
- {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthOpen(true)}>Entrar / Salvar</button></div></header>}
+ {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthMode('login')}>Entrar</button></div></header>}
  <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={setActiveSection} onLogout={()=>void logout()}>
  <main className={session?"app-main":"shell"}>
   {session&&activeSection==='overview'&&<WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
@@ -302,7 +301,7 @@ export default function App(){
   <div className="mc-calculator">
   {!session&&<section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>}
   {session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
-   onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
+   onLogin={()=>setAuthMode('login')} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity')}
    onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
    onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
@@ -432,7 +431,10 @@ export default function App(){
     </section>}
    </div>
    <section className="panel result-panel" aria-labelledby="calculation-result">
-    <h2 id="calculation-result">Resultado do cálculo</h2>
+    <div className="mc-result-heading">
+     <h2 id="calculation-result">Resultado do cálculo</h2>
+     <CalculatorHelp label="Indicadores do resultado">Margem por unidade é o preço de venda menos o custo unitário. Margem bruta é essa diferença em relação ao preço. Markup é essa diferença em relação ao custo.</CalculatorHelp>
+    </div>
     {result&&<div className="hero-amount" aria-live="polite">
      <span>Custo estimado por unidade</span>
      <strong data-testid="unitCost">{money(result.unitCost)}</strong>
@@ -442,9 +444,9 @@ export default function App(){
     {error&&<p className="error" role="alert">{error}</p>}
     {result&&<>
      <dl className="mc-result-metrics">
-      <div><dt>Lucro bruto/un.</dt><dd data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(form.salePrice-result.unitCost)}</dd></div>
-      <div><dt>Margem bruta</dt><dd data-testid="margin">{percent(result.marginPercent)}</dd></div>
-      <div><dt>Markup</dt><dd>{percent(result.markupPercent)}</dd></div>
+      <div><dt>Margem em R$/un.</dt><dd data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(form.salePrice-result.unitCost)}</dd></div>
+      <div><dt>Margem bruta</dt><dd data-testid="margin" className={result.marginPercent<0?'negative':undefined}>{percent(result.marginPercent)}</dd></div>
+      <div><dt>Markup</dt><dd className={result.markupPercent<0?'negative':undefined}>{percent(result.markupPercent)}</dd></div>
      </dl>
      <details className="breakdown" open={advanced||Boolean(session)}>
       <summary>Composição dos custos</summary>
@@ -454,9 +456,13 @@ export default function App(){
         <div><span>Faturamento do lote</span><strong>{money(result.lotRevenue)}</strong></div>
         <div><span>Lucro bruto do lote</span><strong data-testid="grossProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.grossProfit)}</strong></div>
         </div>
-       {session?<div className="mc-result-help"><CalculatorHelp label="Escopo dos custos">Estimativa sem embalagem, frete, taxas de marketplace, tributos e despesas administrativas.</CalculatorHelp></div>:<p className="footnote">Não inclui embalagem, frete, marketplace, tributos e despesas administrativas. Lucro bruto não é lucro líquido.</p>}
+       <div className="mc-result-help"><CalculatorHelp label="Escopo dos custos">Estimativa sem embalagem, frete, taxas de marketplace, tributos e despesas administrativas. O lucro exibido é bruto.</CalculatorHelp></div>
       </div>
      </details>
+     {!session&&<div className="mc-public-account">
+      <span>Quer salvar seus cálculos?</span>
+      <button type="button" className="primary-action" onClick={()=>setAuthMode('signup')}>Criar conta</button>
+     </div>}
     </>}
    </section>
   </div>
@@ -475,13 +481,7 @@ export default function App(){
    <label>Descrição (opcional)<textarea aria-label="Descrição do produto" maxLength={2000} value={description} onChange={event=>setDescription(event.target.value)}/></label>
   </section>}
   </div>
-  {!session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
-   onLogin={()=>setAuthOpen(true)} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
-   onClearRevisionTarget={()=>{setRevisionTarget(null);setLoadedCalculation('');}}
-   onViewSaved={kind=>{setProductTab(kind==='component'?'parts':'all');setActiveSection('products');}}
-   onCreateAssembly={()=>setActiveSection('assemblies')}/>}
   </>}
-  {!session&&<AssemblyPanel session={session} workspaceId={workspaceId} onLogin={()=>setAuthOpen(true)}/>}
   {session&&activeSection==='printers'&&<section className="panel"><h2>Minhas impressoras</h2><button type="button" onClick={addPrinter}>Nova impressora</button>{stored.length===0?<p>Nenhuma impressora cadastrada.</p>:<ul className="dashboard-activity-list">{stored.map(p=><li key={p.id}><strong>{p.name}</strong><button type="button" onClick={()=>{setPrinterId(p.id);setPrinterModal('edit');}}>Editar</button></li>)}</ul>}</section>}
   {session&&activeSection==='workshop'&&<section className="panel"><h2>{workspaceName}</h2><p>Configurações e tarifas da oficina: integração pendente.</p></section>}
   {session&&activeSection==='library'&&<LibraryWorkspace workspaceId={workspaceId}/>}
@@ -491,7 +491,7 @@ export default function App(){
   {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'} onCalculate={snapshot=>{if(applySavedCalculation(snapshot)){setCalculatorTab("calculation");setActiveSection('calculator');}}}/>} 
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>
- {authOpen&&<AuthModal onClose={()=>setAuthOpen(false)} onSuccess={()=>{setAuthOpen(false);void loadAccount();}}/>}
+ {authMode&&<AuthModal initialSignup={authMode==='signup'} onClose={()=>setAuthMode(null)} onSuccess={()=>{setAuthMode(null);void loadAccount();}}/>}
  {printerModal&&<PrinterModal models={models} initial={printerModal==="edit"?(stored.find(p=>p.id===printerId)??{id:activePrinter.id,workspace_id:workspaceId??'',model_id:models.find(m=>activePrinter.name.includes(m.name))?.id??null,name:activePrinter.name,purchase_price:activePrinter.printerPrice,average_watts:activePrinter.averageWatts,lifetime_hours:activePrinter.lifetimeHours,active:true}):undefined} onClose={()=>setPrinterModal(null)} onSave={savePrinter}/>}
  {catalogModal&&<CatalogModal title={catalogTitles[catalogModal]} options={list(catalogModal)} onClose={()=>setCatalogModal(null)} onSave={saveCatalog}/>}
  </div>;

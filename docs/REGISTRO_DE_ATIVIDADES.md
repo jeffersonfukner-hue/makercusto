@@ -1020,3 +1020,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Compactada a tabela e revistas as ações de edição e remoção. Verificados aceitar e cancelar, manutenção do rascunho e ajuda para materiais sem perfil técnico.
 - Build, 78 unitários e 14 casos Playwright aprovados. Sem deploy ou alteração operacional. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Destaque dos resultados e acesso público
+
+- Ajustada a hierarquia dos valores e a ajuda de margem e markup no painel compartilhado. Simplificada a simulação pública, com acesso direto ao formulário de criação de conta e salvamento na área logada.
+- Build, 78 unitários, 16 cenários Playwright e verificação responsiva aprovados. Sem deploy, cobrança ou mudanças no histórico. Commit com `[skip ci]`. Duração não aferida.

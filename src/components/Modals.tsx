@@ -12,19 +12,19 @@ export function Modal({title,onClose,children}: {title:string;onClose:()=>void;c
   </section>
  </div>;
 }
-export function AuthModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:()=>void}){
- const [signup,setSignup]=useState(false),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+export function AuthModal({onClose,onSuccess,initialSignup=false}:{onClose:()=>void;onSuccess:()=>void;initialSignup?:boolean}){
+ const [signup,setSignup]=useState(initialSignup),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError('');setNotice('');try{
   if(signup){const ready=await signUp(email.trim(),password);if(ready){onSuccess();return;}setNotice('Conta criada. Confirme seu e-mail e depois entre.');}
   else{await signIn(email.trim(),password);onSuccess();}
  }catch(err){setError((err as Error).message);}finally{setBusy(false);}};
  return <Modal title={signup?'Criar minha conta':'Entrar no MakerCusto'} onClose={onClose}>
   <form className="modal-body" onSubmit={submit}>
-   <p>Seu cálculo continua livre. Entre somente para salvar impressoras e cadastros na sua oficina.</p>
+   <p>Seu cálculo continua livre. Use uma conta para acessar os recursos da oficina.</p>
    <label>E-mail<input required type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></label>
    <label>Senha<input required type="password" minLength={6} autoComplete={signup?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)}/></label>
    {error&&<p className="error" role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
-   <div className="modal-actions"><button className="primary-action" type="submit" disabled={busy}>{busy?'Salvando...':signup?'Criar conta':'Entrar'}</button><button type="button" onClick={()=>{setSignup(v=>!v);setError('');setNotice('');}}>{signup?'Já tenho conta':'Criar conta gratuita'}</button></div>
+   <div className="modal-actions"><button className="primary-action" type="submit" disabled={busy}>{busy?'Salvando...':signup?'Criar conta':'Entrar'}</button><button type="button" onClick={()=>{setSignup(v=>!v);setError('');setNotice('');}}>{signup?'Já tenho conta':'Criar conta'}</button></div>
   </form>
  </Modal>;
 }
