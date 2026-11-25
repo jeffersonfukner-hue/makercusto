@@ -1,3 +1,4 @@
+import {useConfirmation} from './ConfirmationDialog';
 import {PrintDurationFields,emptyDuration,printDurationInHours,splitPrintDuration} from './PrintDurationFields';
 import {useEffect,useRef,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
@@ -6,8 +7,10 @@ import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExisti
  type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview,type InventoryAdjustmentProposal,type PhysicalOccurrenceDossier} from '../data/supabase';
 
 const newKey=()=>crypto.randomUUID();
+const gramsFormat=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3});
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
 export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
+ const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [activePrimaryForm,setActivePrimaryForm]=useState<'new'|'reserve'|'confirm'|'due'|'occurrence'|'review'|'proposal'|'dossier'|'swap'|'reduction'|'cancel'|'allocation'|'other'>('new');
  const [printers,setPrinters]=useState<StoredPrinter[]>([]),[products,setProducts]=useState<ProductRecord[]>([]);
  const [spools,setSpools]=useState<ExistingSpool[]>([]),[prints,setPrints]=useState<PrintRecord[]>([]),[reservations,setReservations]=useState<PrintReservation[]>([]),[occurrences,setOccurrences]=useState<PhysicalConsumptionOccurrence[]>([]);
@@ -56,12 +59,16 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  };
 
  const [error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
+ const [loading,setLoading]=useState(false);
  const [reload,setReload]=useState(0),operation=useRef(newKey());
  useEffect(()=>{
-  let live=true;if(!workspaceId)return;
+  if(!workspaceId){setLoading(false);return;}
+  let live=true;
+  setLoading(true);
   Promise.all([listPrinters(workspaceId),listProducts(workspaceId),listExistingSpools(workspaceId),listPrints(workspaceId),listPrintReservations(workspaceId),listPhysicalOccurrences(workspaceId),listPhysicalOccurrenceReviews(workspaceId),listInventoryAdjustmentProposals(workspaceId)])
    .then(([p,pr,s,executions,held,pending,history,adjustments])=>{if(live){setPrinters(p);setProducts(pr.filter(x=>x.kind!=='kit'));setSpools(s);setPrints(executions);setReservations(held);setOccurrences(pending);setReviews(history);setProposals(adjustments);}})
-   .catch(e=>{if(live)setError('Falha ao consultar impressões: '+(e as Error).message);});
+   .catch(e=>{if(live)setError('Falha ao consultar impressões: '+(e as Error).message);})
+   .finally(()=>{if(live)setLoading(false);});
   return()=>{live=false};
  },[workspaceId,reload]);
  const addOutput=()=>{
@@ -112,13 +119,19 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Prazo recusado: '+(e as Error).message)}
   finally{setBusy(false)}
  };
- const submitCancel=async()=>{
+ const submitCancel=async(confirmed=false)=>{
   const target=prints.find(p=>p.id===cancelTarget);
   if(!workspaceId||!target||!['draft','partial','reserved','running'].includes(target.status)){
    setError('Selecione uma impressão aberta para cancelar.');return;
   }
   if(cancelReason.trim().length<10||cancelReason.trim().length>1000){
    setError('Informe justificativa de cancelamento com 10 a 1000 caracteres.');return;
+  }
+  if(!confirmed){
+   setError('');
+   requestConfirmation({title:'Cancelar impressão',message:`A impressão de “${target.outputs.map(o=>o.name).join(' + ')}” será encerrada. As reservas não consumidas serão liberadas.`,
+    actionLabel:'Cancelar impressão e liberar reservas',onConfirm:()=>void submitCancel(true)});
+   return;
   }
   setBusy(true);setError('');setMessage('');
   try{
@@ -129,7 +142,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Cancelamento recusado: '+(e as Error).message)}
   finally{setBusy(false)}
  };
- const submitReduction=async()=>{
+ const submitReduction=async(confirmed=false)=>{
   if(!workspaceId||!reduceTarget||!reduceOutput){
    setError('Selecione uma impressão e uma peça para reduzir o planejamento.');return;
   }
@@ -151,6 +164,12 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   if(reduceReason.trim().length<10||reduceReason.trim().length>1000){
    setError('Informe justificativa de 10 a 1000 caracteres.');return;
   }
+  if(!confirmed){
+   setError('');
+   requestConfirmation({title:'Reduzir planejamento',message:`A quantidade de “${output.name}” passa de ${output.planned} para ${newPlanned}. ${isReleasing?`Serão liberados ${gramsFormat.format(release)} g da reserva selecionada.`:'As reservas permanecem como estão.'}`,
+    actionLabel:'Salvar redução',onConfirm:()=>void submitReduction(true)});
+   return;
+  }
   setBusy(true);setError('');setMessage('');
   try{
    await reducePrintPlan(workspaceId,{productionId:reduceTarget,requestKey:reduceKey.current,
@@ -164,7 +183,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Redução parcial recusada: '+(e as Error).message)}
   finally{setBusy(false)}
  };
- const submitSwap=async()=>{
+ const submitSwap=async(confirmed=false)=>{
   const old=reservations.find(x=>x.id===swapReservation&&x.status==='active');
   const nextLot=spools.find(x=>x.id===swapNewLot);
   if(!workspaceId||!old||!nextLot||old.lot_id===swapNewLot){
@@ -183,6 +202,12 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }
   if(swapReason.trim().length<10||swapReason.trim().length>1000){
    setError('Informe justificativa da troca de 10 a 1000 caracteres.');return;
+  }
+  if(!confirmed){
+   setError('');
+   requestConfirmation({title:'Trocar bobina reservada',message:`Serão liberados ${gramsFormat.format(release)} g da reserva atual e reservados ${gramsFormat.format(held)} g em “${nextLot.label}”.`,
+    actionLabel:'Salvar troca',onConfirm:()=>void submitSwap(true)});
+   return;
   }
   setBusy(true);setError('');setMessage('');
   try{
@@ -284,7 +309,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   finally{setDossierBusy(false)}
  };
  const selectedPrint=prints.find(p=>p.id===selected);
- const confirm=async()=>{
+ const confirm=async(confirmed=false)=>{
   if(!workspaceId||!selectedPrint||!lot||!valid(mass)||!valid(purge)||!valid(loss)||Number(mass)+Number(purge)+Number(loss)<=0||!valid(good)||!valid(failed)){
    setError('Informe impressão, bobina, consumo positivo e peças novas boas/rejeitadas.');return;
   }
@@ -300,6 +325,12 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   if([mass,purge,loss].some(v=>Math.abs(Number(v)*1000-Math.round(Number(v)*1000))>0.000001)){
    setError('Informe massas em gramas com até três casas decimais.');return;
   }
+  if(!confirmed){
+   setError('');
+   requestConfirmation({title:'Registrar consumo incremental',message:`Serão baixados ${gramsFormat.format(Number(mass)+Number(purge)+Number(loss))} g da bobina. Peças de “${output.name}” neste registro: ${Number(good)} boas e ${Number(failed)} rejeitadas.`,
+    actionLabel:'Registrar consumo',onConfirm:()=>void confirm(true)});
+   return;
+  }
   setBusy(true);setError('');setMessage('');
   try{
    await confirmPrint(workspaceId,{id:selectedPrint.id,key:operation.current,
@@ -311,9 +342,12 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   }catch(e){setError('Confirmação recusada: '+(e as Error).message)}finally{setBusy(false)}
  };
  return <section className="materials-workspace" aria-label="Registro real de impressões">
+  {confirmationDialog}
   <div className="product-workspace-heading"><div><h2>Impressões da oficina</h2>
    <p>L2 registra a impressão sem baixar estoque. L3 confirma apenas os incrementos físicos.</p></div></div>
   {error&&<p role="alert" className="error">{error}</p>}{message&&<p role="status" className="product-success">{message}</p>}
+  {busy&&<p role="status">Aguardando resposta do servidor…</p>}
+  {loading&&<p role="status">Atualizando impressões e reservas…</p>}
   <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('new')} onClickCapture={()=>setActivePrimaryForm('new')}><h3>Nova impressão</h3>
    <div className="product-save-fields">
     <label>Impressora física<select aria-label="Impressora física" value={printer} onChange={e=>setPrinter(e.target.value)}>

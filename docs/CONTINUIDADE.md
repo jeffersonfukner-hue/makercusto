@@ -1117,3 +1117,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A migração `20261125171554_save_composition_pricing.sql` grava preço, modo de precificação, meta de margem e quantidade planejada nas novas revisões. A aplicação no Supabase de teste depende de autorização específica. O lote inclui os ajustes do iPad já presentes em `8dd8ca9` para um único Preview manual.
 - Validação local: build, 82 testes unitários, 128 cenários Playwright em desktop/celular, dois cenários em WebKit com perfil de iPad Pro e teste da migração em PostgreSQL local descartável. Sem CI remota, deploy ou alteração operacional. Falta homologar a recuperação em aparelhos reais no Preview.
 - Migração autorizada e aplicada no Supabase de teste. O arquivo local `20261125171554_save_composition_pricing.sql` corresponde à versão remota `20261125172724` registrada pelo serviço. A leitura confirmou duas partes, custo de R$ 17,55, preço de referência de R$ 87,73 e retorno da revisão histórica pelo identificador correto. A RPC de histórico permite execução por usuários autenticados e bloqueia acesso anônimo. Preview manual pendente.
+
+## 25/11/2026 — Confirmações de operações em Impressões
+
+- O diálogo padrão do site confirma consumo incremental, troca de bobina, redução parcial e cancelamento. Validações ocorrem antes do diálogo. Fechá-lo preserva a edição. Falha de comunicação preserva os dados e a chave para tentar de novo.
+- Impressões informa quando aguarda o servidor e quando atualiza impressões e reservas. Nenhuma migração foi necessária.
+- Build, 82 unitários e 128 testes de navegador passaram. O teste de cancelamento simula a operação em espera, desistência sem requisição e reenvio após falha. Homologação visual deste lote fica para depois da validação do Preview da calculadora. Lote mantido localmente para agrupar com as próximas pendências.

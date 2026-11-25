@@ -1030,8 +1030,10 @@ test('Impressões L3: confirmação incremental mantém chave no retry e respeit
  await actualDuration.getByRole('spinbutton',{name:'Horas',exact:true}).fill('1');
  await actualDuration.getByRole('spinbutton',{name:'Minutos',exact:true}).fill('15');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Registrar consumo',exact:true}).click();
  await expect(page.getByRole('alert').last()).toContainText('Falha de rede simulada');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Registrar consumo',exact:true}).click();
  await expect(page.getByText('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.')).toBeVisible();
  expect(attempts).toHaveLength(2);
  expect(attempts[0].p_idempotency_key).toBe(attempts[1].p_idempotency_key);
@@ -1081,6 +1083,7 @@ test('Impressões L3: bloqueia deltas fracionários e quantidade superior ao pla
  expect(called).toBe(false);
  await minutes.fill('30');
  await page.getByRole('button',{name:'Confirmar consumo incremental'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Registrar consumo',exact:true}).click();
  await expect(page.getByText('Confirmação incremental registrada; consumo da bobina baixado somente uma vez.')).toBeVisible();
  expect(called).toBe(true);
 });
@@ -1139,6 +1142,8 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
  const production='66666666-6666-4666-8666-666666666666',lot='77777777-7777-4777-8777-777777777777';
  const reservation='88888888-8888-4888-8888-888888888888',output='55555555-5555-4555-8555-555555555555';
+ let finishFirstAttempt!:()=>void;
+ const pendingAttempt=new Promise<void>(resolve=>{finishFirstAttempt=resolve;});
  const cancelAttempts:Record<string,unknown>[]=[];const dueAttempts:Record<string,unknown>[]=[];
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock',refresh_token:'mock',expires_at:Date.now()+3600000,user:{id:user,email:'maker@teste.local'}
@@ -1162,7 +1167,10 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
   }
   if(u.includes('rpc/mc_cancel_print')){
    cancelAttempts.push(route.request().postDataJSON() as Record<string,unknown>);
-   if(cancelAttempts.length===1)return send({message:'Conexão indisponível'},503);
+   if(cancelAttempts.length===1){
+    await pendingAttempt;
+    return send({message:'Conexão indisponível'},503);
+   }
    return send(production);
   }
   return send([]);
@@ -1185,8 +1193,19 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  expect(cancelAttempts).toHaveLength(0);
  await page.getByRole('textbox',{name:'Justificativa do cancelamento'}).fill('Pedido cancelado após produção parcial');
  await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
- await expect(page.getByRole('alert').last()).toContainText('Conexão indisponível');
+ await expect(page.getByRole('dialog')).toContainText('reservas não consumidas');
+ await page.getByRole('dialog').getByRole('button',{name:'Cancelar',exact:true}).click();
+ expect(cancelAttempts).toHaveLength(0);
+ await expect(page.getByRole('textbox',{name:'Justificativa do cancelamento'})).toHaveValue('Pedido cancelado após produção parcial');
  await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Cancelar impressão e liberar reservas',exact:true}).click();
+ await expect(page.getByText('Aguardando resposta do servidor…')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Cancelando…',exact:true})).toBeDisabled();
+ finishFirstAttempt();
+ await expect(page.getByRole('alert').last()).toContainText('Conexão indisponível');
+ await expect(page.getByText('Aguardando resposta do servidor…')).toHaveCount(0);
+ await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Cancelar impressão e liberar reservas',exact:true}).click();
  await expect(page.getByText('Impressão cancelada. Reservas não utilizadas liberadas; consumos e peças anteriores preservados.')).toBeVisible();
  expect(cancelAttempts).toHaveLength(2);
  expect(cancelAttempts[0].p_request_key).toBe(cancelAttempts[1].p_request_key);
@@ -1242,8 +1261,10 @@ test('P01-E: redução parcial preserva peças confirmadas e exige liberação e
  expect(attempts).toHaveLength(0);
  await page.getByRole('spinbutton',{name:'Gramas a liberar da reserva'}).fill('12');
  await page.getByRole('button',{name:'Confirmar redução parcial'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Salvar redução',exact:true}).click();
  await expect(page.getByRole('alert').last()).toContainText('Falha de comunicação simulada');
  await page.getByRole('button',{name:'Confirmar redução parcial'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Salvar redução',exact:true}).click();
  await expect(page.getByText(/Planejamento parcialmente reduzido/)).toBeVisible();
  expect(attempts).toHaveLength(2);
  expect(attempts[0].p_request_key).toBe(attempts[1].p_request_key);
@@ -1294,8 +1315,10 @@ test('P01-D: troca de bobina preserva preços antigos e reenvia mesma chave sem 
  expect(attempts).toHaveLength(0);
  await page.getByRole('spinbutton',{name:'Gramas a liberar na troca'}).fill('120');
  await page.getByRole('button',{name:'Confirmar troca de reserva'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Salvar troca',exact:true}).click();
  await expect(page.getByRole('alert').last()).toContainText('Conexão temporariamente indisponível');
  await page.getByRole('button',{name:'Confirmar troca de reserva'}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Salvar troca',exact:true}).click();
  await expect(page.getByText('Troca de reserva registrada. Nenhum filamento foi baixado nem houve alteração dos custos históricos.')).toBeVisible();
  expect(attempts).toHaveLength(2);
  expect(attempts[0].p_request_key).toBe(attempts[1].p_request_key);

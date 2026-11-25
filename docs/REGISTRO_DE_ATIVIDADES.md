@@ -1031,3 +1031,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A calculadora abre a montagem salva na própria ficha e mantém a impressão em peça única selecionável. Pedido e orçamento usam o método ativo. O histórico recupera a revisão escolhida.
 - Build, 82 unitários, 128 cenários Playwright, dois testes em WebKit com perfil de iPad e teste SQL local aprovados. Migração de teste e Preview pendentes.
 - Aplicada a migração no Supabase de teste após autorização. Leitura da composição do troféu confirmou duas partes, custo de R$ 17,55 e preço de referência de R$ 87,73. O Preview continua pendente.
+
+### 25/11/2026 — Confirmações em Impressões
+
+- Integrados os diálogos e indicadores de espera aos fluxos de Impressões. Build, 82 unitários e 128 testes Playwright passaram. Commit local, com validação visual e envio em lote pendentes.
