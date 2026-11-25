@@ -991,3 +991,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Atalhos da Visão geral
 
 - Reposicionados os seis destinos de Acesso rápido para o cabeçalho. Build, 75 unitários e navegação Playwright no desktop e celular aprovados. Commit com `[skip ci]`. Duração não aferida.
+
+### 25/11/2026 — Painel de produção da Visão geral
+
+- Pesquisadas referências de gestão de impressão e produção. Implementados indicadores de execuções disponíveis, barras por etapa e totais de peças confirmadas. Retirado o espaço reservado ao gráfico financeiro vazio.
+- Build, 75 unitários, quatro cenários Playwright e verificação visual responsiva aprovados. Sem deploy, migração operacional ou integração financeira. Commit com `[skip ci]`. Duração não aferida.

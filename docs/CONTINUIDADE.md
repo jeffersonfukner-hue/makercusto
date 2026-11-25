@@ -950,3 +950,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Os seis atalhos agora ficam ao lado do título da Visão geral em desktop, com quebra de linha no celular. O painel abaixo concentra indicadores e gráficos.
 - Sequência acordada: testar os atalhos enquanto se pesquisa e implementa o painel com dados disponíveis, incorporar correções dos testes, depois retomar miniaturas em Produtos e pesquisa das impressoras. A migração da galeria permanece pendente de autorização.
 - Build, 75 testes unitários e dois cenários Playwright de navegação aprovados.
+
+### Visão geral — indicadores de produção
+
+- Prusa Connect e 3DPrinterOS separam fila, histórico e estados dos trabalhos. Odoo apresenta medidas de produção a partir de ordens registradas. O MakerCusto usa as execuções já disponibilizadas pelo módulo Impressões para mostrar a distribuição por etapa e as peças confirmadas como boas ou rejeitadas. Os gráficos só aparecem com execuções disponíveis. Custos finais e resultado de vendas continuam sinalizados como dados aguardados.
+- Referências: [Prusa Connect](https://connect.prusa3d.com/), [3DPrinterOS](https://intercom.help/3DPrinterOS/en/articles/9712569-actions-available-for-print-jobs) e [Análise de produção do Odoo](https://www.odoo.com/documentation/18.0/applications/inventory_and_mrp/manufacturing/reporting/production_analysis.html).
+- Build, 75 unitários, quatro cenários Playwright e layout responsivo verificado em 320, 390, 1024 e 1600 px. As duas colunas de gráficos foram verificadas em 1024 e 1600 px e a altura do cabeçalho nesses tamanhos permanece definida pelo título.
+- Pendentes: homologação dos ajustes da Visão geral, miniaturas na lista de Produtos, validação da galeria após autorização da migração e pesquisa das impressoras. O painel usa apenas leitura das APIs existentes.

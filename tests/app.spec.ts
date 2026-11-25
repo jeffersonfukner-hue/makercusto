@@ -593,6 +593,10 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
   if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Oficina de Testes',owner_id:user}])});
   if(url.includes('/mc_printers?')||url.includes('/mc_catalog?')||url.includes('/mc_products?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
   if(url.includes('/rpc/mc_list_assemblies'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:'44444444-4444-4444-8444-444444444444',name:'Lançador de hélices',sku:null,description:null,sale_price:null,created_at:'2026-11-22T00:00:00Z',total_cost:null,cost_status:'unknown',revision:1,parts:[{id:'1',name:'Lançador',quantity:1,notes:null,grams:null},{id:'2',name:'Haste',quantity:1,notes:null,grams:null},{id:'3',name:'Hélice',quantity:1,notes:null,grams:null}]}])});
+  if(url.includes('/rpc/mc_list_prints'))return route.fulfill({json:[
+   {id:'1',status:'partial',outputs:[{good:3,failed:1,planned:5}]},
+   {id:'2',status:'completed',outputs:[{good:2,failed:0,planned:2}]}
+  ]});
   return route.fulfill({status:200,contentType:'application/json',body:'[]'});
  });
  await page.goto('/');
@@ -606,7 +610,10 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(page.getByRole('heading',{name:'Informações a completar'})).toBeVisible();
  await expect(page.getByText('Custo não apurado')).toBeVisible();
  await page.getByRole('navigation',{name:'Abas de Visão geral'}).getByRole('button',{name:'Visão geral',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Evolução dos custos'})).toBeVisible();
+ await expect(page.getByRole('region',{name:'Impressões por etapa'})).toContainText('Em andamento1');
+ await expect(page.getByRole('region',{name:'Impressões por etapa'})).toContainText('Concluídas1');
+ await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Boas5');
+ await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Rejeitadas1');
  const shortcuts=page.getByRole('navigation',{name:'Acesso rápido'});
  await expect(shortcuts.getByRole('button')).toHaveCount(6);
  await shortcuts.getByRole('button',{name:'Calculadora',exact:true}).click();
