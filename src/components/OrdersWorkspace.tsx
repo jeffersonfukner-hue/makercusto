@@ -1,3 +1,4 @@
+import {OperationFeedback} from './OperationFeedback';
 import {useEffect,useState} from 'react';
 import {listCustomerOrders,type CustomerOrder,type WorkshopCustomer} from '../data/supabase';
 import {calculateOrderPlan} from '../domain/order-plan';
@@ -7,19 +8,21 @@ const date=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}
 
 export function OrdersWorkspace({workspaceId,customer}:{workspaceId:string;customer?:WorkshopCustomer}){
  const [offset,setOffset]=useState(0);
- const [page,setPage]=useState<{offset:number;orders:CustomerOrder[];error?:string}>();
+ const [retry,setRetry]=useState(0);
+ const [page,setPage]=useState<{key:string;orders:CustomerOrder[];error?:string}>();
+ const key=[workspaceId,customer?.id,offset,retry].join('/');
  useEffect(()=>{
   let active=true;
   void listCustomerOrders(workspaceId,offset,customer?.id)
-   .then(orders=>{if(active)setPage({offset,orders});})
-   .catch(error=>{if(active)setPage({offset,orders:[],error:(error as Error).message});});
+   .then(orders=>{if(active)setPage({key,orders});})
+   .catch(error=>{if(active)setPage({key,orders:[],error:(error as Error).message||'A consulta falhou.'});});
   return ()=>{active=false;};
- },[workspaceId,offset,customer?.id]);
- const current=page?.offset===offset?page:undefined;
+ },[workspaceId,offset,customer?.id,key]);
+ const current=page?.key===key?page:undefined;
  return <section className="panel" aria-label="Histórico de pedidos">
   <h2>{customer?'Pedidos de '+customer.name:'Histórico de pedidos'}</h2>
-  {!current&&<p role="status">Carregando pedidos…</p>}
-  {current?.error&&<p role="alert">Não foi possível consultar pedidos. {current.error}</p>}
+  <OperationFeedback pending={!current} pendingMessage="Carregando pedidos…" error={current?.error??''}
+   failureMessage="Não foi possível consultar pedidos." onRetry={()=>setRetry(attempt=>attempt+1)}/>
   {current&&!current.error&&current.orders.length===0&&<p>Nenhum pedido nesta página. Use Planejamento do pedido na calculadora para registrar um.</p>}
   {current?.orders.map(order=>{
    const plan=calculateOrderPlan(order.pieces_per_plate,Number(order.plate_cost),Number(order.sale_price),

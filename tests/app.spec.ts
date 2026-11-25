@@ -2167,6 +2167,8 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  const earlier='55555555-5555-4555-8555-555555555555';
  const customer={id:'66666666-6666-4666-8666-666666666666',name:'Maria da Silva',whatsapp:null,email:null as string|null};
  let registered=false;
+ let historyReads=0;
+ let orderReadFailed=true;
  const requests:Array<Record<string,unknown>>=[];
  let failFirstSave!:()=>void;
  const firstSave=new Promise<void>(resolve=>{failFirstSave=resolve;});
@@ -2179,6 +2181,7 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
   if(path.endsWith('/mc_list_saved_calculations'))return route.fulfill({json:[
    {product_id:product,snapshot_id:recent,name:'Chaveiro',kind:'product',sku:null,saved_input:{quantity:2,salePrice:9},saved_at:'2026-11-25T11:00:00Z'}
   ]});
+  if(path.endsWith('/mc_cost_snapshots')&&++historyReads===1)return route.fulfill({status:503,json:{message:'Histórico indisponível'}});
   if(path.endsWith('/mc_cost_snapshots'))return route.fulfill({json:[
    {id:recent,confirmed_at:'2026-11-25T11:00:00Z',quantity:2,total_cost:8,parameters:{saved_input:{quantity:2,salePrice:9}}},
    {id:earlier,confirmed_at:'2026-11-24T11:00:00Z',quantity:2,total_cost:10,parameters:{saved_input:{quantity:2,salePrice:8}}}
@@ -2211,6 +2214,7 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
     }
     return route.fulfill({status:204});
    }
+   if(requests.length&&orderReadFailed)return route.fulfill({status:503,json:{message:'Pedidos indisponíveis'}});
    return route.fulfill({json:[{...requests.at(-1),customer:{name:customer.name},created_at:'2026-11-25T11:30:00Z'}]});
   }
   return route.fulfill({json:[]});
@@ -2220,6 +2224,8 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await systemModule(page,'Calculadora de custos').click();
  await page.getByText('Histórico de custos',{exact:true}).click();
  await page.getByLabel('Produto do histórico').selectOption(product);
+ await expect(page.getByRole('alert').filter({hasText:'Não foi possível consultar as revisões.'})).toBeVisible();
+ await page.getByRole('button',{name:'Tentar novamente',exact:true}).click();
  await expect(page.getByRole('button',{name:'Reutilizar parâmetros'})).toHaveCount(2);
  await page.getByText(/5,00\/un\./).locator('..').getByRole('button',{name:'Reutilizar parâmetros'}).click();
  await expect(page.getByTestId('salePrice')).toHaveValue('8');
@@ -2254,6 +2260,12 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await expect(page.getByText('Pedido registrado no histórico da oficina.')).toBeVisible();
  expect(requests[1]).toMatchObject({id:requests[0].id,workspace_id:workspace,snapshot_id:earlier,customer_id:customer.id,status:'sold',quantity:15,pieces_per_plate:2,sale_price:8});
  await page.getByRole('button',{name:'Ver pedidos'}).click();
+ const orderHistory=page.getByRole('region',{name:'Histórico de pedidos'});
+ await expect(orderHistory.getByRole('alert')).toHaveText('Não foi possível consultar pedidos.');
+ await orderHistory.getByText('Detalhes',{exact:true}).click();
+ await expect(orderHistory.getByText('Pedidos indisponíveis',{exact:true})).toBeVisible();
+ orderReadFailed=false;
+ await orderHistory.getByRole('button',{name:'Tentar novamente',exact:true}).click();
  const order=page.getByRole('article').filter({hasText:'Chaveiro'});
  await expect(order).toContainText('Vendido');
  await expect(order).toContainText(customer.name);

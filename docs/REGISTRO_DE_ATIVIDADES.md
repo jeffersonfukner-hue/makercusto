@@ -1052,3 +1052,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Fornecedores
 
 - Criada a área em Oficina com busca, cadastro e edição. Build, 82 unitários, seis testes de navegador e validação local de acesso ao banco passaram.
+
+### 25/11/2026 — Consultas de Pedidos e histórico de custos
+
+- Aplicado o feedback de carregamento, falha e reenvio das consultas. Build, 82 unitários e oito cenários Playwright passaram.

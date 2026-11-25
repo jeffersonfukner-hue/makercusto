@@ -1152,3 +1152,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Oficina → Fornecedores lista e pesquisa fornecedores ativos e permite cadastrar e editar nome, WhatsApp e e-mail. Reutiliza os componentes de Clientes e a tabela existente `mc_suppliers`, já prevista em Compras. A edição preserva outras chaves existentes no contato.
 - Build, 82 unitários e seis cenários em desktop e celular aprovados. PostgreSQL descartável confirmou atualização, reenvio sem duplicata e isolamento entre oficinas. No Supabase de teste, a verificação foi somente leitura e confirmou RLS habilitada e ausência de políticas anônimas. Sem migração ou deploy, lote local enquanto o Preview anterior é homologado.
+
+## 25/11/2026 — Feedback na consulta de pedidos e revisões
+
+- O histórico de pedidos e o de custos mostram espera, detalhes de falha e nova tentativa mantendo a consulta selecionada. Ao carregar uma revisão de composição, a seleção de outro cálculo pelo histórico aguarda o fim da consulta.
+- Build, 82 unitários e oito cenários de navegador passaram. A regressão simula falha e recuperação das duas consultas. Lote local com Fornecedores enquanto o Preview anterior é homologado.
