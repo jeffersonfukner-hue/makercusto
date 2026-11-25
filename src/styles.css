@@ -1030,3 +1030,50 @@
 .mc-order-customer legend {font-size:12px;font-weight:700}
 .mc-order-customer-choice {display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .mc-order-customer-choice select {flex:1 1 120px;min-width:0}
+
+/* Controles e superfícies compartilhados com a calculadora. */
+.mc-theme {
+ --mc-action-bg:#eef4ff;
+ --mc-action-hover:#dfeaff;
+ --mc-action-ink:#194386;
+ --mc-action-border:#b9cbe6;
+ --mc-control-radius:6px;
+ --mc-metric-bg:#eef3fa;
+}
+.mc-theme :is(main,.modal-window) button:not(:where(.mc-calculator button,.mc-order-row,.overview-shortcuts button,.form-action-dock button,.mc-help button,.modal-close,.smart-suggestions button,.row-actions button)) {
+ min-height:36px;padding:6px 10px;border:1px solid var(--mc-action-border);
+ border-radius:var(--mc-control-radius);background:var(--mc-action-bg);color:var(--mc-action-ink);
+ font:650 12px/1.25 Inter,ui-sans-serif,system-ui,sans-serif;
+}
+.mc-theme :is(main,.modal-window) button:not(:where(.primary-action,.mc-calculator button,.mc-order-row,.overview-shortcuts button,.form-action-dock button,.mc-help button,.modal-close,.smart-suggestions button,.row-actions button)):not(:disabled):hover {
+ background:var(--mc-action-hover);
+}
+.mc-theme :is(main,.modal-window) button.primary-action {
+ background:var(--mc-blue);border-color:var(--mc-blue);color:white;
+}
+.mc-theme :is(main,.modal-window) button:not(:where(.mc-calculator button,.form-action-dock button)):disabled {
+ background:#eaf0f7;color:#51647e;border-color:var(--mc-border);opacity:1;
+}
+.mc-theme .mc-help button {
+ border:0;background:transparent;padding:0;color:#28558e;font-size:15px;min-width:22px;min-height:22px;
+}
+.mc-help-heading {display:flex;align-items:center;gap:5px}
+.mc-help-heading :is(h2,h3) {margin:0}
+.mc-field-with-help {display:grid;align-content:start;gap:4px;min-width:0}
+.mc-field-with-help .mc-tooltip {left:0;max-width:min(230px,calc(100vw - 64px))}
+.mc-theme .materials-workspace .materials-form {gap:10px;padding:14px}
+.mc-theme .materials-workspace .product-save-fields {gap:10px}
+.mc-theme .materials-workspace .product-save-fields :is(input,select){min-height:36px;border-radius:var(--mc-control-radius);padding:7px 9px}
+.mc-metric-grid>div {background:var(--mc-metric-bg)}
+.mc-record-toolbar {display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin-bottom:10px}
+.mc-record-toolbar label {display:grid;gap:4px;flex:1 1 165px;max-width:320px}
+.mc-contact-list {list-style:none;margin:0;padding:0;border:1px solid var(--mc-border);border-radius:10px}
+.mc-contact-row {display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px}
+.mc-contact-row+li {border-top:1px solid var(--mc-border)}
+.mc-contact-row>div:first-child {min-width:0;overflow-wrap:anywhere}
+.mc-contact-row small {display:block;margin-top:3px;color:var(--mc-muted);font-size:12px}
+.mc-contact-actions {display:flex;flex-wrap:wrap;gap:5px}
+.mc-contact-row h3 {margin:0;font-size:14px}
+.mc-help-heading {position:relative}
+.mc-help-heading>.mc-help {position:static}
+.mc-help-heading .mc-tooltip {left:0;bottom:auto;top:100%;max-width:min(260px,calc(100vw - 48px))}

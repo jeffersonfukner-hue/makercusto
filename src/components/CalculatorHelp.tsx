@@ -8,3 +8,13 @@ export function CalculatorHelp({label,children}: {label:string; children:ReactNo
   <span className="mc-tooltip" role="tooltip" id={id}>{children}</span>
  </span>;
 }
+
+export function FieldWithHelp({label,help,children}:{
+ label:string;help:ReactNode;children:(id:string)=>ReactNode;
+}){
+ const id=useId();
+ return <div className="mc-field-with-help">
+  <div className="mc-field-caption"><label htmlFor={id}>{label}</label><CalculatorHelp label={label}>{help}</CalculatorHelp></div>
+  {children(id)}
+ </div>;
+}

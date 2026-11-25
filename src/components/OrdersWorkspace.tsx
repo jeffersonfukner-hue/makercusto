@@ -1,3 +1,4 @@
+import {MetricGrid} from './MetricGrid';
 import {OperationFeedback} from './OperationFeedback';
 import {useEffect,useRef,useState} from 'react';
 import {listCustomerOrders,type CustomerOrder,type WorkshopCustomer} from '../data/supabase';
@@ -45,12 +46,12 @@ export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspace
     </div>
     <span className="mc-order-status" data-sold={selected.status==='sold'}>{statusLabel(selected)}</span>
    </header>
-   <dl className="mc-order-financials">
-    <div><dt>Faturamento do pedido</dt><dd>{money.format(plan.revenue)}</dd></div>
-    <div><dt>Custo registrado</dt><dd>{money.format(plan.totalCost)}</dd></div>
-    <div><dt>Lucro bruto</dt><dd>{money.format(plan.grossProfit)}</dd></div>
-    <div><dt>Venda por unidade</dt><dd>{money.format(Number(selected.sale_price))}</dd></div>
-   </dl>
+   <MetricGrid className="mc-order-financials" metrics={[
+    {label:'Faturamento do pedido',value:money.format(plan.revenue)},
+    {label:'Custo registrado',value:money.format(plan.totalCost)},
+    {label:'Lucro bruto',value:money.format(plan.grossProfit),className:plan.grossProfit<0?'negative':'positive'},
+    {label:'Venda por unidade',value:money.format(Number(selected.sale_price))},
+   ]}/>
    <section className="mc-order-production" aria-label="Produção do pedido">
     <h3>Produção</h3>
     <p>{assembly?'Montagem por partes':'Impressão em peça única'}</p>

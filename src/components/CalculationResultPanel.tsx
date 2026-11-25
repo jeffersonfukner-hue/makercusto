@@ -1,3 +1,4 @@
+import {MetricGrid} from './MetricGrid';
 import type {ReactNode} from 'react';
 import type {CostResult} from '../domain/cost';
 import {CalculatorHelp} from './CalculatorHelp';
@@ -45,11 +46,11 @@ export function CalculationResultPanel({result,composed=false,quantity,lines,fil
   {overviewLines.length>0&&<dl className="cost-list">{overviewLines.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
   {pricing}
   {result&&<>
-   <dl className="mc-result-metrics">
-    <div><dt>Margem em R$/un.</dt><dd data-testid="unitProfit" className={result.grossProfit<0?'negative':'positive'}>{money(result.salePrice-result.unitCost)}</dd></div>
-    <div><dt>Margem bruta</dt><dd data-testid="margin" className={result.marginPercent<0?'negative':undefined}>{pct(result.marginPercent)}</dd></div>
-    <div><dt>Markup</dt><dd className={result.markupPercent<0?'negative':undefined}>{pct(result.markupPercent)}</dd></div>
-   </dl>
+   <MetricGrid className="mc-result-metrics" metrics={[
+    {label:'Margem em R$/un.',value:money(result.salePrice-result.unitCost),testId:'unitProfit',className:result.grossProfit<0?'negative':'positive'},
+    {label:'Margem bruta',value:pct(result.marginPercent),testId:'margin',className:result.marginPercent<0?'negative':undefined},
+    {label:'Markup',value:pct(result.markupPercent),className:result.markupPercent<0?'negative':undefined},
+   ]}/>
    <details className="breakdown" open={expanded}>
     <summary>{composed?'Composição dos custos e filamentos':'Composição dos custos'}</summary>
     <div className="breakdown-inner">

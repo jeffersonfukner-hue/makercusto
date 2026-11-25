@@ -1,3 +1,4 @@
+import {CalculatorHelp,FieldWithHelp} from './CalculatorHelp';
 import {useConfirmation} from './ConfirmationDialog';
 import {PrintDurationFields,emptyDuration,printDurationInHours,splitPrintDuration} from './PrintDurationFields';
 import {useEffect,useRef,useState} from 'react';
@@ -343,16 +344,14 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
  };
  return <section className="materials-workspace" aria-label="Registro real de impressões">
   {confirmationDialog}
-  <div className="product-workspace-heading"><div><h2>Impressões da oficina</h2>
-   <p>L2 registra a impressão sem baixar estoque. L3 confirma apenas os incrementos físicos.</p></div></div>
+  <div className="mc-help-heading"><h2>Impressões da oficina</h2><CalculatorHelp label="Impressões da oficina">Registrar uma impressão cria o planejamento. O estoque é atualizado na confirmação do consumo real.</CalculatorHelp></div>
   {error&&<p role="alert" className="error">{error}</p>}{message&&<p role="status" className="product-success">{message}</p>}
   {busy&&<p role="status">Aguardando resposta do servidor…</p>}
   {loading&&<p role="status">Atualizando impressões e reservas…</p>}
   <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('new')} onClickCapture={()=>setActivePrimaryForm('new')}><h3>Nova impressão</h3>
    <div className="product-save-fields">
-    <label>Impressora física<select aria-label="Impressora física" value={printer} onChange={e=>setPrinter(e.target.value)}>
-     <option value="">Selecione</option>{printers.map(x=><option value={x.id} key={x.id}>{x.name}</option>)}</select>
-     <small>É a unidade da oficina, não o modelo global.</small></label>
+    <FieldWithHelp label="Impressora física" help="É a impressora cadastrada na oficina.">{id=><select id={id} aria-label="Impressora física" value={printer} onChange={e=>setPrinter(e.target.value)}>
+     <option value="">Selecione</option>{printers.map(x=><option value={x.id} key={x.id}>{x.name}</option>)}</select>}</FieldWithHelp>
     <label>Fonte dos dados<select aria-label="Fonte dos dados de impressão" value={source} onChange={e=>setSource(e.target.value as typeof source)}>
      <option value="slicer">Fatiador</option><option value="measured">Medição</option><option value="informed">Informado</option><option value="estimated">Estimado</option></select></label>
     <PrintDurationFields label="Tempo previsto (opcional)" value={plannedDuration} onChange={setPlannedDuration}/>
@@ -365,16 +364,13 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <ul>{outputs.map(o=><li key={o.product_id}>{o.name}: {o.quantity} <button type="button" aria-label={'Remover '+o.name} onClick={()=>setOutputs(v=>v.filter(x=>x.product_id!==o.product_id))}>Remover</button></li>)}</ul>
 
   </section>
-  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('reserve')} onClickCapture={()=>setActivePrimaryForm('reserve')}><h3>Reserva opcional de filamento</h3>
-   <p className="footnote">A reserva apenas compromete gramas da bobina para esta impressão. Não retira material físico nem gera custo. O saldo reservado é abatido somente durante confirmações reais.</p>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('reserve')} onClickCapture={()=>setActivePrimaryForm('reserve')}><div className="mc-help-heading"><h3>Reserva opcional de filamento</h3><CalculatorHelp label="Reserva opcional de filamento">A reserva apenas compromete gramas da bobina para esta impressão. Não retira material físico nem gera custo. O saldo reservado é abatido somente durante confirmações reais.</CalculatorHelp></div>
    <div className="product-save-fields">
     <label>Impressão para reservar<select aria-label="Impressão para reservar" value={reservePrintId} onChange={e=>{setActivePrimaryForm('reserve');setReservePrintId(e.target.value);reservationKey.current=newKey();}}>
      <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
-    <label>Bobina para reservar<select aria-label="Bobina para reservar" value={reserveLot} onChange={e=>{setReserveLot(e.target.value);reservationKey.current=newKey();}}>
-     <option value="">Selecione</option>{spools.map(x=><option key={x.id} value={x.id}>{x.label} — disponíveis {(Number(x.remaining_grams)-remainingReserved(x.id)).toFixed(3)} g</option>)}</select>
-     <small>Disponível = físico menos reservas ativas da oficina.</small></label>
-    <label>Quantidade a reservar (g)<input aria-label="Quantidade a reservar" type="number" min=".001" step=".001" value={reserveGrams} onChange={e=>{setReserveGrams(e.target.value);reservationKey.current=newKey();}}/>
-     <small>Reserva opcional, por bobina. Não libera sobra em uma confirmação parcial.</small></label>
+    <FieldWithHelp label="Bobina para reservar" help="Disponível = físico menos reservas ativas da oficina.">{id=><select id={id} aria-label="Bobina para reservar" value={reserveLot} onChange={e=>{setReserveLot(e.target.value);reservationKey.current=newKey();}}>
+     <option value="">Selecione</option>{spools.map(x=><option key={x.id} value={x.id}>{x.label} — disponíveis {(Number(x.remaining_grams)-remainingReserved(x.id)).toFixed(3)} g</option>)}</select>}</FieldWithHelp>
+    <FieldWithHelp label="Quantidade a reservar (g)" help="Reserva opcional, por bobina. Não libera sobra em uma confirmação parcial.">{id=><input id={id} aria-label="Quantidade a reservar" type="number" min=".001" step=".001" value={reserveGrams} onChange={e=>{setReserveGrams(e.target.value);reservationKey.current=newKey();}}/>}</FieldWithHelp>
    </div>
 
    {reservations.filter(x=>x.status==='active').length>0&&<ul aria-label="Reservas ativas da oficina">
@@ -385,22 +381,20 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    {reservations.some(x=>x.status==='active')&&<div className="product-save-fields" onChangeCapture={()=>setActivePrimaryForm('due')} onClickCapture={()=>setActivePrimaryForm('due')}>
     <label>Reserva para revisar<select aria-label="Reserva para revisar" value={dueReservation} onChange={e=>{setActivePrimaryForm('due');setDueReservation(e.target.value);setDueLocal('');}}>
      <option value="">Selecione</option>{reservations.filter(x=>x.status==='active').map(x=><option key={x.id} value={x.id}>{x.lot_label||'Bobina'} — {x.remaining} g</option>)}</select></label>
-    <label>Data e hora de revisão (opcional)<input aria-label="Data e hora de revisão" type="datetime-local" value={dueLocal} onChange={e=>setDueLocal(e.target.value)}/>
-     <small>Uma data vencida apenas alerta. Nunca libera reserva. Deixe vazio para remover a data.</small></label>
+    <FieldWithHelp label="Data e hora de revisão (opcional)" help="Uma data vencida apenas alerta. Nunca libera reserva. Deixe vazio para remover a data.">{id=><input id={id} aria-label="Data e hora de revisão" type="datetime-local" value={dueLocal} onChange={e=>setDueLocal(e.target.value)}/>}</FieldWithHelp>
 
    </div>}
   </section>
-  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('confirm')} onClickCapture={()=>setActivePrimaryForm('confirm')}><h3>Confirmação incremental de impressão</h3>
-   <p className="footnote">Confirme a quantidade produzida de cada peça separadamente. O consumo e o tempo informados são incrementais; registre falhas mesmo sem peças boas. O material da mesa não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</p>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('confirm')} onClickCapture={()=>setActivePrimaryForm('confirm')}><div className="mc-help-heading"><h3>Confirmação incremental de impressão</h3><CalculatorHelp label="Confirmação incremental de impressão">Confirme a quantidade produzida de cada peça separadamente. O consumo e o tempo informados são incrementais; registre falhas mesmo sem peças boas. O material da mesa não será rateado financeiramente entre as peças até L4. Encerramento definitivo bloqueado.</CalculatorHelp></div>
    <div className="product-save-fields">
     <label>Impressão<select aria-label="Impressão para confirmar" value={selected} onChange={e=>{setActivePrimaryForm('confirm');setSelected(e.target.value);setSelectedOutput('');operation.current=newKey();}}>
      <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
     <label>Peça confirmada<select aria-label="Peça confirmada" value={selectedOutput} onChange={e=>setSelectedOutput(e.target.value)}><option value="">Selecione</option>{selectedPrint?.outputs.map(o=><option key={o.id} value={o.id}>{o.name} — pendentes {Number(o.planned)-Number(o.good)-Number(o.failed)}</option>)}</select></label>
     <label>Bobina<select aria-label="Bobina consumida" value={lot} onChange={e=>setLot(e.target.value)}>
      <option value="">Selecione</option>{spools.map(s=><option key={s.id} value={s.id}>{s.label} — {s.remaining_grams} g</option>)}</select></label>
-    <label>Consumo adicional de modelo (g)<input type="number" min=".001" step=".001" aria-label="Consumo adicional" value={mass} onChange={e=>setMass(e.target.value)}/><small>Somente gramas novas, sem repetir purga/perdas já incluídas. Origem obrigatória.</small></label>
-    <label>Purga adicional (g)<input aria-label="Purga adicional" type="number" step=".001" min="0" value={purge} onChange={e=>setPurge(e.target.value)}/><small>Informe 0 se já estiver incluída no peso do modelo.</small></label>
-    <label>Perda adicional (g)<input aria-label="Perda adicional" type="number" step=".001" min="0" value={loss} onChange={e=>setLoss(e.target.value)}/><small>Informe 0 quando não houver perda adicional; nunca conte a mesma massa duas vezes.</small></label>
+    <FieldWithHelp label="Consumo adicional de modelo (g)" help="Somente gramas novas, sem repetir purga/perdas já incluídas. Origem obrigatória.">{id=><input id={id} type="number" min=".001" step=".001" aria-label="Consumo adicional" value={mass} onChange={e=>setMass(e.target.value)}/>}</FieldWithHelp>
+    <FieldWithHelp label="Purga adicional (g)" help="Informe 0 se já estiver incluída no peso do modelo.">{id=><input id={id} aria-label="Purga adicional" type="number" step=".001" min="0" value={purge} onChange={e=>setPurge(e.target.value)}/>}</FieldWithHelp>
+    <FieldWithHelp label="Perda adicional (g)" help="Informe 0 quando não houver perda adicional; nunca conte a mesma massa duas vezes.">{id=><input id={id} aria-label="Perda adicional" type="number" step=".001" min="0" value={loss} onChange={e=>setLoss(e.target.value)}/>}</FieldWithHelp>
     <label>Fonte do consumo<select aria-label="Fonte do consumo" value={basis} onChange={e=>setBasis(e.target.value as typeof basis)}><option value="weighed">Pesado</option><option value="slicer">Fatiador</option><option value="estimated">Estimado</option></select></label>
     <PrintDurationFields label="Tempo real adicional (opcional)" value={actualDuration} onChange={setActualDuration}>
      <small>Informe somente o tempo novo desta confirmação. Em falha, registre o tempo efetivo mesmo com zero peças boas. Deixe vazio se desconhecido.</small>
@@ -411,26 +405,19 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
 
   </section>
   <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('occurrence')} onClickCapture={()=>setActivePrimaryForm('occurrence')} aria-label="Ocorrências físicas pendentes">
-   <h3>Ocorrência física pendente — GAP01</h3>
-   <p className="footnote">Registre o que realmente aconteceu, mesmo quando a massa observada exceder o saldo cadastrado ou a bobina não for conhecida. Este registro NÃO é baixa de estoque, confirmação de consumo, regularização financeira ou aprovação.</p>
+   <div className="mc-help-heading"><h3>Ocorrência física pendente — GAP01</h3><CalculatorHelp label="Ocorrência física pendente — GAP01">Registre o que realmente aconteceu, mesmo quando a massa observada exceder o saldo cadastrado ou a bobina não for conhecida. Este registro NÃO é baixa de estoque, confirmação de consumo, regularização financeira ou aprovação.</CalculatorHelp></div>
    <div className="product-save-fields">
     <label>Impressão da ocorrência<select aria-label="Impressão da ocorrência" value={occPrint} onChange={e=>{setActivePrimaryForm('occurrence');setOccPrint(e.target.value);occKey.current=newKey();}}>
      <option value="">Selecione</option>{prints.map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}</select></label>
-    <label>Material observado<input aria-label="Material observado" maxLength={150} value={occMaterial} onChange={e=>{setOccMaterial(e.target.value);occKey.current=newKey();}}/>
-     <small>Nome informado do material. Não cria cadastro de estoque nem filamento fictício.</small></label>
-    <label>Massa física observada (g)<input aria-label="Massa física observada" type="number" step=".001" min=".001" value={occGrams} onChange={e=>{setOccGrams(e.target.value);occKey.current=newKey();}}/>
-     <small>Informe a quantidade total da ocorrência, sem reduzir artificialmente para caber no saldo.</small></label>
+    <FieldWithHelp label="Material observado" help="Nome informado do material. Não cria cadastro de estoque nem filamento fictício.">{id=><input id={id} aria-label="Material observado" maxLength={150} value={occMaterial} onChange={e=>{setOccMaterial(e.target.value);occKey.current=newKey();}}/>}</FieldWithHelp>
+    <FieldWithHelp label="Massa física observada (g)" help="Informe a quantidade total da ocorrência, sem reduzir artificialmente para caber no saldo.">{id=><input id={id} aria-label="Massa física observada" type="number" step=".001" min=".001" value={occGrams} onChange={e=>{setOccGrams(e.target.value);occKey.current=newKey();}}/>}</FieldWithHelp>
     <label>Fonte de aferição<select aria-label="Fonte da ocorrência física" value={occBasis} onChange={e=>{setOccBasis(e.target.value as typeof occBasis);occKey.current=newKey();}}>
      <option value="weighed">Pesagem</option><option value="slicer">Fatiador</option><option value="informed">Relato</option><option value="other">Outra fonte</option></select></label>
-    <label>Data e hora observadas<input aria-label="Data e hora da ocorrência" type="datetime-local" value={occAt} onChange={e=>{setOccAt(e.target.value);occKey.current=newKey();}}/>
-     <small>Obrigatórias; informe quando ocorreu de fato, sem horário presumido.</small></label>
-    <label>Bobina possivelmente utilizada (opcional)<select aria-label="Bobina possivelmente utilizada" value={occLot} onChange={e=>{setOccLot(e.target.value);occKey.current=newKey();}}>
-     <option value="">Origem não identificada</option>{spools.map(l=><option key={l.id} value={l.id}>{l.label}</option>)}</select>
-     <small>Hipótese, não confirmação. Saldo insuficiente não impede registrar o ocorrido.</small></label>
-    <label>Como foi constatado<input aria-label="Como foi constatado" maxLength={1000} value={occSource} onChange={e=>{setOccSource(e.target.value);occKey.current=newKey();}}/>
-     <small>Descreva pesagem, relato ou outra fonte observada; 10 a 1000 caracteres.</small></label>
-    <label>Referência da evidência (opcional)<input aria-label="Referência da evidência" maxLength={2000} value={occEvidence} onChange={e=>{setOccEvidence(e.target.value);occKey.current=newKey();}}/>
-     <small>Ex.: número do relatório, anotação ou foto já armazenada. Este campo não envia arquivos.</small></label>
+    <FieldWithHelp label="Data e hora observadas" help="Obrigatórias; informe quando ocorreu de fato, sem horário presumido.">{id=><input id={id} aria-label="Data e hora da ocorrência" type="datetime-local" value={occAt} onChange={e=>{setOccAt(e.target.value);occKey.current=newKey();}}/>}</FieldWithHelp>
+    <FieldWithHelp label="Bobina possivelmente utilizada (opcional)" help="Hipótese, não confirmação. Saldo insuficiente não impede registrar o ocorrido.">{id=><select id={id} aria-label="Bobina possivelmente utilizada" value={occLot} onChange={e=>{setOccLot(e.target.value);occKey.current=newKey();}}>
+     <option value="">Origem não identificada</option>{spools.map(l=><option key={l.id} value={l.id}>{l.label}</option>)}</select>}</FieldWithHelp>
+    <FieldWithHelp label="Como foi constatado" help="Descreva pesagem, relato ou outra fonte observada; 10 a 1000 caracteres.">{id=><input id={id} aria-label="Como foi constatado" maxLength={1000} value={occSource} onChange={e=>{setOccSource(e.target.value);occKey.current=newKey();}}/>}</FieldWithHelp>
+    <FieldWithHelp label="Referência da evidência (opcional)" help="Ex.: número do relatório, anotação ou foto já armazenada. Este campo não envia arquivos.">{id=><input id={id} aria-label="Referência da evidência" maxLength={2000} value={occEvidence} onChange={e=>{setOccEvidence(e.target.value);occKey.current=newKey();}}/>}</FieldWithHelp>
     <label>Possível origem, ainda não comprovada (opcional)<input aria-label="Possível origem da ocorrência" maxLength={1000} value={occOrigin} onChange={e=>{setOccOrigin(e.target.value);occKey.current=newKey();}}/></label>
    </div>
 
@@ -445,8 +432,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
      </li>)}
     </ul>
    </div>}
-   <h4>Investigação da ocorrência — sem regularização</h4>
-   <p className="footnote">Cada investigação acrescenta um evento auditável. A causa selecionada continua sendo hipótese até conferência externa; não altera massa observada, saldo, reserva ou custo.</p>
+   <div className="mc-help-heading"><h4>Investigação da ocorrência — sem regularização</h4><CalculatorHelp label="Investigação da ocorrência — sem regularização">Cada investigação acrescenta um evento auditável. A causa selecionada continua sendo hipótese até conferência externa; não altera massa observada, saldo, reserva ou custo.</CalculatorHelp></div>
    <div className="product-save-fields" onChangeCapture={()=>setActivePrimaryForm('review')} onClickCapture={()=>setActivePrimaryForm('review')}>
     <label>Ocorrência para investigar<select aria-label="Ocorrência para investigar" value={reviewOccurrence}
      onChange={e=>{setActivePrimaryForm('review');const id=e.target.value;setReviewOccurrence(id);const item=occurrences.find(x=>x.id===id);
@@ -460,20 +446,17 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
       <option value="pending_decision">Pendente de decisão (sem aprovação)</option>:
       <option value="under_review">Em análise</option>}
     </select><small>Não existe opção de regularizar ou autorizar movimento de estoque neste fluxo.</small></label>
-    <label>Hipótese investigada<select aria-label="Hipótese da divergência" value={reviewCause}
+    <FieldWithHelp label="Hipótese investigada" help="Uma hipótese não confirma entrada, compra ou novo custo.">{id=><select id={id} aria-label="Hipótese da divergência" value={reviewCause}
      onChange={e=>{setReviewCause(e.target.value as typeof reviewCause);reviewKey.current=newKey();}}>
      <option value="unknown">Origem ainda desconhecida</option>
      <option value="unrecorded_input">Possível entrada não contabilizada</option>
      <option value="lot_change">Possível troca de bobina</option>
      <option value="quantity_error">Possível erro de contagem</option>
-     <option value="other">Outra hipótese</option></select>
-     <small>Uma hipótese não confirma entrada, compra ou novo custo.</small></label>
-    <label>Relato da investigação<textarea aria-label="Relato da investigação" maxLength={2000} rows={3}
-     value={reviewNote} onChange={e=>{setReviewNote(e.target.value);reviewKey.current=newKey();}}/>
-     <small>10 a 2000 caracteres. Preserve a observação original e detalhe o que foi apurado ou segue incerto.</small></label>
-    <label>Evidência adicional (opcional)<input aria-label="Evidência da investigação" maxLength={2000}
-     value={reviewEvidence} onChange={e=>{setReviewEvidence(e.target.value);reviewKey.current=newKey();}}/>
-     <small>Referência de documento ou foto existente, sem assumir prova suficiente ou enviar arquivo.</small></label>
+     <option value="other">Outra hipótese</option></select>}</FieldWithHelp>
+    <FieldWithHelp label="Relato da investigação" help="10 a 2000 caracteres. Preserve a observação original e detalhe o que foi apurado ou segue incerto.">{id=><textarea id={id} aria-label="Relato da investigação" maxLength={2000} rows={3}
+     value={reviewNote} onChange={e=>{setReviewNote(e.target.value);reviewKey.current=newKey();}}/>}</FieldWithHelp>
+    <FieldWithHelp label="Evidência adicional (opcional)" help="Referência de documento ou foto existente, sem assumir prova suficiente ou enviar arquivo.">{id=><input id={id} aria-label="Evidência da investigação" maxLength={2000}
+     value={reviewEvidence} onChange={e=>{setReviewEvidence(e.target.value);reviewKey.current=newKey();}}/>}</FieldWithHelp>
     <label>Bobina sob investigação (opcional)<select aria-label="Bobina sob investigação" value={reviewLot}
      onChange={e=>{setReviewLot(e.target.value);reviewKey.current=newKey();}}>
      <option value="">Nenhuma bobina comprovada</option>{spools.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
@@ -490,35 +473,31 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>}
   </section>
   <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('proposal')} onClickCapture={()=>setActivePrimaryForm('proposal')} aria-label="Propostas de ajuste de inventário GAP01">
-   <h3>Proposta de correção de inventário — GAP01-C</h3>
-   <p className="footnote">Apenas uma proposta para análise humana. Quantidades positivas ou negativas não movimentam estoque, não corrigem saldos e não atribuem custo. Nenhuma aprovação extraordinária está habilitada.</p>
+   <div className="mc-help-heading"><h3>Proposta de correção de inventário — GAP01-C</h3><CalculatorHelp label="Proposta de correção de inventário — GAP01-C">Apenas uma proposta para análise humana. Quantidades positivas ou negativas não movimentam estoque, não corrigem saldos e não atribuem custo. Nenhuma aprovação extraordinária está habilitada.</CalculatorHelp></div>
    <div className="product-save-fields">
-    <label>Ocorrência investigada<select aria-label="Ocorrência para proposta de inventário" value={proposalOccurrence}
+    <FieldWithHelp label="Ocorrência investigada" help="É necessário registrar a investigação antes de propor qualquer correção.">{id=><select id={id} aria-label="Ocorrência para proposta de inventário" value={proposalOccurrence}
      onChange={e=>{setActivePrimaryForm('proposal');setProposalOccurrence(e.target.value);proposalKey.current=newKey();}}>
      <option value="">Selecione</option>
      {occurrences.filter(o=>o.status==='under_review'||o.status==='pending_decision').map(o=><option key={o.id} value={o.id}>
       {o.material_name} — {o.quantity_g} g — {o.status}
-     </option>)}</select><small>É necessário registrar a investigação antes de propor qualquer correção.</small></label>
-    <label>Bobina cadastrada para possível ajuste<select aria-label="Bobina da proposta de ajuste" value={proposalLot}
+     </option>)}</select>}</FieldWithHelp>
+    <FieldWithHelp label="Bobina cadastrada para possível ajuste" help="O lote deve existir na oficina; nenhuma nova compra ou bobina é criada.">{id=><select id={id} aria-label="Bobina da proposta de ajuste" value={proposalLot}
      onChange={e=>{setProposalLot(e.target.value);proposalKey.current=newKey();}}>
      <option value="">Selecione</option>{spools.map(l=><option key={l.id} value={l.id}>{l.label}</option>)}
-    </select><small>O lote deve existir na oficina; nenhuma nova compra ou bobina é criada.</small></label>
-    <label>Diferença proposta em gramas<input aria-label="Diferença proposta em gramas" type="number" step=".001" value={proposalGrams}
-     onChange={e=>{setProposalGrams(e.target.value);proposalKey.current=newKey();}}/>
-     <small>Positivo para material anteriormente não contabilizado; negativo para erro de contagem demonstrado. Não é uma baixa.</small></label>
-    <label>Causa investigada<select aria-label="Causa da proposta de inventário" value={proposalCause}
+    </select>}</FieldWithHelp>
+    <FieldWithHelp label="Diferença proposta em gramas" help="Positivo para material anteriormente não contabilizado; negativo para erro de contagem demonstrado. Não é uma baixa.">{id=><input id={id} aria-label="Diferença proposta em gramas" type="number" step=".001" value={proposalGrams}
+     onChange={e=>{setProposalGrams(e.target.value);proposalKey.current=newKey();}}/>}</FieldWithHelp>
+    <FieldWithHelp label="Causa investigada" help="A causa informada é submetida à revisão, não considerada automaticamente comprovada.">{id=><select id={id} aria-label="Causa da proposta de inventário" value={proposalCause}
      onChange={e=>{setProposalCause(e.target.value as typeof proposalCause);proposalKey.current=newKey();}}>
      <option value="verified_count_error">Erro de contagem</option>
      <option value="unrecorded_physical_input">Material físico anteriormente não contabilizado</option>
-    </select><small>A causa informada é submetida à revisão, não considerada automaticamente comprovada.</small></label>
-    <label>Origem material a conferir<textarea aria-label="Origem material a conferir" rows={2} maxLength={2000} value={proposalOrigin}
-     onChange={e=>{setProposalOrigin(e.target.value);proposalKey.current=newKey();}}/>
-     <small>Identifique a origem real alegada, sem inventar compra ou fornecedor.</small></label>
+    </select>}</FieldWithHelp>
+    <FieldWithHelp label="Origem material a conferir" help="Identifique a origem real alegada, sem inventar compra ou fornecedor.">{id=><textarea id={id} aria-label="Origem material a conferir" rows={2} maxLength={2000} value={proposalOrigin}
+     onChange={e=>{setProposalOrigin(e.target.value);proposalKey.current=newKey();}}/>}</FieldWithHelp>
     <label>Justificativa da proposta<textarea aria-label="Justificativa da proposta" rows={2} maxLength={2000} value={proposalReason}
      onChange={e=>{setProposalReason(e.target.value);proposalKey.current=newKey();}}/></label>
-    <label>Evidência do inventário<input aria-label="Evidência da proposta" maxLength={2000} value={proposalEvidence}
-     onChange={e=>{setProposalEvidence(e.target.value);proposalKey.current=newKey();}}/>
-     <small>Referência verificável da pesagem, contagem ou documento. Este campo não envia arquivos.</small></label>
+    <FieldWithHelp label="Evidência do inventário" help="Referência verificável da pesagem, contagem ou documento. Este campo não envia arquivos.">{id=><input id={id} aria-label="Evidência da proposta" maxLength={2000} value={proposalEvidence}
+     onChange={e=>{setProposalEvidence(e.target.value);proposalKey.current=newKey();}}/>}</FieldWithHelp>
    </div>
 
    {proposals.length>0&&<div><h4>Propostas pendentes de decisão</h4>
@@ -530,8 +509,7 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    </div>}
   </section>
   <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('dossier')} onClickCapture={()=>setActivePrimaryForm('dossier')} aria-label="Dossiê de conciliação GAP01">
-   <h3>Dossiê de conciliação — GAP01-D/E</h3>
-   <p className="footnote">Consulta somente leitura do saldo atual, das reservas de todas as ordens e das linhas históricas de consumo relacionadas à impressão. Não verifica automaticamente a origem física nem autoriza estornos, ajustes ou compensações financeiras.</p>
+   <div className="mc-help-heading"><h3>Dossiê de conciliação — GAP01-D/E</h3><CalculatorHelp label="Dossiê de conciliação — GAP01-D/E">Consulta somente leitura do saldo atual, das reservas de todas as ordens e das linhas históricas de consumo relacionadas à impressão. Não verifica automaticamente a origem física nem autoriza estornos, ajustes ou compensações financeiras.</CalculatorHelp></div>
    <div className="product-save-fields">
     <label>Ocorrência para dossiê<select aria-label="Ocorrência para dossiê" value={dossierTarget}
      onChange={e=>{setActivePrimaryForm('dossier');setDossierTarget(e.target.value);setDossier(null);}}>
@@ -566,34 +544,29 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <p className="footnote">Somente análise. Não existe ação de aprovar, liberar reserva, estornar ou movimentar estoque neste dossiê.</p>
    </div>}
   </section>
-  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('swap')} onClickCapture={()=>setActivePrimaryForm('swap')}><h3>Trocar bobina reservada</h3>
-   <p className="footnote">A troca ajusta apenas as reservas lógicas. O filamento já consumido continua atribuído à bobina original, com o preço histórico original. A próxima confirmação deve indicar a bobina realmente consumida.</p>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('swap')} onClickCapture={()=>setActivePrimaryForm('swap')}><div className="mc-help-heading"><h3>Trocar bobina reservada</h3><CalculatorHelp label="Trocar bobina reservada">A troca ajusta apenas as reservas lógicas. O filamento já consumido continua atribuído à bobina original, com o preço histórico original. A próxima confirmação deve indicar a bobina realmente consumida.</CalculatorHelp></div>
    <div className="product-save-fields">
-    <label>Reserva de origem<select aria-label="Reserva de origem para troca" value={swapReservation}
+    <FieldWithHelp label="Reserva de origem" help="Somente gramas ainda reservados podem ser liberados; nada retorna fisicamente à bobina.">{id=><select id={id} aria-label="Reserva de origem para troca" value={swapReservation}
      onChange={e=>{setActivePrimaryForm('swap');setSwapReservation(e.target.value);setSwapNewLot('');setSwapRelease('');setSwapReserve('');swapKey.current=newKey();}}>
      <option value="">Selecione</option>
      {reservations.filter(r=>r.status==='active').map(r=><option value={r.id} key={r.id}>{r.lot_label||'Bobina'} — {r.remaining} g reservados</option>)}
-    </select><small>Somente gramas ainda reservados podem ser liberados; nada retorna fisicamente à bobina.</small></label>
+    </select>}</FieldWithHelp>
     <label>Nova bobina para reservar<select aria-label="Nova bobina para reservar" value={swapNewLot}
      onChange={e=>{setSwapNewLot(e.target.value);swapKey.current=newKey();}}>
      <option value="">Selecione</option>
      {spools.filter(x=>x.id!==reservations.find(r=>r.id===swapReservation)?.lot_id).map(x=><option value={x.id} key={x.id}>
       {x.label} — disponíveis {(Number(x.remaining_grams)-remainingReserved(x.id)).toFixed(3)} g
      </option>)}</select></label>
-    <label>Gramas a liberar da origem<input aria-label="Gramas a liberar na troca" type="number" step=".001" min=".001"
-     value={swapRelease} onChange={e=>{setSwapRelease(e.target.value);swapKey.current=newKey();}}/>
-     <small>Pode liberar só parte do restante; o restante continua reservado na origem.</small></label>
-    <label>Gramas a reservar na nova bobina<input aria-label="Gramas a reservar na nova bobina" type="number" step=".001" min=".001"
-     value={swapReserve} onChange={e=>{setSwapReserve(e.target.value);swapKey.current=newKey();}}/>
-     <small>Quantidade explicitamente informada; não presumimos igualdade nem conversão entre bobinas.</small></label>
-    <label>Motivo da troca<input aria-label="Motivo da troca de bobina" value={swapReason} maxLength={1000}
-     onChange={e=>{setSwapReason(e.target.value);swapKey.current=newKey();}}/>
-     <small>Motivo obrigatório, auditado e associado aos dois lotes.</small></label>
+    <FieldWithHelp label="Gramas a liberar da origem" help="Pode liberar só parte do restante; o restante continua reservado na origem.">{id=><input id={id} aria-label="Gramas a liberar na troca" type="number" step=".001" min=".001"
+     value={swapRelease} onChange={e=>{setSwapRelease(e.target.value);swapKey.current=newKey();}}/>}</FieldWithHelp>
+    <FieldWithHelp label="Gramas a reservar na nova bobina" help="Quantidade explicitamente informada; não presumimos igualdade nem conversão entre bobinas.">{id=><input id={id} aria-label="Gramas a reservar na nova bobina" type="number" step=".001" min=".001"
+     value={swapReserve} onChange={e=>{setSwapReserve(e.target.value);swapKey.current=newKey();}}/>}</FieldWithHelp>
+    <FieldWithHelp label="Motivo da troca" help="Motivo obrigatório, auditado e associado aos dois lotes.">{id=><input id={id} aria-label="Motivo da troca de bobina" value={swapReason} maxLength={1000}
+     onChange={e=>{setSwapReason(e.target.value);swapKey.current=newKey();}}/>}</FieldWithHelp>
    </div>
 
   </section>
-  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('reduction')} onClickCapture={()=>setActivePrimaryForm('reduction')}><h3>Cancelar parcialmente o planejamento</h3>
-   <p className="footnote">Reduza somente peças ainda não produzidas. O material já extrudado e os resultados confirmados permanecem registrados. Informe explicitamente gramas a liberar por bobina: não presumimos consumo de material por peça.</p>
+  <section className="panel materials-form" onChangeCapture={()=>setActivePrimaryForm('reduction')} onClickCapture={()=>setActivePrimaryForm('reduction')}><div className="mc-help-heading"><h3>Cancelar parcialmente o planejamento</h3><CalculatorHelp label="Cancelar parcialmente o planejamento">Reduza somente peças ainda não produzidas. O material já extrudado e os resultados confirmados permanecem registrados. Informe explicitamente gramas a liberar por bobina: não presumimos consumo de material por peça.</CalculatorHelp></div>
    <div className="product-save-fields">
     <label>Impressão para redução parcial<select aria-label="Impressão para redução parcial" value={reduceTarget}
      onChange={e=>{setActivePrimaryForm('reduction');setReduceTarget(e.target.value);setReduceOutput('');setReduceReservation('');setReducePlanned('');setReduceGrams('');reduceKey.current=newKey();}}>
@@ -601,19 +574,16 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
     <label>Peça a reduzir<select aria-label="Peça a reduzir" value={reduceOutput}
      onChange={e=>{setReduceOutput(e.target.value);setReducePlanned('');reduceKey.current=newKey();}}>
      <option value="">Selecione</option>{prints.find(p=>p.id===reduceTarget)?.outputs.map(o=><option key={o.id} value={o.id}>{o.name} — previstas {o.planned}, confirmadas {Number(o.good)+Number(o.failed)}</option>)}</select></label>
-    <label>Nova quantidade planejada<input aria-label="Novo total após redução parcial" type="number" min="0" step="1" value={reducePlanned}
-     onChange={e=>{setReducePlanned(e.target.value);reduceKey.current=newKey();}}/>
-     <small>Nunca inferior à soma de peças boas e rejeitadas já confirmadas.</small></label>
+    <FieldWithHelp label="Nova quantidade planejada" help="Nunca inferior à soma de peças boas e rejeitadas já confirmadas.">{id=><input id={id} aria-label="Novo total após redução parcial" type="number" min="0" step="1" value={reducePlanned}
+     onChange={e=>{setReducePlanned(e.target.value);reduceKey.current=newKey();}}/>}</FieldWithHelp>
     <label>Reserva para liberação parcial (opcional)<select aria-label="Reserva para liberação parcial" value={reduceReservation}
      onChange={e=>{setReduceReservation(e.target.value);setReduceGrams('');reduceKey.current=newKey();}}>
      <option value="">Nenhuma liberação</option>{reservations.filter(r=>r.production_id===reduceTarget&&r.status==='active').map(r=><option key={r.id} value={r.id}>{r.lot_label||'Bobina'} — {r.remaining} g reservados</option>)}</select></label>
-    <label>Gramas a liberar da reserva<input aria-label="Gramas a liberar da reserva" type="number" min="0" step=".001"
+    <FieldWithHelp label="Gramas a liberar da reserva" help="Somente o excedente comprovado. Se houver mais de uma bobina, registre cada redução separadamente.">{id=><input id={id} aria-label="Gramas a liberar da reserva" type="number" min="0" step=".001"
      disabled={!reduceReservation} value={reduceGrams}
-     onChange={e=>{setReduceGrams(e.target.value);reduceKey.current=newKey();}}/>
-     <small>Somente o excedente comprovado. Se houver mais de uma bobina, registre cada redução separadamente.</small></label>
-    <label>Motivo da redução parcial<input aria-label="Motivo da redução parcial" value={reduceReason} maxLength={1000}
-     onChange={e=>{setReduceReason(e.target.value);reduceKey.current=newKey();}}/>
-     <small>Justificativa auditada, de 10 a 1000 caracteres.</small></label>
+     onChange={e=>{setReduceGrams(e.target.value);reduceKey.current=newKey();}}/>}</FieldWithHelp>
+    <FieldWithHelp label="Motivo da redução parcial" help="Justificativa auditada, de 10 a 1000 caracteres.">{id=><input id={id} aria-label="Motivo da redução parcial" value={reduceReason} maxLength={1000}
+     onChange={e=>{setReduceReason(e.target.value);reduceKey.current=newKey();}}/>}</FieldWithHelp>
    </div>
 
   </section>
@@ -622,9 +592,8 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    <p>O cancelamento encerra a impressão e libera somente reservas ainda não consumidas.
     Peças produzidas, falhas, tempo e material consumido continuam registrados.</p>
    <p>Impressão: {prints.find(p=>p.id===cancelTarget)?.outputs.map(o=>o.name).join(' + ')||'não encontrada'}</p>
-   <label>Justificativa do cancelamento<input aria-label="Justificativa do cancelamento" maxLength={1000}
-    value={cancelReason} onChange={e=>{setCancelReason(e.target.value);cancelKey.current=newKey();}}/>
-    <small>Obrigatória, de 10 a 1000 caracteres. Fica registrada na auditoria.</small></label>
+   <FieldWithHelp label="Justificativa do cancelamento" help="Obrigatória, de 10 a 1000 caracteres. Fica registrada na auditoria.">{id=><input id={id} aria-label="Justificativa do cancelamento" maxLength={1000}
+    value={cancelReason} onChange={e=>{setCancelReason(e.target.value);cancelKey.current=newKey();}}/>}</FieldWithHelp>
 
 
   </section>}

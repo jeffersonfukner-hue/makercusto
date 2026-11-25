@@ -27,21 +27,21 @@ export function ContactsWorkspace({workspaceId,kind}:{workspaceId:string;kind:'c
  const selected=contacts.find(contact=>contact.id===history);
  return <>
   {!orderOpen&&<section className="panel" aria-label={'Cadastro de '+plural}>
-   <div className="mc-calculation-share-actions">
+   <div className="mc-record-toolbar">
     <label>Buscar {kind}<input type="search" value={query} onChange={event=>setQuery(event.target.value)}/></label>
     <button type="button" className="primary-action" disabled={loading} onClick={()=>setEdit('new')}>Novo {kind}</button>
    </div>
    <OperationFeedback pending={loading} pendingMessage={'Carregando '+plural+'…'} error={error} failureMessage={'Não foi possível consultar '+plural+'.'}/>
    {!loading&&!error&&matches.length===0&&<p>{'Nenhum '+kind+(term?' encontrado.':' cadastrado.')}</p>}
-   {matches.map(contact=><article key={contact.id} className="product-detail">
-    <h2>{contact.name}</h2>
-    {contact.whatsapp&&<p>WhatsApp {contact.whatsapp}</p>}
-    {contact.email&&<p>{contact.email}</p>}
-    <div className="mc-calculation-share-actions">
+   {matches.length>0&&<ul className="mc-contact-list">{matches.map(contact=><li key={contact.id} className="mc-contact-row">
+    <div><h3>{contact.name}</h3>
+     {(contact.whatsapp||contact.email)&&<small>{[contact.whatsapp,contact.email].filter(Boolean).join(' · ')}</small>}
+    </div>
+    <div className="mc-contact-actions">
      <button type="button" onClick={()=>setEdit(contact)}>Editar {kind}</button>
      {!supplier&&<button type="button" onClick={()=>setHistory(contact.id)}>Ver pedidos de {contact.name}</button>}
     </div>
-   </article>)}
+   </li>)}</ul>}
   </section>}
   {selected&&<OrdersWorkspace key={selected.id} workspaceId={workspaceId} customer={selected} onDetailChange={setOrderOpen}/>}
   {edit&&<ContactEditor workspaceId={workspaceId} kind={kind} contact={edit==='new'?undefined:edit} onClose={()=>setEdit(undefined)}

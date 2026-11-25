@@ -672,7 +672,7 @@ export default function App(){
   </div>
   </div>
   </>}
-  {session&&activeSection==='printers'&&<section className="panel"><h2>Minhas impressoras</h2><button type="button" onClick={addPrinter}>Nova impressora</button>{stored.length===0?<p>Nenhuma impressora cadastrada.</p>:<ul className="dashboard-activity-list">{stored.map(p=><li key={p.id}><strong>{p.name}</strong><button type="button" onClick={()=>{setPrinterId(p.id);setPrinterModal('edit');}}>Editar</button></li>)}</ul>}</section>}
+  {session&&activeSection==='printers'&&<section className="panel"><h2>Minhas impressoras</h2><button type="button" className="primary-action" onClick={addPrinter}>Nova impressora</button>{stored.length===0?<p>Nenhuma impressora cadastrada.</p>:<ul className="dashboard-activity-list">{stored.map(p=><li key={p.id}><strong>{p.name}</strong><button type="button" onClick={()=>{setPrinterId(p.id);setPrinterModal('edit');}}>Editar</button></li>)}</ul>}</section>}
   {session&&(activeSection==='customers'||activeSection==='suppliers')&&workspaceId&&<ContactsWorkspace key={workspaceId+'/'+activeSection} workspaceId={workspaceId} kind={activeSection==='suppliers'?'fornecedor':'cliente'}/>}
   {session&&activeSection==='orders'&&workspaceId&&<OrdersWorkspace key={workspaceId} workspaceId={workspaceId}/>}
   {session&&activeSection==='workshop'&&<section className="panel"><h2>{workspaceName}</h2><p>Configurações e tarifas da oficina: integração pendente.</p></section>}

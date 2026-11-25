@@ -66,3 +66,10 @@
 ## Continuidade local sem exigir login — 21/11/2026
 - A impressora pessoal criada pelo visitante sobrevive a recarga no mesmo navegador; dados locais ficam separados da oficina autenticada. O último equipamento selecionado também é lembrado por visitante ou conta (preferência local do dispositivo, não sincronização de preferências entre dispositivos).
 - Restaurar o exemplo nunca apaga cadastros pessoais persistidos, apenas restaura parâmetros do cálculo e seleção inicial. Usuário deve ser informado que limpar os dados do navegador pode apagar suas cópias locais; cópias não se transferem automaticamente para uma conta.
+
+## Padrão visual compartilhado
+
+- A calculadora é a referência visual do MakerCusto. Antes de criar ou alterar uma tela, reaproveite os controles, superfícies, estados e componentes existentes. A composição muda conforme os campos e os dados da tarefa.
+- Use as cores e medidas do tema para botões, campos e cards. Reserve o botão primário para a ação principal. Use `MetricGrid` para grupos de indicadores comparáveis e o modal compartilhado para cadastros rápidos.
+- Mostre só o texto necessário para localizar, entender o estado e agir. Associe ajuda contextual ao nome do campo com `FieldWithHelp`. Use `CalculatorHelp` ao lado do título quando a orientação vale para a seção inteira. Deixe erros, estados de espera e consequências que exigem confirmação à vista.
+- Prefira listas compactas e abra detalhes sob demanda. Verifique o espaço útil e a leitura no desktop, no iPad em retrato e a 320 px. Confirme foco visível, abertura da ajuda por toque e teclado e ausência de rolagem horizontal na página.

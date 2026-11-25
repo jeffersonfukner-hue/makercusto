@@ -1,3 +1,4 @@
+import {FieldWithHelp} from './CalculatorHelp';
 import {CalculationHistory} from './CalculationHistory';
 import {useConfirmation} from './ConfirmationDialog';
 import {AssemblyComposer} from './AssemblyComposer';
@@ -207,7 +208,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
    </tbody></table></div>
    <section className="panel" aria-label="Calculadora de conjuntos"><h4>Simular custo e preço do conjunto</h4><div className="product-save-fields">
    <label>Quantidade de conjuntos<input type="number" min="1" step="1" value={kitQuantity} onChange={e=>setKitQuantity(Number(e.target.value))}/></label>
-   <label>Custo adicional por conjunto (R$)<input type="number" min="0" step=".01" value={kitExtra} onChange={e=>setKitExtra(Number(e.target.value))}/><small>Somente montagem, embalagem ou outros custos ainda não incluídos nas peças.</small></label>
+   <FieldWithHelp label="Custo adicional por conjunto (R$)" help="Somente montagem, embalagem ou outros custos ainda não incluídos nas peças.">{id=><input id={id} type="number" min="0" step=".01" value={kitExtra} onChange={e=>setKitExtra(Number(e.target.value))}/>}</FieldWithHelp>
    <label>Preço de venda unitário (R$)<input type="number" min="0" step=".01" value={kitPrice} placeholder={kit.sale_price===null?'Não informado':String(kit.sale_price)} onChange={e=>setKitPrice(e.target.value)}/></label></div>
    {(()=>{const base=totalCost(kit.parts.map(partDraft));const price=kitPrice.trim()===''?kit.sale_price:Number(kitPrice);if(base===null)return <p>Não é possível apurar o custo: há peças sem custo registrado.</p>;if(!Number.isSafeInteger(kitQuantity)||kitQuantity<1||!Number.isFinite(kitExtra)||kitExtra<0||(price!==null&&(!Number.isFinite(price)||price<0)))return <p role="alert">Confira quantidade, custo adicional e preço.</p>;const unit=base+kitExtra;return <div className="product-detail-stats"><div><small>Custo por conjunto</small><strong>{brl(unit)}</strong></div><div><small>Custo do lote</small><strong>{brl(unit*kitQuantity)}</strong></div><div><small>Resultado estimado do lote</small><strong>{price===null?'Sem preço':brl((price-unit)*kitQuantity)}</strong></div></div>;})()}
    <p className="footnote">Simulação somente. Não altera custos históricos, estoque ou preço cadastrado.</p></section>

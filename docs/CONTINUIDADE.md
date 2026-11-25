@@ -1168,3 +1168,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - O proprietário confirmou que cadastrou o primeiro cliente pelo modal da calculadora no Preview. O modal da tela de Clientes também abriu normalmente.
 - Pedidos e vendas e o histórico de cada cliente usam uma lista compacta com produto, cliente, data, situação, quantidade e total. A ficha do pedido destaca os valores e mostra o método de produção e a divisão por mesas quando aplicável. Voltar restaura a lista e o foco no pedido selecionado.
 - Build, 82 unitários e seis cenários de navegador passaram, incluindo detalhes e retorno nos dois pontos de entrada. Ajuste local para o próximo lote.
+
+## 25/11/2026 — Auditoria e padrão visual compartilhado
+
+- A calculadora foi definida pelo proprietário como referência visual. A auditoria encontrou botões de estilos antigos fora da calculadora, fichas de contato com espaço excessivo e ajuda dispersa principalmente em Impressões e Filamentos. Controles padrão agora usam tokens comuns; navegação, ações em barra escura e controles especializados conservam suas variantes.
+- Clientes e Fornecedores passaram a usar linhas compactas. Pedidos e Calculadora reutilizam `MetricGrid`. Filamentos, Impressões e o campo de custo adicional em Produtos usam ajuda contextual reaproveitada para campos e títulos; erros e consequências de confirmações seguem visíveis. As orientações foram registradas em AGENTS.md e docs/PADROES.md.
+- Build, 82 unitários e 130 cenários de navegador passaram durante a auditoria. Após os ajustes finais de ajuda, 16 cenários direcionados e três em WebKit com perfil de iPad Pro passaram. Falta homologar visualmente o lote no Preview e continuar a revisão das telas especializadas.

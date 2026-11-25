@@ -1060,3 +1060,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Lista e detalhes de pedidos
 
 - Reformuladas a consulta geral e a consulta por cliente, com lista compacta e ficha dedicada. Build, 82 unitários e seis cenários Playwright aprovados. Cadastro rápido confirmado pelo proprietário no Preview anterior.
+
+### 25/11/2026 — Auditoria visual compartilhada
+
+- Unificados controles, indicadores e ajuda contextual com a calculadora como referência. Compactadas as listas de contatos e a orientação nos formulários. Build e regressões em desktop, celular e WebKit com perfil de iPad aprovados.

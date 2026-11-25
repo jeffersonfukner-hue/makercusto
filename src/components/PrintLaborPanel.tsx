@@ -1,3 +1,4 @@
+import {CalculatorHelp} from './CalculatorHelp';
 import {useEffect,useState} from 'react';
 import {listWorkshopServices,getL4Labor,recordL4Labor,reviseL4Labor,type LaborRevisionDraft,type WorkshopService,type StoredLaborActivity} from '../data/supabase';
 import {laborCandidate,validateLaborRevision,type LaborActivity} from '../domain/l4-labor-draft';
@@ -74,8 +75,7 @@ export function PrintLaborPanel({workspaceId,executionId,onImport,onInvalidate}:
   catch(e){setError((e as Error).message);}
  };
  return <section className="panel" aria-label="Mão de obra da impressão">
-  <h4>Mão de obra — atividades da oficina</h4>
-  <p className="footnote">Informe somente o tempo de trabalho humano, não as horas automáticas da impressora. Tarifas do catálogo são atuais, não comprovantes históricos. Rascunhos são locais até o registro explícito. Evidências registradas são imutáveis e não constituem lançamento financeiro.</p>
+  <div className="mc-help-heading"><h4>Mão de obra — atividades da oficina</h4><CalculatorHelp label="Mão de obra — atividades da oficina">Informe somente o tempo de trabalho humano, não as horas automáticas da impressora. Tarifas do catálogo são atuais, não comprovantes históricos. Rascunhos são locais até o registro explícito. Evidências registradas são imutáveis e não constituem lançamento financeiro.</CalculatorHelp></div>
   {serviceError&&<p>{serviceError}</p>}
   <div className="product-save-fields">
    <label>Serviço da oficina<select value={serviceId} onChange={e=>{const s=services.find(x=>x.id===e.target.value);setServiceId(e.target.value);if(s){setActivity(s.name);setRate(String(s.rate));}}}><option value="">Informar manualmente</option>{services.map(s=><option key={s.id} value={s.id}>{s.name} — R$ {s.rate}/h</option>)}</select></label>

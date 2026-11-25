@@ -1,3 +1,4 @@
+import {CalculatorHelp} from './CalculatorHelp';
 import {useEffect,useRef,useState} from 'react';
 import {getEnergyEvidence,registerEnergyTariff,recordEnergyInterval,getIntegralEnergy,recordIntegralEnergy,reviseIntegralEnergy,type IntegralEnergyRevision,type IntegralEnergyEvidence,type EnergyEvidence,type EnergyEvidenceInterval} from '../data/supabase';
 import {prepareRecordedEnergy} from '../domain/p07-recorded-energy';
@@ -53,8 +54,7 @@ export function PrintEnergyPanel({workspaceId,executionId,onUseForAllocation,onI
   catch(e){setError((e as Error).message);}
  };
  return <section className="panel" aria-label="Energia P07">
-  <h4>Energia da impressão — P07</h4>
-  <p className="footnote">Registre evidências de consumo e vigência da tarifa. Não movimenta estoque nem confirma custo financeiro. Horários informados em Brasília.</p>
+  <div className="mc-help-heading"><h4>Energia da impressão — P07</h4><CalculatorHelp label="Energia da impressão — P07">Registre evidências de consumo e vigência da tarifa. Não movimenta estoque nem confirma custo financeiro. Horários informados em Brasília.</CalculatorHelp></div>
   <button type="button" disabled={busy||!workspaceId} onClick={()=>void load()}>Consultar fontes P07</button>
   {error&&<p role="alert" className="error">{error}</p>}
   {data&&workspaceId&&<>

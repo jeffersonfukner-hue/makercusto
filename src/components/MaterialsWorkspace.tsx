@@ -1,3 +1,4 @@
+import {CalculatorHelp,FieldWithHelp} from './CalculatorHelp';
 import {formatCatalogName} from '../domain/catalogName';
 import {useEffect,useRef,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
@@ -52,29 +53,22 @@ export function MaterialsWorkspace({workspaceId}:Props){
   finally{setBusy(false);}
  };
  return <section className="materials-workspace" aria-label="Filamentos e bobinas da oficina">
-  <div className="product-workspace-heading"><div><h2>Filamentos e bobinas</h2>
-    <p>Cadastre uma bobina que já existe fisicamente, mesmo sem nota fiscal ou compra registrada.</p></div>
+  <div className="product-workspace-heading"><div className="mc-help-heading"><h2>Filamentos e bobinas</h2><CalculatorHelp label="Filamentos e bobinas">Cadastre uma bobina que já existe fisicamente, mesmo sem nota fiscal ou compra registrada.</CalculatorHelp></div>
    <button type="button" className="primary-action" onClick={()=>{setShow(!show);setError('');}}>+ Inventariar bobina</button>
   </div>
   {error&&<p role="alert" className="error">{error}</p>}
   {feedback&&<p role="status" className="product-success">{feedback}</p>}
   {show&&<div className="materials-form panel">
    <h3>Inventário inicial de bobina existente</h3>
-   <p className="footnote">Preencha apenas o que sabe. A quantidade precisa representar o filamento disponível agora, não o peso impresso na embalagem quando nova.</p>
    <div className="product-save-fields">
-    <label>Filamento<input aria-label="Nome do filamento" placeholder="Ex.: PETG Masterprint Branco" maxLength={150} value={name} onChange={e=>setName(e.target.value)}/>
-     <small>Nome que identifica tipo, fabricante e cor. Este cadastro não altera referências globais.</small></label>
-    <label>Identificação da bobina<input aria-label="Identificação da bobina" placeholder="Ex.: PETG Branco — bobina 1" maxLength={150} value={label} onChange={e=>setLabel(e.target.value)}/>
-     <small>Use um nome que distinga bobinas do mesmo material.</small></label>
-    <label>Saldo físico atual (g)<input aria-label="Saldo físico atual" type="number" step=".001" min=".001" value={mass} onChange={e=>setMass(e.target.value)}/>
-     <small>Informe gramas restantes; sem descontar novamente o peso do carretel.</small></label>
-    <label>Origem da quantidade<select aria-label="Origem da quantidade" value={basis} onChange={e=>setBasis(e.target.value as ExistingSpoolDraft['basis'])}>
+    <FieldWithHelp label="Filamento" help="Nome que identifica tipo, fabricante e cor. Este cadastro não altera referências globais.">{id=><input id={id} aria-label="Nome do filamento" placeholder="Ex.: PETG Masterprint Branco" maxLength={150} value={name} onChange={e=>setName(e.target.value)}/>}</FieldWithHelp>
+    <FieldWithHelp label="Identificação da bobina" help="Use um nome que distinga bobinas do mesmo material.">{id=><input id={id} aria-label="Identificação da bobina" placeholder="Ex.: PETG Branco — bobina 1" maxLength={150} value={label} onChange={e=>setLabel(e.target.value)}/>}</FieldWithHelp>
+    <FieldWithHelp label="Saldo físico atual (g)" help="Informe o peso do filamento restante, sem o carretel. Use o peso atual da bobina.">{id=><input id={id} aria-label="Saldo físico atual" type="number" step=".001" min=".001" value={mass} onChange={e=>setMass(e.target.value)}/>}</FieldWithHelp>
+    <FieldWithHelp label="Origem da quantidade" help="Uma estimativa não é tratada como medição.">{id=><select id={id} aria-label="Origem da quantidade" value={basis} onChange={e=>setBasis(e.target.value as ExistingSpoolDraft['basis'])}>
      <option value="measured">Medida com balança</option><option value="informed">Informada por mim</option><option value="estimated">Estimativa visual</option>
-    </select><small>Uma estimativa não é tratada como medição.</small></label>
-    <label>Valor estimado do saldo (R$, opcional)<input aria-label="Valor estimado do saldo" type="number" step=".01" min="0" placeholder="Deixe vazio se desconhecido" value={cost} onChange={e=>setCost(e.target.value)}/>
-     <small>É o custo estimado do filamento restante, não necessariamente o valor pago por uma bobina nova.</small></label>
-    <label>Observações (opcional)<input aria-label="Observações da bobina" maxLength={1000} value={notes} onChange={e=>setNotes(e.target.value)}/>
-     <small>Ex.: origem da estimativa, pesagem, data ou etiqueta.</small></label>
+    </select>}</FieldWithHelp>
+    <FieldWithHelp label="Valor estimado do saldo (R$, opcional)" help="É o custo estimado do filamento restante, não necessariamente o valor pago por uma bobina nova.">{id=><input id={id} aria-label="Valor estimado do saldo" type="number" step=".01" min="0" placeholder="Deixe vazio se desconhecido" value={cost} onChange={e=>setCost(e.target.value)}/>}</FieldWithHelp>
+    <FieldWithHelp label="Observações (opcional)" help="Ex.: origem da estimativa, pesagem, data ou etiqueta.">{id=><input id={id} aria-label="Observações da bobina" maxLength={1000} value={notes} onChange={e=>setNotes(e.target.value)}/>}</FieldWithHelp>
    </div>
 
   </div>}

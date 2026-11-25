@@ -939,6 +939,13 @@ test('bobina física: inventário na oficina sem criar compra fictícia',async({
  await expect(page.getByRole('heading',{name:'Filamentos e bobinas'})).toBeVisible();
  await expect(page.getByText('Nenhuma bobina inventariada nesta oficina.')).toBeVisible();
  await page.getByRole('button',{name:'+ Inventariar bobina'}).click();
+ const balanceHelp=page.getByRole('button',{name:'Ajuda: Saldo físico atual (g)',exact:true});
+ const balanceTooltip=page.getByRole('tooltip').filter({hasText:'peso do filamento restante'});
+ await expect(balanceTooltip).toBeHidden();
+ await balanceHelp.focus();
+ await expect(balanceTooltip).toBeVisible();
+ await balanceHelp.press('Escape');
+ await expect(balanceTooltip).toBeHidden();
  await page.getByRole('textbox',{name:'Nome do filamento'}).fill('PETG Masterprint Branco');
  await page.getByRole('textbox',{name:'Identificação da bobina'}).fill('Bobina PETG-01');
  await page.getByRole('spinbutton',{name:'Saldo físico atual'}).fill('325.125');

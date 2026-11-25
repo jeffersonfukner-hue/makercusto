@@ -42,3 +42,7 @@ Durante a implementação, por decisão expressa do proprietário, esta regra pr
 
 ## ENTREGA-LOTE-01 — 24/11/2026
 Complementa BUILD-MANUAL-01. Agrupar alterações em lotes funcionais substanciais, preferencialmente módulos completos ou fluxos ponta a ponta: layout, formulários, navegação, validações, persistência nas tabelas corretas e integração com módulos existentes. Avançar autonomamente nas tarefas autorizadas antes de solicitar Preview. Não solicitar deploy por alterações cosméticas, textos, pequenas correções isoladas ou quantidade arbitrária de commits; acumular correções e melhorias até uma entrega coerente. Exceção: bloqueio crítico que impeça testar ou prosseguir. Respeitar orçamento informado pelo proprietário de 500 deploys Cloudflare, sem presumir saldo disponível. Entregar SHA, resumo funcional, pendências e roteiro curto de homologação. Usar logs do build manual e evidências do proprietário para corrigir problemas, sem duplicar builds no GitHub Actions. Preservar homologações e restrições de merge, deploy, banco operacional e gastos.
+
+## Padrão visual do MakerCusto
+
+A calculadora é a referência de qualidade para todos os módulos. Siga a seção Padrão visual compartilhado de `docs/PADROES.md` em novas telas e revisões. Reaproveite controles, cards, indicadores e modais, mantenha os formulários compactos e coloque orientações auxiliares no ícone de informação junto ao campo ou título correspondente. Verifique o padrão durante a implementação de cada tela.
