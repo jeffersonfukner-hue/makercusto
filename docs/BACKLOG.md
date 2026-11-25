@@ -10,7 +10,8 @@
 
 - [x] Aplicar a migração de Clientes no Supabase de teste.
 - [x] Confirmar no Preview desktop a exibição do pedido vinculado em Clientes e no histórico geral, junto aos pedidos antigos sem cliente.
-- [ ] Homologar o cadastro pelo modal da calculadora e a navegação no iPad no Preview.
+- [x] Homologar o cadastro de cliente pelo modal da calculadora no Preview.
+- [ ] Homologar a navegação no iPad e a nova lista com detalhes de pedidos no Preview.
 
 ## Etapa 1 — Fundação e cálculo inicial (PR #1)
 - [x] Documentação, arquitetura, contrato e regras de trabalho

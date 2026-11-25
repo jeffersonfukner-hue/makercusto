@@ -13,6 +13,7 @@ export function ContactsWorkspace({workspaceId,kind}:{workspaceId:string;kind:'c
  const [error,setError]=useState('');
  const [edit,setEdit]=useState<WorkshopCustomer|'new'>();
  const [history,setHistory]=useState('');
+ const [orderOpen,setOrderOpen]=useState(false);
  useEffect(()=>{
   let live=true;
   void (supplier?listWorkshopSuppliers(workspaceId):listWorkshopCustomers(workspaceId)).then(rows=>{if(live)setContacts(rows);})
@@ -25,7 +26,7 @@ export function ContactsWorkspace({workspaceId,kind}:{workspaceId:string;kind:'c
   [contact.name,contact.whatsapp,contact.email].some(value=>value?.toLocaleLowerCase('pt-BR').includes(term)));
  const selected=contacts.find(contact=>contact.id===history);
  return <>
-  <section className="panel" aria-label={'Cadastro de '+plural}>
+  {!orderOpen&&<section className="panel" aria-label={'Cadastro de '+plural}>
    <div className="mc-calculation-share-actions">
     <label>Buscar {kind}<input type="search" value={query} onChange={event=>setQuery(event.target.value)}/></label>
     <button type="button" className="primary-action" disabled={loading} onClick={()=>setEdit('new')}>Novo {kind}</button>
@@ -41,8 +42,8 @@ export function ContactsWorkspace({workspaceId,kind}:{workspaceId:string;kind:'c
      {!supplier&&<button type="button" onClick={()=>setHistory(contact.id)}>Ver pedidos de {contact.name}</button>}
     </div>
    </article>)}
-  </section>
-  {selected&&<OrdersWorkspace key={selected.id} workspaceId={workspaceId} customer={selected}/>}
+  </section>}
+  {selected&&<OrdersWorkspace key={selected.id} workspaceId={workspaceId} customer={selected} onDetailChange={setOrderOpen}/>}
   {edit&&<ContactEditor workspaceId={workspaceId} kind={kind} contact={edit==='new'?undefined:edit} onClose={()=>setEdit(undefined)}
    onSaved={saved=>{setContacts(previous=>[...previous.filter(contact=>contact.id!==saved.id),saved].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')));setEdit(undefined);}}/>}
  </>;

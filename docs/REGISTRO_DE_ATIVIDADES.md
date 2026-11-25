@@ -1056,3 +1056,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Consultas de Pedidos e histórico de custos
 
 - Aplicado o feedback de carregamento, falha e reenvio das consultas. Build, 82 unitários e oito cenários Playwright passaram.
+
+### 25/11/2026 — Lista e detalhes de pedidos
+
+- Reformuladas a consulta geral e a consulta por cliente, com lista compacta e ficha dedicada. Build, 82 unitários e seis cenários Playwright aprovados. Cadastro rápido confirmado pelo proprietário no Preview anterior.

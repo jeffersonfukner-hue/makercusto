@@ -1162,3 +1162,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - As fotos enviadas pelo proprietário mostram o menu agrupado no desktop e o mesmo pedido planejado de 12 conjuntos na ficha do cliente e no histórico geral de Pedidos e vendas. O histórico também mostra pedidos anteriores sem vínculo e diferencia montagem por partes de impressão com mesas.
 - As imagens confirmam a consulta do vínculo. A abertura e a gravação pelo modal da calculadora, a navegação no iPad e a área de Fornecedores permanecem sem evidência visual nesta validação.
+
+## 25/11/2026 — Lista e detalhes de pedidos
+
+- O proprietário confirmou que cadastrou o primeiro cliente pelo modal da calculadora no Preview. O modal da tela de Clientes também abriu normalmente.
+- Pedidos e vendas e o histórico de cada cliente usam uma lista compacta com produto, cliente, data, situação, quantidade e total. A ficha do pedido destaca os valores e mostra o método de produção e a divisão por mesas quando aplicável. Voltar restaura a lista e o foco no pedido selecionado.
+- Build, 82 unitários e seis cenários de navegador passaram, incluindo detalhes e retorno nos dois pontos de entrada. Ajuste local para o próximo lote.

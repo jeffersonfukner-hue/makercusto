@@ -1,12 +1,27 @@
 import {OperationFeedback} from './OperationFeedback';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {listCustomerOrders,type CustomerOrder,type WorkshopCustomer} from '../data/supabase';
 import {calculateOrderPlan} from '../domain/order-plan';
 
 const money=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const date=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'});
 
-export function OrdersWorkspace({workspaceId,customer}:{workspaceId:string;customer?:WorkshopCustomer}){
+const statusLabel=(order:CustomerOrder)=>order.status==='sold'?'Vendido':'Planejado';
+const orderPlan=(order:CustomerOrder)=>calculateOrderPlan(order.pieces_per_plate,Number(order.plate_cost),Number(order.sale_price),
+ order.quantity,Number(order.partial_plate_cost));
+const orderQuantity=(order:CustomerOrder)=>order.quantity+(order.production_method==='assembly'
+ ?order.quantity===1?' conjunto':' conjuntos'
+ :order.quantity===1?' peça':' peças');
+
+export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspaceId:string;customer?:WorkshopCustomer;onDetailChange?:(open:boolean)=>void}){
+ const [selected,setSelected]=useState<CustomerOrder>();
+ const detailHeading=useRef<HTMLHeadingElement>(null);
+ const openedRow=useRef('');
+ const rowButtons=useRef(new Map<string,HTMLButtonElement>());
+ useEffect(()=>{
+  if(selected)detailHeading.current?.focus();
+  else if(openedRow.current)rowButtons.current.get(openedRow.current)?.focus();
+ },[selected]);
  const [offset,setOffset]=useState(0);
  const [retry,setRetry]=useState(0);
  const [page,setPage]=useState<{key:string;orders:CustomerOrder[];error?:string}>();
@@ -19,30 +34,53 @@ export function OrdersWorkspace({workspaceId,customer}:{workspaceId:string;custo
   return ()=>{active=false;};
  },[workspaceId,offset,customer?.id,key]);
  const current=page?.key===key?page:undefined;
+ if(selected){
+  const plan=orderPlan(selected);
+  const assembly=selected.production_method==='assembly';
+  return <article className="panel mc-order-detail" aria-labelledby="mc-order-detail-title">
+   <button type="button" className="mc-light-action" onClick={()=>{setSelected(undefined);onDetailChange?.(false);}}>← Voltar aos pedidos</button>
+   <header className="mc-order-detail-header">
+    <div><h2 id="mc-order-detail-title" tabIndex={-1} ref={detailHeading}>{selected.product_name}</h2>
+     <p>{selected.customer?.name??customer?.name??'Sem cliente'} · {date.format(new Date(selected.created_at))}</p>
+    </div>
+    <span className="mc-order-status" data-sold={selected.status==='sold'}>{statusLabel(selected)}</span>
+   </header>
+   <dl className="mc-order-financials">
+    <div><dt>Faturamento do pedido</dt><dd>{money.format(plan.revenue)}</dd></div>
+    <div><dt>Custo registrado</dt><dd>{money.format(plan.totalCost)}</dd></div>
+    <div><dt>Lucro bruto</dt><dd>{money.format(plan.grossProfit)}</dd></div>
+    <div><dt>Venda por unidade</dt><dd>{money.format(Number(selected.sale_price))}</dd></div>
+   </dl>
+   <section className="mc-order-production" aria-label="Produção do pedido">
+    <h3>Produção</h3>
+    <p>{assembly?'Montagem por partes':'Impressão em peça única'}</p>
+    <p>{assembly?orderQuantity(selected)+(selected.quantity===1?' montado':' montados'):<>
+     {orderQuantity(selected)} · {plan.totalPlates} {plan.totalPlates===1?'mesa':'mesas'}
+     {plan.partialPieces>0&&' · última mesa: '+plan.partialPieces+' un.'}
+    </>}</p>
+   </section>
+  </article>;
+ }
  return <section className="panel" aria-label="Histórico de pedidos">
   <h2>{customer?'Pedidos de '+customer.name:'Histórico de pedidos'}</h2>
   <OperationFeedback pending={!current} pendingMessage="Carregando pedidos…" error={current?.error??''}
    failureMessage="Não foi possível consultar pedidos." onRetry={()=>setRetry(attempt=>attempt+1)}/>
   {current&&!current.error&&current.orders.length===0&&<p>Nenhum pedido nesta página. Use Planejamento do pedido na calculadora para registrar um.</p>}
-  {current?.orders.map(order=>{
-   const plan=calculateOrderPlan(order.pieces_per_plate,Number(order.plate_cost),Number(order.sale_price),
-    order.quantity,Number(order.partial_plate_cost));
-   return <article key={order.id} className="product-detail mc-order-record">
-    <h3>{order.product_name}</h3>
-    {order.customer&&<p>Cliente: {order.customer.name}</p>}
-    <p>{order.status==='sold'?'Vendido':'Planejado'} · {date.format(new Date(order.created_at))}</p>
-    <p>{order.production_method==='assembly'?order.quantity+' conjuntos montados':<>
-     {order.quantity} peças · {plan.totalPlates} {plan.totalPlates===1?'mesa':'mesas'}
-     {plan.partialPieces>0&&' · última mesa: '+plan.partialPieces+' un.'}
-    </>}</p>
-    <dl className="cost-list">
-     <div><dt>Custo registrado</dt><dd>{money.format(plan.totalCost)}</dd></div>
-     <div><dt>Venda por unidade</dt><dd>{money.format(Number(order.sale_price))}</dd></div>
-     <div><dt>Faturamento do pedido</dt><dd>{money.format(plan.revenue)}</dd></div>
-     <div><dt>Lucro bruto</dt><dd>{money.format(plan.grossProfit)}</dd></div>
-    </dl>
-   </article>;
-  })}
+  {!!current?.orders.length&&<ul className="mc-order-list">
+   {current.orders.map(order=><li key={order.id}>
+    <button type="button" className="mc-order-row" ref={element=>{
+     if(element)rowButtons.current.set(order.id,element);
+     else rowButtons.current.delete(order.id);
+    }} onClick={()=>{openedRow.current=order.id;setSelected(order);onDetailChange?.(true);}}>
+     <span className="mc-order-identity"><strong>{order.product_name}</strong>
+      <small>{order.customer?.name??customer?.name??'Sem cliente'} · {date.format(new Date(order.created_at))}</small></span>
+     <span className="mc-order-status" data-sold={order.status==='sold'}>{statusLabel(order)}</span>
+     <span className="mc-order-quantity">{orderQuantity(order)}</span>
+     <strong className="mc-order-total">{money.format(orderPlan(order).revenue)}</strong>
+     <span className="mc-order-chevron" aria-hidden="true">›</span>
+    </button>
+   </li>)}
+  </ul>}
   <div className="mc-calculation-share-actions">
    {offset>0&&<button type="button" onClick={()=>setOffset(offset-20)}>Anterior</button>}
    {current?.orders.length===20&&<button type="button" onClick={()=>setOffset(offset+20)}>Próxima</button>}
