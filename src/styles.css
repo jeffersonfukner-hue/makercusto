@@ -521,3 +521,17 @@
 .mc-field-help{justify-self:start;align-self:start}
 @media(max-width:1100px){.calculator-identity .product-save-content{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:700px){.system-shell .calculator-identity .product-save-fields{grid-template-columns:minmax(0,1fr)}.system-shell .calculator-identity .product-name-input{grid-column:1/-1}}
+
+.mc-production-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mc-production-grid .calculator-production{min-width:0}
+.mc-production-grid .mc-extras{grid-column:1/-1}
+.mc-sale-price{display:grid;gap:6px;margin:12px 0;font-size:13px}
+.mc-sale-price input{width:100%;min-width:0;background:#0c1727;color:#fff;border:1px solid #42506a;border-radius:8px;padding:10px}
+.system-shell:has(.calculator-identity) .mc-production-grid .calculator-production{border:1px solid #dce3ed;border-radius:8px;padding:10px}
+.system-shell:has(.calculator-identity) .mc-production-grid h3{margin:-10px -10px 10px;border-radius:7px 7px 0 0}
+.system-shell:has(.calculator-identity) .mc-print h3{background:#e2edfc}
+.system-shell:has(.calculator-identity) .mc-extras h3{background:#fff3d8}
+.mc-result-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.mc-result-metrics>div{display:grid;gap:5px;padding:10px;background:#f2edfc;border-radius:7px;color:#30205b}
+.mc-result-metrics strong{font-size:20px}
+@media(max-width:700px){.mc-production-grid{grid-template-columns:minmax(0,1fr)}}
