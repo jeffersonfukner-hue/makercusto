@@ -901,3 +901,8 @@
 .mc-order-record {margin:8px 0}
 .mc-order-record .cost-list>div {border-color:var(--mc-border)}
 .mc-order-record .cost-list dt {color:var(--mc-muted)}
+
+.mc-calculator-tools {display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;min-width:0}
+.mc-calculator .mc-calculator-tools .mode-switch {margin-bottom:0}
+.mc-calculator .mc-clear-calculation,.mc-calculator .mc-copy-calculation {min-height:32px;white-space:nowrap}
+.mc-copy-calculation {margin-left:auto}

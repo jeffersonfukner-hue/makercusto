@@ -62,6 +62,34 @@ test('planeja mesas completas e última mesa com somente as peças necessárias'
  await quantity.fill('0');
  await expect(page.getByText('Informe uma quantidade inteira de peças maior que zero.')).toBeVisible();
 });
+test('zera o rascunho nos dois modos sem trocar a impressora',async({page})=>{
+ await page.goto('/');
+ const clear=page.getByRole('button',{name:'Zerar cálculo',exact:true});
+ const dialog=page.getByRole('dialog',{name:'Zerar cálculo'});
+ await clear.click();
+ await dialog.getByRole('button',{name:'Cancelar'}).click();
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('151.58');
+ await clear.click();
+ await dialog.getByRole('button',{name:'Zerar cálculo',exact:true}).click();
+ await expect(page.getByTestId('simpleQuantity')).toHaveValue('0');
+ await expect(page.getByTestId('simplePrice')).toHaveValue('0');
+ await page.getByRole('button',{name:/Avançado/}).click();
+ const printer=page.getByRole('combobox',{name:'Selecionar impressora'});
+ await printer.selectOption('reference:creality-k1c');
+ await page.getByRole('button',{name:'Detalhar por cor'}).click();
+ await page.getByLabel('Cor do filamento').fill('Vermelho');
+ await page.getByTestId('packagePrice').fill('100');
+ await page.getByTestId('gramsUsed').fill('14');
+ await page.getByRole('button',{name:'Adicionar à tabela'}).click();
+ await expect(page.getByTestId('row-extra-1')).toBeVisible();
+ await clear.click();
+ await dialog.getByRole('button',{name:'Zerar cálculo',exact:true}).click();
+ await expect(printer).toHaveValue('reference:creality-k1c');
+ await expect(page.getByRole('button',{name:/Avançado/})).toHaveAttribute('aria-pressed','true');
+ await expect(page.getByTestId('salePrice')).toHaveValue('0');
+ await page.getByRole('button',{name:'Detalhar por cor'}).click();
+ await expect(page.getByTestId('row-extra-1')).toHaveCount(0);
+});
 test('detalhar por cor exibe tabela alinhada e total',async({page})=>{
  await page.goto('/');
  await page.getByRole('button',{name:/Avançado/}).click();
@@ -1636,7 +1664,9 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
  await expect(page.getByRole('spinbutton',{name:'Segundos',exact:true})).toHaveValue('30');
  await expect(page.getByTestId('salePrice')).toHaveValue('40');
  expect(readCalls).toContain('read');
- await page.getByRole('button',{name:'Salvar como novo',exact:true}).click();
+ const copyButtons=page.getByRole('button',{name:'Salvar como novo',exact:true});
+ await expect(copyButtons).toHaveCount(2);
+ await page.locator('.mc-current-product').getByRole('button',{name:'Salvar como novo',exact:true}).click();
  const productName=page.getByRole('textbox',{name:'Nome do produto'});
  await expect(productName).toBeFocused();
  await expect(productName).toHaveValue('Guirlanda — cópia 2');

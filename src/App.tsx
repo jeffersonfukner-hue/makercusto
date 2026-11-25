@@ -68,7 +68,7 @@ function writeLocalPrinters(printers:PrinterProfile[]):void{
  try{localStorage.setItem(LOCAL_PRINTERS_KEY,JSON.stringify(printers.filter(personalLocal).slice(0,100)));}catch{/* armazenamento indisponível: cópias mantidas na sessão */}
 }
 
-type NumericKey = Exclude<keyof CostInput,'materials'>;
+type NumericKey = keyof typeof fields;
 const fields = {
  quantity: {label:'Peças por mesa',step:'1',min:1,help:'Quantidade de peças prontas produzidas em uma impressão de mesa cheia.'},
  accessoryPerUnit: {label:'Acessórios por unidade (R$)',step:'0.01',min:0,help:'Custo dos acessórios consumidos por peça.'},
@@ -115,6 +115,7 @@ export default function App(){
  const [accountError,setAccountError]=useState('');
  const [workspaceName,setWorkspaceName]=useState('Minha oficina');
  const [description,setDescription]=useState('');
+ const [identityReset,setIdentityReset]=useState(0);
  const [calculatorTab,setCalculatorTab]=useState<'calculation'|'composition'|'settings'|'notes'>('calculation');
  const [activeSection,setActiveSection]=useState<SystemSection>('overview');
  const [productTab,setProductTab]=useState<ProductTab>('all');
@@ -273,6 +274,22 @@ export default function App(){
    setAdvanced(false);setDetails(false);
    setDraft(newDraft());setEditId(null);setNextId(1);setErrorDraft('');
  };
+ const requestClearCalculation=()=>requestConfirmation({
+  title:'Zerar cálculo',
+  message:'Os valores e a identificação deste rascunho serão limpos. A impressora selecionada e os cálculos salvos serão mantidos.',
+  actionLabel:'Zerar cálculo',
+  onConfirm:()=>{
+   setRevisionTarget(null);setLoadedCalculation('');setAccountError('');
+   setDescription('');setIdentityReset(value=>value+1);
+   setPrintDurationDraft(null);setSlicerDurationDrafts({});
+   setForm({...referenceCase,materials:undefined,grams:0,pricePerKg:0,hours:0,quantity:1,
+    accessoryPerUnit:0,assemblyMinutesPerUnit:0,laborPerHour:0,salePrice:0});
+   setSimple({quantity:0,quantityUnit:'g',price:0,priceUnit:'kg'});
+   setPriceByMargin(false);setTargetMargin(30);
+   setDetails(false);setDetailedMaterials([]);
+   setDraft(newDraft());setEditId(null);setNextId(1);setErrorDraft('');
+  }
+ });
  const [loadedCalculation,setLoadedCalculation]=useState('');
  const [revisionTarget,setRevisionTarget]=useState<SavedCalculation|null>(null);
  const applySavedCalculation=(saved:SavedCalculation)=>{
@@ -367,7 +384,9 @@ export default function App(){
   ['Faturamento do lote',money(result.lotRevenue)],
   ['Lucro bruto do lote',money(result.grossProfit)]
  ] as const;
- const modeSwitch=<nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>;
+ const modeSwitch=<div className="mc-calculator-tools"><nav className="mode-switch" aria-label="Modo de cálculo"><button type="button" className={!advanced?"selected":""} aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>Simples {!session&&<small>Direto ao resultado</small>}</button><button type="button" className={advanced?"selected":""} aria-pressed={advanced} onClick={()=>setAdvanced(true)}>Avançado {!session&&<small>Cores, impressora e custos extras</small>}</button></nav>
+  <button type="button" className="details-button mc-clear-calculation" onClick={requestClearCalculation}>Zerar cálculo</button>
+ </div>;
  return <div className="mc-theme">
  {confirmationDialog}
  {shareLines&&(!session||activeSection==='calculator')&&<CalculationPrintSummary title={shareTitle} lines={shareLines}/>}
@@ -378,7 +397,7 @@ export default function App(){
   {(!session||activeSection==='calculator')&&<>
   <div className="mc-calculator">
   {!session&&<section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>}
-  {session&&<ProductSavePanel session={session} workspaceId={workspaceId} input={activeInput} result={result}
+  {session&&<ProductSavePanel key={identityReset} session={session} workspaceId={workspaceId} input={activeInput} result={result}
    onLogin={()=>setAuthMode('login')} onLoadCalculation={applySavedCalculation} revisionTarget={revisionTarget}
    description={description} onDescriptionChange={setDescription} lotField={calculationField('quantity')}
    onNewCalculation={()=>{reset();setCalculatorTab('calculation');}}
@@ -602,7 +621,7 @@ export default function App(){
       orderRegistration={session&&workspaceId?{workspaceId,snapshotId:revisionTarget?.snapshot_id??null,
        productName:revisionTarget?.name,onViewOrders:()=>setActiveSection('orders')}:undefined}/>
      {shareLines&&<CalculationShare title={shareTitle} lines={shareLines}/>}
-     <CustomerQuote key={revisionTarget?.snapshot_id??'new-quote'} name={revisionTarget?.name}
+     <CustomerQuote key={revisionTarget?.snapshot_id??identityReset} name={revisionTarget?.name}
       quantity={activeInput.quantity} salePrice={activeInput.salePrice}
       product={session&&workspaceId&&revisionTarget?{workspaceId,id:revisionTarget.product_id}:undefined}/>
      {!session&&<div className="mc-public-account">

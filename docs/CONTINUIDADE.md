@@ -1050,3 +1050,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Migração local `20261125142601_customer_orders.sql` preparada. O PostgreSQL descartável via PGlite confirmou autor derivado da sessão, retry idempotente, isolamento entre oficinas e bloqueios de alteração e acesso anônimo. Build, 82 unitários e dez cenários Playwright passaram, com API simulada para o fluxo de registro.
 - A migração de Pedidos ainda aguarda autorização específica para o Supabase de teste. A permissão anterior foi para a galeria. A calculadora aritmética e o bloco de notas rápidas ficaram no backlog.
 - Após autorização do proprietário, a migração de Pedidos foi aplicada ao Supabase de teste do MakerCusto. O histórico remoto registrou `20261125142952` como `customer_orders`. Teste SQL com rollback verificou autoria pela sessão, registro de uma venda de 15 peças, repetição sem duplicação, bloqueio de alteração direta e bloqueio de leitura e gravação entre oficinas. RLS está habilitada e a consulta posterior encontrou zero dados de teste remanescentes. A validação via aplicativo autenticado fica para o Preview.
+
+### Zerar cálculo e copiar pelo cabeçalho — 25/11/2026
+
+- Zerar cálculo foi adicionado ao lado de Simples e Avançado, com confirmação no padrão visual do site. Zera filamento, preços, tempo, extras e identificação do rascunho, volta a uma peça por mesa e conserva o modo atual, a impressora selecionada e o histórico salvo. No Avançado, a tabela por cor fica vazia ao reabrir o detalhamento.
+- Salvar como novo fica na linha de Identificação do produto quando um cálculo salvo está carregado. A ação existente no rodapé permanece e ambas abrem a mesma cópia editável, incluindo nome e tipo.
+- Build, 82 testes unitários e cenários Playwright de reset, cópia e compartilhamento aprovados em desktop e mobile. Homologação visual pendente.

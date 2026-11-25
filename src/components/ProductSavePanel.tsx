@@ -154,6 +154,8 @@ export function ProductSavePanel({session,workspaceId,input,result,filter='all',
    <section className="panel mc-current-product" aria-labelledby="product-save-title">
     <div className="mc-identity-heading"><h2 id="product-save-title">Identificação do produto</h2>
      <CalculatorHelp label="Salvar produto">O custo é registrado com os parâmetros atuais. Peças diferentes na mesma placa exigem rateio validado. O salvamento não movimenta estoque.</CalculatorHelp>
+     {revisionTarget&&onClearRevisionTarget&&<button type="button" className="details-button mc-copy-calculation"
+      disabled={busy} onClick={draftAsCopy}>Salvar como novo</button>}
     </div>
     <div className="product-save-fields mc-product-identity-fields">
      <div className="product-name-input">
