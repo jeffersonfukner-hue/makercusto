@@ -18,7 +18,7 @@ const formatCents=(cents:string)=>{const value=BigInt(cents);return 'R$ '+new In
 const categories: {id:AllocationCategory;label:string}[]=[
  {id:'model',label:'Filamento do modelo'},{id:'purge',label:'Purga separada'},
  {id:'energy',label:'Energia'},{id:'machine',label:'Máquina'},
- {id:'labor',label:'Mão de obra'},{id:'accessory',label:'Acessórios'},
+ {id:'labor',label:'Mão de obra'},{id:'accessory',label:'Acessórios'},{id:'tool',label:'Ferramentas'},
  {id:'loss',label:'Perda separada'},{id:'rework',label:'Retrabalho'},
  {id:'other',label:'Outro custo'}
 ];
@@ -278,12 +278,21 @@ export function PrintAllocationPreview({workspaceId,prints,printers,active,onAct
    <h4>Prévia conciliada das categorias informadas: {formatCents(preview.allocation.totalCents)}</h4>
    <p>Esta conciliação vale apenas para as categorias fornecidas. Não confirma custo final de produção.</p>
    <ul>{preview.allocation.outputTotals.map(o=><li key={o.outputId}>{destinations.find(d=>d.id===o.outputId)?.name}: {formatCents(o.totalCents)}</li>)}</ul>
-   <small>P05/P06: half-up por categoria, maiores restos e desempate por ID. Sem gravação no banco.</small>
+   <details>
+    <summary>Detalhar valores por categoria</summary>
+    <dl className="cost-list">{categories.map(({id,label})=>{
+     const sources=preview.allocation.categoryTotals.filter(line=>line.category===id);
+     return sources.length>0&&<div key={id}><dt>{label}</dt>
+      <dd>{formatCents(sources.reduce((sum,line)=>sum+BigInt(line.closedCents),0n).toString())}</dd>
+     </div>;
+    })}</dl>
+   </details>
+   <small>P05/P06: arredondamento por categoria e distribuição dos centavos pelos maiores restos. Sem gravação no banco.</small>
    <section aria-label="Pendências de fechamento financeiro L4">
     <h4>Fechamento financeiro: PENDENTE</h4>
     <p>Fontes históricas associadas: {preview.assignedConsumptionCount} de {preview.expectedConsumptionCount}.
      A conciliação acima representa apenas as categorias informadas. Nenhum snapshot financeiro foi confirmado.</p>
-    <ul>{preview.issues.map((issue,index)=><li key={index}>{issue.description}{issue.sourceId?' — '+issue.sourceId:''}</li>)}</ul>
+    <ul>{preview.issues.map((issue,index)=><li key={index}>{issue.category&&<strong>{categories.find(c=>c.id===issue.category)?.label} · </strong>}{issue.description}{issue.sourceId?' — '+issue.sourceId:''}</li>)}</ul>
    </section>
   </div>}
   {active&&<FormActionDock title="Prévia L4" subtitle="Cálculo local, não registra custo nem movimenta estoque">

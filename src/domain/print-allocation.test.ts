@@ -45,6 +45,31 @@ describe('L4 — rateio homologado P05 e precisão P06',()=>{
    destinations:[{outputId:'guirlanda',basis:'1'}]})]));
   expect(a.totalCents).toBe('124');
  });
+ it('arredonda o total de cada categoria uma vez e distribui os centavos entre as fontes',()=>{
+  const sources=[
+   line({id:'tool-a',category:'tool',amountBrl:'0.005',method:'direct',destinations:[{outputId:'guirlanda',basis:'1'}]}),
+   line({id:'tool-b',category:'tool',amountBrl:'0.005',method:'direct',destinations:[{outputId:'estrela-grande',basis:'1'}]}),
+   line({id:'accessory-a',category:'accessory',amountBrl:'0.004',method:'direct',destinations:[{outputId:'guirlanda',basis:'1'}]}),
+   line({id:'accessory-b',category:'accessory',amountBrl:'0.003',method:'direct',destinations:[{outputId:'estrela-grande',basis:'1'}]})
+  ];
+  const first=reconcilePrintAllocation(request(sources));
+  const reversed=reconcilePrintAllocation(request([...sources].reverse()));
+  expect(first.totalCents).toBe('2');
+  expect(first.categoryTotals.map(x=>x.closedCents)).toEqual(['0','1','1','0']);
+  expect(first.outputTotals.map(x=>x.totalCents)).toEqual(['1','1','0']);
+  expect(reversed.outputTotals).toEqual(first.outputTotals);
+ });
+ it('mantém as quotas por destino quando uma fonte é dividida em duas linhas',()=>{
+  const base=line({category:'tool',amountBrl:'0.02',destinations:[
+   {outputId:'guirlanda',basis:'1'},{outputId:'estrela-grande',basis:'1'}
+  ]});
+  const single=reconcilePrintAllocation(request([base]));
+  const split=reconcilePrintAllocation(request([
+   {...base,id:'primeira',amountBrl:'0.01'},{...base,id:'segunda',amountBrl:'0.01'}
+  ]));
+  expect(split.outputTotals).toEqual(single.outputTotals);
+  expect(split.outputTotals.map(x=>x.totalCents)).toEqual(['1','1','0']);
+ });
  it('mantém falha isolada e não repassa automaticamente custo às peças boas',()=>{
   const failure:AllocationRequest['outputs'][number]={id:'rejeitada',name:'Teste com falha',outcome:'rejected',quantity:1};
   const a=reconcilePrintAllocation({executionId:'mesa-002',outputs:[...outputs,failure],lines:[

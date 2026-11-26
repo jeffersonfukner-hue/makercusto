@@ -1987,6 +1987,10 @@ test('L4: prévia de rateio de mesa mista concilia centavos sem RPC financeira',
  await expect(result).toContainText('R$ 10,00');
  await expect(result).toContainText('R$ 3,34');
  await expect(result).toContainText('R$ 3,33');
+ await result.getByText('Detalhar valores por categoria').click();
+ await expect(result.getByText('Energia',{exact:true}).locator('..')).toContainText('R$ 10,00');
+ await expect(panel.getByRole('combobox',{name:'Categoria de custo L4'}).getByRole('option',{name:'Ferramentas'})).toHaveCount(1);
+ await expect(panel.getByRole('combobox',{name:'Revisão de Ferramentas'})).toBeVisible();
  await expect(panel.getByRole('list',{name:'Fontes de consumo L4'})).toContainText('PETG branco');
  await expect(panel.getByRole('list',{name:'Fontes de consumo L4'})).toContainText('custo desconhecido');
  await panel.getByRole('button',{name:'Usar modelo no rateio'}).click();

@@ -1,11 +1,11 @@
-import {parseExactDecimal,roundPositiveCentsHalfUp} from './decimal-exact';
+import {parseExactDecimal,roundPositiveCentsHalfUp,reduceRational,type Rational} from './decimal-exact';
 /**
  * L4 — reconciliação local e determinística de rateios por execução (P05/P06).
  * Sem efeitos de banco, sem distribuição automática de perdas ou preços presumidos.
  * Valores monetários e pesos são strings decimais; BigInt é a fonte exata.
  */
 export type AllocationCategory =
- | 'model' | 'purge' | 'energy' | 'machine' | 'labor' | 'accessory' | 'loss' | 'rework' | 'other';
+ | 'model' | 'purge' | 'energy' | 'machine' | 'labor' | 'accessory' | 'tool' | 'loss' | 'rework' | 'other';
 export type AllocationMethod = 'direct' | 'shared';
 export type AllocationDestination = {
  outputId: string;
@@ -64,7 +64,50 @@ function decimal(value:string,label:string){
  try{return parseExactDecimal(value);}
  catch(e){throw new Error(label+': '+(e as Error).message);}
 }
-const centsHalfUp=roundPositiveCentsHalfUp;
+const zero:Rational={numerator:0n,denominator:1n};
+const add=(a:Rational,b:Rational)=>reduceRational({
+ numerator:a.numerator*b.denominator+b.numerator*a.denominator,
+ denominator:a.denominator*b.denominator
+});
+
+function splitCents(total:bigint,weights:{id:string;weight:Rational}[]){
+ const weightSum=weights.reduce((sum,{weight})=>add(sum,weight),zero);
+ const quotas=weights.map(({id,weight})=>{
+  const numerator=total*weight.numerator*weightSum.denominator;
+  const denominator=weightSum.numerator===0n?1n:weight.denominator*weightSum.numerator;
+  return {id,cents:numerator/denominator,remainder:numerator%denominator,denominator,residualCent:false};
+ });
+ let residual=total-quotas.reduce((sum,quota)=>sum+quota.cents,0n);
+ quotas.sort((a,b)=>{
+  const left=a.remainder*b.denominator,right=b.remainder*a.denominator;
+  return left===right?a.id.localeCompare(b.id):left>right?-1:1;
+ });
+ for(const quota of quotas){
+  if(residual===0n)break;
+  quota.cents++;quota.residualCent=true;residual--;
+ }
+ if(residual!==0n)throw new Error('Centavos residuais não conciliados.');
+ return quotas;
+}
+
+type Contribution={lineId:string;outputId:string;weight:Rational};
+
+function closeCategory(contributions:Contribution[]){
+ const byOutput=new Map<string,Contribution[]>();
+ for(const item of contributions){
+  const group=byOutput.get(item.outputId)??[];
+  group.push(item);byOutput.set(item.outputId,group);
+ }
+ const weights=[...byOutput].map(([id,group])=>({id,weight:group.reduce((sum,item)=>add(sum,item.weight),zero)}));
+ const total=roundPositiveCentsHalfUp(weights.reduce((sum,{weight})=>add(sum,weight),zero));
+ return splitCents(total,weights).flatMap(output=>{
+  const group=byOutput.get(output.id)!;
+  return splitCents(output.cents,group.map(({lineId,weight})=>({id:lineId,weight}))).map(line=>({
+   lineId:line.id,outputId:output.id,cents:line.cents,
+   residualCent:group.filter(item=>item.weight.numerator>0n).length<=1?output.residualCent&&line.cents>0n:line.residualCent
+  }));
+ });
+}
 const validId = (v: string) => Boolean(v && v.trim() === v && v.trim().length > 0);
 const expectUnique = (xs: string[], label: string) => {
  if (new Set(xs).size !== xs.length || xs.some(x => !validId(x))) throw new Error(label + ': identificadores obrigatórios e únicos.');
@@ -72,7 +115,7 @@ const expectUnique = (xs: string[], label: string) => {
 
 /**
  * Custo de cada categoria é fechado UMA VEZ; depois os centavos são divididos
- * pelo maior resto, desempate lexical por ID do destino (P06-D).
+ * pelos maiores restos entre os destinos e detalha a parcela por fonte (P06-D).
  * Não calcula custo da energia, potência ou bobina: recebe custo de origem explícito.
  */
 export function reconcilePrintAllocation(request: AllocationRequest): AllocationSnapshot {
@@ -85,10 +128,11 @@ export function reconcilePrintAllocation(request: AllocationRequest): Allocation
  const outputIds = new Set(request.outputs.map(o => o.id));
  const totals = new Map(request.outputs.map(o => [o.id, 0n]));
  let total = 0n;
- const categoryTotals = request.lines.map(line => {
+ const groups=new Map<AllocationCategory,Contribution[]>();
+ const prepared = request.lines.map(line => {
   if (!line.source.trim() || !line.sourceVersion.trim() || !line.category ||
       !['direct', 'shared'].includes(line.method) ||
-      !['model','purge','energy','machine','labor','accessory','loss','rework','other'].includes(line.category)) {
+      !['model','purge','energy','machine','labor','accessory','tool','loss','rework','other'].includes(line.category)) {
    throw new Error('Categoria ' + line.id + ': origem, versão, natureza e método obrigatórios.');
   }
   if (line.category === 'purge' || line.category === 'loss') {
@@ -104,28 +148,36 @@ export function reconcilePrintAllocation(request: AllocationRequest): Allocation
   expectUnique(line.destinations.map(d => d.outputId), 'Destinos da categoria ' + line.id);
   if (line.destinations.some(d => !outputIds.has(d.outputId))) throw new Error('Destino não pertence à execução.');
   const amount = decimal(line.amountBrl, 'Custo da categoria ' + line.id);
-  const cents = centsHalfUp(amount);
   const bases = line.destinations.map(d => decimal(d.basis, 'Base do destino ' + d.outputId));
   if (bases.some(b => b.numerator <= 0n)) throw new Error('Base deve ser positiva e explicitamente informada.');
-  const denominator = bases.reduce((s,b) => s*b.denominator, 1n);
-  const weights = bases.map(b => b.numerator*(denominator/b.denominator));
-  const sum = weights.reduce((s,b) => s+b, 0n);
-  const quotas = weights.map(w => ({floor: cents*w/sum, remainder: cents*w%sum}));
-  let residual = cents - quotas.reduce((s,q) => s+q.floor, 0n);
-  const order = quotas.map((q,i) => ({i, remainder:q.remainder, id:line.destinations[i].outputId}))
-   .sort((a,b)=>a.remainder===b.remainder?a.id.localeCompare(b.id):a.remainder>b.remainder?-1:1);
-  const extras = new Set<number>();
-  for (const item of order) {
-   if (residual <= 0n) break;
-   extras.add(item.i);
-   residual--;
+  const weightSum=bases.reduce(add,zero);
+  const group=groups.get(line.category)??[];
+  for(const [i,{outputId}] of line.destinations.entries()){
+   const basis=bases[i];
+   group.push({lineId:line.id,outputId,weight:reduceRational({
+    numerator:amount.numerator*basis.numerator*weightSum.denominator,
+    denominator:amount.denominator*basis.denominator*weightSum.numerator
+   })});
   }
-  const allocations = line.destinations.map((d,i) => {
-   const value = quotas[i].floor + (extras.has(i)?1n:0n);
-   totals.set(d.outputId, (totals.get(d.outputId)??0n)+value);
-   return {outputId:d.outputId, basis:d.basis, cents:value.toString(), residualCent:extras.has(i)};
+  groups.set(line.category,group);
+  return line;
+ });
+ const allocationsByLine=new Map<string,ReturnType<typeof closeCategory>>();
+ for(const contributions of groups.values()){
+  for(const allocation of closeCategory(contributions)){
+   const list=allocationsByLine.get(allocation.lineId)??[];
+   list.push(allocation);allocationsByLine.set(allocation.lineId,list);
+  }
+ }
+ const categoryTotals=prepared.map(line=>{
+  const distributed=allocationsByLine.get(line.id)!;
+  let cents=0n;
+  const allocations=line.destinations.map(destination=>{
+   const value=distributed.find(item=>item.outputId===destination.outputId)!;
+   totals.set(destination.outputId,(totals.get(destination.outputId)??0n)+value.cents);
+   cents+=value.cents;
+   return {...destination,cents:value.cents.toString(),residualCent:value.residualCent};
   });
-  if (allocations.reduce((s,a)=>s+BigInt(a.cents),0n)!==cents) throw new Error('Falha de conciliação da categoria.');
   total+=cents;
   return {lineId:line.id,category:line.category,source:line.source,sourceVersion:line.sourceVersion,
    method:line.method,rationale:line.rationale,originalAmountBrl:line.amountBrl,

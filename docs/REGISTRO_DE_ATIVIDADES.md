@@ -1122,3 +1122,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Build local, 84 unitários e 130 cenários Playwright passaram. PostgreSQL descartável via PGlite executou a migração, três regressões P01 anteriores e o novo teste com rollback, cobrindo motivo vazio nas três operações, reenvio idempotente, preservação do primeiro complemento e bloqueio entre oficinas.
 
 - Migração autorizada e aplicada somente no Supabase de teste MakerCusto em 26/11/2026. O arquivo `20261126223000_optional_print_audit_reasons.sql` foi registrado remotamente como `20261126224336`. A regressão autenticada com rollback passou nas três operações sem motivo, no reenvio, na preservação do primeiro complemento e no isolamento entre oficinas. A consulta posterior confirmou zero registros temporários. Preview manual pendente.
+
+### 26/11/2026 — Conciliação da prévia de rateio
+
+- Corrigido arredondamento por categoria, incorporado detalhamento dos valores e disponibilizada a categoria Ferramentas na prévia. Build, 86 unitários e nova regressão direcionada desktop/celular passaram. A suíte geral de 130 cenários passou durante o lote. Sem deploy ou alteração de banco. Duração total não aferida.

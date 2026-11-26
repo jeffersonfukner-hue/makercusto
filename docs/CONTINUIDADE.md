@@ -1244,3 +1244,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A migração `20261126223000_optional_print_audit_reasons.sql` foi preparada na branch. Este frontend consulta a relação criada pela migração. Para homologar o lote no Preview, é necessário aplicar primeiro a migração no Supabase de teste após autorização específica.
 
 - Migração autorizada e aplicada somente no Supabase de teste MakerCusto em 26/11/2026. O arquivo `20261126223000_optional_print_audit_reasons.sql` foi registrado remotamente como `20261126224336`. A regressão autenticada com rollback passou nas três operações sem motivo, no reenvio, na preservação do primeiro complemento e no isolamento entre oficinas. A consulta posterior confirmou zero registros temporários. Preview manual pendente.
+
+## 26/11/2026 — Prévia de rateio por categoria
+
+- O motor soma valores exatos por categoria e fecha os centavos uma vez. As quotas são calculadas por destino a partir de todas as fontes; o detalhe por fonte conserva os centavos atribuídos. A divisão de uma fonte em várias linhas não muda as quotas por destino.
+- A prévia de Impressões distingue Ferramentas e Acessórios, mostra totais por categoria e identifica a categoria nas pendências. Ferramentas entram por valor informado, com fonte e base explícitas. Importação de fontes comprovadas e fechamento financeiro P09 seguem pendentes.
+- Build e 86 unitários aprovados. 130 cenários Playwright passaram durante o lote e o cenário de mesa mista passou novamente em desktop e celular após o ajuste final do motor. Sem alteração de banco ou publicação.
