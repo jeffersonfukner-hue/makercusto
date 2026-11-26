@@ -506,7 +506,10 @@
 .mc-identity-heading {margin-bottom:8px;position:relative;flex-wrap:wrap}
 .mc-recovery .mc-identity-heading h2 {font-size:14px}
 .mc-recovery-controls {--recovery-height:38px}
-.mc-recovery-controls select {flex:1;width:100%;height:var(--recovery-height);text-overflow:ellipsis;font-size:14px}
+.mc-saved-picker {flex:1;min-width:0;position:relative}
+.mc-saved-picker input {width:100%;height:var(--recovery-height);text-overflow:ellipsis}
+.catalog-field.mc-saved-picker .smart-suggestions {max-height:min(230px,42dvh);z-index:35}
+.mc-saved-picker .smart-suggestions>span {padding:8px;font-size:12px;color:var(--mc-muted)}
 .mc-calculator .mc-recovery-controls .mc-new-calculation {
  width:var(--recovery-height);height:var(--recovery-height);flex:none;padding:0;
  font-size:26px;line-height:1;background:#e8f1ff;color:var(--mc-blue);

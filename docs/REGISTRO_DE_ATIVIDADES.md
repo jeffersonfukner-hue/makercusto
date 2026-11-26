@@ -1076,3 +1076,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 26/11/2026 — Primeira composição de produto existente
 
 - Exposta a opção de montagem no resultado de produtos finais já calculados. Build, 82 unitários e seis cenários Playwright aprovados.
+
+### 26/11/2026 — Busca de cálculos salvos
+
+- Implementada lista pesquisável na calculadora. Build e dez cenários Playwright aprovados, incluindo seleção por teclado, histórico e composição.

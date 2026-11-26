@@ -1189,3 +1189,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Produto final recuperado com apenas impressão direta já permitia usar a aba Composição / Peças, mas o seletor de método no resultado ficava oculto até entrar nela ou já existir composição. O seletor agora aparece para todo produto final e abre o formulário de montagem ao escolher esse método pela primeira vez. A ação de impressão em peça única retorna aos campos de impressão.
 - Build, 82 unitários e seis testes de navegador passaram. A regressão abre um cálculo antigo, alterna métodos e confirma que Salvar composição vincula as partes à ficha existente. Sem migração. Ajuste local para o próximo lote.
+
+## 26/11/2026 — Busca para recuperar cálculo salvo
+
+- A calculadora abre uma lista pesquisável por nome ou SKU, com seleção por toque ou teclado. O campo indica quando o cálculo ativo é uma revisão histórica. A montagem salva continua disponível pelo mesmo seletor.
+- Build e dez cenários de navegador passaram em desktop e celular. Alteração local para o próximo lote, sem migração.

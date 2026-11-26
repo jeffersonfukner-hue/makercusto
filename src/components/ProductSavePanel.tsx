@@ -1,3 +1,4 @@
+import {SavedCalculationPicker} from './SavedCalculationPicker';
 import {OperationFeedback} from './OperationFeedback';
 import {CalculationHistory} from './CalculationHistory';
 import {useConfirmation} from './ConfirmationDialog';
@@ -141,17 +142,7 @@ export function ProductSavePanel({session,workspaceId,kind,onKindChange,name,onN
      </details>
     </div>
     <div className="mc-recovery-controls">
-     <select aria-label="Cálculo salvo para reutilizar" value={revisionTarget?.snapshot_id??''} disabled={busy} onChange={event=>{
-      const item=savedCalculations.find(snapshot=>snapshot.snapshot_id===event.target.value);
-      if(item)onLoadCalculation(item);
-     }}>
-      <option value="" disabled>Selecione</option>
-      {revisionTarget&&!savedCalculations.some(item=>item.snapshot_id===revisionTarget.snapshot_id)&&
-       <option value={revisionTarget.snapshot_id}>{revisionTarget.name} · revisão carregada</option>}
-      {savedCalculations.map(item=><option key={item.snapshot_id} value={item.snapshot_id}>
-       {item.kind==='component'?'Peça: ':'Produto: '}{item.name}{item.composition?' · Montagem por partes':''}
-      </option>)}
-     </select>
+     <SavedCalculationPicker items={savedCalculations} selected={revisionTarget} disabled={busy} onPick={onLoadCalculation}/>
      {onNewCalculation&&<button type="button" className="mc-new-calculation" aria-label="Novo cálculo" disabled={busy}
       onClick={startNewCalculation}>+</button>}
     </div>

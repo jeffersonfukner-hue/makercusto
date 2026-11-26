@@ -11,6 +11,12 @@ async function navigateSystemModule(page:Page,name:string,group:string){
  await openSystemGroup(page,group);
  await systemModule(page,name).click();
 }
+async function chooseSavedCalculation(page:Page,name:string){
+ const input=page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'});
+ await input.click();
+ await input.fill(name);
+ await page.getByRole('listbox',{name:'Cálculos salvos'}).getByRole('option',{name:new RegExp(name,'i')}).click();
+}
 test.beforeEach(async({page})=>{
  await page.route('**/*.supabase.co/rest/v1/mc_catalog?**',route=>route.fulfill({json:[]}));
  await page.route('**/storage/v1/object/list/mc-product-photos',route=>route.fulfill({json:[]}));
@@ -1754,7 +1760,7 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
  await page.goto('/');await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
  await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toBeVisible();
- await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+ await chooseSavedCalculation(page,'Guirlanda');
 
  await expect(page.getByRole('status').filter({hasText:'Dados de "Guirlanda" carregados'})).toBeVisible();
  await expect(page.getByTestId('simpleQuantity')).toHaveValue('90');
@@ -1780,7 +1786,7 @@ test('calculadora reutiliza cálculo salvo sem modificar snapshot histórico',as
  await expect(page.getByRole('status').filter({hasText:'versão inicial e custo estimado salvos'})).toBeVisible();
  expect(created).toHaveLength(1);
  expect(created[0]).toMatchObject({p_name:'Guirlanda — cópia 2',p_parameters:{saved_input:{hours:5.225}}});
- await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+ await chooseSavedCalculation(page,'Guirlanda');
  await page.getByRole('button',{name:'Novo cálculo',exact:true}).click();
  await page.getByRole('dialog',{name:'Iniciar novo cálculo'}).getByRole('button',{name:'Iniciar novo cálculo'}).click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toBeEmpty();
@@ -2009,7 +2015,7 @@ test('galeria privada permite anexar fotos, definir principal e consultar em out
  await expect(page.getByRole('article').filter({hasText:'Produto sem foto'}).getByRole('img')).toHaveCount(0);
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
- await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(snapshot);
+ await chooseSavedCalculation(page,'Urso');
 
  await expect(page.getByRole('img',{name:'Foto principal de Urso'})).toHaveAttribute('src',new RegExp(filenames[1]));
  await page.getByText('Orçamento para cliente',{exact:true}).click();
@@ -2157,7 +2163,15 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
- await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(oldSnapshot);
+ const savedPicker=page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'});
+ await savedPicker.click();
+ await expect(page.getByRole('listbox',{name:'Cálculos salvos'}).getByRole('option')).toHaveCount(1);
+ await savedPicker.fill('nada a encontrar');
+ await expect(page.getByText('Nenhum cálculo encontrado.')).toBeVisible();
+ await savedPicker.fill('trofeu');
+ await savedPicker.press('ArrowDown');
+ await expect(savedPicker).toHaveAttribute('aria-activedescendant',/.+/);
+ await savedPicker.press('Enter');
  const methods=page.getByRole('group',{name:'Origem do resultado'});
  await expect(methods.getByRole('button',{name:'Impressão em peça única'})).toHaveAttribute('aria-pressed','true');
  await methods.getByRole('button',{name:'Montagem por partes'}).click();
@@ -2253,8 +2267,7 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await expect(page.getByRole('button',{name:'Reutilizar parâmetros'})).toHaveCount(2);
  await page.getByText(/5,00\/un\./).locator('..').getByRole('button',{name:'Reutilizar parâmetros'}).click();
  await expect(page.getByTestId('salePrice')).toHaveValue('8');
- await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toHaveValue(earlier);
- await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).locator('option:checked')).toContainText('revisão carregada');
+ await expect(page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'})).toHaveValue('Chaveiro · revisão carregada');
  await page.getByText('Planejamento do pedido',{exact:true}).click();
  await page.getByLabel('Quantidade do pedido (peças)').fill('15');
  await expect(page.getByLabel('Item do pedido')).toHaveValue('Chaveiro');
@@ -2363,7 +2376,7 @@ test('recupera margem da composição e mantém o preço da peça única indepen
  await openSystemMenuIfMobile(page);
  await systemModule(page,'Calculadora de custos').click();
  const picker=page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'});
- await picker.selectOption(latest);
+ await chooseSavedCalculation(page,'Troféu');
  const composition=page.getByRole('region',{name:'Resultado do conjunto'});
  await expect(composition.getByTestId('unitCost')).toContainText('16,00');
  await expect(composition.getByRole('spinbutton',{name:'Margem bruta desejada (%)'})).toHaveValue('80');
@@ -2375,7 +2388,7 @@ test('recupera margem da composição e mantém o preço da peça única indepen
  await page.getByText('Histórico de custos',{exact:true}).click();
  await page.getByLabel('Produto do histórico').selectOption(product);
  await page.getByRole('button',{name:'Carregar composição'}).click();
- await expect(picker).toHaveValue(earlier);
+ await expect(picker).toHaveValue('Troféu · revisão carregada');
  await expect(composition.getByRole('spinbutton',{name:'Margem bruta desejada (%)'})).toHaveValue('60');
  await expect(composition.locator('.mc-calculated-sale-price')).toContainText('40,00');
 });
