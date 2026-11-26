@@ -1101,3 +1101,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Implementados filtro de 7, 30 ou 90 dias pela data de cadastro da impressão, volumes de execução, peças confirmadas e proporção de peças boas e rejeitadas. A consulta de impressões é reaproveitada no frontend. Sem alteração de banco, merge ou deploy. Duração do trabalho não aferida.
 - Build local, 84 testes unitários e 130 cenários Playwright em desktop e celular passaram. A regressão cobre mudança de período, oficina vazia, limites do dia de Brasília e rendimento zero. Sem GitHub Actions.
+
+### 26/11/2026 — Continuidade da fila de rastreabilidade
+
+- Cruzados backlog, documentação e código. Corrigida disponibilidade de cancelamento e redução parcial para execuções reservadas ou em andamento. O servidor já aceitava ambos os estados. Mantidas a justificativa do contrato atual, a confirmação e a proteção dos dados já confirmados.
+- Build local, 84 testes unitários e 130 cenários Playwright aprovados. Os cenários de Impressões exercitaram cancelamento em andamento, redução em execução reservada e reenvio com a mesma chave. Sem alteração no banco, deploy ou GitHub Actions. Duração total do trabalho não aferida.

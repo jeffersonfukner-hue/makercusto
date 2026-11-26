@@ -1230,10 +1230,12 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  await page.route('**/rest/v1/**',async route=>{
   const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
   if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina P01',owner_id:user}]);
-  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'partial',printer_id:null,
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'running',printer_id:null,
    printer_name:'Impressora P01',planned_hours:2,actual_hours:0.5,notes:null,
    created_at:new Date().toISOString(),outputs:[{id:output,product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-   name:'Hélice',planned:2,good:1,failed:0}]}]);
+   name:'Hélice',planned:2,good:1,failed:0}]},
+   {id:'completed-print',status:'completed',printer_name:'Impressora P01',planned_hours:1,actual_hours:1,
+    created_at:new Date().toISOString(),outputs:[{id:'closed-output',name:'Peça concluída',planned:1,good:1,failed:0}]}]);
   if(u.includes('rpc/mc_list_existing_spools'))return send([{id:lot,label:'Bobina P01',name:'PETG',
    initial_grams:100,remaining_grams:90,remaining_cost_estimate:null,cost_status:'unknown',notes:null,
    created_at:new Date().toISOString()}]);
@@ -1264,6 +1266,7 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  await expect(page.getByText('Prazo de revisão atualizado; nenhuma reserva foi liberada.')).toBeVisible();
  expect(dueAttempts).toHaveLength(1);
  expect(dueAttempts[0].p_due_at).toBe(null);
+ await expect(page.getByRole('button',{name:'Cancelar impressão Peça concluída'})).toHaveCount(0);
  await page.getByRole('button',{name:'Cancelar impressão Hélice'}).click();
  await expect(page.getByRole('group',{name:'Ações de Cancelar impressão'})).toBeVisible();
  await expect(page.getByRole('button',{name:'Registrar reserva sem baixa'})).toHaveCount(0);
@@ -1305,7 +1308,7 @@ test('P01-E: redução parcial preserva peças confirmadas e exige liberação e
  await page.route('**/rest/v1/**',async route=>{
   const u=route.request().url(),send=(data:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
   if(u.includes('mc_workspaces?'))return send([{id:ws,name:'Oficina P01',owner_id:user}]);
-  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'partial',printer_id:null,
+  if(u.includes('rpc/mc_list_prints'))return send([{id:production,status:'reserved',printer_id:null,
    printer_name:'Impressora P01',planned_hours:2,actual_hours:0.5,notes:null,
    created_at:new Date().toISOString(),outputs:[{id:output,product_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
    name:'Hélice',planned:5,good:2,failed:1}]}]);

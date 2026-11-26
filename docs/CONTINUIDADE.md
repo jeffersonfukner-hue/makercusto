@@ -1219,3 +1219,10 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - O painel usa a mesma consulta de impressões para acompanhamento e estatísticas. O filtro oferece os últimos 7, 30 ou 90 dias corridos, incluindo hoje, pela data de cadastro em horário de Brasília. A seleção inicial é 30 dias.
 - O bloco mostra impressões cadastradas e concluídas, peças confirmadas e aproveitamento. Aproveitamento é a proporção de peças boas sobre o total de boas e rejeitadas confirmadas nas execuções cadastradas no período. A barra compara essas duas contagens. Ausência de impressões e ausência de peças confirmadas têm mensagens próprias.
+
+## 26/11/2026 — Retomada do backlog de rastreabilidade
+
+- A revisão partiu de Pedidos e vendas, cujo cancelamento já preserva o registro e permite acrescentar motivo depois. As RPCs de cancelamento de impressão, redução parcial e troca de bobina já registram evento por oficina com autor autenticado, motivo e data. Os três fluxos exigem justificativa no contrato atual.
+- Corrigida uma divergência na interface: cancelamento e redução parcial agora alcançam impressões em rascunho, reservadas, em andamento e parciais. Os estados concluído, falho e cancelado permanecem encerrados. A confirmação e os limites da operação foram mantidos.
+- Nas telas de cadastros revisadas, remoções de insumos ou peças atuam sobre o formulário, e a troca de foto principal não remove o arquivo. A auditoria não encontrou ações de exclusão persistente de produtos, clientes ou fornecedores expostas por essas telas. O dossiê de conciliação apenas consulta dados.
+- Fila remanescente de rastreabilidade: motivo opcional e complemento posterior para registros de Impressões exigem alinhar os contratos das RPCs e o histórico de auditoria. A homologação visual do cancelamento de pedidos continua registrada separadamente.

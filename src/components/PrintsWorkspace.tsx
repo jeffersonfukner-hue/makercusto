@@ -10,6 +10,8 @@ import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExisti
 
 const newKey=()=>crypto.randomUUID();
 const gramsFormat=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3});
+const isOpenPrint=({status}:PrintRecord)=>
+ status==='draft'||status==='reserved'||status==='running'||status==='partial';
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
 export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|null;focusPrintId?:string}){
  const focusedPrint=useRef<HTMLElement>(null);
@@ -130,7 +132,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
  };
  const submitCancel=async(confirmed=false)=>{
   const target=prints.find(p=>p.id===cancelTarget);
-  if(!workspaceId||!target||!['draft','partial','reserved','running'].includes(target.status)){
+  if(!workspaceId||!target||!isOpenPrint(target)){
    setError('Selecione uma impressão aberta para cancelar.');return;
   }
   if(cancelReason.trim().length<10||cancelReason.trim().length>1000){
@@ -156,9 +158,12 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
    setError('Selecione uma impressão e uma peça para reduzir o planejamento.');return;
   }
   const print=prints.find(p=>p.id===reduceTarget);
-  const output=print?.outputs.find(o=>o.id===reduceOutput);
+  if(!print||!isOpenPrint(print)){
+   setError('Selecione uma impressão aberta para reduzir o planejamento.');return;
+  }
+  const output=print.outputs.find(o=>o.id===reduceOutput);
   const newPlanned=Number(reducePlanned);
-  if(!print||!output||reducePlanned.trim()===''||!Number.isInteger(newPlanned)||
+  if(!output||reducePlanned.trim()===''||!Number.isInteger(newPlanned)||
     newPlanned<Number(output.good)+Number(output.failed)||newPlanned>=Number(output.planned)){
    setError('A nova quantidade deve ser inteira, menor que a planejada e nunca inferior às peças já confirmadas.');return;
   }
@@ -578,7 +583,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
    <div className="product-save-fields">
     <label>Impressão para redução parcial<select aria-label="Impressão para redução parcial" value={reduceTarget}
      onChange={e=>{setActivePrimaryForm('reduction');setReduceTarget(e.target.value);setReduceOutput('');setReduceReservation('');setReducePlanned('');setReduceGrams('');reduceKey.current=newKey();}}>
-     <option value="">Selecione</option>{prints.filter(p=>p.status==='draft'||p.status==='partial').map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')}</option>)}</select></label>
+     <option value="">Selecione</option>{prints.filter(isOpenPrint).map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')}</option>)}</select></label>
     <label>Peça a reduzir<select aria-label="Peça a reduzir" value={reduceOutput}
      onChange={e=>{setReduceOutput(e.target.value);setReducePlanned('');reduceKey.current=newKey();}}>
      <option value="">Selecione</option>{prints.find(p=>p.id===reduceTarget)?.outputs.map(o=><option key={o.id} value={o.id}>{o.name} — previstas {o.planned}, confirmadas {Number(o.good)+Number(o.failed)}</option>)}</select></label>
@@ -620,7 +625,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
    <h4>{p.printer_name||'Impressora sem nome'}</h4><p>Status: {p.status} · {new Date(p.created_at).toLocaleString('pt-BR')}</p>
    <ul>{p.outputs.map(o=><li key={o.id}>{o.name}: planejadas {o.planned}, boas {o.good}, rejeitadas {o.failed}</li>)}</ul>
    <small>Tempo previsto: {formatDuration(p.planned_hours)}. Tempo registrado: {formatDuration(p.actual_hours)}.</small>
-   {(p.status==='draft'||p.status==='partial')&&
+   {isOpenPrint(p)&&
     <button type="button" disabled={busy} aria-label={'Cancelar impressão '+p.outputs.map(o=>o.name).join(' + ')}
     onClick={()=>{setCancelTarget(p.id);setCancelReason('');cancelKey.current=newKey();setError('');setActivePrimaryForm('cancel');}}>
     Cancelar impressão</button>}
