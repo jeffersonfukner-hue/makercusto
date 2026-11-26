@@ -1072,3 +1072,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 25/11/2026 — Fichas de impressoras
 
 - Acrescentadas cinco referências de Anycubic, Creality e Flashforge, com links oficiais. Build e quatro cenários Playwright aprovados.
+
+### 26/11/2026 — Primeira composição de produto existente
+
+- Exposta a opção de montagem no resultado de produtos finais já calculados. Build, 82 unitários e seis cenários Playwright aprovados.

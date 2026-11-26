@@ -637,10 +637,10 @@ export default function App(){
    <CalculationResultPanel result={displayedResult} composed={composed} quantity={resultQuantity} title={shareTitle}
     lines={resultLines} filamentDetails={composed?compositionSummary?.filamentDetails:undefined}
     expanded={!composed&&(advanced||Boolean(session))}
-    source={session&&calculatorKind==='product'&&(calculatorTab==='composition'||composed||Boolean(selectedComposition)||Boolean(compositionSummary?.partsCount))&&
+    source={session&&calculatorKind==='product'&&
      <div className="mc-result-source" role="group" aria-label="Origem do resultado">
-      <button type="button" className="mc-light-action" aria-pressed={!composed} onClick={()=>setPreferComposition(false)}>Impressão em peça única</button>
-      <button type="button" className="mc-light-action" aria-pressed={composed} onClick={()=>setPreferComposition(true)}>Montagem por partes</button>
+      <button type="button" className="mc-light-action" aria-pressed={!composed} onClick={()=>{setPreferComposition(false);setCalculatorTab('calculation');}}>Impressão em peça única</button>
+      <button type="button" className="mc-light-action" aria-pressed={composed} onClick={()=>{setPreferComposition(true);setCalculatorTab(selectedComposition||compositionSummary?.partsCount?'calculation':'composition');}}>Montagem por partes</button>
      </div>}
     sourceNotice={composed?(compositionSummary?.partsCount?count(compositionSummary.partsCount)+' partes na composição':'Selecione as partes para começar'):undefined}
     pricing={<>

@@ -1184,3 +1184,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Adicionadas referências de volume e limites térmicos verificados para Anycubic Kobra 3 Max, Anycubic Kobra S1, Creality K1C, Creality K2 Plus e Flashforge Adventurer 5M Pro. As fichas apontam para as referências oficiais consultadas em 25/11/2026. A temperatura da mesa da 5M Pro ficou em branco porque as fontes do fabricante divergem.
 - Os valores operacionais permanecem identificados como estimativas editáveis. Build e quatro cenários de navegador passaram. Lote local com os ajustes de Impressões, sem migração.
+
+## 26/11/2026 — Primeira composição de produto já calculado
+
+- Produto final recuperado com apenas impressão direta já permitia usar a aba Composição / Peças, mas o seletor de método no resultado ficava oculto até entrar nela ou já existir composição. O seletor agora aparece para todo produto final e abre o formulário de montagem ao escolher esse método pela primeira vez. A ação de impressão em peça única retorna aos campos de impressão.
+- Build, 82 unitários e seis testes de navegador passaram. A regressão abre um cálculo antigo, alterna métodos e confirma que Salvar composição vincula as partes à ficha existente. Sem migração. Ajuste local para o próximo lote.

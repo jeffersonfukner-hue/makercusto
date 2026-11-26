@@ -2158,7 +2158,14 @@ test('monta base e mão com microfone na calculadora usando custos e filamentos 
  await systemModule(page,'Calculadora de custos').click();
  await page.getByRole('button',{name:'Cálculo',exact:true}).click();
  await page.getByRole('combobox',{name:'Cálculo salvo para reutilizar'}).selectOption(oldSnapshot);
- await compositionTab.click();
+ const methods=page.getByRole('group',{name:'Origem do resultado'});
+ await expect(methods.getByRole('button',{name:'Impressão em peça única'})).toHaveAttribute('aria-pressed','true');
+ await methods.getByRole('button',{name:'Montagem por partes'}).click();
+ await expect(compositionTab).toHaveAttribute('aria-current','page');
+ await expect(page.getByRole('region',{name:'Partes na composição'})).toBeVisible();
+ await methods.getByRole('button',{name:'Impressão em peça única'}).click();
+ await expect(page.getByTestId('simpleQuantity')).toBeVisible();
+ await methods.getByRole('button',{name:'Montagem por partes'}).click();
  await expect(page.getByRole('textbox',{name:'Nome do produto'})).toHaveValue('Troféu já cadastrado');
  await expect(page.getByRole('textbox',{name:'SKU do produto'})).toHaveValue('TR-01');
  const add=page.getByRole('list',{name:'Peças salvas'}).getByRole('button',{name:'Adicionar à composição'});
