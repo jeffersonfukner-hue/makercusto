@@ -1120,3 +1120,5 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Preparados frontend, migração e teste SQL com rollback. Cancelamento, redução e troca aceitam motivo vazio. O histórico pode receber um complemento com autoria e data próprias. Sem alteração no Supabase remoto, deploy ou GitHub Actions. Duração total não aferida.
 - Build local, 84 unitários e 130 cenários Playwright passaram. PostgreSQL descartável via PGlite executou a migração, três regressões P01 anteriores e o novo teste com rollback, cobrindo motivo vazio nas três operações, reenvio idempotente, preservação do primeiro complemento e bloqueio entre oficinas.
+
+- Migração autorizada e aplicada somente no Supabase de teste MakerCusto em 26/11/2026. O arquivo `20261126223000_optional_print_audit_reasons.sql` foi registrado remotamente como `20261126224336`. A regressão autenticada com rollback passou nas três operações sem motivo, no reenvio, na preservação do primeiro complemento e no isolamento entre oficinas. A consulta posterior confirmou zero registros temporários. Preview manual pendente.
