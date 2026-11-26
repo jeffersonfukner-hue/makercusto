@@ -1194,3 +1194,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - A calculadora abre uma lista pesquisável por nome ou SKU, com seleção por toque ou teclado. O campo indica quando o cálculo ativo é uma revisão histórica. A montagem salva continua disponível pelo mesmo seletor.
 - Build e dez cenários de navegador passaram em desktop e celular. Alteração local para o próximo lote, sem migração.
+
+## 26/11/2026 — Cancelamento auditável de pedidos
+
+- A ficha de pedido permite cancelar registro planejado ou vendido mediante confirmação e justificativa de 10 a 1.000 caracteres. O histórico conserva pedido, valores e estado original, e exibe motivo, data e identificador do usuário responsável. Cancelados ficam fora dos indicadores comerciais de planejados, vendidos e faturamento.
+- A migração `20261126135200_customer_order_cancellations.sql` guarda um evento por pedido e oficina. O servidor atribui a autoria e a data. O acesso é isolado por oficina, e o primeiro evento é preservado em reenvios. O cancelamento comercial não lança devolução de pagamento.
+- Build, 82 unitários, regressões desktop/celular e teste em PostgreSQL local passaram. Aplicação no Supabase de teste depende de autorização específica.

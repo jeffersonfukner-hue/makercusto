@@ -1080,3 +1080,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 26/11/2026 — Busca de cálculos salvos
 
 - Implementada lista pesquisável na calculadora. Build e dez cenários Playwright aprovados, incluindo seleção por teclado, histórico e composição.
+
+### 26/11/2026 — Cancelamento auditável de pedidos
+
+- Implementados confirmação com justificativa, registro de autoria e exclusão dos totais comerciais. Validados build, 82 unitários, cenários de navegador e SQL local. Migração de teste pendente de autorização.

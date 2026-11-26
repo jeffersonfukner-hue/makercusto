@@ -246,3 +246,9 @@ Não ampliar escopo sem homologação.
 - [ ] Homologar o painel único e o pedido por montagem no Preview.
 - [x] Aplicar a migração de precificação da composição no Supabase de teste.
 - [ ] Homologar no Preview a recuperação em outro aparelho, a troca de método no mesmo produto e o valor usado no pedido.
+
+## Rastreabilidade de exclusões
+
+- [x] Implementar cancelamento auditável de pedidos, com justificativa, autor, data e registro original consultável.
+- [ ] Aplicar a migração de cancelamento no Supabase de teste após autorização e homologar o fluxo no Preview.
+- [ ] Revisar os fluxos existentes de exclusão, desativação e estorno nos demais módulos. Registrar entidade, ação, motivo, data e usuário autenticado, com isolamento por oficina.

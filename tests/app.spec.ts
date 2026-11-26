@@ -823,7 +823,8 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
    description:'Dados para testar a adaptação do catálogo à largura disponível.',sku:null,sale_price:15,created_at:'2026-11-25T10:00:00Z'
   }))});
   if(url.includes('/mc_customer_orders?'))return route.fulfill({json:[
-   {status:'planned',quantity:2,sale_price:10},{status:'sold',quantity:15,sale_price:8}
+   {status:'planned',quantity:2,sale_price:10},{status:'sold',quantity:15,sale_price:8},
+   {status:'sold',quantity:99,sale_price:90,cancellation:{reason:'Duplicado'}}
   ]});
   if(url.includes('/mc_printers?')||url.includes('/mc_catalog?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
   if(url.includes('/rpc/mc_list_assemblies'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:'44444444-4444-4444-8444-444444444444',name:'Lançador de hélices',sku:null,description:null,sale_price:null,created_at:'2026-11-22T00:00:00Z',total_cost:null,cost_status:'unknown',revision:1,parts:[{id:'1',name:'Lançador',quantity:1,notes:null,grams:null},{id:'2',name:'Haste',quantity:1,notes:null,grams:null},{id:'3',name:'Hélice',quantity:1,notes:null,grams:null}]}])});
@@ -2205,6 +2206,8 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  const earlier='55555555-5555-4555-8555-555555555555';
  const customer={id:'66666666-6666-4666-8666-666666666666',name:'Maria da Silva',whatsapp:null,email:null as string|null};
  let registered=false;
+ let cancellation:{reason:string;cancelled_by:string;cancelled_at:string}|undefined;
+ let cancellationWrites=0;
  let historyReads=0;
  let orderReadFailed=true;
  const requests:Array<Record<string,unknown>>=[];
@@ -2243,6 +2246,13 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
    }
    return route.fulfill({json:registered?[customer]:[]});
   }
+  if(path.endsWith('/mc_order_cancellations')){
+   cancellationWrites++;
+   const payload=route.request().postDataJSON();
+   expect(payload).toEqual({workspace_id:workspace,order_id:requests.at(-1)?.id,reason:'Pedido registrado em duplicidade'});
+   cancellation={reason:payload.reason,cancelled_by:user,cancelled_at:'2026-11-26T14:15:00Z'};
+   return route.fulfill({json:[cancellation]});
+  }
   if(path.endsWith('/mc_customer_orders')){
    if(route.request().method()==='POST'){
     requests.push(route.request().postDataJSON());
@@ -2253,7 +2263,7 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
     return route.fulfill({status:204});
    }
    if(requests.length&&orderReadFailed)return route.fulfill({status:503,json:{message:'Pedidos indisponíveis'}});
-   return route.fulfill({json:[{...requests.at(-1),customer:{name:customer.name},created_at:'2026-11-25T11:30:00Z'}]});
+   return route.fulfill({json:[{...requests.at(-1),customer:{name:customer.name},cancellation,created_at:'2026-11-25T11:30:00Z'}]});
   }
   return route.fulfill({json:[]});
  });
@@ -2331,6 +2341,24 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await edit.getByLabel('E-mail (opcional)').fill('maria@example.test');
  await edit.getByRole('button',{name:'Salvar cliente'}).click();
  await expect(page.getByText('maria@example.test',{exact:true})).toBeVisible();
+ await page.getByRole('region',{name:'Histórico de pedidos'}).getByRole('button',{name:/Chaveiro/}).click();
+ await page.getByRole('button',{name:'Cancelar pedido',exact:true}).click();
+ const cancelDialog=page.getByRole('dialog',{name:'Cancelar pedido'});
+ const confirmCancel=cancelDialog.getByRole('button',{name:'Confirmar cancelamento'});
+ await expect(confirmCancel).toBeDisabled();
+ await cancelDialog.getByLabel('Motivo do cancelamento').fill('Pedido registrado em duplicidade');
+ await cancelDialog.getByRole('button',{name:'Manter pedido'}).click();
+ expect(cancellationWrites).toBe(0);
+ await page.getByRole('button',{name:'Cancelar pedido',exact:true}).click();
+ await cancelDialog.getByLabel('Motivo do cancelamento').fill('Pedido registrado em duplicidade');
+ await confirmCancel.click();
+ const audit=page.getByRole('region',{name:'Cancelamento',exact:true});
+ await expect(audit).toContainText('Pedido registrado em duplicidade');
+ await expect(audit).toContainText(user);
+ await expect(audit).toContainText('Vendido');
+ await expect(page.getByRole('button',{name:'Cancelar pedido',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:/Voltar aos pedidos/}).click();
+ await expect(page.getByRole('region',{name:'Histórico de pedidos'}).getByRole('button',{name:/Chaveiro/})).toContainText('Cancelado');
 });
 
 test('recupera margem da composição e mantém o preço da peça única independente',async({page})=>{

@@ -483,12 +483,23 @@ export type CustomerOrderDraft = {
  id:string;snapshot_id:string|null;customer_id?:string;product_name:string;status:'planned'|'sold';quantity:number;
  pieces_per_plate:number;plate_cost:number;partial_plate_cost:number;sale_price:number;production_method?:'direct'|'assembly';
 };
-export type CustomerOrder=CustomerOrderDraft&{created_at:string;customer?:{name:string}|null};
+export type OrderCancellation={reason:string;cancelled_by:string;cancelled_at:string};
+export type CustomerOrder=CustomerOrderDraft&{created_at:string;customer?:{name:string}|null;cancellation?:OrderCancellation|null};
 export const listCustomerOrders=(workspaceId:string,offset:number,customerId?:string)=>
- api<CustomerOrder[]>('mc_customer_orders?select=id,snapshot_id,product_name,status,quantity,pieces_per_plate,plate_cost,partial_plate_cost,sale_price,created_at,production_method,customer:mc_customers(name)&workspace_id=eq.'+
+ api<CustomerOrder[]>('mc_customer_orders?select=id,snapshot_id,product_name,status,quantity,pieces_per_plate,plate_cost,partial_plate_cost,sale_price,created_at,production_method,customer:mc_customers(name),cancellation:mc_order_cancellations(reason,cancelled_by,cancelled_at)&workspace_id=eq.'+
   encodeURIComponent(workspaceId)+(customerId?'&customer_id=eq.'+encodeURIComponent(customerId):'')+'&order=created_at.desc,id.desc&limit=20&offset='+offset);
 export const saveCustomerOrder=(workspaceId:string,draft:CustomerOrderDraft)=>
  api<void>('mc_customer_orders?on_conflict=id','POST',{...draft,workspace_id:workspaceId},'resolution=ignore-duplicates,return=minimal');
+
+export async function cancelCustomerOrder(workspaceId:string,orderId:string,reason:string){
+ const rows=await api<OrderCancellation[]>('mc_order_cancellations?on_conflict=order_id,workspace_id','POST',
+  {workspace_id:workspaceId,order_id:orderId,reason},'resolution=ignore-duplicates,return=representation');
+ if(rows?.[0])return rows[0];
+ const [existing]=await api<OrderCancellation[]>('mc_order_cancellations?select=reason,cancelled_by,cancelled_at&order_id=eq.'+
+  encodeURIComponent(orderId)+'&workspace_id=eq.'+encodeURIComponent(workspaceId));
+ if(!existing)throw new Error('O cancelamento não está disponível.');
+ return existing;
+}
 
 export type ComponentCostSnapshot={
  quantity:number;total_cost:number;

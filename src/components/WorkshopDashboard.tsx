@@ -66,8 +66,8 @@ export function WorkshopDashboard({tab,workspaceId,workspaceName,busy,onNavigate
    .finally(()=>{if(active)setOrdersLoading(false);});
   return()=>{active=false;};
  },[workspaceId,tab,refresh]);
- const soldOrders=orders?.filter(order=>order.status==='sold')??[];
- const plannedOrders=orders?.filter(order=>order.status==='planned')??[];
+ const soldOrders=orders?.filter(order=>order.status==='sold'&&!order.cancellation)??[];
+ const plannedOrders=orders?.filter(order=>order.status==='planned'&&!order.cancellation)??[];
  const revenue=soldOrders.reduce((sum,order)=>sum+Number(order.sale_price)*order.quantity,0);
  const brl=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
  const printCounts=printStages.map(({label,statuses,color})=>({

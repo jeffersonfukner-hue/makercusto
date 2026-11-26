@@ -1,3 +1,4 @@
+import {OrderCancellationModal} from './OrderCancellationModal';
 import {MetricGrid} from './MetricGrid';
 import {OperationFeedback} from './OperationFeedback';
 import {useEffect,useRef,useState} from 'react';
@@ -7,7 +8,7 @@ import {calculateOrderPlan} from '../domain/order-plan';
 const money=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const date=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'});
 
-const statusLabel=(order:CustomerOrder)=>order.status==='sold'?'Vendido':'Planejado';
+const statusLabel=(order:CustomerOrder)=>order.cancellation?'Cancelado':order.status==='sold'?'Vendido':'Planejado';
 const orderPlan=(order:CustomerOrder)=>calculateOrderPlan(order.pieces_per_plate,Number(order.plate_cost),Number(order.sale_price),
  order.quantity,Number(order.partial_plate_cost));
 const orderQuantity=(order:CustomerOrder)=>order.quantity+(order.production_method==='assembly'
@@ -16,6 +17,7 @@ const orderQuantity=(order:CustomerOrder)=>order.quantity+(order.production_meth
 
 export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspaceId:string;customer?:WorkshopCustomer;onDetailChange?:(open:boolean)=>void}){
  const [selected,setSelected]=useState<CustomerOrder>();
+ const [cancelling,setCancelling]=useState(false);
  const detailHeading=useRef<HTMLHeadingElement>(null);
  const openedRow=useRef('');
  const rowButtons=useRef(new Map<string,HTMLButtonElement>());
@@ -44,7 +46,7 @@ export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspace
     <div><h2 id="mc-order-detail-title" tabIndex={-1} ref={detailHeading}>{selected.product_name}</h2>
      <p>{selected.customer?.name??customer?.name??'Sem cliente'} · {date.format(new Date(selected.created_at))}</p>
     </div>
-    <span className="mc-order-status" data-sold={selected.status==='sold'}>{statusLabel(selected)}</span>
+    <span className="mc-order-status" data-sold={!selected.cancellation&&selected.status==='sold'} data-cancelled={Boolean(selected.cancellation)}>{statusLabel(selected)}</span>
    </header>
    <MetricGrid className="mc-order-financials" metrics={[
     {label:'Faturamento do pedido',value:money.format(plan.revenue)},
@@ -60,6 +62,24 @@ export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspace
      {plan.partialPieces>0&&' · última mesa: '+plan.partialPieces+' un.'}
     </>}</p>
    </section>
+   {selected.cancellation?<section className="mc-order-production" aria-label="Cancelamento">
+    <h3>Cancelamento registrado</h3>
+    <p>{selected.cancellation.reason}</p>
+    <dl className="mc-order-audit">
+     <div><dt>Situação anterior</dt><dd>{selected.status==='sold'?'Vendido':'Planejado'}</dd></div>
+     <div><dt>Data do cancelamento</dt><dd>{date.format(new Date(selected.cancellation.cancelled_at))}</dd></div>
+     <div><dt>Usuário responsável</dt><dd>{selected.cancellation.cancelled_by}</dd></div>
+    </dl>
+   </section>:<div className="mc-calculation-share-actions">
+    <button type="button" className="mc-light-action" onClick={()=>setCancelling(true)}>Cancelar pedido</button>
+   </div>}
+   {cancelling&&<OrderCancellationModal workspaceId={workspaceId} order={selected} onClose={()=>setCancelling(false)}
+    onCancelled={cancellation=>{
+     const updated={...selected,cancellation};
+     setSelected(updated);
+     setPage(previous=>previous&&{...previous,orders:previous.orders.map(order=>order.id===updated.id?updated:order)});
+     setCancelling(false);
+    }}/>}
   </article>;
  }
  return <section className="panel" aria-label="Histórico de pedidos">
@@ -75,7 +95,7 @@ export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspace
     }} onClick={()=>{openedRow.current=order.id;setSelected(order);onDetailChange?.(true);}}>
      <span className="mc-order-identity"><strong>{order.product_name}</strong>
       <small>{order.customer?.name??customer?.name??'Sem cliente'} · {date.format(new Date(order.created_at))}</small></span>
-     <span className="mc-order-status" data-sold={order.status==='sold'}>{statusLabel(order)}</span>
+     <span className="mc-order-status" data-sold={!order.cancellation&&order.status==='sold'} data-cancelled={Boolean(order.cancellation)}>{statusLabel(order)}</span>
      <span className="mc-order-quantity">{orderQuantity(order)}</span>
      <strong className="mc-order-total">{money.format(orderPlan(order).revenue)}</strong>
      <span className="mc-order-chevron" aria-hidden="true">›</span>
