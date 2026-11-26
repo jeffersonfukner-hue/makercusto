@@ -856,6 +856,43 @@
  outline:2px solid #326cd1;outline-offset:2px;
 }
 .dashboard-calculations button:focus-visible {outline-color:#c0dbff}
+.dashboard-statistics-header {
+ display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.dashboard-statistics-period {
+ display:flex;gap:3px;padding:3px;border:1px solid #d8dce1;border-radius:9px;background:#e9ecf0;
+}
+.mc-theme main .dashboard-statistics-period button {
+ flex:1;min-height:38px;margin:0;padding:5px 11px;border:0;border-radius:6px;
+ background:transparent;color:#454c57;white-space:nowrap;
+}
+.mc-theme main .dashboard-statistics-period button:hover {background:#dce1e8}
+.mc-theme main .dashboard-statistics-period button[aria-pressed="true"] {
+ background:#313840;color:white;
+}
+.dashboard-statistics-results {display:grid;gap:12px}
+.dashboard-statistics-metrics {
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0;
+}
+.dashboard-statistics-metrics>div {min-width:0;padding:10px 12px;border:1px solid #d8dce1;border-radius:9px}
+.dashboard-statistics-metrics dt {color:#4b5563;font-size:12px}
+.dashboard-statistics-metrics dd {
+ margin:4px 0 0;color:#252b34;font-size:clamp(20px,3vw,30px);font-weight:750;overflow-wrap:anywhere;
+}
+.dashboard-piece-breakdown {display:grid;gap:6px}
+.dashboard-piece-bar {height:8px;overflow:hidden;border-radius:5px;background:#9e492e}
+.dashboard-piece-bar>span {display:block;height:100%;background:#2f7159}
+.dashboard-piece-legend {
+ display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 14px;color:#4b5563;font-size:12px;
+}
+.dashboard-piece-legend span::before {
+ display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:2px;background:#2f7159;content:"";
+}
+.dashboard-piece-legend span:last-child::before {background:#9e492e}
+@media(max-width:620px) {
+ .dashboard-statistics-metrics {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dashboard-statistics-period {width:100%}
+}
 .materials-spool-card[tabindex="-1"] {scroll-margin:96px 0 100px}
 .materials-spool-card[tabindex="-1"]:focus {outline:2px solid var(--mc-blue);outline-offset:-2px}
 .print-confirmed-metrics {margin-bottom:12px}

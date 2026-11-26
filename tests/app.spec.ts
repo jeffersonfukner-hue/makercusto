@@ -810,6 +810,7 @@ test('acesso público preserva calculadora sem apresentar sistema privado',async
  await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeVisible();
 });
 test('login apresenta navegação superior e painel de oficina',async({page},testInfo)=>{
+ await page.clock.setFixedTime(new Date('2026-11-26T15:00:00Z'));
  let failPrintLookup=true;
  let emptyWorkshop=false;
  const assemblyId='44444444-4444-4444-8444-444444444444';
@@ -843,7 +844,8 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
     {id:'1',status:'partial',printer_name:'Kobra X',created_at:'2026-11-25T10:00:00Z',planned_hours:null,actual_hours:null,
      outputs:[{id:'output-1',name:'Guirlanda',good:3,failed:1,planned:5}]},
     {id:'2',status:'completed',printer_name:'Kobra 2',created_at:'2026-11-24T10:00:00Z',planned_hours:null,actual_hours:null,
-     outputs:[{id:'output-2',name:'Estrela concluída',good:2,failed:0,planned:2}]}
+     outputs:[{id:'output-2',name:'Estrela concluída',good:2,failed:0,planned:2}]},
+    {id:'3',status:'draft',printer_name:'Kobra 2',created_at:'2026-11-06T10:00:00Z',planned_hours:null,actual_hours:null,outputs:[]}
    ]});
   }
   return route.fulfill({status:200,contentType:'application/json',body:'[]'});
@@ -863,6 +865,15 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(prints.getByRole('button',{name:/Guirlanda Kobra X Confirmação parcial/})).toBeVisible();
  await expect(prints.getByText('Estrela concluída')).toHaveCount(0);
  await expect(overview.getByText('Faturamento',{exact:true})).toHaveCount(0);
+ const statistics=overview.getByRole('region',{name:'Estatísticas da oficina'});
+ await expect(statistics.getByRole('button',{name:'30 dias'})).toHaveAttribute('aria-pressed','true');
+ await expect(statistics.getByText('Impressões cadastradas').locator('..')).toHaveText('Impressões cadastradas3');
+ await expect(statistics.getByText('Impressões concluídas').locator('..')).toHaveText('Impressões concluídas1');
+ await expect(statistics.getByText('Peças confirmadas').locator('..')).toHaveText('Peças confirmadas6');
+ await expect(statistics.getByText('Aproveitamento',{exact:true}).locator('..')).toHaveText('Aproveitamento83,3%');
+ await statistics.getByRole('button',{name:'7 dias'}).click();
+ await expect(statistics.getByText('Impressões cadastradas').locator('..')).toHaveText('Impressões cadastradas2');
+
 
  const originalViewport=page.viewportSize()!;
  for(const width of [320,390,768,1280]){
@@ -953,6 +964,7 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
  await expect(calculations.getByText('Seus cálculos salvos aparecerão aqui.')).toBeVisible();
  await expect(prints.getByText(/Nenhuma impressão em execução/)).toBeVisible();
  await expect(overview.getByText(/Nenhuma pendência de custo ou preço/)).toBeVisible();
+ await expect(statistics.getByText('Nenhuma impressão cadastrada neste período.')).toBeVisible();
 });
 
 test('bobina física: inventário na oficina sem criar compra fictícia',async({page})=>{

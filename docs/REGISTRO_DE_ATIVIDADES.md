@@ -1096,3 +1096,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Aplicados painel grafite com o cálculo mais recente em destaque, painel claro para impressões, abas segmentadas e faixa para pendências. Conferidas as versões renderizadas de desktop e celular com dados simulados. Duração do trabalho não aferida.
 - Build local, 82 testes unitários e 130 cenários Playwright da suíte passaram. Duas execuções locais adicionais confirmaram o destaque do cálculo mais recente e registraram a tela renderizada. Sem deploy ou GitHub Actions.
+
+### 26/11/2026 — Estatísticas de produção na Visão geral
+
+- Implementados filtro de 7, 30 ou 90 dias pela data de cadastro da impressão, volumes de execução, peças confirmadas e proporção de peças boas e rejeitadas. A consulta de impressões é reaproveitada no frontend. Sem alteração de banco, merge ou deploy. Duração do trabalho não aferida.
+- Build local, 84 testes unitários e 130 cenários Playwright em desktop e celular passaram. A regressão cobre mudança de período, oficina vazia, limites do dia de Brasília e rendimento zero. Sem GitHub Actions.

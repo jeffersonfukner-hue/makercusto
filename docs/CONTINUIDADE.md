@@ -1214,3 +1214,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - A revisão visual usa grafite para Cálculos recentes, com destaque para o último cálculo salvo, e uma superfície clara para Impressões, com etiquetas de estado. A seção recebeu título maior, abas segmentadas e uma faixa com o total de cadastros pendentes. A ação Abrir calculadora ocupa toda a largura no celular.
 - Conferência visual local em Chromium com oficina simulada. A homologação visual com a oficina do proprietário permanece no Preview manual deste mesmo lote.
+
+### Estatísticas da oficina na Visão geral
+
+- O painel usa a mesma consulta de impressões para acompanhamento e estatísticas. O filtro oferece os últimos 7, 30 ou 90 dias corridos, incluindo hoje, pela data de cadastro em horário de Brasília. A seleção inicial é 30 dias.
+- O bloco mostra impressões cadastradas e concluídas, peças confirmadas e aproveitamento. Aproveitamento é a proporção de peças boas sobre o total de boas e rejeitadas confirmadas nas execuções cadastradas no período. A barra compara essas duas contagens. Ausência de impressões e ausência de peças confirmadas têm mensagens próprias.

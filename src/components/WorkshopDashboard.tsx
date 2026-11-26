@@ -3,6 +3,8 @@ import {
  listAssemblies,listLatestProductCalculations,listPrints,listProducts,
  type PrintRecord,type SavedCalculation
 } from '../data/supabase';
+import {printStatisticsPeriods,summarizePrints,type PrintStatisticsPeriod} from '../domain/print-statistics';
+import {MetricGrid} from './MetricGrid';
 import type {OverviewTab} from './SystemNavigation';
 
 type ProductTarget={id:string;section:'products'|'assemblies';part?:boolean};
@@ -13,6 +15,8 @@ type Props={
 };
 type Query<T>={key:string;state:'ready';data:T}|{key:string;state:'error'};
 const date=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeZone:'America/Sao_Paulo'});
+const quantity=new Intl.NumberFormat('pt-BR');
+const percentage=new Intl.NumberFormat('pt-BR',{style:'percent',maximumFractionDigits:1});
 const formatDate=(iso:string)=>Number.isFinite(Date.parse(iso))?date.format(new Date(iso)):'Data indisponível';
 const printLabels:Partial<Record<PrintRecord['status'],string>>={
  running:'Em execução',partial:'Confirmação parcial',failed:'Com falha'
@@ -38,7 +42,12 @@ function useDashboardQuery<T>(workspaceId:string|null,load:(id:string)=>Promise<
 function DataBlock<T>({workspaceId,load,children}:{
  workspaceId:string|null;load:(id:string)=>Promise<T>;children:(data:T)=>ReactNode
 }){
- const {result,retry}=useDashboardQuery(workspaceId,load);
+ return <QueryContent {...useDashboardQuery(workspaceId,load)} workspaceId={workspaceId}>{children}</QueryContent>;
+}
+
+function QueryContent<T>({workspaceId,result,retry,children}:{
+ workspaceId:string|null;result:Query<T>|undefined;retry:()=>void;children:(data:T)=>ReactNode
+}){
  if(!workspaceId)return <p>Aguardando acesso à oficina.</p>;
  if(!result)return <p role="status">Carregando…</p>;
  if(result.state==='error')return <div className="dashboard-data-error">
@@ -78,7 +87,33 @@ function RecordButton({name,detail,state,featured,onClick}:{
  </button>;
 }
 
+function PrintStatistics({prints,period}:{prints:PrintRecord[];period:PrintStatisticsPeriod}){
+ const {registered,completed,good,rejected,confirmed,yieldRate}=summarizePrints(prints,period,new Date());
+ if(registered===0)return <p>Nenhuma impressão cadastrada neste período.</p>;
+ return <>
+  <MetricGrid className="dashboard-statistics-metrics" metrics={[
+   {label:'Impressões cadastradas',value:quantity.format(registered)},
+   {label:'Impressões concluídas',value:quantity.format(completed)},
+   {label:'Peças confirmadas',value:quantity.format(confirmed)},
+   {label:'Aproveitamento',value:yieldRate===null?'—':percentage.format(yieldRate)}
+  ]}/>
+  {yieldRate===null?<p>Nenhuma peça confirmada nas impressões deste período.</p>:
+   <div className="dashboard-piece-breakdown">
+    <div className="dashboard-piece-bar" aria-hidden="true">
+     <span style={{width:(yieldRate*100)+'%'}}/>
+    </div>
+    <div className="dashboard-piece-legend">
+     <span><strong>{quantity.format(good)}</strong> boas</span>
+     <span><strong>{quantity.format(rejected)}</strong> rejeitadas</span>
+    </div>
+   </div>}
+  <p>Período pela data de cadastro da impressão. Aproveitamento = peças boas entre as confirmadas.</p>
+ </>;
+}
+
 export function WorkshopDashboard({tab,workspaceId,onTab,onCalculation,onPrint,onProduct}:Props){
+ const [period,setPeriod]=useState<PrintStatisticsPeriod>(30);
+ const printQuery=useDashboardQuery(tab==='general'?workspaceId:null,listPrints);
  return <section className="dashboard-home" aria-label="Painel da oficina">
   {tab==='general'&&<>
    <div className="dashboard-work-grid">
@@ -93,7 +128,7 @@ export function WorkshopDashboard({tab,workspaceId,onTab,onCalculation,onPrint,o
     </section>
     <section className="panel dashboard-card dashboard-prints" aria-labelledby="dashboard-current-prints">
      <h2 id="dashboard-current-prints">Impressões para acompanhar</h2>
-     <DataBlock workspaceId={workspaceId} load={listPrints}>{prints=>{
+     <QueryContent workspaceId={workspaceId} {...printQuery}>{prints=>{
       const current=prints.filter(print=>printLabels[print.status]).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
       return <>
        {current.length===0?<p>Nenhuma impressão em execução, parcialmente confirmada ou com falha.</p>:
@@ -103,7 +138,7 @@ export function WorkshopDashboard({tab,workspaceId,onTab,onCalculation,onPrint,o
         </li>)}</ul>}
        <button type="button" className="secondary-action" onClick={()=>onPrint()}>Ver impressões</button>
       </>;
-     }}</DataBlock>
+     }}</QueryContent>
     </section>
    </div>
    <div className="dashboard-pending-summary">
@@ -116,6 +151,20 @@ export function WorkshopDashboard({tab,workspaceId,onTab,onCalculation,onPrint,o
      </button>
     }</DataBlock>
    </div>
+   <section className="panel dashboard-card dashboard-statistics" aria-labelledby="dashboard-statistics-title">
+    <div className="dashboard-statistics-header">
+     <h2 id="dashboard-statistics-title">Estatísticas da oficina</h2>
+     <div className="dashboard-statistics-period" role="group" aria-label="Período das estatísticas">
+      {printStatisticsPeriods.map(days=><button key={days} type="button" aria-pressed={days===period}
+       onClick={()=>setPeriod(days)}>{days} dias</button>)}
+     </div>
+    </div>
+    <div className="dashboard-statistics-results" aria-live="polite">
+     <QueryContent workspaceId={workspaceId} {...printQuery}>{prints=>
+      <PrintStatistics prints={prints} period={period}/>
+     }</QueryContent>
+    </div>
+   </section>
   </>}
   {tab==='activities'&&<section className="panel dashboard-card" aria-labelledby="dashboard-activities">
    <h2 id="dashboard-activities">Cadastros recentes</h2>
