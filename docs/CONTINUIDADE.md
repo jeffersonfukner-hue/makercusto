@@ -1231,3 +1231,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Ampliada a regressão existente para recuperar uma revisão histórica de composição em sessão nova, após alternar para impressão direta, e registrar o pedido vinculado ao snapshot histórico. A fixture confirmou 12 conjuntos com custo registrado de R$ 192,00 e valor do pedido de R$ 480,00, tanto na calculadora quanto na ficha do histórico.
 - Passaram seis cenários direcionados em Chromium, com desktop, celular e perfil de iPad Pro 11 emulado. A homologação autenticada em dispositivos reais continua no Preview.
+
+## 26/11/2026 — Histórico por execução em Impressões
+
+- As fichas de execução têm a seção recolhível Histórico da impressão. A leitura carrega sob demanda cancelamentos, reduções parciais e trocas de bobina, com data, ID do usuário e motivo. A consulta pagina em blocos de 20 eventos e permite tentar novamente em caso de falha.
+- O frontend usa a política de leitura por oficina da tabela de auditoria existente e seleciona somente os campos da ficha. Nenhuma migração ou rotina de gravação foi alterada. A mudança de contrato para motivo opcional e seu complemento posterior continua como próximo lote de auditoria.

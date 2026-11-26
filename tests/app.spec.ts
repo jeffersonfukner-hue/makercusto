@@ -1221,6 +1221,7 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
  const production='66666666-6666-4666-8666-666666666666',lot='77777777-7777-4777-8777-777777777777';
  const reservation='88888888-8888-4888-8888-888888888888',output='55555555-5555-4555-8555-555555555555';
+ const auditOffsets:string[]=[];
  let finishFirstAttempt!:()=>void;
  const pendingAttempt=new Promise<void>(resolve=>{finishFirstAttempt=resolve;});
  const cancelAttempts:Record<string,unknown>[]=[];const dueAttempts:Record<string,unknown>[]=[];
@@ -1245,6 +1246,23 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
   if(u.includes('rpc/mc_set_print_reservation_due')){
    dueAttempts.push(route.request().postDataJSON() as Record<string,unknown>);
    return send(reservation);
+  }
+  if(u.includes('/mc_audit_events?')){
+   const params=new URL(u).searchParams;
+   expect(route.request().method()).toBe('GET');
+   expect(params.get('workspace_id')).toBe('eq.'+ws);
+   expect(params.get('entity')).toBe('eq.production');
+   expect(params.get('entity_id')).toBe('eq.'+production);
+   expect(params.get('action')).toBe('in.(cancel_print,reduce_print_plan,swap_reserved_lot)');
+   const offset=params.get('offset')??'';
+   auditOffsets.push(offset);
+   if(auditOffsets.length===1)return send({message:'Histórico indisponível'},503);
+   const records=Array.from({length:offset==='0'?21:1},(_,i)=>({
+    id:offset+'-'+i,action:offset==='0'?'cancel_print':'swap_reserved_lot',actor_id:user,
+    reason:offset==='0'?'Cancelada após produção parcial':'Troca de lote documentada',
+    occurred_at:'2026-11-26T15:30:00Z'
+   }));
+   return send(records);
   }
   if(u.includes('rpc/mc_cancel_print')){
    cancelAttempts.push(route.request().postDataJSON() as Record<string,unknown>);
@@ -1293,6 +1311,17 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  expect(cancelAttempts[0].p_request_key).toBe(cancelAttempts[1].p_request_key);
  expect(cancelAttempts[0].p_reason).toBe('Pedido cancelado após produção parcial');
  expect(cancelAttempts[0].p_production_id).toBe(production);
+ expect(auditOffsets).toEqual([]);
+ const audit=page.locator('article').filter({hasText:'Hélice: planejadas'}).locator('details.mc-print-audit');
+ await audit.getByText('Histórico da impressão',{exact:true}).click();
+ await expect(audit.getByRole('alert')).toHaveText('Não foi possível consultar o histórico da impressão.');
+ await audit.getByRole('button',{name:'Tentar novamente'}).click();
+ await expect(audit.getByText('Cancelamento da impressão',{exact:true})).toHaveCount(20);
+ await expect(audit.getByText('Usuário '+user).first()).toBeVisible();
+ await expect(audit.locator('time').first()).toHaveAttribute('datetime','2026-11-26T15:30:00Z');
+ await audit.getByRole('button',{name:'Próxima'}).click();
+ await expect(audit.getByText('Troca de lote documentada')).toBeVisible();
+ expect(auditOffsets).toEqual(['0','0','20']);
 });
 
 

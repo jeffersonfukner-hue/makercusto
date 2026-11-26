@@ -132,6 +132,16 @@ export type PrintOutput={id:string;product_id:string;name:string;planned:number;
 export type PrintRecord={id:string;status:'draft'|'partial'|'reserved'|'running'|'completed'|'failed'|'cancelled';printer_id:string;printer_name:string|null;planned_hours:number|null;actual_hours:number|null;notes:string|null;created_at:string;outputs:PrintOutput[]};
 export const listPrints=(workspaceId:string)=>api<PrintRecord[]>('rpc/mc_list_prints','POST',{p_workspace_id:workspaceId});
 
+const printAuditActions=['cancel_print','reduce_print_plan','swap_reserved_lot'] as const;
+export type PrintAuditEvent={
+ id:string;action:typeof printAuditActions[number];actor_id:string|null;reason:string|null;occurred_at:string;
+};
+export const printAuditPageSize=20;
+export const listPrintAudit=(workspaceId:string,printId:string,offset:number)=>
+ api<PrintAuditEvent[]>('mc_audit_events?select=id,action,actor_id,reason,occurred_at&workspace_id=eq.'+
+  encodeURIComponent(workspaceId)+'&entity=eq.production&entity_id=eq.'+encodeURIComponent(printId)+
+  '&action=in.('+printAuditActions.join(',')+')&order=occurred_at.desc,id.desc&limit='+(printAuditPageSize+1)+'&offset='+offset);
+
 /** Fontes históricas de consumo: read-only, custo estimado ou ausente não vira custo confirmado. */
 export type PrintConsumptionSource={
  consumption_id:string;confirmation_id:string;lot_id:string|null;lot_label:string|null;

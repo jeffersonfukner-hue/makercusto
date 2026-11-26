@@ -4,6 +4,7 @@ import {PrintDurationFields,emptyDuration,printDurationInHours,splitPrintDuratio
 import {useEffect,useRef,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
 import {MetricGrid} from './MetricGrid';
+import {PrintAuditHistory} from './PrintAuditHistory';
 import {PrintAllocationPreview} from './PrintAllocationPreview';
 import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,proposeInventoryAdjustment,listInventoryAdjustmentProposals,getPhysicalOccurrenceDossier,
  type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview,type InventoryAdjustmentProposal,type PhysicalOccurrenceDossier} from '../data/supabase';
@@ -629,6 +630,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
     <button type="button" disabled={busy} aria-label={'Cancelar impressão '+p.outputs.map(o=>o.name).join(' + ')}
     onClick={()=>{setCancelTarget(p.id);setCancelReason('');cancelKey.current=newKey();setError('');setActivePrimaryForm('cancel');}}>
     Cancelar impressão</button>}
+   {workspaceId&&<PrintAuditHistory workspaceId={workspaceId} printId={p.id} refresh={reload}/>}
   </article>)}</div>}
 
   {activePrimaryForm==='due'&&<FormActionDock title="Prazo da reserva" subtitle="Altera o prazo de revisão; não libera filamento">

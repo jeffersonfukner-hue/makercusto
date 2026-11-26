@@ -1110,3 +1110,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 26/11/2026 — Regressão de composição salva e Pedidos
 
 - Ampliado teste de recuperação de composição histórica para conferir snapshot, método de produção, quantidades e valores do pedido do cálculo até sua ficha. Seis cenários direcionados passaram em Chromium desktop, celular e iPad Pro 11 emulado. Usada API simulada. Sem alterar o aplicativo ou banco, sem deploy ou GitHub Actions. Duração total do trabalho não aferida.
+
+### 26/11/2026 — Histórico de cancelamento, redução e troca de bobina
+
+- Exposta consulta paginada dos eventos já registrados de cancelamento, redução parcial e troca de bobina reservada na ficha da impressão. O painel identifica autoria, data e motivo e permite nova tentativa em caso de falha. Sem escrita no banco. Duração total do trabalho não aferida.
+- Build local, 84 testes unitários e 130 cenários Playwright em desktop e celular passaram. A regressão verifica consulta sob demanda, filtros por oficina e impressão, recuperação de falha, autoria e paginação. A API foi simulada nos testes de navegador. Sem GitHub Actions ou deploy.
