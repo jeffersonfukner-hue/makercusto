@@ -64,7 +64,9 @@ export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspace
    </section>
    {selected.cancellation?<section className="mc-order-production" aria-label="Cancelamento">
     <h3>Cancelamento registrado</h3>
-    <p>{selected.cancellation.reason}</p>
+    <p>{selected.cancellation.reason??selected.cancellation.note?.reason??'Motivo não informado.'}</p>
+    {!selected.cancellation.reason&&!selected.cancellation.note&&<button type="button" className="mc-light-action" onClick={()=>setCancelling(true)}>Adicionar motivo</button>}
+    {selected.cancellation.note&&<p>Motivo acrescentado em {date.format(new Date(selected.cancellation.note.added_at))} · Usuário {selected.cancellation.note.added_by}</p>}
     <dl className="mc-order-audit">
      <div><dt>Situação anterior</dt><dd>{selected.status==='sold'?'Vendido':'Planejado'}</dd></div>
      <div><dt>Data do cancelamento</dt><dd>{date.format(new Date(selected.cancellation.cancelled_at))}</dd></div>

@@ -2206,7 +2206,7 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  const earlier='55555555-5555-4555-8555-555555555555';
  const customer={id:'66666666-6666-4666-8666-666666666666',name:'Maria da Silva',whatsapp:null,email:null as string|null};
  let registered=false;
- let cancellation:{reason:string;cancelled_by:string;cancelled_at:string}|undefined;
+ let cancellation:{reason:string|null;cancelled_by:string;cancelled_at:string;note?:{reason:string;added_by:string;added_at:string}}|undefined;
  let cancellationWrites=0;
  let historyReads=0;
  let orderReadFailed=true;
@@ -2246,10 +2246,17 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
    }
    return route.fulfill({json:registered?[customer]:[]});
   }
+  if(path.endsWith('/mc_order_cancellation_notes')){
+   const payload=route.request().postDataJSON();
+   expect(payload.reason).toBe('Duplicado');
+   const note={reason:payload.reason,added_by:user,added_at:'2026-11-26T14:20:00Z'};
+   cancellation!.note=note;
+   return route.fulfill({json:[note]});
+  }
   if(path.endsWith('/mc_order_cancellations')){
    cancellationWrites++;
    const payload=route.request().postDataJSON();
-   expect(payload).toEqual({workspace_id:workspace,order_id:requests.at(-1)?.id,reason:'Pedido registrado em duplicidade'});
+   expect(payload).toEqual({workspace_id:workspace,order_id:requests.at(-1)?.id,reason:null});
    cancellation={reason:payload.reason,cancelled_by:user,cancelled_at:'2026-11-26T14:15:00Z'};
    return route.fulfill({json:[cancellation]});
   }
@@ -2345,15 +2352,20 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
  await page.getByRole('button',{name:'Cancelar pedido',exact:true}).click();
  const cancelDialog=page.getByRole('dialog',{name:'Cancelar pedido'});
  const confirmCancel=cancelDialog.getByRole('button',{name:'Confirmar cancelamento'});
- await expect(confirmCancel).toBeDisabled();
- await cancelDialog.getByLabel('Motivo do cancelamento').fill('Pedido registrado em duplicidade');
+ await expect(confirmCancel).toBeEnabled();
+ await cancelDialog.getByLabel('Motivo do cancelamento (opcional)').fill('Pedido registrado em duplicidade');
  await cancelDialog.getByRole('button',{name:'Manter pedido'}).click();
  expect(cancellationWrites).toBe(0);
  await page.getByRole('button',{name:'Cancelar pedido',exact:true}).click();
- await cancelDialog.getByLabel('Motivo do cancelamento').fill('Pedido registrado em duplicidade');
  await confirmCancel.click();
  const audit=page.getByRole('region',{name:'Cancelamento',exact:true});
- await expect(audit).toContainText('Pedido registrado em duplicidade');
+ await expect(audit).toContainText('Motivo não informado.');
+ await audit.getByRole('button',{name:'Adicionar motivo'}).click();
+ const reasonDialog=page.getByRole('dialog',{name:'Adicionar motivo'});
+ await reasonDialog.getByLabel('Motivo do cancelamento').fill('Duplicado');
+ await reasonDialog.getByRole('button',{name:'Salvar motivo'}).click();
+ await expect(audit).toContainText('Duplicado');
+ await expect(audit).toContainText('Motivo acrescentado em');
  await expect(audit).toContainText(user);
  await expect(audit).toContainText('Vendido');
  await expect(page.getByRole('button',{name:'Cancelar pedido',exact:true})).toHaveCount(0);

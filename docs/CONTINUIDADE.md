@@ -1197,6 +1197,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 ## 26/11/2026 — Cancelamento auditável de pedidos
 
-- A ficha de pedido permite cancelar registro planejado ou vendido mediante confirmação e justificativa de 10 a 1.000 caracteres. O histórico conserva pedido, valores e estado original, e exibe motivo, data e identificador do usuário responsável. Cancelados ficam fora dos indicadores comerciais de planejados, vendidos e faturamento.
+- A ficha de pedido permite cancelar registro planejado ou vendido mediante confirmação, com motivo opcional. O histórico conserva pedido, valores e estado original, e exibe motivo, data e identificador do usuário responsável. Cancelados ficam fora dos indicadores comerciais de planejados, vendidos e faturamento.
 - A migração `20261126135200_customer_order_cancellations.sql` guarda um evento por pedido e oficina. O servidor atribui a autoria e a data. O acesso é isolado por oficina, e o primeiro evento é preservado em reenvios. O cancelamento comercial não lança devolução de pagamento.
 - Build, 82 unitários, regressões desktop/celular e teste em PostgreSQL local passaram. Aplicação no Supabase de teste depende de autorização específica.
+- Revisão do proprietário: o motivo é opcional na confirmação. A ficha permite acrescentá-lo depois se ficou em branco. O complemento tem autoria e data próprias e preserva o registro original. Build, dois cenários de navegador e SQL local aprovados para esse fluxo. A migração segue pendente de autorização.
+- Migração autorizada e aplicada no Supabase de teste como `20261126184600`. A verificação autenticada com rollback confirmou cancelamento sem motivo, autoria, data, reenvio sem duplicata, complemento posterior e isolamento entre oficinas. Após o teste, os cinco pedidos existentes foram preservados e não restaram registros descartáveis.

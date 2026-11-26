@@ -249,6 +249,7 @@ Não ampliar escopo sem homologação.
 
 ## Rastreabilidade de exclusões
 
-- [x] Implementar cancelamento auditável de pedidos, com justificativa, autor, data e registro original consultável.
-- [ ] Aplicar a migração de cancelamento no Supabase de teste após autorização e homologar o fluxo no Preview.
-- [ ] Revisar os fluxos existentes de exclusão, desativação e estorno nos demais módulos. Registrar entidade, ação, motivo, data e usuário autenticado, com isolamento por oficina.
+- [x] Implementar cancelamento auditável de pedidos, com motivo opcional, autor, data e registro original consultável.
+- [x] Aplicar e verificar a migração de cancelamento no Supabase de teste.
+- [ ] Homologar cancelamento e complemento do motivo no Preview.
+- [ ] Revisar os fluxos existentes de exclusão, desativação e estorno nos demais módulos. Pedir confirmação, oferecer motivo opcional com inclusão posterior e registrar entidade, ação, data e usuário autenticado, com isolamento por oficina.

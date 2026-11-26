@@ -1084,3 +1084,5 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 ### 26/11/2026 — Cancelamento auditável de pedidos
 
 - Implementados confirmação com justificativa, registro de autoria e exclusão dos totais comerciais. Validados build, 82 unitários, cenários de navegador e SQL local. Migração de teste pendente de autorização.
+- Tornado opcional o motivo do cancelamento e adicionada complementação posterior com autoria própria. Build, desktop/celular e teste PostgreSQL local passaram.
+- Aplicada a migração no Supabase de teste. Teste com rollback aprovado e cinco pedidos existentes preservados. Preview manual pendente.
