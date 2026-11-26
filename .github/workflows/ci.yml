@@ -1,0 +1,162 @@
+name: Verificações MakerCusto
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: makercusto_ci_only
+          POSTGRES_DB: makercusto_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d makercusto_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+      - name: Verificar tipos
+        run: npm run check
+      - name: Testes do motor de custos
+        run: npm run test
+      - name: Build estático
+        run: npm run build
+      - name: Regressão SQL transacional no PostgreSQL efêmero (rollback obrigatório)
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap_ci_auth.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261121015442_makercusto_foundation_v1.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261121145200_enable_product_save_rpc.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122203000_assembly_revisions_costs.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122204000_product_form_records.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122204500_initial_assembly_costs.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122210500_initial_spool_inventory.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122211000_spool_inventory_hardening.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_preflight_readonly.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122212500_print_execution_l2_l3.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261122235000_print_reservation_p01_partial.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123001000_print_reservation_p01_lifecycle.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123002000_print_reservation_p01_partial_cancel.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123003500_print_reservation_p01_lot_swap.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261126223000_optional_print_audit_reasons.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123005500_gap01_physical_occurrences.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123014500_gap01_investigation_tracking.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123110500_gap01_inventory_adjustment_proposals.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123112000_gap01_reconciliation_dossier.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123123500_component_linked_assemblies.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123125000_reuse_saved_calculations.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123152000_append_product_calculation.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123190000_l4_consumption_sources_readonly.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123200000_l4_exact_origin_capture.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123212000_l4_close_review_pending.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123223000_l4_readiness_dossier.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123233000_p07_energy_evidence.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123234000_p07_integral_measurement.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261124001000_l4_machine_origin.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261124002000_l4_labor_evidence.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261124003000_l4_labor_revisions.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_postflight_readonly.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/fixture_ci_l2_l3.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l2_l3_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_reservations_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_lifecycle_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_partial_cancel_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_lot_swap_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/optional_print_audit_reasons_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_occurrence_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_investigation_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_inventory_proposal_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_dossier_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/component_linked_assemblies_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/product_calculation_revision_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l4_consumption_sources_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l4_exact_origin_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l4_close_review_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l4_readiness_dossier_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/p07_energy_evidence_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l4_machine_origin_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l4_labor_evidence_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/l4_labor_revisions_rollback.sql
+          remaining="$(psql -v ON_ERROR_STOP=1 -Atc "select count(*) from public.mc_productions")"
+          test "$remaining" = "0" || { echo "ROLLBACK não preservou o banco limpo"; exit 1; }
+      - name: Concorrência de estoque L3 e isolamento RLS no PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/l2_l3_concurrency.sh
+      - name: P01-F concorrência de reservas por bobina no PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/p01_reservation_concurrency.sh
+      - name: P01-A/F cancelamento e confirmação concorrentes no PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/p01_cancel_confirmation_race.sh
+      - name: P01-D troca simultânea de reserva entre bobinas no PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/p01_lot_swap_concurrency.sh
+      - name: L4-G01 revisão concorrente idempotente em PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/l4_close_review_concurrency.sh
+      - name: Isolamento entre duas oficinas com dados no PostgreSQL efêmero
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: makercusto_ci
+          PGPASSWORD: makercusto_ci_only
+        run: bash supabase/tests/l2_l3_cross_workspace.sh
+      - name: Instalar navegador de testes
+        run: npx playwright install --with-deps chromium
+      - name: Testes de interface desktop e mobile
+        run: npm run test:e2e
+      - name: Evidências quando falhar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: makercusto-test-results
+          path: test-results/
+          if-no-files-found: ignore

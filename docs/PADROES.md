@@ -1,0 +1,75 @@
+# Padrões e qualidade
+
+- Idioma inicial pt-BR; moeda R$; unidades explícitas (g, W, kWh, h).
+- Campos não negativos, quantidades inteiras >= 1; erros visíveis.
+- Tarifas, consumo e vida útil são hipóteses editáveis, nunca valores oficiais sem fonte.
+- Materiais multicor: o peso do modelo é por material. Purga/perdas entra adicionalmente apenas se não estiver incluída no peso informado.
+- Não somar entrada de filamento único e entrada de filamentos múltiplos simultaneamente.
+- Mostrar material, energia, máquina, acessórios, montagem, custo/lote e unidade, lucro bruto, margem e markup.
+- Margem = (preço - custo) / preço; markup = (preço - custo) / custo.
+- Impressão compartilhada é rateada por lote, acessórios/montagem multiplicam por unidades acabadas.
+- Não considerar frete, impostos, embalagens e taxas de marketplace sem parametrização explícita.
+- Interface acessível e responsiva, incluindo mobile 320px/390px; foco visível e entradas com legenda.
+- Cálculo usa números JS e arredonda somente na apresentação. Antes de persistência financeira, definir precisão decimal/centavos e rateio.
+- Não incrementar versão por commit; CI não equivale a publicação ou homologação.
+- Deploy de Preview exclusivamente manual pelo proprietário, após CI verde.
+
+- Resumo padrão dos filamentos: soma de gramas consumidas, preço médio ponderado por kg (custo total dividido pelo peso total), custo total; tabela avançada apenas após Detalhar por cor.
+- Entrada de compra: quantidade e unidade (g/kg) + preço total da embalagem. Custo consumido = (gramas usadas + perdas adicionais) × preço total / gramas da embalagem; nunca confundir preço de compra com preço/kg.
+- Salvar item explicitamente; não gerar linhas em branco. Visão mobile tem rolagem horizontal apenas para a tabela, não para o aplicativo inteiro.
+
+- **Modo padrão editável:** entrada de filamento total em g ou kg e preço em R$/kg ou R$/g; resumo é saída calculada, não substitui os campos.
+- **Modo detalhado:** botão Detalhar por cor alterna para formulário e tabela; ao voltar, conservar dados de ambos os modos em memória sem somar custos. Somente modo ativo alimenta o motor de cálculos.
+
+- Impressora deve preceder filamento. Seleção de equipamento preenche potência, custo do equipamento, vida útil e tarifa; usuário pode editar. Não chamar exemplos de especificações oficiais.
+- Modo de cálculo Simples/Avançado não se confunde com modelo comercial gratuito/Compartilhado/Full. Compartilhamento deve ser opt-in, perfis Full privados por padrão.
+
+## Cadastros e acesso — requisitos documentados, implementação pendente
+- Botões "+" de cadastro junto aos rótulos Tipo, Cor, Marca e Impressora; modais Normal e Avançado. Evitar formulários excessivos no fluxo rápido.
+- Catálogo global é referência reutilizável, não propriedade editável indiscriminadamente por todos. Itens pessoais são cópias/sobreposições isoladas, preservando o original global.
+- Última impressora selecionada por usuário/dispositivo. Visitante: localStorage sujeito à limpeza do navegador; autenticado: dado da conta quando a persistência for autorizada.
+- Estoque de insumos comprados não confundir com ferramentas reutilizáveis ou itens produzidos; exigir movimentações rastreáveis.
+- Planejar proteção de dados Full privados antes de expor API. Jamais inferir permissão apenas de estar autenticado; revisão de RLS é obrigatória.
+
+## Cinco regras homologadas — 20/11/2026
+- Cadastro oficial global é imutável para usuários, com cópia editável/renomeável como único caminho de personalização. Edição administrativa deve preservar versões e histórico.
+- Compartilhado: publicado consultável por Compartilhado e Full; edição apenas do autor ou administração com atribuição explícita; copiar para modificar registro de terceiro.
+- Full: itens próprios privados por padrão, publicação opcional **de cópia separada**; nunca expor o original privado.
+- Estoque de matérias-primas, acessórios e acabados exige histórico de entradas/saídas/ajustes/perdas.
+- Produto/kit pode conter várias peças impressas, insumos comprados, ferramentas e montagem. Criar snapshots de custo imutáveis antes do uso financeiro real.
+
+## Regra de produto homologada — experiência pronta para usar (21/11/2026)
+- **Facilitar antes de configurar:** o usuário escolhe fabricante e modelo; a ficha global vem preenchida, sempre que houver dados, com especificações **do fabricante** identificadas por fonte/versão, e com **estimativas operacionais iniciais** prontas para cálculo (inclusive consumo médio de impressão, custo/vida útil ilustrativos quando não se conheça o valor individual). Não exigir cálculos manuais para começar a imprimir.
+- Distinguir, **campo a campo**, valor oficial comprovado, estimativa do MakerCusto, valor informado pelo usuário e medição real. Não deixar campo útil vazio por padrão apenas porque é estimado; rotular a estimativa e tornar o ajuste opcional e simples. Ausência de fonte não autoriza atribuir um dado como oficial.
+- **Fabricante → modelos dependentes**, mais populares primeiro; cadastro rápido usa padrões já carregados, sem exigir configuração técnica extensa.
+- **Original global protegido → cópia pessoal completa:** um clique deve duplicar todos os parâmetros disponíveis, vincular ao original, permitir renomear (ex.: Anycubic Kobra X → Aninha) e alterar apenas os poucos valores desejados. Não exigir redigitar nem editar o registro global. Cópia não deve receber atualizações destrutivas do original.
+- Padrão universal para cadastros (impressoras, filamentos, cores, marcas e futuros itens): sugerir valores existentes, ordenar por uso, oferecer pesquisa e cadastro livre normalizado; edição avançada opcional, sem transferir cálculos complexos ao usuário.
+- **Dicas e perfis de impressão otimizados:** recurso futuro candidato ao plano pago (Plus), com recomendações por fabricante/modelo, material, tipo de peça e prioridade (qualidade/rapidez/resistência). Apenas backlog; não implementar nem prometer configurações universais sem validação, procedência e avisos de segurança.
+
+## Regra transversal — catálogo pronto e cópia pessoal (21/11/2026)
+- A história da impressora Aninha é **alegoria universal**: impressoras, filamentos, perfis de slicer, marcas, cores, ferramentas, insumos e futuros cadastros devem oferecer referência pronta e protegida; usuário consulta e utiliza, podendo **Clonar e personalizar** sem digitar todos os parâmetros.
+- Cadastros originais globais são imutáveis para usuários (inclusive nome); cada clone possui identificador, nome, configurações completas herdadas e vínculo com a origem. Modificações na cópia não alteram global, outras cópias nem histórico.
+- Fichas globais de filamento, como Masterprint PETG e SUNLU PLA, disponibilizam no cadastro configurações iniciais úteis para slicer: bico, mesa, velocidade, ventilação, retração quando aplicável, secagem, compatibilidade, fonte e versão. Distinguir especificações de fabricante de sugestões/estimativas; evitar recomendar universalmente um valor dependente da impressora.
+- Consulta ao perfil básico deve estar disponível no cadastro; dicas avançadas/otimizações por impressão são ideia Plus futura e separada.
+- Nomes novos: remover espaços excedentes, capitalizar palavras comuns (exemplo: vermelho fosco → Vermelho Fosco), preservar siglas e grafias oficiais (PLA, PETG, TPU, eSUN etc.). Deduplicar comparando caixa, acentuação e espaços; para possível erro de digitação, sugerir uma correção e não alterar silenciosamente.
+- Prioridade de UX: padrão utilizável imediatamente; personalização opcional e progressiva. Não obrigar preenchimento de dezenas de campos.
+
+## Ajuda contextual nos campos — padrão universal (21/11/2026)
+- Campos onde ajuda agrega valor exibem microtexto discreto abaixo da entrada: uma explicação curta e concreta, relacionada ao campo e ao estado atual. Não encher todos os campos de textos repetitivos nem deslocar a interface desnecessariamente.
+- Durante a digitação, oferecer **no máximo três opções clicáveis** do catálogo pertinente, priorizadas por prefixo exato, popularidade e similaridade: ao digitar Kobra, mostrar sugestões como Kobra X, Kobra 2 e Kobra 3, conforme os registros existentes. Para fabricante selecionado, buscar somente modelos daquele fabricante.
+- Em valor inválido, duplicado ou atípico, substituir ou complementar o microtexto com orientação objetiva e proposta de correção. Não corrigir automaticamente nomes técnicos/erros ambíguos e não deixar criar duplicata silenciosamente.
+- Sugestões não devem sobrepor o teclado mobile ou impedir interação; suportar teclado, clique/toque, leitores de tela e foco visível. Evitar requisições a cada tecla: usar catálogo local/filtrado e debounce quando houver busca remota.
+- Aplicação prioritária: fabricante/modelo de impressora, marca/linha/tipo/cor de filamento, nomes próprios personalizados, temperatura de bico/mesa, velocidade/ventilação/retração, quantidade e unidade de compra, preço de embalagem, consumo e potência estimada, duração e margens. Explicações devem mostrar unidade, origem e efeito no cálculo quando relevante.
+- O componente é reutilizável e parametrizado por tipo de campo, não uma solução isolada para impressoras. Respeitar padrão pronto → consultar → clonar → personalizar.
+
+
+## Continuidade local sem exigir login — 21/11/2026
+- A impressora pessoal criada pelo visitante sobrevive a recarga no mesmo navegador; dados locais ficam separados da oficina autenticada. O último equipamento selecionado também é lembrado por visitante ou conta (preferência local do dispositivo, não sincronização de preferências entre dispositivos).
+- Restaurar o exemplo nunca apaga cadastros pessoais persistidos, apenas restaura parâmetros do cálculo e seleção inicial. Usuário deve ser informado que limpar os dados do navegador pode apagar suas cópias locais; cópias não se transferem automaticamente para uma conta.
+
+## Padrão visual compartilhado
+
+- A calculadora é a referência visual do MakerCusto. Antes de criar ou alterar uma tela, reaproveite os controles, superfícies, estados e componentes existentes. A composição muda conforme os campos e os dados da tarefa.
+- Use as cores e medidas do tema para botões, campos e cards. Reserve o botão primário para a ação principal. Use `MetricGrid` para grupos de indicadores comparáveis e o modal compartilhado para cadastros rápidos.
+- Mostre só o texto necessário para localizar, entender o estado e agir. Associe ajuda contextual ao nome do campo com `FieldWithHelp`. Use `CalculatorHelp` ao lado do título quando a orientação vale para a seção inteira. Deixe erros, estados de espera e consequências que exigem confirmação à vista.
+- Prefira listas compactas e abra detalhes sob demanda. Verifique o espaço útil e a leitura no desktop, no iPad em retrato e a 320 px. Confirme foco visível, abertura da ajuda por toque e teclado e ausência de rolagem horizontal na página.

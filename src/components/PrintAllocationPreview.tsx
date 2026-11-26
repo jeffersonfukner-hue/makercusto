@@ -1,0 +1,302 @@
+import {CalculatorHelp,FieldWithHelp} from './CalculatorHelp';
+import {useEffect,useRef,useState} from 'react';
+import {getPrintConsumptionSources,type PrintConsumptionSources,type PrintRecord,type PrintConsumptionSource,type StoredPrinter,getL4MachineOrigin,type MachineOriginEvidence} from '../data/supabase';
+import {reconcilePrintAllocation,type AllocationLine,type AllocationCategory} from '../domain/print-allocation';
+import {preparePrintFinancialDraft,type FinancialDraft,type CategoryReview} from '../domain/print-financial-draft';
+import {FormActionDock} from './FormActionDock';
+import {PrintReadinessPanel} from './PrintReadinessPanel';
+import {PrintEnergyPanel} from './PrintEnergyPanel';
+import {PrintExactMaterialDraft} from './PrintExactMaterialDraft';
+import {PrintLaborPanel} from './PrintLaborPanel';
+import {isLaborSource} from '../domain/l4-labor-draft';
+
+import {machineCostCandidate} from '../domain/l4-machine-estimate';
+import {historicalMachineCandidate,isMachineSource} from '../domain/l4-machine-origin';
+type Props={workspaceId:string|null;prints:PrintRecord[];printers:StoredPrinter[];active:boolean;onActivate:()=>void};
+type OutputOption={id:string;name:string;outcome:'good'|'rejected';quantity:number};
+const formatCents=(cents:string)=>{const value=BigInt(cents);return 'R$ '+new Intl.NumberFormat('pt-BR').format(value/100n)+','+(value%100n).toString().padStart(2,'0');};
+const categories: {id:AllocationCategory;label:string}[]=[
+ {id:'model',label:'Filamento do modelo'},{id:'purge',label:'Purga separada'},
+ {id:'energy',label:'Energia'},{id:'machine',label:'Máquina'},
+ {id:'labor',label:'Mão de obra'},{id:'accessory',label:'Acessórios'},{id:'tool',label:'Ferramentas'},
+ {id:'loss',label:'Perda separada'},{id:'rework',label:'Retrabalho'},
+ {id:'other',label:'Outro custo'}
+];
+
+/** Apenas estudo local de distribuição: nunca salva custo, snapshot ou estoque. */
+export function PrintAllocationPreview({workspaceId,prints,printers,active,onActivate}:Props){
+ const [printId,setPrintId]=useState('');
+ const [category,setCategory]=useState<AllocationCategory>('model');
+ const [method,setMethod]=useState<'direct'|'shared'>('direct');
+ const [amount,setAmount]=useState('');
+ const [source,setSource]=useState('');
+ const [sourceVersion,setSourceVersion]=useState('entrada-local-1');
+ const [sources,setSources]=useState<PrintConsumptionSources|null>(null);
+ const [sourcesBusy,setSourcesBusy]=useState(false);
+ const [sourcesError,setSourcesError]=useState('');
+ const [rationale,setRationale]=useState('');
+ const [separate,setSeparate]=useState(false);
+ const [basis,setBasis]=useState<Record<string,string>>({});
+ const [lines,setLines]=useState<AllocationLine[]>([]);
+ const [reviews,setReviews]=useState<Partial<Record<AllocationCategory,CategoryReview>>>({});
+ const reviewCategories=categories.filter(c=>!['model','purge','loss'].includes(c.id));
+ const updateReview=(category:AllocationCategory,patch:Partial<CategoryReview>)=>{
+  setReviews(v=>({...v,[category]:{category,state:'unknown',reason:'',...v[category],...patch}}));setPreview(null);
+ };
+ const sequence=useRef(0);
+ const sourceRequest=useRef(0);
+ const [preview,setPreview]=useState<FinancialDraft|null>(null);
+ const [error,setError]=useState('');
+ const print=prints.find(x=>x.id===printId);
+ const machine=print?machineCostCandidate(print,printers.find(p=>p.id===print.printer_id&&p.workspace_id===workspaceId)??null):null;
+ const [machineOrigin,setMachineOrigin]=useState<MachineOriginEvidence|null>(null);
+ const [machineError,setMachineError]=useState('');
+ const [machineBusy,setMachineBusy]=useState(false);
+ const machineRequest=useRef(0);
+ const historical=machineOrigin&&workspaceId&&print?historicalMachineCandidate(machineOrigin,workspaceId,print.id):null;
+ const machineVersion=machine?.sourceVersion??null;
+ const historicalVersion=historical?.sourceVersion??null;
+ useEffect(()=>{
+  ++machineRequest.current;setMachineOrigin(null);setMachineBusy(false);setMachineError('');
+ },[workspaceId,printId,print?.actual_hours,print?.printer_id]);
+ const loadMachineOrigin=()=>{
+  if(!workspaceId||!print)return;
+  const id=++machineRequest.current;
+  setMachineBusy(true);setMachineError('');setMachineOrigin(null);
+  setLines(v=>v.filter(l=>!l.sourceVersion.startsWith('machine-origin:')));setPreview(null);
+  void getL4MachineOrigin(workspaceId,print.id).then(data=>{
+   if(id!==machineRequest.current)return;
+   if(data.workspace_id!==workspaceId||data.execution_id!==print.id||data.schema_version!=='l4-machine-origin-v1'||data.posting_allowed!==false)throw new Error('Resposta histórica inválida.');
+   setMachineOrigin(data);
+  }).catch(e=>{if(id===machineRequest.current)setMachineError((e as Error).message);})
+  .finally(()=>{if(id===machineRequest.current)setMachineBusy(false);});
+ };
+ useEffect(()=>{
+  const stale=(v:string)=>isMachineSource(v)&&v!==machineVersion&&v!==historicalVersion;
+  setLines(previous=>previous.some(l=>stale(l.sourceVersion))?previous.filter(l=>!stale(l.sourceVersion)):previous);
+  if(stale(sourceVersion)){
+   setSourceVersion('entrada-local-1');setAmount('');setSource('');setBasis({});setRationale('');
+  }
+  setPreview(null);
+ },[machineVersion,historicalVersion,sourceVersion]);
+ const destinations:OutputOption[]=print?.outputs.flatMap(o=>[
+  ...(Number(o.good)>0?[{id:o.id+':good',name:o.name+' — boas',quantity:Number(o.good),outcome:'good' as const}]:[]),
+  ...(Number(o.failed)>0?[{id:o.id+':rejected',name:o.name+' — rejeitadas',quantity:Number(o.failed),outcome:'rejected' as const}]:[])
+ ])??[];
+ const changePrint=(id:string)=>{
+  setPrintId(id);setLines([]);setReviews({});setPreview(null);setError('');setBasis({});
+  setSources(null);setSourcesError('');setSourceVersion('entrada-local-1');
+  setAmount('');setSource('');setRationale('');
+  const request=++sourceRequest.current;
+  setSourcesBusy(Boolean(workspaceId&&id));
+  if(!workspaceId||!id)return;
+  void getPrintConsumptionSources(workspaceId,id).then(data=>{
+   if(request!==sourceRequest.current)return;
+   if(data.execution_id!==id||!Array.isArray(data.lines)||data.read_only!==true){
+    throw new Error('Resposta de fontes de custo inválida.');
+   }
+   setSources(data);
+  }).catch(e=>{if(request===sourceRequest.current)setSourcesError('Fontes não disponíveis: '+(e as Error).message);})
+   .finally(()=>{if(request===sourceRequest.current)setSourcesBusy(false);});
+ };
+ const importCost=(row:PrintConsumptionSource,costCategory:'model'|'purge'|'loss')=>{
+  const value=costCategory==='model'?row.model_cost_brl:
+   costCategory==='purge'?row.purge_cost_brl:row.loss_cost_brl;
+  if(value===null||row.cost_status==='unknown')return;
+  const version='historico:'+row.consumption_id+':'+costCategory;
+  setCategory(costCategory);setAmount(value);
+  setSource('Consumo confirmado '+row.consumption_id+' · bobina '+(row.lot_label||row.lot_id||'não identificada'));
+  setSourceVersion(version);setSeparate(costCategory!=='model');
+  setPreview(null);setError('');
+ };
+ const resetImportedSource=()=>{
+  setSourceVersion('entrada-local-1');setSource('');setAmount('');setSeparate(false);
+ };
+ const invalidateP07Energy=()=>{
+  const imported=sourceVersion.startsWith('p07:');
+  const hasEnergy=lines.some(l=>l.category==='energy'&&l.sourceVersion.startsWith('p07:'));
+  if(!imported&&!hasEnergy)return;
+  setLines(v=>v.filter(l=>!(l.category==='energy'&&l.sourceVersion.startsWith('p07:'))));
+  if(imported){resetImportedSource();setRationale('');setBasis({});}
+  setPreview(null);setError('Fonte P07 atualizada. Recalcule e importe novamente a energia antes de conciliar.');
+ };
+ const useP07Energy=(candidate:{amountBrl:string;source:string;sourceVersion:string;estimated:boolean})=>{
+  setPreview(null);setError('');
+  if(lines.some(l=>l.category==='energy')){
+   setError('Energia já incluída nesta prévia. Remova a categoria anterior para evitar dupla contagem.');return;
+  }
+  setCategory('energy');setAmount(candidate.amountBrl);setSource(candidate.source);
+  setSourceVersion(candidate.sourceVersion);setSeparate(false);setBasis({});
+  setRationale(candidate.estimated?'Rateio provisório: energia contém estimativas explícitas.':'');
+ };
+ const importMachine=()=>{
+  if(!machine)return;
+  if(lines.some(l=>l.category==='machine')){setError('Remova a linha de máquina anterior antes de importar a estimativa.');return;}
+  setCategory('machine');setAmount(machine.amountBrl);setSource(machine.source);
+  setSourceVersion(machine.sourceVersion);setBasis({});setSeparate(false);
+  setRationale('Estimativa a partir da ficha atual, sem comprovação histórica.');setPreview(null);setError('');
+ };
+ const importHistoricalMachine=()=>{
+  if(!historical?.importable)return;
+  if(lines.some(l=>l.category==='machine')){setError('Remova o custo de máquina anterior antes de importar a origem congelada.');return;}
+  setCategory('machine');setAmount(historical.amountBrl);setSource(historical.source);
+  setSourceVersion(historical.sourceVersion);setBasis({});setSeparate(false);setRationale('Parâmetros históricos; manutenção parametrizada, sem comprovação financeira.');setPreview(null);setError('');
+ };
+ const invalidateLabor=()=>{
+  setLines(v=>v.filter(l=>!isLaborSource(l.sourceVersion)));setPreview(null);
+  if(isLaborSource(sourceVersion)){resetImportedSource();setBasis({});setRationale('');}
+ };
+ const importLabor=(candidate:{amountBrl:string;source:string;sourceVersion:string})=>{
+  if(lines.some(l=>l.category==='labor')){setError('Remova a mão de obra anterior para evitar dupla contagem.');return;}
+  setCategory('labor');setAmount(candidate.amountBrl);setSource(candidate.source);setSourceVersion(candidate.sourceVersion);
+  setBasis({});setSeparate(false);setRationale('Atividades de trabalho humano declaradas; rateio provisório.');setPreview(null);setError('');
+ };
+ const addLine=()=>{
+  setError('');setPreview(null);
+  if(!print||!destinations.length){setError('Selecione uma impressão com peças confirmadas.');return;}
+  const selected=destinations.filter(o=>basis[o.id]&&basis[o.id].trim()!==''&&basis[o.id].trim()!=='0')
+   .map(o=>({outputId:o.id,basis:basis[o.id]}));
+  if(category==='energy'&&lines.some(l=>l.category==='energy')){
+   setError('Energia já consta na prévia: remova a categoria antiga antes de incluir uma nova.');return;
+  }
+  if(category==='labor'&&lines.some(l=>l.category==='labor'&&(isLaborSource(l.sourceVersion)||isLaborSource(sourceVersion)))){
+   setError('Não some a categoria integral de mão de obra a outro lançamento de mão de obra.');return;
+  }
+  if(category==='machine'&&lines.some(l=>l.category==='machine'&&(isMachineSource(l.sourceVersion)||isMachineSource(sourceVersion)))){
+   setError('Não some a estimativa integral da máquina a outro custo de máquina.');return;
+  }
+  if(sourceVersion!=='entrada-local-1'&&lines.some(l=>l.sourceVersion===sourceVersion)){
+   setError('Esta categoria de consumo já está na prévia. Remova a anterior antes de reutilizar.');return;
+  }
+  const next:AllocationLine={id:'categoria-'+(++sequence.current),category,amountBrl:amount,source,
+   sourceVersion,method,rationale,
+   separatelyMeasured:category!=='purge'&&category!=='loss'?false:separate,destinations:selected};
+  try{
+   reconcilePrintAllocation({executionId:print.id,outputs:destinations,lines:[next]});
+   setLines(v=>[...v,next]);setAmount('');setSource('');setRationale('');setSeparate(false);setBasis({});setSourceVersion('entrada-local-1');
+  }catch(e){setError((e as Error).message);}
+ };
+ const reconcile=()=>{
+  setError('');setPreview(null);
+  if(!print||!destinations.length||!lines.length){setError('Selecione uma impressão com saídas confirmadas e inclua categorias de custo.');return;}
+  try{setPreview(preparePrintFinancialDraft({allocationRequest:{executionId:print.id,outputs:destinations,lines},
+   historicalSources:sources?.lines??null,categoriesToReview:reviewCategories.map(c=>c.id),categoryReviews:Object.values(reviews).filter((x):x is CategoryReview=>Boolean(x))}));}
+  catch(e){setError((e as Error).message);}
+ };
+ return <section className="panel materials-form" aria-label="Prévia L4 de rateio" onFocusCapture={onActivate} onClickCapture={onActivate}>
+  <div className="mc-help-heading"><h3>Prévia de rateio L4 — mesa compartilhada</h3><CalculatorHelp label="Prévia de rateio L4">Confira a distribuição dos valores informados. Categorias ausentes e custos desconhecidos ficam pendentes.</CalculatorHelp></div>
+  <p className="mc-print-simulation"><strong>SIMULAÇÃO NÃO SALVA.</strong></p>
+  <div className="product-save-fields">
+   <FieldWithHelp label="Impressão registrada" help="Somente saídas com quantidades já confirmadas aparecem como destinos.">{id=><select id={id} aria-label="Impressão para prévia de rateio" value={printId} onChange={e=>{onActivate();changePrint(e.target.value);}}>
+    <option value="">Selecione</option>{prints.map(p=><option key={p.id} value={p.id}>{p.outputs.map(o=>o.name).join(' + ')} — {p.status}</option>)}
+   </select>}</FieldWithHelp>
+  </div>
+  {print&&<div>
+   <PrintEnergyPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onUseForAllocation={useP07Energy} onInvalidateAllocation={invalidateP07Energy}/>
+   <section className="panel" aria-label="Estimativa de utilização da máquina">
+    <h4>Máquina — origem histórica e estimativa</h4>
+    <button type="button" disabled={machineBusy||!workspaceId} onClick={loadMachineOrigin}>{machineBusy?'Consultando…':'Consultar parâmetros congelados'}</button>
+    {machineError&&<p role="alert">Origem histórica indisponível: {machineError}</p>}
+    {machineOrigin&&!historical&&<p>Origem congelada inexistente, incompleta ou incompatível. Não reconstruir histórico com a ficha atual.</p>}
+    {historical&&<div>
+     <p>Depreciação indicativa: R$ {historical.depreciationBrl} · manutenção parametrizada: R$ {historical.maintenanceBrl}.</p>
+     <p>Total da categoria (arredondado uma vez): R$ {historical.amountBrl}. Os componentes exibidos podem diferir por centavo.</p>
+     <small>Manutenção parametrizada não é despesa comprovada. Não acrescente novamente a mesma manutenção.</small>
+     <button type="button" disabled={!historical.importable} onClick={importHistoricalMachine}>Usar origem congelada no rateio</button>
+    </div>}
+    <p className="footnote">Usa valor de aquisição e vida útil atuais da impressora vinculada, multiplicados pelas horas registradas da impressão. Não substitui custo histórico comprovado.</p>
+    {machine?<><p>Estimativa: R$ {machine.amountBrl} · {machine.source}</p><button type="button" onClick={importMachine}>Usar estimativa da máquina no rateio</button></>:<p>Estimativa indisponível: confira equipamento, valor, vida útil e horas registradas. Nenhum custo presumido.</p>}
+   </section>
+   <PrintLaborPanel key={(workspaceId??'')+':'+print.id} workspaceId={workspaceId} executionId={print.id} onImport={importLabor} onInvalidate={invalidateLabor}/>
+   <PrintReadinessPanel key={print.id} workspaceId={workspaceId} executionId={print.id}/>
+   <PrintExactMaterialDraft workspaceId={workspaceId} executionId={print.id} outputs={destinations} lines={lines}/>
+   <h4>Consumos confirmados vinculados à impressão</h4>
+   {sourcesBusy&&<p role="status">Consultando histórico de bobinas…</p>}
+   {sourcesError&&<p role="alert" className="error">{sourcesError}</p>}
+   {sources&&sources.lines.length===0&&<p>Nenhum consumo físico confirmado disponível no histórico desta impressão.</p>}
+   {sources&&sources.lines.length>0&&<ul aria-label="Fontes de consumo L4">{sources.lines.map(row=><li key={row.consumption_id}>
+    <strong>{row.lot_label||'Bobina sem identificação'}</strong> — {row.cost_status==='known'?'custo registrado':row.cost_status==='estimated'?'custo estimado':'custo desconhecido'}
+    <small>Modelo: {row.model_g} g · purga: {row.purge_g} g · perda: {row.loss_g} g · origem: {row.quantity_basis}</small>
+    {row.unit_cost_snapshot===null?<p>Custo desconhecido: não será considerado zero nem importado.</p>:
+    <div className="product-workspace-buttons">
+     {([
+      ['model',row.model_cost_brl,'Modelo'],
+      ['purge',row.purge_cost_brl,'Purga'],
+      ['loss',row.loss_cost_brl,'Perda']
+     ] as const).map(([kind,value,title])=>value!==null&&value!=='0'&&value!=='0.0000000000'?<button key={kind}
+      type="button" onClick={()=>importCost(row,kind)}>{'Usar '+title.toLowerCase()+' no rateio'}</button>:null)}
+    </div>}
+    <small>Referência: {row.consumption_id}. {row.precision_note} — estimativa de prévia, não fechamento financeiro.</small>
+   </li>)}</ul>}
+   {destinations.length===0?<p>Nenhuma peça boa ou rejeitada foi confirmada nesta impressão; não há destinos conciliáveis.</p>:<>
+    <h4>Adicionar uma categoria de custo explícita</h4>
+    <div className="product-save-fields">
+     <label>Categoria<select aria-label="Categoria de custo L4" value={category} disabled={sourceVersion!=='entrada-local-1'} onChange={e=>{setCategory(e.target.value as AllocationCategory);setPreview(null);}}>
+      {categories.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
+     <FieldWithHelp label="Custo total da categoria (R$)" help="Use ponto decimal; a categoria é fechada em centavos apenas uma vez.">{id=><input id={id} aria-label="Valor da categoria L4" placeholder="Ex.: 1.235" readOnly={sourceVersion!=='entrada-local-1'} value={amount} onChange={e=>setAmount(e.target.value)} />}</FieldWithHelp>
+     <FieldWithHelp label="Fonte do custo" help="Não presuma preço da bobina ou energia. Informe a origem real ou estimada.">{id=><input id={id} aria-label="Fonte do custo L4" value={source} readOnly={sourceVersion!=='entrada-local-1'} onChange={e=>setSource(e.target.value)} placeholder="Ex.: lote e pesagem, tarifa e medidor" />}</FieldWithHelp>
+     <FieldWithHelp label="Critério" help="Direto: atribua base 1 a um destino. Compartilhado: informe pesos positivos em pelo menos dois destinos.">{id=><select id={id} aria-label="Método de rateio L4" value={method} onChange={e=>setMethod(e.target.value as 'direct'|'shared')}>
+      <option value="direct">Atribuição direta (um destino)</option><option value="shared">Compartilhado (base explícita)</option>
+     </select>}</FieldWithHelp>
+     <FieldWithHelp label="Justificativa e unidade da base" help="Na distribuição compartilhada, explique a base e se é medição ou estimativa.">{id=><input id={id} aria-label="Justificativa do rateio L4" value={rationale} onChange={e=>setRationale(e.target.value)} placeholder="Ex.: massa medida em gramas ou tempo atribuível" />}</FieldWithHelp>
+    </div>
+    {sourceVersion!=='entrada-local-1'&&<p className="footnote">Fonte histórica ou evidência P07 selecionada: valor indicativo protegido contra edição. É preciso informar o destino e uma base válida. <button type="button" onClick={resetImportedSource}>Usar entrada manual</button></p>}
+    {(category==='purge'||category==='loss')&&<label><input type="checkbox" checked={separate} disabled={sourceVersion!=='entrada-local-1'} onChange={e=>setSeparate(e.target.checked)} />
+     Esta purga/perda foi medida separadamente e NÃO está incluída no custo do modelo.</label>}
+    <div className="materials-spool-grid">{destinations.map(o=><label key={o.id}>
+     {o.name} ({o.quantity})
+     <input aria-label={'Base de rateio '+o.name} value={basis[o.id]??''}
+      placeholder={method==='direct'?'1 para atribuir aqui':'Peso proporcional positivo'}
+      onChange={e=>setBasis(v=>({...v,[o.id]:e.target.value}))}/>
+    </label>)}</div>
+    <button type="button" onClick={addLine}>+ Incluir categoria na prévia</button>
+    <div className="mc-help-heading"><h4>Revisão das demais categorias de custo</h4><CalculatorHelp label="Revisão das demais categorias de custo">Ausência de lançamento não significa custo zero. Declarações locais exigem confirmação futura e não encerram a impressão.</CalculatorHelp></div>
+    <div className="materials-spool-grid">{reviewCategories.map(c=>{
+     const review=reviews[c.id];
+     const hasCost=lines.some(l=>l.category===c.id);
+     return <div key={c.id}>
+      <label>{c.label}<select aria-label={'Revisão de '+c.label} value={review?.state??'unknown'} onChange={e=>updateReview(c.id,{state:e.target.value as CategoryReview['state']})}>
+       <option value="unknown">{hasCost?'Custo informado na prévia':'Não revisado / desconhecido'}</option>
+       <option value="not_applicable">Não se aplica</option><option value="zero">Zero declarado</option>
+      </select></label>
+      {review&&review.state!=='unknown'&&<>
+       <label>Justificativa<input value={review.reason} onChange={e=>updateReview(c.id,{reason:e.target.value})}/></label>
+       {review.state==='zero'&&<label>Referência da evidência<input value={review.reference??''} onChange={e=>updateReview(c.id,{reference:e.target.value})}/></label>}
+      </>}
+     </div>;
+    })}</div>
+    <h4>Categorias informadas ({lines.length})</h4>
+    {lines.length===0?<p>Nenhuma categoria informada. Não é possível conciliar a mesa sem custos de origem.</p>:<ul>
+     {lines.map(l=><li key={l.id}>{categories.find(c=>c.id===l.category)?.label}: R$ {l.amountBrl} — {l.method==='direct'?'direto':'compartilhado'} — {l.source}
+      <button type="button" aria-label={'Remover categoria '+l.id} onClick={()=>{setLines(v=>v.filter(x=>x.id!==l.id));setPreview(null);}}>Remover</button>
+     </li>)}
+    </ul>}
+   </>}
+  </div>}
+  {error&&<p role="alert" className="error">{error}</p>}
+  {preview&&<div className="panel" role="status" aria-label="Resultado da prévia de rateio">
+   <h4>Prévia conciliada das categorias informadas: {formatCents(preview.allocation.totalCents)}</h4>
+   <p>Esta conciliação vale apenas para as categorias fornecidas. Não confirma custo final de produção.</p>
+   <ul>{preview.allocation.outputTotals.map(o=><li key={o.outputId}>{destinations.find(d=>d.id===o.outputId)?.name}: {formatCents(o.totalCents)}</li>)}</ul>
+   <details>
+    <summary>Detalhar valores por categoria</summary>
+    <dl className="cost-list">{categories.map(({id,label})=>{
+     const sources=preview.allocation.categoryTotals.filter(line=>line.category===id);
+     return sources.length>0&&<div key={id}><dt>{label}</dt>
+      <dd>{formatCents(sources.reduce((sum,line)=>sum+BigInt(line.closedCents),0n).toString())}</dd>
+     </div>;
+    })}</dl>
+   </details>
+   <small>P05/P06: arredondamento por categoria e distribuição dos centavos pelos maiores restos. Sem gravação no banco.</small>
+   <section aria-label="Pendências de fechamento financeiro L4">
+    <h4>Fechamento financeiro: PENDENTE</h4>
+    <p>Fontes históricas associadas: {preview.assignedConsumptionCount} de {preview.expectedConsumptionCount}.
+     A conciliação acima representa apenas as categorias informadas. Nenhum snapshot financeiro foi confirmado.</p>
+    <ul>{preview.issues.map((issue,index)=><li key={index}>{issue.category&&<strong>{categories.find(c=>c.id===issue.category)?.label} · </strong>}{issue.description}{issue.sourceId?' — '+issue.sourceId:''}</li>)}</ul>
+   </section>
+  </div>}
+  {active&&<FormActionDock title="Prévia L4" subtitle="Cálculo local, não registra custo nem movimenta estoque">
+   <button type="button" className="primary-action" disabled={!print||!destinations.length||!lines.length} onClick={reconcile}>Calcular prévia de rateio</button>
+  </FormActionDock>}
+ </section>;
+}
