@@ -1226,3 +1226,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Corrigida uma divergência na interface: cancelamento e redução parcial agora alcançam impressões em rascunho, reservadas, em andamento e parciais. Os estados concluído, falho e cancelado permanecem encerrados. A confirmação e os limites da operação foram mantidos.
 - Nas telas de cadastros revisadas, remoções de insumos ou peças atuam sobre o formulário, e a troca de foto principal não remove o arquivo. A auditoria não encontrou ações de exclusão persistente de produtos, clientes ou fornecedores expostas por essas telas. O dossiê de conciliação apenas consulta dados.
 - Fila remanescente de rastreabilidade: motivo opcional e complemento posterior para registros de Impressões exigem alinhar os contratos das RPCs e o histórico de auditoria. A homologação visual do cancelamento de pedidos continua registrada separadamente.
+
+## 26/11/2026 — Regressão de recuperação e pedido por composição
+
+- Ampliada a regressão existente para recuperar uma revisão histórica de composição em sessão nova, após alternar para impressão direta, e registrar o pedido vinculado ao snapshot histórico. A fixture confirmou 12 conjuntos com custo registrado de R$ 192,00 e valor do pedido de R$ 480,00, tanto na calculadora quanto na ficha do histórico.
+- Passaram seis cenários direcionados em Chromium, com desktop, celular e perfil de iPad Pro 11 emulado. A homologação autenticada em dispositivos reais continua no Preview.

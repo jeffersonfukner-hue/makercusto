@@ -1106,3 +1106,7 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Cruzados backlog, documentação e código. Corrigida disponibilidade de cancelamento e redução parcial para execuções reservadas ou em andamento. O servidor já aceitava ambos os estados. Mantidas a justificativa do contrato atual, a confirmação e a proteção dos dados já confirmados.
 - Build local, 84 testes unitários e 130 cenários Playwright aprovados. Os cenários de Impressões exercitaram cancelamento em andamento, redução em execução reservada e reenvio com a mesma chave. Sem alteração no banco, deploy ou GitHub Actions. Duração total do trabalho não aferida.
+
+### 26/11/2026 — Regressão de composição salva e Pedidos
+
+- Ampliado teste de recuperação de composição histórica para conferir snapshot, método de produção, quantidades e valores do pedido do cálculo até sua ficha. Seis cenários direcionados passaram em Chromium desktop, celular e iPad Pro 11 emulado. Usada API simulada. Sem alterar o aplicativo ou banco, sem deploy ou GitHub Actions. Duração total do trabalho não aferida.

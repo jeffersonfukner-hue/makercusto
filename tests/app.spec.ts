@@ -2423,6 +2423,7 @@ test('recupera revisão antiga e registra pedido vendido no histórico da oficin
 });
 
 test('recupera margem da composição e mantém o preço da peça única independente',async({page})=>{
+ let order:Record<string,unknown>|undefined;
  const workspace='11111111-1111-4111-8111-111111111111';
  const user='22222222-2222-4222-8222-222222222222';
  const product='33333333-3333-4333-8333-333333333333';
@@ -2455,6 +2456,13 @@ test('recupera margem da composição e mantém o preço da peça única indepen
   if(path.endsWith('/mc_cost_snapshots'))return route.fulfill({json:[
    {id:earlier,confirmed_at:old.saved_at,quantity:1,total_cost:16,parameters:{origin:'assembly-revision'}}
   ]});
+  if(path.endsWith('/mc_customer_orders')){
+   if(route.request().method()==='POST'){
+    order=route.request().postDataJSON();
+    return route.fulfill({status:204});
+   }
+   return route.fulfill({json:order?[{...order,created_at:'2026-11-26T15:00:00Z'}]:[]});
+  }
   if(path.endsWith('/mc_get_assembly_snapshot')){
    expect(route.request().postDataJSON().p_snapshot_id).toBe(earlier);
    return route.fulfill({json:old});
@@ -2480,6 +2488,18 @@ test('recupera margem da composição e mantém o preço da peça única indepen
  await expect(picker).toHaveValue('Troféu · revisão carregada');
  await expect(composition.getByRole('spinbutton',{name:'Margem bruta desejada (%)'})).toHaveValue('60');
  await expect(composition.locator('.mc-calculated-sale-price')).toContainText('40,00');
+ await expect(composition.getByLabel('Quantidade do pedido (conjuntos)')).toHaveValue('12');
+ await expect(composition.getByText('Custo do pedido').locator('..')).toContainText('192,00');
+ await expect(composition.getByText('Faturamento do pedido').locator('..')).toContainText('480,00');
+ await composition.getByRole('button',{name:'Registrar pedido'}).click();
+ await expect(composition.getByText('Pedido registrado no histórico da oficina.')).toBeVisible();
+ expect(order).toMatchObject({workspace_id:workspace,snapshot_id:earlier,product_name:'Troféu',
+  production_method:'assembly',quantity:12,pieces_per_plate:1,plate_cost:16,sale_price:40});
+ await composition.getByRole('button',{name:'Ver pedidos'}).click();
+ await page.getByRole('button',{name:/Troféu.*12 conjuntos/}).click();
+ await expect(page.getByText('Custo registrado').locator('..')).toContainText('192,00');
+ await expect(page.getByText('Faturamento do pedido').locator('..')).toContainText('480,00');
+ await expect(page.getByText(/Montagem por partes/)).toBeVisible();
 });
 
 test('Fornecedores: cadastra, pesquisa e edita no menu Oficina',async({page})=>{
