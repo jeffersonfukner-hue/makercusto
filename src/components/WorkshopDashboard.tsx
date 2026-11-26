@@ -68,10 +68,10 @@ async function listPending(workspaceId:string){
  return entries;
 }
 
-function RecordButton({name,detail,state,onClick}:{
- name:string;detail:string;state?:string;onClick:()=>void
+function RecordButton({name,detail,state,featured,onClick}:{
+ name:string;detail:string;state?:string;featured?:boolean;onClick:()=>void
 }){
- return <button type="button" className="dashboard-record" onClick={onClick}>
+ return <button type="button" className="dashboard-record" data-featured={featured||undefined} onClick={onClick}>
   <span className="dashboard-record-copy"><strong>{name}</strong><small>{detail}</small></span>
   {state&&<span className="dashboard-record-state" data-failed={state===printLabels.failed}>{state}</span>}
   <span aria-hidden="true" className="dashboard-record-chevron">›</span>
@@ -82,16 +82,16 @@ export function WorkshopDashboard({tab,workspaceId,onTab,onCalculation,onPrint,o
  return <section className="dashboard-home" aria-label="Painel da oficina">
   {tab==='general'&&<>
    <div className="dashboard-work-grid">
-    <section className="panel dashboard-card" aria-labelledby="dashboard-calculations">
+    <section className="panel dashboard-card dashboard-calculations" aria-labelledby="dashboard-calculations">
      <h2 id="dashboard-calculations">Cálculos recentes</h2>
      <DataBlock workspaceId={workspaceId} load={listLatestProductCalculations}>{calculations=>
       calculations.length===0?<p>Seus cálculos salvos aparecerão aqui.</p>:
-      <ul className="dashboard-record-list">{calculations.slice(0,3).map(saved=><li key={saved.snapshot_id}>
-       <RecordButton name={saved.name} detail={'Salvo em '+formatDate(saved.saved_at)} onClick={()=>onCalculation(saved)}/>
+      <ul className="dashboard-record-list">{calculations.slice(0,3).map((saved,index)=><li key={saved.snapshot_id}>
+       <RecordButton featured={index===0} name={saved.name} detail={'Salvo em '+formatDate(saved.saved_at)} onClick={()=>onCalculation(saved)}/>
       </li>)}</ul>
      }</DataBlock>
     </section>
-    <section className="panel dashboard-card" aria-labelledby="dashboard-current-prints">
+    <section className="panel dashboard-card dashboard-prints" aria-labelledby="dashboard-current-prints">
      <h2 id="dashboard-current-prints">Impressões para acompanhar</h2>
      <DataBlock workspaceId={workspaceId} load={listPrints}>{prints=>{
       const current=prints.filter(print=>printLabels[print.status]).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
@@ -109,8 +109,10 @@ export function WorkshopDashboard({tab,workspaceId,onTab,onCalculation,onPrint,o
    <div className="dashboard-pending-summary">
     <DataBlock workspaceId={workspaceId} load={listPending}>{pending=>
      pending.length===0?<p>Nenhuma pendência de custo ou preço nos cadastros.</p>:
-     <button type="button" className="secondary-action" onClick={()=>onTab('pending')}>
-      Ver pendências · {pending.length} {pending.length===1?'cadastro':'cadastros'}
+     <button type="button" className="dashboard-pending-button" onClick={()=>onTab('pending')}>
+      <span>Ver pendências</span>
+      <span className="dashboard-pending-count">{pending.length} {pending.length===1?'cadastro':'cadastros'}</span>
+      <span aria-hidden="true" className="dashboard-record-chevron">›</span>
      </button>
     }</DataBlock>
    </div>

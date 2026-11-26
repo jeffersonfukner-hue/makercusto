@@ -240,7 +240,6 @@
 .system-shell.is-collapsed .system-sidebar nav>button{justify-content:center;padding:10px}.system-shell.is-collapsed .system-sidebar-top{justify-content:center}
 .system-shell.is-collapsed .system-sidebar-bottom{justify-content:center}
 .dashboard-home{display:grid;gap:20px}
-.dashboard-card h2{font-size:17px}
 @media(max-width:1050px){.system-email{display:none}}
 @media(max-width:760px){
  .system-topbar{height:64px;padding:0 12px;gap:12px}.system-brand{min-width:0}.system-logo{width:35px;height:35px}.system-brand strong{font-size:15px}.system-brand small{font-size:10px}.system-mobile-menu{display:block;margin-left:auto;border:1px solid #42506b;background:#263651;color:white;border-radius:9px;width:40px;height:40px;font-size:22px}
@@ -780,41 +779,92 @@
 
 
 .overview-intro {
- display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 16px;margin-bottom:16px;
+ display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px 20px;margin-bottom:22px;
 }
 .overview-intro .system-section-header {grid-column:1;grid-row:1;margin:0}
-.overview-intro .system-tabs {grid-column:1/-1;grid-row:2;margin:0}
+.overview-intro .system-section-header h1 {
+ margin:0;color:#20242b;font-size:clamp(28px,3.6vw,44px);font-weight:750;letter-spacing:-.045em;
+}
+.mc-theme .overview-intro .system-tabs {
+ grid-column:1/-1;grid-row:2;justify-self:start;width:max-content;max-width:100%;margin:0;
+ border:1px solid #d8dce1;border-radius:11px;padding:3px;gap:3px;background:#e9ecf0;
+}
+.mc-theme .overview-intro .system-tabs button {
+ min-height:38px;margin:0;padding:6px 14px;border:0;border-radius:7px;color:#454c57;
+}
+.mc-theme .overview-intro .system-tabs .system-tab-active {
+ background:white;color:#20242b;box-shadow:0 1px 3px #22283126;
+}
 .overview-calculator-action {
- grid-column:2;grid-row:1;min-height:44px;padding:8px 15px;
- border:1px solid var(--mc-blue);border-radius:8px;background:var(--mc-blue);color:white;font-weight:700;
+ grid-column:2;grid-row:1;min-height:44px;padding:9px 18px;margin:0;
+ border:1px solid #313840;border-radius:9px;background:#313840;color:white;font-weight:700;
 }
-.dashboard-work-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
-.dashboard-card {min-width:0}
-.dashboard-card h2 {margin:0 0 10px}
-.dashboard-card p,.dashboard-pending-summary p {margin:0;color:var(--mc-muted);font-size:13px}
-.dashboard-card > .secondary-action {margin-top:10px}
+.overview-calculator-action:hover {background:#1e2329}
+.dashboard-work-grid {display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:stretch}
+.mc-theme .dashboard-card {
+ display:flex;min-width:0;flex-direction:column;gap:12px;margin:0;padding:20px;
+ border:1px solid #d6dbe1;border-radius:16px;background:#fff;
+}
+.mc-theme .dashboard-card.dashboard-calculations {
+ border-color:#343a43;background:#2b3038;color:#f8fafc;
+}
+.mc-theme .dashboard-card h2 {margin:0;font-size:clamp(17px,1.8vw,23px);letter-spacing:-.025em}
+.mc-theme .dashboard-card p,.dashboard-pending-summary p {margin:0;color:#555e6b;font-size:13px}
+.mc-theme .dashboard-calculations p {color:#e0e4eb}
+.dashboard-card > .secondary-action {align-self:flex-start;margin:0}
+.dashboard-prints .dashboard-record-list + .secondary-action {margin-top:auto}
 .dashboard-data-error {display:grid;gap:8px;justify-items:start}
-.dashboard-record-list {display:grid;gap:6px;list-style:none;margin:0;padding:0}
+.dashboard-record-list {list-style:none;margin:0;padding:0}
 .dashboard-record-list li {min-width:0}
+.dashboard-record-list li+li {border-top:1px solid #e1e4e9}
+.dashboard-calculations .dashboard-record-list li+li {border-color:#4b525d}
+.dashboard-calculations .dashboard-record-list li:first-child+li {border-top:0;margin-top:5px}
 .mc-theme .dashboard-record {
- display:flex;align-items:center;gap:8px;min-height:46px;width:100%;text-align:left;
- border:1px solid var(--mc-border);border-radius:8px;padding:9px 10px;
- background:var(--mc-surface);color:var(--mc-ink);
+ display:flex;align-items:center;gap:9px;min-height:50px;width:100%;margin:0;text-align:left;
+ border:1px solid transparent;border-radius:7px;padding:10px 6px;background:transparent;color:inherit;
 }
-.mc-theme .dashboard-record:hover {border-color:var(--mc-blue)}
+.mc-theme .dashboard-record:hover {background:#eef0f3}
+.mc-theme .dashboard-calculations .dashboard-record:hover {background:#424955}
+.mc-theme .dashboard-record[data-featured="true"] {
+ min-height:76px;padding:13px;border-color:#626b79;border-radius:11px;background:#3d4550;
+}
+.mc-theme .dashboard-record[data-featured="true"]:hover {background:#4a5461}
 .dashboard-record-copy {display:grid;gap:3px;min-width:0;flex:1;overflow-wrap:anywhere}
-.dashboard-record-copy small,.dashboard-record-state {color:var(--mc-muted);font-size:12px}
-.dashboard-record-state {text-align:right;max-width:43%}
-.dashboard-record-state[data-failed="true"] {color:#93451f}
-.dashboard-record-chevron {color:var(--mc-muted);font-size:18px}
+.dashboard-record[data-featured="true"] strong {font-size:clamp(17px,2.1vw,25px);line-height:1.15}
+.dashboard-record-copy small {color:#545e6d;font-size:12px}
+.dashboard-calculations .dashboard-record-copy small {color:#dee4ed}
+.dashboard-record-state {
+ max-width:43%;padding:3px 7px;border-radius:6px;background:#e7edf2;color:#394653;
+ font-size:11px;font-weight:670;text-align:center;
+}
+.dashboard-record-state[data-failed="true"] {background:#fae9e0;color:#8b3a24}
+.dashboard-record-chevron {flex:none;color:#586170;font-size:19px;line-height:1}
+.dashboard-calculations .dashboard-record-chevron {color:#e3e8ef}
+.dashboard-record[data-featured="true"] .dashboard-record-chevron {
+ display:grid;place-items:center;width:34px;height:34px;border:1px solid #707985;border-radius:8px;
+}
+.dashboard-pending-summary {
+ padding:10px 15px;border:1px solid #d8dce1;border-radius:11px;background:#e9ecf0;
+}
+.mc-theme main .dashboard-pending-button {
+ display:flex;align-items:center;gap:10px;width:100%;min-height:40px;margin:0;padding:0;
+ border:0;background:transparent;color:#252b34;text-align:left;
+}
+.mc-theme main .dashboard-pending-button:hover {background:#dee3e9}
+.dashboard-pending-count {margin-left:auto;color:#4c5664;font-weight:550}
+.overview-intro button:focus-visible,.dashboard-work-grid button:focus-visible,.dashboard-pending-button:focus-visible {
+ outline:2px solid #326cd1;outline-offset:2px;
+}
+.dashboard-calculations button:focus-visible {outline-color:#c0dbff}
 .materials-spool-card[tabindex="-1"] {scroll-margin:96px 0 100px}
 .materials-spool-card[tabindex="-1"]:focus {outline:2px solid var(--mc-blue);outline-offset:-2px}
 .print-confirmed-metrics {margin-bottom:12px}
 @media(max-width:760px) {
  .overview-intro {grid-template-columns:minmax(0,1fr)}
  .overview-calculator-action {grid-column:1;grid-row:3;width:100%}
- .overview-intro .system-tabs {gap:3px}
- .overview-intro .system-tabs button {padding-inline:10px}
+ .mc-theme .overview-intro .system-tabs {justify-self:stretch;width:auto}
+ .mc-theme .overview-intro .system-tabs button {flex:1;padding-inline:5px}
+ .mc-theme .dashboard-card {padding:15px}
  .dashboard-work-grid {grid-template-columns:minmax(0,1fr)}
 }
 
@@ -1038,12 +1088,12 @@
  --mc-control-radius:6px;
  --mc-metric-bg:#eef3fa;
 }
-.mc-theme :is(main,.modal-window) button:not(:where(.mc-calculator button,.mc-order-row,.dashboard-record,.form-action-dock button,.mc-help button,.modal-close,.smart-suggestions button,.row-actions button)) {
+.mc-theme :is(main,.modal-window) button:not(:where(.mc-calculator button,.mc-order-row,.dashboard-record,.dashboard-pending-button,.form-action-dock button,.mc-help button,.modal-close,.smart-suggestions button,.row-actions button)) {
  min-height:36px;padding:6px 10px;border:1px solid var(--mc-action-border);
  border-radius:var(--mc-control-radius);background:var(--mc-action-bg);color:var(--mc-action-ink);
  font:650 12px/1.25 Inter,ui-sans-serif,system-ui,sans-serif;
 }
-.mc-theme :is(main,.modal-window) button:not(:where(.primary-action,.mc-calculator button,.mc-order-row,.dashboard-record,.form-action-dock button,.mc-help button,.modal-close,.smart-suggestions button,.row-actions button)):not(:disabled):hover {
+.mc-theme :is(main,.modal-window) button:not(:where(.primary-action,.mc-calculator button,.mc-order-row,.dashboard-record,.dashboard-pending-button,.form-action-dock button,.mc-help button,.modal-close,.smart-suggestions button,.row-actions button)):not(:disabled):hover {
  background:var(--mc-action-hover);
 }
 .mc-theme :is(main,.modal-window) button.primary-action {

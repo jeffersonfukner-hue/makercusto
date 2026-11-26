@@ -1209,3 +1209,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - A Visão geral mostra até três cálculos salvos recentes, ordenados pela data do snapshot, e até três impressões em execução, com confirmação parcial ou com falha. Os cálculos reaproveitam a recuperação existente e a seleção de uma impressão leva à sua execução. Atividades e Pendências abrem a ficha correspondente. Cada consulta distingue lista vazia, carregamento e falha, com opção de tentar novamente.
 - As peças confirmadas estão em Impressões. O histórico comercial concentra planejados, vendidos e valor vendido entre os últimos 20 pedidos, excluindo cancelados dos totais. O cartão de custo consolidado foi removido enquanto não há uma apuração por período com cobertura definida.
 - Build local, 82 testes unitários e 130 cenários Playwright em desktop e celular emulados passaram. A regressão da Visão geral cobriu 320, 390, 768 e 1280 px, recuperação de falha, oficina vazia e abertura de registros. Próxima etapa é homologação visual autenticada no Preview manual conforme BUILD-MANUAL-01.
+
+### Revisão visual da Visão geral
+
+- A revisão visual usa grafite para Cálculos recentes, com destaque para o último cálculo salvo, e uma superfície clara para Impressões, com etiquetas de estado. A seção recebeu título maior, abas segmentadas e uma faixa com o total de cadastros pendentes. A ação Abrir calculadora ocupa toda a largura no celular.
+- Conferência visual local em Chromium com oficina simulada. A homologação visual com a oficina do proprietário permanece no Preview manual deste mesmo lote.

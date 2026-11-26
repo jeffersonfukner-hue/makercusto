@@ -1091,3 +1091,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Implementados entrada pela Calculadora, retomada de cálculos recentes, lista de impressões para acompanhar com foco na execução e abertura de fichas a partir de Atividades e Pendências. Indicadores de venda e peças confirmadas foram movidos para seus módulos.
 - Build local, 82 unitários e 130 cenários Playwright passaram. O fluxo principal foi verificado em desktop e celular, incluindo 320 px, falha de consulta com nova tentativa, oficina vazia e acesso ao registro de origem. Sem GitHub Actions, merge, deploy ou migração. Duração total do trabalho não aferida.
+
+### 26/11/2026 — Revisão visual da Visão geral
+
+- Aplicados painel grafite com o cálculo mais recente em destaque, painel claro para impressões, abas segmentadas e faixa para pendências. Conferidas as versões renderizadas de desktop e celular com dados simulados. Duração do trabalho não aferida.
+- Build local, 82 testes unitários e 130 cenários Playwright da suíte passaram. Duas execuções locais adicionais confirmaram o destaque do cálculo mais recente e registraram a tela renderizada. Sem deploy ou GitHub Actions.
