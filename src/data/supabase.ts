@@ -133,14 +133,26 @@ export type PrintRecord={id:string;status:'draft'|'partial'|'reserved'|'running'
 export const listPrints=(workspaceId:string)=>api<PrintRecord[]>('rpc/mc_list_prints','POST',{p_workspace_id:workspaceId});
 
 const printAuditActions=['cancel_print','reduce_print_plan','swap_reserved_lot'] as const;
+export type PrintAuditNote={reason:string;added_by:string;added_at:string};
 export type PrintAuditEvent={
- id:string;action:typeof printAuditActions[number];actor_id:string|null;reason:string|null;occurred_at:string;
+ id:string;action:typeof printAuditActions[number];actor_id:string|null;reason:string|null;occurred_at:string;note?:PrintAuditNote|null;
 };
 export const printAuditPageSize=20;
 export const listPrintAudit=(workspaceId:string,printId:string,offset:number)=>
- api<PrintAuditEvent[]>('mc_audit_events?select=id,action,actor_id,reason,occurred_at&workspace_id=eq.'+
+ api<PrintAuditEvent[]>('mc_audit_events?select=id,action,actor_id,reason,occurred_at,note:mc_print_audit_notes(reason,added_by,added_at)&workspace_id=eq.'+
   encodeURIComponent(workspaceId)+'&entity=eq.production&entity_id=eq.'+encodeURIComponent(printId)+
   '&action=in.('+printAuditActions.join(',')+')&order=occurred_at.desc,id.desc&limit='+(printAuditPageSize+1)+'&offset='+offset);
+
+export async function addPrintAuditReason(workspaceId:string,eventId:string,reason:string){
+ const endpoint='mc_print_audit_notes?select=reason,added_by,added_at';
+ const rows=await api<PrintAuditNote[]>(endpoint+'&on_conflict=audit_event_id','POST',
+  {workspace_id:workspaceId,audit_event_id:eventId,reason},'resolution=ignore-duplicates,return=representation');
+ if(rows?.[0])return rows[0];
+ const [existing]=await api<PrintAuditNote[]>(endpoint+'&workspace_id=eq.'+encodeURIComponent(workspaceId)+
+  '&audit_event_id=eq.'+encodeURIComponent(eventId));
+ if(!existing)throw new Error('O motivo não está disponível.');
+ return existing;
+}
 
 /** Fontes históricas de consumo: read-only, custo estimado ou ausente não vira custo confirmado. */
 export type PrintConsumptionSource={
@@ -223,14 +235,14 @@ export const setPrintReservationDue=(workspaceId:string,reservationId:string,due
  api<string>('rpc/mc_set_print_reservation_due','POST',{
  p_workspace_id:workspaceId,p_reservation_id:reservationId,p_due_at:dueAt
 });
-export const cancelPrint=(workspaceId:string,productionId:string,requestKey:string,reason:string)=>
+export const cancelPrint=(workspaceId:string,productionId:string,requestKey:string,reason:string|null)=>
  api<string>('rpc/mc_cancel_print','POST',{
  p_workspace_id:workspaceId,p_production_id:productionId,p_request_key:requestKey,p_reason:reason
 });
 
 export const reducePrintPlan=(workspaceId:string,draft:{
  productionId:string;requestKey:string;outputChanges:{output_id:string;new_planned:number}[];
- reservationReleases:{reservation_id:string;release_g:number}[];reason:string
+ reservationReleases:{reservation_id:string;release_g:number}[];reason:string|null
 })=>api<string>('rpc/mc_reduce_print_plan','POST',{
  p_workspace_id:workspaceId,p_production_id:draft.productionId,
  p_request_key:draft.requestKey,p_output_changes:draft.outputChanges,
@@ -239,7 +251,7 @@ export const reducePrintPlan=(workspaceId:string,draft:{
 
 export const swapPrintReservedLot=(workspaceId:string,draft:{
  productionId:string;oldReservationId:string;newLotId:string;
- releaseGrams:number;newReserveGrams:number;requestKey:string;reason:string
+ releaseGrams:number;newReserveGrams:number;requestKey:string;reason:string|null
 })=>api<string>('rpc/mc_swap_print_reserved_lot','POST',{
  p_workspace_id:workspaceId,p_production_id:draft.productionId,
  p_old_reservation_id:draft.oldReservationId,p_new_lot_id:draft.newLotId,

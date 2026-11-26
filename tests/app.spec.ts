@@ -1217,7 +1217,7 @@ test('Reserva P01: disponibilidade desconta reservas, valida saldo e reenvia a m
 });
 
 
-test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificativa e preserva chave no retry',async ({page})=>{
+test('P01-A/B: prazo vencido não libera reserva; cancelamento aceita motivo opcional e preserva chave no retry',async ({page})=>{
  const user='22222222-2222-4222-8222-222222222222',ws='11111111-1111-4111-8111-111111111111';
  const production='66666666-6666-4666-8666-666666666666',lot='77777777-7777-4777-8777-777777777777';
  const reservation='88888888-8888-4888-8888-888888888888',output='55555555-5555-4555-8555-555555555555';
@@ -1259,10 +1259,17 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
    if(auditOffsets.length===1)return send({message:'Histórico indisponível'},503);
    const records=Array.from({length:offset==='0'?21:1},(_,i)=>({
     id:offset+'-'+i,action:offset==='0'?'cancel_print':'swap_reserved_lot',actor_id:user,
-    reason:offset==='0'?'Cancelada após produção parcial':'Troca de lote documentada',
+    reason:offset==='0'?(i===0?null:'Cancelada após produção parcial'):'Troca de lote documentada',
     occurred_at:'2026-11-26T15:30:00Z'
    }));
    return send(records);
+  }
+  if(u.includes('/mc_print_audit_notes?')){
+   expect(route.request().method()).toBe('POST');
+   expect(route.request().postDataJSON()).toEqual({
+    workspace_id:ws,audit_event_id:'0-0',reason:'Cliente confirmou que desistiu'
+   });
+   return send([{reason:'Cliente confirmou que desistiu',added_by:user,added_at:'2026-11-26T15:40:00Z'}]);
   }
   if(u.includes('rpc/mc_cancel_print')){
    cancelAttempts.push(route.request().postDataJSON() as Record<string,unknown>);
@@ -1288,15 +1295,16 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  await page.getByRole('button',{name:'Cancelar impressão Hélice'}).click();
  await expect(page.getByRole('group',{name:'Ações de Cancelar impressão'})).toBeVisible();
  await expect(page.getByRole('button',{name:'Registrar reserva sem baixa'})).toHaveCount(0);
+ await page.getByRole('textbox',{name:'Justificativa do cancelamento'}).fill('curto');
  await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
  await expect(page.getByRole('alert').last()).toContainText('10 a 1000 caracteres');
  expect(cancelAttempts).toHaveLength(0);
- await page.getByRole('textbox',{name:'Justificativa do cancelamento'}).fill('Pedido cancelado após produção parcial');
+ await page.getByRole('textbox',{name:'Justificativa do cancelamento'}).fill('');
  await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
  await expect(page.getByRole('dialog')).toContainText('reservas não consumidas');
  await page.getByRole('dialog').getByRole('button',{name:'Cancelar',exact:true}).click();
  expect(cancelAttempts).toHaveLength(0);
- await expect(page.getByRole('textbox',{name:'Justificativa do cancelamento'})).toHaveValue('Pedido cancelado após produção parcial');
+ await expect(page.getByRole('textbox',{name:'Justificativa do cancelamento'})).toHaveValue('');
  await page.getByRole('button',{name:'Confirmar cancelamento e liberar reservas'}).click();
  await page.getByRole('dialog').getByRole('button',{name:'Cancelar impressão e liberar reservas',exact:true}).click();
  await expect(page.getByText('Aguardando resposta do servidor…')).toBeVisible();
@@ -1309,7 +1317,7 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  await expect(page.getByText('Impressão cancelada. Reservas não utilizadas liberadas; consumos e peças anteriores preservados.')).toBeVisible();
  expect(cancelAttempts).toHaveLength(2);
  expect(cancelAttempts[0].p_request_key).toBe(cancelAttempts[1].p_request_key);
- expect(cancelAttempts[0].p_reason).toBe('Pedido cancelado após produção parcial');
+ expect(cancelAttempts[0].p_reason).toBeNull();
  expect(cancelAttempts[0].p_production_id).toBe(production);
  expect(auditOffsets).toEqual([]);
  const audit=page.locator('article').filter({hasText:'Hélice: planejadas'}).locator('details.mc-print-audit');
@@ -1319,6 +1327,14 @@ test('P01-A/B: prazo vencido não libera reserva; cancelamento exige justificati
  await expect(audit.getByText('Cancelamento da impressão',{exact:true})).toHaveCount(20);
  await expect(audit.getByText('Usuário '+user).first()).toBeVisible();
  await expect(audit.locator('time').first()).toHaveAttribute('datetime','2026-11-26T15:30:00Z');
+ const cancellation=audit.getByRole('listitem').first();
+ await cancellation.getByRole('button',{name:'Adicionar motivo'}).click();
+ await cancellation.getByRole('textbox',{name:'Motivo da ação'}).fill('Cliente confirmou que desistiu');
+ await cancellation.getByRole('button',{name:'Salvar motivo'}).click();
+ await expect(cancellation.getByText('Cliente confirmou que desistiu')).toBeVisible();
+ await expect(cancellation.getByText(/Motivo acrescentado em/)).toContainText(user);
+ await expect(cancellation.getByRole('button',{name:'Adicionar motivo'})).toHaveCount(0);
+
  await audit.getByRole('button',{name:'Próxima'}).click();
  await expect(audit.getByText('Troca de lote documentada')).toBeVisible();
  expect(auditOffsets).toEqual(['0','0','20']);

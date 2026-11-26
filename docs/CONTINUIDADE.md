@@ -1236,3 +1236,9 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - As fichas de execução têm a seção recolhível Histórico da impressão. A leitura carrega sob demanda cancelamentos, reduções parciais e trocas de bobina, com data, ID do usuário e motivo. A consulta pagina em blocos de 20 eventos e permite tentar novamente em caso de falha.
 - O frontend usa a política de leitura por oficina da tabela de auditoria existente e seleciona somente os campos da ficha. Nenhuma migração ou rotina de gravação foi alterada. A mudança de contrato para motivo opcional e seu complemento posterior continua como próximo lote de auditoria.
+
+## 26/11/2026 — Motivo opcional no histórico de Impressões
+
+- Cancelamento, redução parcial e troca de bobina aceitam motivo em branco. Se preenchido, o motivo continua limitado a 10 a 1000 caracteres. As confirmações e a idempotência existente foram mantidas.
+- Um proprietário ou gerente pode acrescentar um motivo no histórico quando o evento original ficou sem motivo. O complemento tem autoria e data próprias. A regra de oficina e o limite de um complemento por evento são verificados no banco. Reenvio preserva o primeiro texto.
+- A migração `20261126223000_optional_print_audit_reasons.sql` foi preparada na branch. Este frontend consulta a relação criada pela migração. Para homologar o lote no Preview, é necessário aplicar primeiro a migração no Supabase de teste após autorização específica.

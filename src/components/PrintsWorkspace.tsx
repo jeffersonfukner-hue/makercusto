@@ -13,6 +13,10 @@ const newKey=()=>crypto.randomUUID();
 const gramsFormat=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3});
 const isOpenPrint=({status}:PrintRecord)=>
  status==='draft'||status==='reserved'||status==='running'||status==='partial';
+const validPrintReason=(reason:string)=>{
+ const length=reason.trim().length;
+ return length===0||(length>=10&&length<=1000);
+};
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
 export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|null;focusPrintId?:string}){
  const focusedPrint=useRef<HTMLElement>(null);
@@ -136,8 +140,8 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
   if(!workspaceId||!target||!isOpenPrint(target)){
    setError('Selecione uma impressão aberta para cancelar.');return;
   }
-  if(cancelReason.trim().length<10||cancelReason.trim().length>1000){
-   setError('Informe justificativa de cancelamento com 10 a 1000 caracteres.');return;
+  if(!validPrintReason(cancelReason)){
+   setError('Motivo, se informado, deve ter de 10 a 1000 caracteres.');return;
   }
   if(!confirmed){
    setError('');
@@ -147,7 +151,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
   }
   setBusy(true);setError('');setMessage('');
   try{
-   await cancelPrint(workspaceId,cancelTarget,cancelKey.current,cancelReason.trim());
+   await cancelPrint(workspaceId,cancelTarget,cancelKey.current,cancelReason.trim()||null);
    cancelKey.current=newKey();setCancelTarget('');setCancelReason('');
    setMessage('Impressão cancelada. Reservas não utilizadas liberadas; consumos e peças anteriores preservados.');
    setReload(n=>n+1);
@@ -176,8 +180,8 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
     release>Number(reservation.remaining)))||(!isReleasing&&reduceGrams.trim()!=='')){
    setError('Para liberar uma reserva, selecione a bobina e informe gramas válidos, até o saldo reservado, com três casas decimais.');return;
   }
-  if(reduceReason.trim().length<10||reduceReason.trim().length>1000){
-   setError('Informe justificativa de 10 a 1000 caracteres.');return;
+  if(!validPrintReason(reduceReason)){
+   setError('Motivo, se informado, deve ter de 10 a 1000 caracteres.');return;
   }
   if(!confirmed){
    setError('');
@@ -190,7 +194,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
    await reducePrintPlan(workspaceId,{productionId:reduceTarget,requestKey:reduceKey.current,
     outputChanges:[{output_id:reduceOutput,new_planned:newPlanned}],
     reservationReleases:isReleasing?[{reservation_id:reduceReservation,release_g:release}]:[],
-    reason:reduceReason.trim()});
+    reason:reduceReason.trim()||null});
    reduceKey.current=newKey();setReduceTarget('');setReduceOutput('');setReducePlanned('');
    setReduceReservation('');setReduceGrams('');setReduceReason('');
    setMessage('Planejamento parcialmente reduzido. Peças, consumo e tempo já confirmados preservados; apenas a reserva informada foi liberada.');
@@ -215,8 +219,8 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
   if(held>available+0.000001){
    setError('A bobina substituta não tem saldo disponível após outras reservas.');return;
   }
-  if(swapReason.trim().length<10||swapReason.trim().length>1000){
-   setError('Informe justificativa da troca de 10 a 1000 caracteres.');return;
+  if(!validPrintReason(swapReason)){
+   setError('Motivo, se informado, deve ter de 10 a 1000 caracteres.');return;
   }
   if(!confirmed){
    setError('');
@@ -228,7 +232,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
   try{
    await swapPrintReservedLot(workspaceId,{productionId:old.production_id,oldReservationId:old.id,
     newLotId:swapNewLot,releaseGrams:release,newReserveGrams:held,
-    requestKey:swapKey.current,reason:swapReason.trim()});
+    requestKey:swapKey.current,reason:swapReason.trim()||null});
    swapKey.current=newKey();setSwapReservation('');setSwapNewLot('');setSwapRelease('');
    setSwapReserve('');setSwapReason('');
    setMessage('Troca de reserva registrada. Nenhum filamento foi baixado nem houve alteração dos custos históricos.');
@@ -575,7 +579,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
      value={swapRelease} onChange={e=>{setSwapRelease(e.target.value);swapKey.current=newKey();}}/>}</FieldWithHelp>
     <FieldWithHelp label="Gramas a reservar na nova bobina" help="Quantidade explicitamente informada; não presumimos igualdade nem conversão entre bobinas.">{id=><input id={id} aria-label="Gramas a reservar na nova bobina" type="number" step=".001" min=".001"
      value={swapReserve} onChange={e=>{setSwapReserve(e.target.value);swapKey.current=newKey();}}/>}</FieldWithHelp>
-    <FieldWithHelp label="Motivo da troca" help="Motivo obrigatório, auditado e associado aos dois lotes.">{id=><input id={id} aria-label="Motivo da troca de bobina" value={swapReason} maxLength={1000}
+    <FieldWithHelp label="Motivo da troca (opcional)" help="Se preenchido, inclui de 10 a 1000 caracteres no histórico.">{id=><input id={id} aria-label="Motivo da troca de bobina" value={swapReason} maxLength={1000}
      onChange={e=>{setSwapReason(e.target.value);swapKey.current=newKey();}}/>}</FieldWithHelp>
    </div>
 
@@ -596,7 +600,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
     <FieldWithHelp label="Gramas a liberar da reserva" help="Somente o excedente comprovado. Se houver mais de uma bobina, registre cada redução separadamente.">{id=><input id={id} aria-label="Gramas a liberar da reserva" type="number" min="0" step=".001"
      disabled={!reduceReservation} value={reduceGrams}
      onChange={e=>{setReduceGrams(e.target.value);reduceKey.current=newKey();}}/>}</FieldWithHelp>
-    <FieldWithHelp label="Motivo da redução parcial" help="Justificativa auditada, de 10 a 1000 caracteres.">{id=><input id={id} aria-label="Motivo da redução parcial" value={reduceReason} maxLength={1000}
+    <FieldWithHelp label="Motivo da redução parcial (opcional)" help="Se preenchido, inclui de 10 a 1000 caracteres no histórico.">{id=><input id={id} aria-label="Motivo da redução parcial" value={reduceReason} maxLength={1000}
      onChange={e=>{setReduceReason(e.target.value);reduceKey.current=newKey();}}/>}</FieldWithHelp>
    </div>
 
@@ -606,7 +610,7 @@ export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|n
    <p>O cancelamento encerra a impressão e libera somente reservas ainda não consumidas.
     Peças produzidas, falhas, tempo e material consumido continuam registrados.</p>
    <p>Impressão: {prints.find(p=>p.id===cancelTarget)?.outputs.map(o=>o.name).join(' + ')||'não encontrada'}</p>
-   <FieldWithHelp label="Justificativa do cancelamento" help="Obrigatória, de 10 a 1000 caracteres. Fica registrada na auditoria.">{id=><input id={id} aria-label="Justificativa do cancelamento" maxLength={1000}
+   <FieldWithHelp label="Justificativa do cancelamento (opcional)" help="Se preenchida, inclui de 10 a 1000 caracteres no histórico.">{id=><input id={id} aria-label="Justificativa do cancelamento" maxLength={1000}
     value={cancelReason} onChange={e=>{setCancelReason(e.target.value);cancelKey.current=newKey();}}/>}</FieldWithHelp>
 
 

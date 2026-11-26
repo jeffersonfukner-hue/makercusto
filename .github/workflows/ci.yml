@@ -60,6 +60,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123001000_print_reservation_p01_lifecycle.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123002000_print_reservation_p01_partial_cancel.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123003500_print_reservation_p01_lot_swap.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261126223000_optional_print_audit_reasons.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123005500_gap01_physical_occurrences.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123014500_gap01_investigation_tracking.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261123110500_gap01_inventory_adjustment_proposals.sql
@@ -83,6 +84,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_lifecycle_rollback.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_partial_cancel_rollback.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/p01_lot_swap_rollback.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/optional_print_audit_reasons_rollback.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_occurrence_rollback.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_investigation_rollback.sql
           psql -v ON_ERROR_STOP=1 -f supabase/tests/gap01_inventory_proposal_rollback.sql

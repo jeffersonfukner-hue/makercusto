@@ -1178,3 +1178,5 @@
 }
 .mc-print-audit-events li:last-child {border-bottom:0}
 .mc-print-audit-events time {color:var(--mc-muted);font-size:12px}
+.mc-print-audit-events form label {display:grid;gap:5px}
+.mc-print-audit-events textarea {width:100%;min-width:0;resize:vertical;font:inherit}

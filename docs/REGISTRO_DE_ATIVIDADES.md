@@ -1115,3 +1115,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 
 - Exposta consulta paginada dos eventos já registrados de cancelamento, redução parcial e troca de bobina reservada na ficha da impressão. O painel identifica autoria, data e motivo e permite nova tentativa em caso de falha. Sem escrita no banco. Duração total do trabalho não aferida.
 - Build local, 84 testes unitários e 130 cenários Playwright em desktop e celular passaram. A regressão verifica consulta sob demanda, filtros por oficina e impressão, recuperação de falha, autoria e paginação. A API foi simulada nos testes de navegador. Sem GitHub Actions ou deploy.
+
+### 26/11/2026 — Motivo opcional e complemento em Impressões
+
+- Preparados frontend, migração e teste SQL com rollback. Cancelamento, redução e troca aceitam motivo vazio. O histórico pode receber um complemento com autoria e data próprias. Sem alteração no Supabase remoto, deploy ou GitHub Actions. Duração total não aferida.
+- Build local, 84 unitários e 130 cenários Playwright passaram. PostgreSQL descartável via PGlite executou a migração, três regressões P01 anteriores e o novo teste com rollback, cobrindo motivo vazio nas três operações, reenvio idempotente, preservação do primeiro complemento e bloqueio entre oficinas.
