@@ -1,146 +1,139 @@
-import {useEffect,useState} from 'react';
-import {listProducts,listAssemblies,listPrints,listCustomerOrders,type CustomerOrder,type ProductRecord,type AssemblyRecord,type PrintRecord} from '../data/supabase';
-import type {OverviewTab,SystemSection} from './SystemNavigation';
+import {useEffect,useState,type ReactNode} from 'react';
+import {
+ listAssemblies,listLatestProductCalculations,listPrints,listProducts,
+ type PrintRecord,type SavedCalculation
+} from '../data/supabase';
+import type {OverviewTab} from './SystemNavigation';
 
-type View=SystemSection;
-type Props={tab:OverviewTab;workspaceId:string|null;workspaceName:string;printersCount:number;busy:boolean;onNavigate:(view:View)=>void};
-const printStages:{label:string;statuses:PrintRecord['status'][];color:string}[]=[
- {label:'Rascunhos e reservas',statuses:['draft','reserved'],color:'blue'},
- {label:'Em andamento',statuses:['running','partial'],color:'blue'},
- {label:'Concluídas',statuses:['completed'],color:'green'},
- {label:'Com falha',statuses:['failed'],color:'amber'},
- {label:'Canceladas',statuses:['cancelled'],color:'gray'}
-];
+type ProductTarget={id:string;section:'products'|'assemblies';part?:boolean};
+type Props={
+ tab:OverviewTab;workspaceId:string|null;onTab:(tab:OverviewTab)=>void;
+ onCalculation:(saved:SavedCalculation)=>void;onPrint:(id?:string)=>void;
+ onProduct:(target:ProductTarget)=>void;
+};
+type Query<T>={key:string;state:'ready';data:T}|{key:string;state:'error'};
+const date=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeZone:'America/Sao_Paulo'});
+const formatDate=(iso:string)=>Number.isFinite(Date.parse(iso))?date.format(new Date(iso)):'Data indisponível';
+const printLabels:Partial<Record<PrintRecord['status'],string>>={
+ running:'Em execução',partial:'Confirmação parcial',failed:'Com falha'
+};
 
-type Bar={label:string;value:number;color:string};
-function DashboardBars({bars}: {bars:Bar[]}){
- const max=Math.max(1,...bars.map(bar=>bar.value));
- return <dl className="dashboard-bars">{bars.map(bar=><div key={bar.label}>
-  <dt>{bar.label}</dt><dd>{bar.value.toLocaleString('pt-BR')}</dd>
-  <div className="dashboard-bar-track" aria-hidden="true"><span data-color={bar.color} style={{width:(bar.value/max*100)+'%'}}/></div>
- </div>)}</dl>;
+function useDashboardQuery<T>(workspaceId:string|null,load:(id:string)=>Promise<T>){
+ const [attempt,setAttempt]=useState(0);
+ const [result,setResult]=useState<Query<T>>();
+ const key=workspaceId?workspaceId+'/'+attempt:null;
+ useEffect(()=>{
+  if(!workspaceId||!key)return;
+  let active=true;
+  void load(workspaceId).then(data=>{
+   if(active)setResult({key,state:'ready',data});
+  }).catch(()=>{
+   if(active)setResult({key,state:'error'});
+  });
+  return()=>{active=false;};
+ },[workspaceId,key,load]);
+ return {result:key&&result?.key===key?result:undefined,retry:()=>setAttempt(n=>n+1)};
 }
 
-export function WorkshopDashboard({tab,workspaceId,workspaceName,busy,onNavigate}:Props){
- const [products,setProducts]=useState<ProductRecord[]>([]);
- const [kits,setKits]=useState<AssemblyRecord[]>([]);
- const [loading,setLoading]=useState(false);
- const [error,setError]=useState('');
- const [refresh,setRefresh]=useState(0);
- const [prints,setPrints]=useState<PrintRecord[]|null>(null);
- const [printsLoading,setPrintsLoading]=useState(false);
- const [printsError,setPrintsError]=useState(false);
- const [orders,setOrders]=useState<CustomerOrder[]|null>(null);
- const [ordersLoading,setOrdersLoading]=useState(false);
- const [ordersError,setOrdersError]=useState(false);
- useEffect(()=>{
-  let alive=true;
-  setProducts([]);setKits([]);setError('');
-  if(!workspaceId)return;
-  setLoading(true);
-  void Promise.all([listProducts(workspaceId),listAssemblies(workspaceId)])
-   .then(([p,k])=>{if(alive){setProducts(p);setKits(k);}})
-   .catch(e=>{if(alive)setError('Não foi possível atualizar os indicadores da oficina: '+(e as Error).message);})
-   .finally(()=>{if(alive)setLoading(false);});
-  return()=>{alive=false;};
- },[workspaceId,refresh]);
- useEffect(()=>{
-  let active=true;
-  setPrints(null);setPrintsError(false);setPrintsLoading(false);
-  if(!workspaceId||tab!=='general')return;
-  setPrintsLoading(true);
-  void listPrints(workspaceId)
-   .then(rows=>{if(active)setPrints(rows);})
-   .catch(()=>{if(active)setPrintsError(true);})
-   .finally(()=>{if(active)setPrintsLoading(false);});
-  return()=>{active=false;};
- },[workspaceId,tab,refresh]);
- useEffect(()=>{
-  let active=true;
-  setOrders(null);setOrdersError(false);setOrdersLoading(false);
-  if(!workspaceId||tab!=='general')return;
-  setOrdersLoading(true);
-  void listCustomerOrders(workspaceId,0)
-   .then(rows=>{if(active)setOrders(rows);})
-   .catch(()=>{if(active)setOrdersError(true);})
-   .finally(()=>{if(active)setOrdersLoading(false);});
-  return()=>{active=false;};
- },[workspaceId,tab,refresh]);
- const soldOrders=orders?.filter(order=>order.status==='sold'&&!order.cancellation)??[];
- const plannedOrders=orders?.filter(order=>order.status==='planned'&&!order.cancellation)??[];
- const revenue=soldOrders.reduce((sum,order)=>sum+Number(order.sale_price)*order.quantity,0);
- const brl=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
- const printCounts=printStages.map(({label,statuses,color})=>({
-  label,color,value:prints?.filter(print=>statuses.includes(print.status)).length??0
- }));
- const confirmedPieces=(prints??[]).reduce((counts,print)=>{
-  for(const output of print.outputs){
-   counts.good+=output.good;
-   counts.failed+=output.failed;
-  }
-  return counts;
- },{good:0,failed:0});
- const productCount=products.filter(p=>p.kind==='product').length;
- const recent=products.slice().sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
- const pendingKits=kits.filter(k=>k.total_cost===null || k.sale_price===null);
- const pendingProducts=products.filter(p=>p.kind!=='kit' && p.sale_price===null);
- const date=(iso:string)=>{const n=new Date(iso);return Number.isFinite(n.getTime())?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeZone:'America/Sao_Paulo'}).format(n):'Data indisponível';};
+function DataBlock<T>({workspaceId,load,children}:{
+ workspaceId:string|null;load:(id:string)=>Promise<T>;children:(data:T)=>ReactNode
+}){
+ const {result,retry}=useDashboardQuery(workspaceId,load);
+ if(!workspaceId)return <p>Aguardando acesso à oficina.</p>;
+ if(!result)return <p role="status">Carregando…</p>;
+ if(result.state==='error')return <div className="dashboard-data-error">
+  <p role="alert">Não foi possível carregar estes dados.</p>
+  <button type="button" className="secondary-action" onClick={retry}>Tentar novamente</button>
+ </div>;
+ return children(result.data);
+}
+
+async function listPending(workspaceId:string){
+ const [products,assemblies]=await Promise.all([listProducts(workspaceId),listAssemblies(workspaceId)]);
+ const entries=assemblies.flatMap<{target:ProductTarget;name:string;reasons:string[]}>(assembly=>{
+  const reasons=[
+   assembly.total_cost===null?'Custo não apurado':'',
+   assembly.sale_price===null?'Preço de venda não informado':''
+  ].filter(Boolean);
+  return reasons.length?[{target:{id:assembly.id,section:'assemblies'},name:assembly.name,reasons}]:[];
+ });
+ const assemblyIds=new Set(assemblies.map(assembly=>assembly.id));
+ for(const product of products){
+  if(product.kind==='kit'||assemblyIds.has(product.id)||product.sale_price!==null)continue;
+  entries.push({
+   target:{id:product.id,section:'products',part:product.kind==='component'},
+   name:product.name,reasons:['Preço de venda não informado']
+  });
+ }
+ return entries;
+}
+
+function RecordButton({name,detail,state,onClick}:{
+ name:string;detail:string;state?:string;onClick:()=>void
+}){
+ return <button type="button" className="dashboard-record" onClick={onClick}>
+  <span className="dashboard-record-copy"><strong>{name}</strong><small>{detail}</small></span>
+  {state&&<span className="dashboard-record-state" data-failed={state===printLabels.failed}>{state}</span>}
+  <span aria-hidden="true" className="dashboard-record-chevron">›</span>
+ </button>;
+}
+
+export function WorkshopDashboard({tab,workspaceId,onTab,onCalculation,onPrint,onProduct}:Props){
  return <section className="dashboard-home" aria-label="Painel da oficina">
-  <div className="dashboard-welcome">
-   <div><p className="eyebrow">PAINEL DA OFICINA</p><h1>{workspaceName}</h1>
-    <p>Gerencie seus cadastros e acompanhe o que já está salvo na nuvem.</p></div>
-   <button type="button" onClick={()=>setRefresh(n=>n+1)} disabled={loading||printsLoading||ordersLoading||busy||!workspaceId}>Atualizar dados</button>
-  </div>
-  {busy&&<p role="status" className="footnote">Conectando à sua oficina…</p>}
-  {error&&<p className="error" role="alert">{error}</p>}
-  {tab==='general'&&<><div className="dashboard-metrics" aria-label="Indicadores da oficina">
-   <div className="dashboard-metric"><span>Produtos</span><strong>{loading||busy||error||!workspaceId?'—':productCount}</strong><small>Produtos simples cadastrados</small></div>
-   <div className="dashboard-metric"><span>Impressões</span><strong>{prints?.length??'—'}</strong><small>Execuções disponíveis</small></div>
-   <div className="dashboard-metric"><span>Custos</span><strong>R$ —</strong><small>Aguardando custos finais apurados</small></div>
-   <div className="dashboard-metric"><span>Faturamento</span><strong>{orders?brl.format(revenue):'—'}</strong><small>Vendas entre os últimos 20 pedidos</small></div>
-  </div>
-  <div className="dashboard-columns dashboard-production">
-   <section className="panel dashboard-card" aria-labelledby="dashboard-orders">
-    <h2 id="dashboard-orders">Pedidos por situação</h2>
-    {ordersLoading&&<p role="status">Consultando pedidos…</p>}
-    {ordersError&&<p>Pedidos indisponíveis no momento.</p>}
-    {orders&&<>
-     <DashboardBars bars={[
-      {label:'Planejados',value:plannedOrders.length,color:'blue'},
-      {label:'Vendidos',value:soldOrders.length,color:'green'}
-     ]}/>
-     <p className="footnote">{orders.length===0?'Nenhum pedido registrado.':'Últimos 20 pedidos da oficina.'}</p>
-    </>}
-   </section>
-   <section className="panel dashboard-card" aria-labelledby="dashboard-print-status">
-    <h2 id="dashboard-print-status">Impressões por etapa</h2>
-    {printsLoading&&<p role="status">Consultando impressões…</p>}
-    {printsError&&<p>Impressões indisponíveis no momento.</p>}
-    {prints&&<DashboardBars bars={printCounts}/>}
-    {prints?.length===0&&<p className="footnote">Nenhuma execução registrada.</p>}
-   </section>
-   {prints&&prints.length>0&&<section className="panel dashboard-card" aria-labelledby="dashboard-piece-results">
-    <h2 id="dashboard-piece-results">Peças confirmadas</h2>
-    {confirmedPieces.good+confirmedPieces.failed>0?<DashboardBars bars={[
-     {label:'Boas',value:confirmedPieces.good,color:'green'},
-     {label:'Rejeitadas',value:confirmedPieces.failed,color:'amber'}
-    ]}/>:<p>Nenhuma peça confirmada nas execuções disponíveis.</p>}
-   </section>}
-  </div>
+  {tab==='general'&&<>
+   <div className="dashboard-work-grid">
+    <section className="panel dashboard-card" aria-labelledby="dashboard-calculations">
+     <h2 id="dashboard-calculations">Cálculos recentes</h2>
+     <DataBlock workspaceId={workspaceId} load={listLatestProductCalculations}>{calculations=>
+      calculations.length===0?<p>Seus cálculos salvos aparecerão aqui.</p>:
+      <ul className="dashboard-record-list">{calculations.slice(0,3).map(saved=><li key={saved.snapshot_id}>
+       <RecordButton name={saved.name} detail={'Salvo em '+formatDate(saved.saved_at)} onClick={()=>onCalculation(saved)}/>
+      </li>)}</ul>
+     }</DataBlock>
+    </section>
+    <section className="panel dashboard-card" aria-labelledby="dashboard-current-prints">
+     <h2 id="dashboard-current-prints">Impressões para acompanhar</h2>
+     <DataBlock workspaceId={workspaceId} load={listPrints}>{prints=>{
+      const current=prints.filter(print=>printLabels[print.status]).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+      return <>
+       {current.length===0?<p>Nenhuma impressão em execução, parcialmente confirmada ou com falha.</p>:
+        <ul className="dashboard-record-list">{current.slice(0,3).map(print=><li key={print.id}>
+         <RecordButton name={print.outputs.map(output=>output.name).join(' + ')||'Impressão sem peças'}
+          detail={print.printer_name||'Impressora sem nome'} state={printLabels[print.status]} onClick={()=>onPrint(print.id)}/>
+        </li>)}</ul>}
+       <button type="button" className="secondary-action" onClick={()=>onPrint()}>Ver impressões</button>
+      </>;
+     }}</DataBlock>
+    </section>
+   </div>
+   <div className="dashboard-pending-summary">
+    <DataBlock workspaceId={workspaceId} load={listPending}>{pending=>
+     pending.length===0?<p>Nenhuma pendência de custo ou preço nos cadastros.</p>:
+     <button type="button" className="secondary-action" onClick={()=>onTab('pending')}>
+      Ver pendências · {pending.length} {pending.length===1?'cadastro':'cadastros'}
+     </button>
+    }</DataBlock>
+   </div>
   </>}
-  {tab==='activities'&&<section className="panel dashboard-card dashboard-tab-panel" aria-label="Atividades da oficina">
-   <h2>Cadastros recentes</h2><p>Registros de produtos cadastrados na oficina, ordenados pela data de criação. Esta lista não é um log de alterações ou impressões.</p>
-   {loading?<p role="status">Carregando atividades…</p>:recent.length===0?<p>Nenhum cadastro de produto encontrado.</p>:
-   <ul className="dashboard-activity-list">{recent.slice(0,20).map(p=><li key={p.id}><div><strong>{p.name}</strong><small>{p.kind==='kit'?'Conjunto':p.kind==='component'?'Peça':'Produto'} cadastrado · {date(p.created_at)}</small></div><button type="button" onClick={()=>onNavigate(p.kind==='kit'?'assemblies':'products')}>Consultar</button></li>)}</ul>}
-   {recent.length>20&&<p className="footnote">Exibindo os 20 cadastros mais recentes.</p>}
+  {tab==='activities'&&<section className="panel dashboard-card" aria-labelledby="dashboard-activities">
+   <h2 id="dashboard-activities">Cadastros recentes</h2>
+   <DataBlock workspaceId={workspaceId} load={listProducts}>{products=>
+    products.length===0?<p>Nenhum cadastro de produto encontrado.</p>:
+    <ul className="dashboard-record-list">{products.slice(0,20).map(product=><li key={product.id}>
+     <RecordButton name={product.name} detail={'Cadastro em '+formatDate(product.created_at)} onClick={()=>onProduct({
+      id:product.id,section:product.kind==='kit'?'assemblies':'products',part:product.kind==='component'
+     })}/>
+    </li>)}</ul>
+   }</DataBlock>
   </section>}
-  {tab==='pending'&&<section className="panel dashboard-card dashboard-tab-panel" aria-label="Pendências da oficina">
-   <h2>Informações a completar</h2><p>Dados incompletos identificados nos cadastros. Não representam tarefas com prazo nem ordens de produção.</p>
-   {loading?<p role="status">Carregando pendências…</p>:pendingKits.length===0&&pendingProducts.length===0?<p>Não há pendências de preço ou custo identificadas nos cadastros consultados.</p>:
-   <ul className="dashboard-activity-list">
-    {pendingKits.map(kit=><li key={kit.id}><div><strong>{kit.name}</strong><small>{[kit.total_cost===null?'Custo não apurado':null,kit.sale_price===null?'Preço de venda não informado':null].filter(Boolean).join(' · ')}</small></div><button type="button" onClick={()=>onNavigate('assemblies')}>Abrir conjunto</button></li>)}
-    {pendingProducts.map(p=><li key={p.id}><div><strong>{p.name}</strong><small>Preço de venda não informado</small></div><button type="button" onClick={()=>onNavigate('products')}>Ver produto</button></li>)}
-   </ul>}
+  {tab==='pending'&&<section className="panel dashboard-card" aria-labelledby="dashboard-pending">
+   <h2 id="dashboard-pending">Informações a completar</h2>
+   <DataBlock workspaceId={workspaceId} load={listPending}>{pending=>
+    pending.length===0?<p>Nenhuma pendência de custo ou preço nos cadastros.</p>:
+    <ul className="dashboard-record-list">{pending.map(entry=><li key={entry.target.id}>
+     <RecordButton name={entry.name} detail={entry.reasons.join(' · ')} onClick={()=>onProduct(entry.target)}/>
+    </li>)}</ul>
+   }</DataBlock>
   </section>}
  </section>;
 }

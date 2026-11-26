@@ -30,8 +30,6 @@ const groups=[
  {label:'Oficina',sections:['workshop','printers','materials','suppliers']},
  {label:'Recursos',sections:['library','tips']}
 ] as const;
-const overviewShortcutSections=['calculator','orders','library','tips'] as const;
-const overviewShortcuts=overviewShortcutSections.map(section=>menu.find(item=>item.section===section)!);
 
 export function SystemNavigation({authenticated,workspaceName,email,section,productTab,onProductTab,overviewTab,onOverviewTab,onNavigate,onLogout,children}:Props){
  const [open,setOpen]=useState(false);
@@ -96,14 +94,10 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
   </div>
   <div className="system-frame">
    <div className="system-content">
+    <div className={section==='overview'?'overview-intro':undefined}>
     <div className="system-section-header">
      <div>{section!=='calculator'&&<p className="system-breadcrumb">MakerCusto / {section==='overview'?'Visão geral':section==='materials'?'Materiais':section==='prints'?'Impressões':title}</p>}<h1>{title}</h1>
-      {section!=='calculator'&&<p>{section==='overview'?'Cadastros, indicadores e próximos passos.':section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p>}</div>
-     {section==='overview'&&overviewTab==='general'&&<nav className="overview-shortcuts" aria-label="Acesso rápido">
-      {overviewShortcuts.map(item=><button key={item.section} type="button" onClick={()=>navigate(item.section)}>
-       <span aria-hidden="true">{item.symbol}</span>{item.label}
-      </button>)}
-     </nav>}
+      {section!=='calculator'&&section!=='overview'&&<p>{section==='materials'?'Cadastre bobinas reais e consulte o saldo de material.':section==='prints'?'Registre execuções e confirme consumos incrementais.':section==='products'||section==='assemblies'?'Produtos fabricados, peças e conjuntos da sua oficina.':'Área da oficina.'}</p>}</div>
     </div>
     {section!=='calculator'&&<div className="system-tabs" role="navigation" aria-label={'Abas de '+title}>
      {section==='overview'&&([
@@ -122,6 +116,11 @@ export function SystemNavigation({authenticated,workspaceName,email,section,prod
      {section==='prints'&&<button type="button" aria-current="page" className="system-tab-active">Execuções</button>}
      {section==='materials'&&<button type="button" aria-current="page" className="system-tab-active">Bobinas existentes</button>}
     </div>}
+    {section==='overview'&&overviewTab==='general'&&
+     <button type="button" className="primary-action overview-calculator-action" onClick={()=>navigate('calculator')}>
+      Abrir calculadora
+     </button>}
+    </div>
     <div className="system-module-body">{children}</div>
     <footer className="system-footer">MakerCusto · Dados da oficina no Supabase · Ambiente em desenvolvimento</footer>
    </div>

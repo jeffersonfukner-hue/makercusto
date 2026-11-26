@@ -3,6 +3,7 @@ import {useConfirmation} from './ConfirmationDialog';
 import {PrintDurationFields,emptyDuration,printDurationInHours,splitPrintDuration} from './PrintDurationFields';
 import {useEffect,useRef,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
+import {MetricGrid} from './MetricGrid';
 import {PrintAllocationPreview} from './PrintAllocationPreview';
 import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExistingSpools,listPrintReservations,reservePrintLot,setPrintReservationDue,cancelPrint,reducePrintPlan,swapPrintReservedLot,recordPhysicalOccurrence,listPhysicalOccurrences,reviewPhysicalOccurrence,listPhysicalOccurrenceReviews,proposeInventoryAdjustment,listInventoryAdjustmentProposals,getPhysicalOccurrenceDossier,
  type PrintRecord,type ProductRecord,type StoredPrinter,type ExistingSpool,type PrintReservation,type PhysicalConsumptionOccurrence,type PhysicalOccurrenceReview,type InventoryAdjustmentProposal,type PhysicalOccurrenceDossier} from '../data/supabase';
@@ -10,7 +11,8 @@ import {createPrint,confirmPrint,listPrints,listPrinters,listProducts,listExisti
 const newKey=()=>crypto.randomUUID();
 const gramsFormat=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3});
 const valid=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
-export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
+export function PrintsWorkspace({workspaceId,focusPrintId}:{workspaceId:string|null;focusPrintId?:string}){
+ const focusedPrint=useRef<HTMLElement>(null);
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [activePrimaryForm,setActivePrimaryForm]=useState<'new'|'reserve'|'confirm'|'due'|'occurrence'|'review'|'proposal'|'dossier'|'swap'|'reduction'|'cancel'|'allocation'|'other'>('new');
  const [printers,setPrinters]=useState<StoredPrinter[]>([]),[products,setProducts]=useState<ProductRecord[]>([]);
@@ -72,6 +74,12 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
    .finally(()=>{if(live)setLoading(false);});
   return()=>{live=false};
  },[workspaceId,reload]);
+ const targetPrintId=prints.find(print=>print.id===focusPrintId)?.id;
+ useEffect(()=>{if(targetPrintId)focusedPrint.current?.focus();},[targetPrintId]);
+ const confirmedPieces=prints.reduce((totals,print)=>{
+  for(const output of print.outputs){totals.good+=output.good;totals.failed+=output.failed;}
+  return totals;
+ },{good:0,failed:0});
  const addOutput=()=>{
   const p=products.find(x=>x.id===product),n=Number(quantity);
   if(!p||!Number.isInteger(n)||n<1||n>100000){setError('Selecione peça e quantidade inteira positiva.');return;}
@@ -599,7 +607,16 @@ export function PrintsWorkspace({workspaceId}:{workspaceId:string|null}){
   </section>}
   <PrintAllocationPreview workspaceId={workspaceId} prints={prints} printers={printers} active={activePrimaryForm==='allocation'} onActivate={()=>setActivePrimaryForm('allocation')}/>
   <h3>Execuções registradas</h3>
-  {prints.length===0?<p>Nenhuma impressão registrada nesta oficina.</p>:<div className="materials-spool-grid">{prints.map(p=><article className="materials-spool-card" key={p.id}>
+  {prints.length>0&&<section aria-label="Peças confirmadas">
+   <h4>Peças confirmadas</h4>
+   <MetricGrid className="mc-order-financials print-confirmed-metrics" metrics={[
+    {label:'Boas',value:confirmedPieces.good.toLocaleString('pt-BR')},
+    {label:'Rejeitadas',value:confirmedPieces.failed.toLocaleString('pt-BR')}
+   ]}/>
+  </section>}
+  {focusPrintId&&!loading&&!error&&!targetPrintId&&<p>Execução não encontrada nesta oficina.</p>}
+  {prints.length===0?<p>Nenhuma impressão registrada nesta oficina.</p>:<div className="materials-spool-grid">{prints.map(p=><article className="materials-spool-card" key={p.id}
+   ref={p.id===focusPrintId?focusedPrint:undefined} tabIndex={p.id===focusPrintId?-1:undefined}>
    <h4>{p.printer_name||'Impressora sem nome'}</h4><p>Status: {p.status} · {new Date(p.created_at).toLocaleString('pt-BR')}</p>
    <ul>{p.outputs.map(o=><li key={o.id}>{o.name}: planejadas {o.planned}, boas {o.good}, rejeitadas {o.failed}</li>)}</ul>
    <small>Tempo previsto: {formatDuration(p.planned_hours)}. Tempo registrado: {formatDuration(p.actual_hours)}.</small>

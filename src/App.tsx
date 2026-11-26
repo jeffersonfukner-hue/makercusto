@@ -135,9 +135,11 @@ export default function App(){
  const [identityReset,setIdentityReset]=useState(0);
  const [calculatorKind,setCalculatorKind]=useState<'product'|'component'>('product');
  const [calculatorTab,setCalculatorTab]=useState<'calculation'|'composition'|'settings'|'notes'>('calculation');
- const [activeSection,setActiveSection]=useState<SystemSection>('overview');
+ const [activeSection,setActiveSection]=useState<SystemSection>('calculator');
  const [productTab,setProductTab]=useState<ProductTab>('all');
  const [overviewTab,setOverviewTab]=useState<OverviewTab>('general');
+ const [dashboardProductId,setDashboardProductId]=useState<string>();
+ const [dashboardPrintId,setDashboardPrintId]=useState<string>();
  const [cloudBusy,setCloudBusy]=useState(false);
  const profileFromDb=(p:StoredPrinter):PrinterProfile=>({
   id:p.id,name:p.name,printerPrice:p.purchase_price??0,
@@ -147,7 +149,7 @@ export default function App(){
  });
  const loadAccount=async()=>{
   const current=sessionStore.get();setSession(current);
-  if(!current){setWorkspaceId(null);setWorkspaceName('Minha oficina');setActiveSection('overview');setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));return;}
+  if(!current){setWorkspaceId(null);setWorkspaceName('Minha oficina');setActiveSection('calculator');setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));return;}
   setCloudBusy(true);setAccountError('');
   try{
    let ws=await listWorkspaces();
@@ -184,7 +186,7 @@ export default function App(){
   setStored(prev=>[...prev.filter(p=>p.id!==saved.id),saved]);
   setPrinters(prev=>[...prev.filter(p=>p.id!==saved.id),profileFromDb(saved)]);setPrinterId(saved.id);
  };
- const logout=async()=>{await signOut();setActiveSection('overview');setSession(null);setWorkspaceId(null);setRevisionTarget(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));};
+ const logout=async()=>{await signOut();setActiveSection('calculator');setSession(null);setWorkspaceId(null);setRevisionTarget(null);setStored([]);const local=[...seedPrinters(),...readLocalPrinters()];setPrinters(local);setPrinterId(readSelectedPrinter('guest',local));};
  const activePrinter=printers.find(p=>p.id===printerId)??printers[0];
  const addPrinter=()=>setPrinterModal('new');
  const isReferencePrinter=printerId==='example'||printerId.startsWith('reference:');
@@ -415,9 +417,19 @@ export default function App(){
  {confirmationDialog}
  {shareLines&&(!session||activeSection==='calculator')&&<CalculationPrintSummary title={shareTitle||'Resultado do cálculo'} lines={shareLines}/>}
  {!session&&<header className="site-header"><div className="shell brand"><span className="brand-mark" aria-hidden="true">M</span><div><strong>MakerCusto</strong><small>Conheça seu custo. Defina seu preço.</small></div><span className="phase">Prévia de desenvolvimento</span><button type="button" className="account-button" onClick={()=>setAuthMode('login')}>Entrar</button></div></header>}
- <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={section=>{setCompositionSaved('');setActiveSection(section);}} onLogout={()=>void logout()}>
+ <SystemNavigation authenticated={Boolean(session)} workspaceName={workspaceName} email={session?.user.email??'Conta'} section={activeSection} productTab={productTab} onProductTab={setProductTab} overviewTab={overviewTab} onOverviewTab={setOverviewTab} onNavigate={section=>{
+  setCompositionSaved('');setDashboardProductId(undefined);setDashboardPrintId(undefined);setActiveSection(section);
+ }} onLogout={()=>void logout()}>
  <main className={session?"app-main":"shell"}>
-  {session&&activeSection==='overview'&&<WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} workspaceName={workspaceName} printersCount={stored.length} busy={cloudBusy} onNavigate={setActiveSection}/>}
+  {session&&activeSection==='overview'&&<>
+   {accountError&&<p role="alert" className="error">{accountError}</p>}
+   <WorkshopDashboard tab={overviewTab} workspaceId={workspaceId} onTab={setOverviewTab}
+    onCalculation={saved=>{if(applySavedCalculation(saved))setActiveSection('calculator');}}
+    onPrint={id=>{setDashboardPrintId(id);setActiveSection('prints');}}
+    onProduct={({id,section,part})=>{
+     setDashboardProductId(id);setProductTab(part?'parts':'all');setActiveSection(section);
+    }}/>
+  </>}
   {(!session||activeSection==='calculator')&&<>
   <div className="mc-calculator">
   {!session&&<section className="intro"><p className="eyebrow">IMPRESSÃO 3D SEM COMPLICAÇÃO</p><h1>Descubra seu custo. Venda com confiança.</h1><p>Comece com o essencial. Precisa de mais controle? Ative o Avançado.</p></section>}
@@ -679,9 +691,9 @@ export default function App(){
   {session&&activeSection==='library'&&<LibraryWorkspace workspaceId={workspaceId}/>}
   {session&&activeSection==='tips'&&<section className="panel"><h2>Dicas de impressão</h2><p>Conteúdo em desenvolvimento.</p></section>}
   {session&&activeSection==='materials'&&<MaterialsWorkspace workspaceId={workspaceId}/>}
-  {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId}/>}
+  {session&&activeSection==='prints'&&<PrintsWorkspace workspaceId={workspaceId} focusPrintId={dashboardPrintId}/>}
   {session&&activeSection==='assemblies'&&compositionSaved&&<p role="status" className="product-success">{compositionSaved}</p>}
-  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'}
+  {session&&(activeSection==='products'||activeSection==='assemblies')&&<ProductWorkspace workspaceId={workspaceId} initialProductId={dashboardProductId} tab={activeSection==='assemblies'?'assemblies':productTab==='parts'?'component':'all'}
    onCalculate={snapshot=>{if(applySavedCalculation(snapshot)){setCalculatorTab("calculation");setActiveSection('calculator');}}}/>}
  </main>{!session&&<footer className="shell footer">MakerCusto · Preview em desenvolvimento · Cadastros na nuvem após login</footer>}
  </SystemNavigation>

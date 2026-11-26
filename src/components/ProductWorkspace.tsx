@@ -4,7 +4,7 @@ import {useConfirmation} from './ConfirmationDialog';
 import {AssemblyComposer} from './AssemblyComposer';
 import {formatCatalogName} from '../domain/catalogName';
 import {ProductPhotos,ProductThumbnail} from './ProductPhotos';
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {FormActionDock} from './FormActionDock';
 import {
  createAssembly,listAssemblies,listProducts,saveProductRecord,updateAssembly,listComponentLibrary,saveAssemblyWithComponents,listLatestProductCalculations,
@@ -13,19 +13,19 @@ import {
 
 type Tab='all'|'component'|'assemblies';
 type Mode='catalog'|'view'|'edit'|'new'|'compose';
-type Props={workspaceId:string|null;tab:Tab;onCalculate?:(snapshot:SavedCalculation)=>void};
+type Props={workspaceId:string|null;tab:Tab;initialProductId?:string;onCalculate?:(snapshot:SavedCalculation)=>void};
 const brl=(n:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 const blank=():AssemblyPartDraft=>({name:'',quantity:1,grams:null,unit_cost:null,notes:''});
 const template=()=>[blank(),blank()];
 const moneyValue=(s:string):number|null=>s.trim()===''?null:Number(s);
 const partDraft=(p:AssemblyRecord['parts'][number]):AssemblyPartDraft=>({id:p.id,product_id:p.product_id??null,name:p.name,quantity:Number(p.quantity),notes:p.notes??'',grams:p.grams===null?null:Number(p.grams),unit_cost:p.unit_cost});
-export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
+export function ProductWorkspace({workspaceId,tab,initialProductId,onCalculate}:Props){
  const {requestConfirmation,confirmationDialog}=useConfirmation();
  const [items,setItems]=useState<ProductRecord[]>([]);
  const [kits,setKits]=useState<AssemblyRecord[]>([]);
  const [library,setLibrary]=useState<ComponentLibraryItem[]>([]);
- const [mode,setMode]=useState<Mode>('catalog');
- const [selected,setSelected]=useState<string|null>(null);
+ const [mode,setMode]=useState<Mode>(initialProductId?'view':'catalog');
+ const [selected,setSelected]=useState<string|null>(initialProductId??null);
  const [kind,setKind]=useState<'product'|'component'|'kit'>('product');
  const [name,setName]=useState('');
  const [sku,setSku]=useState('');
@@ -34,7 +34,7 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
  const [parts,setParts]=useState<AssemblyPartDraft[]>(template);
  const [query,setQuery]=useState('');
  const [busy,setBusy]=useState(false);
- const [loading,setLoading]=useState(false);
+ const [loading,setLoading]=useState(Boolean(workspaceId));
  const [feedback,setFeedback]=useState('');
  const [error,setError]=useState('');
  const [reload,setReload]=useState(0);
@@ -44,7 +44,9 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
  const [kitPrice,setKitPrice]=useState('');
  useEffect(()=>{setKitQuantity(1);setKitExtra(0);setKitPrice('');},[selected]);
  const [libraryError,setLibraryError]=useState('');
- useEffect(()=>{setMode('catalog');setSelected(null);setQuery('');setFeedback('');setError('');},[tab,workspaceId]);
+ useEffect(()=>{
+  setMode(initialProductId?'view':'catalog');setSelected(initialProductId??null);setQuery('');setFeedback('');setError('');
+ },[tab,workspaceId,initialProductId]);
  useEffect(()=>{
   let active=true;setLoading(true);setItems([]);setKits([]);
   if(!workspaceId){setLoading(false);return;}
@@ -63,6 +65,9 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
  },[workspaceId,reload]);
  const kit=kits.find(x=>x.id===selected);
  const product=items.find(x=>x.id===selected);
+ const productHeading=useRef<HTMLHeadingElement>(null);
+ const openedFromDashboard=Boolean(initialProductId&&product?.id===initialProductId);
+ useEffect(()=>{if(openedFromDashboard)productHeading.current?.focus();},[openedFromDashboard]);
  const visible=useMemo(()=>items.filter(x=>
   (tab==='all'||(tab==='component'?x.kind==='component':x.kind==='kit'||kits.some(assembly=>assembly.id===x.id)))&&
   (x.name+' '+(x.sku??'')).toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR'))
@@ -189,8 +194,12 @@ export function ProductWorkspace({workspaceId,tab,onCalculate}:Props){
     <button type="button" onClick={()=>open(p.id)}>Ver ficha</button>
    </article>)}</div>}
   </>}
+  {mode==='view'&&!product&&(loading?<p role="status">Carregando ficha…</p>:<>
+   {!error&&<p>Cadastro não encontrado nesta oficina.</p>}
+   <button type="button" className="secondary-action" onClick={()=>{setMode('catalog');setSelected(null);}}>Voltar aos cadastros</button>
+  </>)}
   {mode==='view'&&product&&<section className="product-detail">
-   <div className="product-detail-head"><div><span className="product-kind">{label(product)}</span><h3>{product.name}</h3>
+   <div className="product-detail-head"><div><span className="product-kind">{label(product)}</span><h3 ref={productHeading} tabIndex={-1}>{product.name}</h3>
     <p>{product.description||'Sem descrição cadastrada'}</p></div>
 
    </div>

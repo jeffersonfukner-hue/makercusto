@@ -7,8 +7,9 @@ async function openSystemGroup(page:Page,name:string){
  const toggle=systemModule(page,name);
  if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
 }
-async function navigateSystemModule(page:Page,name:string,group:string){
- await openSystemGroup(page,group);
+async function navigateSystemModule(page:Page,name:string,group?:string){
+ await openSystemMenuIfMobile(page);
+ if(group)await openSystemGroup(page,group);
  await systemModule(page,name).click();
 }
 async function chooseSavedCalculation(page:Page,name:string){
@@ -411,9 +412,7 @@ test('login, oficina e cadastro persistente consomem API autenticada',async({pag
  await page.getByRole('textbox',{name:'E-mail'}).fill(user.email);
  await page.getByLabel('Senha').fill('senha-teste');
  await page.getByRole('dialog',{name:'Entrar no MakerCusto'}).getByRole('button',{name:'Entrar',exact:true}).click();
- await expect(page.getByRole('region',{name:'Painel da oficina'})).toBeVisible();
- await openSystemMenuIfMobile(page);
- await systemModule(page,'Calculadora de custos').click();
+ await expect(page.getByRole('heading',{name:'Calculadora de Produto'})).toBeVisible();
  await page.getByRole('button',{name:/Avançado/}).click();
  await page.getByRole('button',{name:/Nova impressora/}).click();
  await page.getByRole('combobox',{name:'Fabricante da impressora'}).selectOption('Anycubic');
@@ -811,71 +810,101 @@ test('acesso público preserva calculadora sem apresentar sistema privado',async
  await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeVisible();
 });
 test('login apresenta navegação superior e painel de oficina',async({page},testInfo)=>{
+ let failPrintLookup=true;
+ let emptyWorkshop=false;
+ const assemblyId='44444444-4444-4444-8444-444444444444';
  const workspace='11111111-1111-4111-8111-111111111111',user='22222222-2222-4222-8222-222222222222';
  await page.addInitScript(({user})=>localStorage.setItem('makercusto:session:v1',JSON.stringify({
   access_token:'mock-token',refresh_token:'mock-refresh',expires_at:Date.now()+3600000,user:{id:user,email:'maker@example.test'}
  })),{user});
  await page.route('**/rest/v1/**',async route=>{
   const url=route.request().url();
+  if(emptyWorkshop&&/mc_products|mc_list_assemblies|mc_list_prints|mc_list_saved_calculations/.test(url))return route.fulfill({json:[]});
   if(url.includes('/mc_workspaces?'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:workspace,name:'Oficina de Testes',owner_id:user}])});
   if(url.includes('/mc_products?'))return route.fulfill({json:Array.from({length:12},(_,index)=>({
-   id:String(index),kind:'product',name:'Cadastro '+index+' — '+(index===0?'NomeSemEspaços'.repeat(8):'Componente com descrição'),
+   id:index===1?assemblyId:String(index),kind:index===1?'kit':'product',name:index===1?'Lançador de hélices':'Cadastro '+index+' — '+(index===0?'NomeSemEspaços'.repeat(8):'Componente com descrição'),
    description:'Dados para testar a adaptação do catálogo à largura disponível.',sku:null,sale_price:15,created_at:'2026-11-25T10:00:00Z'
   }))});
   if(url.includes('/mc_customer_orders?'))return route.fulfill({json:[
-   {status:'planned',quantity:2,sale_price:10},{status:'sold',quantity:15,sale_price:8},
-   {status:'sold',quantity:99,sale_price:90,cancellation:{reason:'Duplicado'}}
-  ]});
+   {id:'order-1',status:'planned',quantity:2,sale_price:10},
+   {id:'order-2',status:'sold',quantity:15,sale_price:8},
+   {id:'order-3',status:'sold',quantity:99,sale_price:90,cancellation:{reason:'Duplicado'}}
+  ].map(order=>({...order,product_name:'Pedido de teste',created_at:'2026-11-25T10:00:00Z',
+   pieces_per_plate:2,plate_cost:3,partial_plate_cost:3}))});
   if(url.includes('/mc_printers?')||url.includes('/mc_catalog?'))return route.fulfill({status:200,contentType:'application/json',body:'[]'});
   if(url.includes('/rpc/mc_list_assemblies'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:'44444444-4444-4444-8444-444444444444',name:'Lançador de hélices',sku:null,description:null,sale_price:null,created_at:'2026-11-22T00:00:00Z',total_cost:null,cost_status:'unknown',revision:1,parts:[{id:'1',name:'Lançador',quantity:1,notes:null,grams:null},{id:'2',name:'Haste',quantity:1,notes:null,grams:null},{id:'3',name:'Hélice',quantity:1,notes:null,grams:null}]}])});
-  if(url.includes('/rpc/mc_list_prints'))return route.fulfill({json:[
-   {id:'1',status:'partial',outputs:[{good:3,failed:1,planned:5}]},
-   {id:'2',status:'completed',outputs:[{good:2,failed:0,planned:2}]}
-  ]});
+  if(url.includes('/rpc/mc_list_saved_calculations'))return route.fulfill({json:[{
+   product_id:'0',snapshot_id:'recent-snapshot',kind:'product',name:'Guirlanda de teste',
+   sku:null,saved_at:'2026-11-25T10:00:00Z',saved_input:{grams:85}
+  }]});
+  if(url.includes('/rpc/mc_list_prints')){
+   if(failPrintLookup)return route.fulfill({status:500,json:{message:'Teste de repetição'}});
+   return route.fulfill({json:[
+    {id:'1',status:'partial',printer_name:'Kobra X',created_at:'2026-11-25T10:00:00Z',planned_hours:null,actual_hours:null,
+     outputs:[{id:'output-1',name:'Guirlanda',good:3,failed:1,planned:5}]},
+    {id:'2',status:'completed',printer_name:'Kobra 2',created_at:'2026-11-24T10:00:00Z',planned_hours:null,actual_hours:null,
+     outputs:[{id:'output-2',name:'Estrela concluída',good:2,failed:0,planned:2}]}
+   ]});
+  }
   return route.fulfill({status:200,contentType:'application/json',body:'[]'});
  });
  await page.goto('/');
- await expect(page.getByRole('region',{name:'Painel da oficina'})).toBeVisible();
- await openSystemMenuIfMobile(page);
- await expect(systemModule(page,'Visão geral')).toHaveAttribute('aria-current','page');
+ await expect(page.getByRole('heading',{name:'Calculadora de Produto'})).toBeVisible();
+ await navigateSystemModule(page,'Visão geral');
  const menuToggle=page.getByRole('button',{name:'Abrir menu do sistema'});
- if(await menuToggle.isVisible())await page.keyboard.press('Escape');
- await page.getByRole('button',{name:'Atividades',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Cadastros recentes'})).toBeVisible();
- await expect(page.getByText('Esta lista não é um log de alterações ou impressões.')).toBeVisible();
- await page.getByRole('button',{name:'Pendências',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Informações a completar'})).toBeVisible();
- await expect(page.getByText('Custo não apurado')).toBeVisible();
- await page.getByRole('navigation',{name:'Abas de Visão geral'}).getByRole('button',{name:'Visão geral',exact:true}).click();
- await expect(page.getByRole('region',{name:'Impressões por etapa'})).toContainText('Em andamento1');
- await expect(page.getByRole('region',{name:'Impressões por etapa'})).toContainText('Concluídas1');
- await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Boas5');
- await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Rejeitadas1');
- const shortcuts=page.getByRole('navigation',{name:'Acesso rápido'});
- await expect(shortcuts.getByRole('button')).toHaveText(['◷Calculadora de custos','▤Pedidos','▥Biblioteca STL','◇Dicas de impressão']);
- const orders=page.getByRole('region',{name:'Pedidos por situação'});
- await expect(orders).toContainText('Planejados1');
- await expect(orders).toContainText('Vendidos1');
- await expect(page.getByText('Faturamento',{exact:true}).locator('..')).toContainText('120,00');
+ const overview=page.getByRole('region',{name:'Painel da oficina'});
+ const calculations=overview.getByRole('region',{name:'Cálculos recentes'});
+ const prints=overview.getByRole('region',{name:'Impressões para acompanhar'});
+ const calculatorAction=page.getByRole('button',{name:'Abrir calculadora'});
+ await expect(calculations.getByRole('button',{name:/Guirlanda de teste/})).toBeVisible();
+ await expect(prints.getByRole('alert')).toBeVisible();
+ failPrintLookup=false;
+ await prints.getByRole('button',{name:'Tentar novamente'}).click();
+ await expect(prints.getByRole('button',{name:/Guirlanda Kobra X Confirmação parcial/})).toBeVisible();
+ await expect(prints.getByText('Estrela concluída')).toHaveCount(0);
+ await expect(overview.getByText('Faturamento',{exact:true})).toHaveCount(0);
+
  const originalViewport=page.viewportSize()!;
- for(const [width,expectedRows] of [[320,[2,2]],[768,[2,2]],[882,[2,2]],[1180,[2,2]],[1201,[4]],[1280,[4]]] as const){
+ for(const width of [320,390,768,1280]){
   await page.setViewportSize({width,height:originalViewport.height});
-  const layout=await shortcuts.evaluate(nav=>{
-   const buttons=Array.from(nav.querySelectorAll('button'),button=>button.getBoundingClientRect());
-   const rows=new Map<number,number>();
-   for(const button of buttons)rows.set(button.top,(rows.get(button.top)??0)+1);
-   const header=nav.parentElement!.getBoundingClientRect();
-   return {rows:[...rows.values()],insideHeader:buttons.every(button=>button.left>=header.left&&button.right<=header.right&&button.height>=58)};
+  const layout=await overview.evaluate(panel=>{
+   const [recent,production]=panel.querySelectorAll('.dashboard-work-grid > section');
+   const action=document.querySelector('.overview-calculator-action')!.getBoundingClientRect();
+   const tabs=document.querySelector('.overview-intro .system-tabs')!.getBoundingClientRect();
+   return {stacked:production.getBoundingClientRect().top>recent.getBoundingClientRect().top,
+    buttonBelowTabs:action.top>=tabs.bottom,overflow:document.documentElement.scrollWidth>window.innerWidth};
   });
-  expect(layout,`Atalhos da Visão geral em ${width}px`).toEqual({rows:expectedRows,insideHeader:true});
+  expect(layout).toEqual({stacked:width<=760,buttonBelowTabs:width<=760,overflow:false});
  }
  await page.setViewportSize(originalViewport);
- await shortcuts.getByRole('button',{name:'Calculadora de custos',exact:true}).click();
+ await calculatorAction.click();
  await expect(page.getByRole('heading',{name:'Calculadora de Produto'})).toBeVisible();
- await openSystemMenuIfMobile(page);
- await systemModule(page,'Visão geral').click();
- await expect(page.getByRole('heading',{name:'Oficina de Testes'})).toBeVisible();
- await expect(page.getByRole('heading',{name:'Descubra seu custo. Venda com confiança.'})).toHaveCount(0);
+ await navigateSystemModule(page,'Visão geral');
+ await calculations.getByRole('button',{name:/Guirlanda de teste/}).click();
+ await expect(page.getByText('Dados de "Guirlanda de teste" carregados',{exact:false})).toBeVisible();
+
+ await navigateSystemModule(page,'Visão geral');
+ await prints.getByRole('button',{name:/Guirlanda Kobra X/}).click();
+ const printCard=page.locator('article').filter({hasText:'Guirlanda: planejadas 5'});
+ await expect(printCard).toBeFocused();
+ await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Boas5');
+ await expect(page.getByRole('region',{name:'Peças confirmadas'})).toContainText('Rejeitadas1');
+
+ await navigateSystemModule(page,'Pedidos','Comercial');
+ const orders=page.getByRole('region',{name:'Últimos 20 pedidos da oficina'});
+ await expect(orders).toContainText('Planejados1');
+ await expect(orders).toContainText('Vendidos1');
+ await expect(orders).toContainText('120,00');
+
+ await navigateSystemModule(page,'Visão geral');
+ await page.getByRole('button',{name:/Ver pendências/}).click();
+ await page.getByRole('button',{name:/Lançador de hélices Custo não apurado/}).click();
+ await expect(page.getByRole('heading',{name:'Lançador de hélices'})).toBeVisible();
+ await navigateSystemModule(page,'Visão geral');
+ await page.getByRole('button',{name:'Atividades',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Cadastros recentes'})).toBeVisible();
+ await page.getByRole('button',{name:/Cadastro 0/}).click();
+ await expect(page.getByRole('heading',{name:/Cadastro 0/})).toBeVisible();
  await openSystemMenuIfMobile(page);
  await openSystemGroup(page,'Produção');
  await expect(systemModule(page,'Impressões')).toBeEnabled();
@@ -919,6 +948,11 @@ test('login apresenta navegação superior e painel de oficina',async({page},tes
   const button=page.getByRole('button',{name:'Abrir menu do sistema'});
   await expect(button).toBeVisible();
  }
+ emptyWorkshop=true;
+ await page.getByRole('navigation',{name:'Abas de Visão geral'}).getByRole('button',{name:'Visão geral',exact:true}).click();
+ await expect(calculations.getByText('Seus cálculos salvos aparecerão aqui.')).toBeVisible();
+ await expect(prints.getByText(/Nenhuma impressão em execução/)).toBeVisible();
+ await expect(overview.getByText(/Nenhuma pendência de custo ou preço/)).toBeVisible();
 });
 
 test('bobina física: inventário na oficina sem criar compra fictícia',async({page})=>{

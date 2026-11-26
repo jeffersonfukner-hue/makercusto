@@ -1086,3 +1086,8 @@ Navegação superior responsiva com todos os dez destinos existentes, sem sideba
 - Implementados confirmação com justificativa, registro de autoria e exclusão dos totais comerciais. Validados build, 82 unitários, cenários de navegador e SQL local. Migração de teste pendente de autorização.
 - Tornado opcional o motivo do cancelamento e adicionada complementação posterior com autoria própria. Build, desktop/celular e teste PostgreSQL local passaram.
 - Aplicada a migração no Supabase de teste. Teste com rollback aprovado e cinco pedidos existentes preservados. Preview manual pendente.
+
+### 26/11/2026 — Visão geral responsiva para acompanhar a oficina
+
+- Implementados entrada pela Calculadora, retomada de cálculos recentes, lista de impressões para acompanhar com foco na execução e abertura de fichas a partir de Atividades e Pendências. Indicadores de venda e peças confirmadas foram movidos para seus módulos.
+- Build local, 82 unitários e 130 cenários Playwright passaram. O fluxo principal foi verificado em desktop e celular, incluindo 320 px, falha de consulta com nova tentativa, oficina vazia e acesso ao registro de origem. Sem GitHub Actions, merge, deploy ou migração. Duração total do trabalho não aferida.

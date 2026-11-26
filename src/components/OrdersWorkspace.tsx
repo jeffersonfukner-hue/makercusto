@@ -37,6 +37,9 @@ export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspace
   return ()=>{active=false;};
  },[workspaceId,offset,customer?.id,key]);
  const current=page?.key===key?page:undefined;
+ const recentOrders=!customer&&offset===0?current?.orders:undefined;
+ const recentSales=recentOrders?.filter(order=>order.status==='sold'&&!order.cancellation)??[];
+ const plannedOrders=recentOrders?.filter(order=>order.status==='planned'&&!order.cancellation)??[];
  if(selected){
   const plan=orderPlan(selected);
   const assembly=selected.production_method==='assembly';
@@ -89,6 +92,14 @@ export function OrdersWorkspace({workspaceId,customer,onDetailChange}:{workspace
   <OperationFeedback pending={!current} pendingMessage="Carregando pedidos…" error={current?.error??''}
    failureMessage="Não foi possível consultar pedidos." onRetry={()=>setRetry(attempt=>attempt+1)}/>
   {current&&!current.error&&current.orders.length===0&&<p>Nenhum pedido nesta página. Use Planejamento do pedido na calculadora para registrar um.</p>}
+  {!!recentOrders?.length&&<section aria-labelledby="mc-order-summary-title">
+   <h3 id="mc-order-summary-title">Últimos 20 pedidos da oficina</h3>
+   <MetricGrid className="mc-order-financials" metrics={[
+    {label:'Planejados',value:plannedOrders.length},
+    {label:'Vendidos',value:recentSales.length},
+    {label:'Valor vendido',value:money.format(recentSales.reduce((total,order)=>total+orderPlan(order).revenue,0))}
+   ]}/>
+  </section>}
   {!!current?.orders.length&&<ul className="mc-order-list">
    {current.orders.map(order=><li key={order.id}>
     <button type="button" className="mc-order-row" ref={element=>{
