@@ -91,7 +91,7 @@ ul.sum li.tot { font-weight: 700; border-bottom: 0 }
 .details .scroll th, .details .scroll td { padding: 6px 6px; font-size: .85rem }
 
 /* Cabeçalho fixo e menu de cadastros */
-.nav { position: sticky; top: 0; z-index: 20; background: var(--bg) }
+.nav { position: sticky; top: 0; z-index: 20; background: var(--nav-bg, var(--bg)); backdrop-filter: var(--nav-blur, none) }
 .nav .more { position: relative }
 .nav .more summary { cursor: pointer; color: var(--mute); padding: 4px 0; list-style: none; border-bottom: 2px solid transparent }
 .nav .more summary::-webkit-details-marker { display: none }
@@ -253,7 +253,7 @@ input, select, textarea { color: inherit }
   --main:#00f0c8; --on-main:#04141a; --amber:#ffd23f; --on-amber:#1a1030; --warn:#ff5c8a;
   --amber-soft:#3a2d08; --amber-soft-2:#ffe9b3; --amber-ink:#ffe29a;
   --hero-bg: linear-gradient(135deg, #3a0ca3 0%, #7209b7 55%, #f72585 100%); --on-dark:#fff; --on-dark-mute:#e2dcff;
-  --glow: 0 0 22px #7209b766;
+  --glow: 0 0 22px #7209b766; --nav-bg: #0a0a1c66; --nav-blur: blur(10px);
 }
 :root[data-tema="neon"] .card, :root[data-tema="neon"] .card2, :root[data-tema="neon"] .details, :root[data-tema="neon"] .modal, :root[data-tema="neon"] .choice { box-shadow: 0 0 0 1px var(--line), 0 0 24px #7209b733 }
 :root[data-tema="neon"] .hero, :root[data-tema="neon"] .sumbar { box-shadow: var(--glow), 0 0 0 1px #ffffff22 }
