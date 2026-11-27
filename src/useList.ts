@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 // Lista que vive na nuvem quando a pessoa está logada e no navegador quando não está.
 // `localCount` mostra quantos itens ficaram só no navegador, e `importLocal` os envia para a nuvem.
-export interface CloudApi<T, D> { list(): Promise<T[]>; save(d: D): Promise<void>; remove(id: string): Promise<void> }
+export interface CloudApi<T, D> { list(): Promise<T[]>; save(d: D): Promise<void>; remove(id: string): Promise<void>; update?(id: string, t: T): Promise<void> }
 export function useList<T extends { id: string }, D>(o: {
   read: () => T[]; write: (l: T[]) => void; user: string | null
   api: CloudApi<T, D> | null; addLocal: (l: T[], d: D, id: string) => T[]; toDraft: (t: T) => D
@@ -27,6 +27,11 @@ export function useList<T extends { id: string }, D>(o: {
     if (!online) { const next = items.filter((x) => x.id !== id); setItems(next); o.write(next); return }
     try { await o.api!.remove(id); await reload() } catch (e) { setMsg((e as Error).message) }
   }
+  // Troca um item inteiro (ex.: nova quantidade em estoque).
+  const update = async (next: T) => {
+    if (!online) { const l = items.map((x) => (x.id === next.id ? next : x)); setItems(l); o.write(l); return }
+    try { await o.api!.update?.(next.id, next); await reload() } catch (e) { setMsg((e as Error).message) }
+  }
   const importLocal = async () => {
     if (!online) return
     let sent = 0
@@ -38,5 +43,5 @@ export function useList<T extends { id: string }, D>(o: {
     }
     await reload()
   }
-  return { items, msg, add, remove, online, localCount: online ? local.length : 0, importLocal, setMsg }
+  return { items, msg, add, remove, update, online, localCount: online ? local.length : 0, importLocal, setMsg }
 }

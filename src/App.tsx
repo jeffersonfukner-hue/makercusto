@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Composition } from './Composition'
 import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
@@ -8,14 +8,19 @@ import { fromHMS, toHMS } from './domain/time'
 import { addFilament, filamentLabel, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
 import { addPrinter, type UserPrinter, type UserPrinterDraft } from './domain/printers'
 import { addSavedProduct, type ProductInput, type SavedProduct } from './domain/product'
+import { addSupplier, type Supplier, type SupplierDraft } from './domain/supplier'
+import { addSupply, type Supply, type SupplyDraft } from './domain/supply'
+import { Estoque } from './Estoque'
 import { Filamentos } from './Filamentos'
+import { Fornecedores } from './Fornecedores'
+import { LandingHero, LandingSections } from './Landing'
 import { Impressoras } from './Impressoras'
 import { ImportBar } from './ImportBar'
 import { Produto } from './Produto'
 import { useList } from './useList'
 import { ESSENTIAL, inputForMode, type Mode } from './modes'
 import { cloud, onUser, signInWithGoogle, signOut, supabase } from './supabase'
-import { readFilaments, readMode, readPrinters, readProducts, readSaved, writeFilaments, writeMode, writePrinters, writeProducts, writeSaved } from './storage'
+import { readFilaments, readMode, readPrinters, readProducts, readSaved, readStartPage, readSuppliers, readSupplies, writeFilaments, writeMode, writePrinters, writeProducts, writeSaved, writeStartPage, writeSuppliers, writeSupplies } from './storage'
 
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 
@@ -26,7 +31,8 @@ function useRoute() {
     addEventListener('hashchange', on)
     return () => removeEventListener('hashchange', on)
   }, [])
-  return hash === '#/calculadora' ? 'calculadora' : hash === '#/painel' ? 'painel' : hash === '#/filamentos' ? 'filamentos' : hash === '#/produto' ? 'produto' : hash === '#/impressoras' ? 'impressoras' : 'inicio'
+  const r = hash.replace(/^#\/?/, '')
+  return (['painel', 'filamentos', 'produto', 'impressoras', 'fornecedores', 'estoque', 'inicio'] as const).find((x) => x === r) ?? 'calculadora'
 }
 
 const toForm = (i: CostInput): Form => {
@@ -57,6 +63,16 @@ export default function App() {
     addLocal: addPrinter, toDraft: ({ id: _id, ...d }) => d })
   const prod = useList<SavedProduct, { name: string; input: ProductInput }>({ read: readProducts, write: writeProducts, user, api: cloud?.products ?? null,
     addLocal: (l, d, id) => addSavedProduct(l, d.name, d.input, id, new Date().toISOString()), toDraft: (p) => ({ name: p.name, input: p.input }) })
+  const sup = useList<Supplier, SupplierDraft>({ read: readSuppliers, write: writeSuppliers, user, api: cloud?.suppliers ?? null,
+    addLocal: addSupplier, toDraft: ({ id: _id, ...d }) => d })
+  const stock = useList<Supply, SupplyDraft>({ read: readSupplies, write: writeSupplies, user, api: cloud?.supplies ?? null,
+    addLocal: addSupply, toDraft: ({ id: _id, ...d }) => d })
+  // Ao entrar na conta, abre a tela que a pessoa escolheu (padrão: a calculadora).
+  const prevUser = useRef<string | null>(null)
+  useEffect(() => {
+    if (user && !prevUser.current && readStartPage() === 'inicio' && (location.hash === '' || location.hash === '#/' || location.hash === '#/calculadora')) location.hash = '#/inicio'
+    prevUser.current = user
+  }, [user])
   const localCalcs = user && cloud ? readSaved().length : 0
   const importCalcs = async () => {
     if (!(user && cloud)) return
@@ -83,7 +99,7 @@ export default function App() {
   }
 
   if (route === 'calculadora') {
-    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} />
+    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
   }
   if (route === 'filamentos') {
     return (
@@ -92,7 +108,29 @@ export default function App() {
         <h1>Meus filamentos</h1>
         <p className="lead">Cadastre cada rolo com o preço que você pagou. Na calculadora (modo Avançado) você escolhe o rolo e o custo já vem certo.</p>
         <ImportBar count={fil.localCount} what="filamentos" onImport={fil.importLocal} />
-        <Filamentos list={fil.items} onAdd={fil.add} onRemove={fil.remove} msg={fil.msg} />
+        <Filamentos list={fil.items} suppliers={sup.items} onAdd={fil.add} onRemove={fil.remove} msg={fil.msg} />
+      </main>
+    )
+  }
+  if (route === 'fornecedores') {
+    return (
+      <main className="wrap">
+        <Nav route="fornecedores" account={account} />
+        <h1>Fornecedores</h1>
+        <p className="lead">De onde vêm seus filamentos e insumos. Marcas e lojas diferentes têm preços e condições diferentes.</p>
+        <ImportBar count={sup.localCount} what="fornecedores" onImport={sup.importLocal} />
+        <Fornecedores list={sup.items} onAdd={sup.add} onRemove={sup.remove} msg={sup.msg} />
+      </main>
+    )
+  }
+  if (route === 'estoque') {
+    return (
+      <main className="wrap">
+        <Nav route="estoque" account={account} />
+        <h1>Estoque de insumos</h1>
+        <p className="lead">Chaveiros, copos de alumínio, LEDs, ímãs e tudo que você compra pronto. Esses itens também aparecem no produto com partes.</p>
+        <ImportBar count={stock.localCount} what="itens de estoque" onImport={stock.importLocal} />
+        <Estoque list={stock.items} suppliers={sup.items} onAdd={stock.add} onUpdate={stock.update} onRemove={stock.remove} msg={stock.msg} />
       </main>
     )
   }
@@ -114,7 +152,7 @@ export default function App() {
         <h1>Produto com partes</h1>
         <p className="lead">Para produtos feitos de várias impressões, com várias cores e itens comprados. Copie do fatiador o tempo e o peso de cada cor.</p>
         <ImportBar count={prod.localCount} what="produtos" onImport={prod.importLocal} />
-        <Produto filaments={fil.items} printers={prn.items} products={prod.items} msg={prod.msg}
+        <Produto filaments={fil.items} printers={prn.items} supplies={stock.items} products={prod.items} msg={prod.msg}
           onSave={(name, input) => prod.add({ name, input })} onDelete={prod.remove} />
       </main>
     )
@@ -138,21 +176,43 @@ export default function App() {
       </main>
     )
   }
-  return <Home />
+  return <Home account={account} />
 }
 
 type Account = { user: string | null; signIn: () => void; signOut: () => void } | null
 
 function Nav({ route, account }: { route: string; account?: Account }) {
+  const ref = useRef<HTMLElement>(null)
+  // O cabeçalho é fixo: guarda a altura para o card de resultado ficar logo abaixo dele.
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const set = () => document.documentElement.style.setProperty('--navh', `${el.offsetHeight}px`)
+    set()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(set)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const cur = (r: string) => (route === r ? 'page' : undefined)
+  const close = (e: { currentTarget: Element }) => e.currentTarget.closest('details')?.removeAttribute('open')
+  const registers = ['filamentos', 'fornecedores', 'estoque', 'impressoras']
   return (
-    <nav className="nav">
+    <nav className="nav" ref={ref}>
       <a className="brand" href="#/">MakerCusto</a>
       <a href="#/calculadora" aria-current={cur('calculadora')}>Calculadora</a>
       <a href="#/produto" aria-current={cur('produto')}>Produto</a>
-      <a href="#/filamentos" aria-current={cur('filamentos')}>Filamentos</a>
-      <a href="#/impressoras" aria-current={cur('impressoras')}>Impressoras</a>
       <a href="#/painel" aria-current={cur('painel')}>Painel</a>
+      <details className="more">
+        <summary aria-current={registers.includes(route) ? 'page' : undefined}>Cadastros</summary>
+        <div className="menu">
+          <a href="#/filamentos" aria-current={cur('filamentos')} onClick={close}>Filamentos</a>
+          <a href="#/fornecedores" aria-current={cur('fornecedores')} onClick={close}>Fornecedores</a>
+          <a href="#/estoque" aria-current={cur('estoque')} onClick={close}>Estoque</a>
+          <a href="#/impressoras" aria-current={cur('impressoras')} onClick={close}>Impressoras</a>
+          <a href="#/inicio" aria-current={cur('inicio')} onClick={close}>Início e preferências</a>
+        </div>
+      </details>
       {account && (account.user
         ? <span className="acct"><span title={account.user}>{account.user}</span><button type="button" onClick={account.signOut}>Sair</button></span>
         : <button type="button" className="acct" onClick={account.signIn}>Entrar com Google</button>)}
@@ -160,11 +220,18 @@ function Nav({ route, account }: { route: string; account?: Account }) {
   )
 }
 
-function Home() {
+function Home({ account }: { account?: Account }) {
+  const [start, setStart] = useState(readStartPage)
+  const pick = (v: 'calculadora' | 'inicio') => { setStart(v); writeStartPage(v) }
   return (
     <main className="wrap home">
+      <Nav route="inicio" account={account} />
       <h1>MakerCusto</h1>
       <p className="lead">Descubra quanto custa cada peça impressa e qual preço cobrar.</p>
+      <fieldset className="startpref"><legend>Ao entrar na conta, abrir</legend>
+        <label><input type="radio" name="start" checked={start === 'calculadora'} onChange={() => pick('calculadora')} /> a calculadora</label>
+        <label><input type="radio" name="start" checked={start === 'inicio'} onChange={() => pick('inicio')} /> esta tela, com atalhos</label>
+      </fieldset>
       <div className="choices">
         <a className="choice main" href="#/calculadora">
           <strong>Calculadora</strong>
@@ -180,7 +247,15 @@ function Home() {
         </a>
         <a className="choice" href="#/filamentos">
           <strong>Filamentos</strong>
-          <span>Cadastre cada rolo com o preço pago. Modo Avançado.</span>
+          <span>Cada rolo com o preço pago, marca e temperaturas.</span>
+        </a>
+        <a className="choice" href="#/fornecedores">
+          <strong>Fornecedores</strong>
+          <span>De onde vêm filamentos e insumos.</span>
+        </a>
+        <a className="choice" href="#/estoque">
+          <strong>Estoque</strong>
+          <span>Insumos para montar o produto, com aviso de estoque baixo.</span>
         </a>
         <a className="choice" href="#/painel">
           <strong>Painel</strong>
@@ -235,8 +310,8 @@ const flat = groups.flatMap((g) => g.fields)
 const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
-function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, printers }: {
-  filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
+function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, printers, user }: {
+  user: string | null; filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
 }) {
   const input = inputForMode(toInput(form), mode)
   const errors = validate(input)
@@ -287,8 +362,9 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, 
   return (
     <main className="wrap">
       <Nav route="calculadora" account={account} />
+      {!user && <LandingHero />}
       <header className="top">
-        <h1>Calculadora</h1>
+        {user ? <h1>Calculadora</h1> : <h2>Calculadora</h2>}
         <div className="modes" role="group" aria-label="Modo da calculadora">
           <button type="button" aria-pressed={basic} onClick={() => setMode('basico')}>Básico</button>
           <button type="button" aria-pressed={!basic} onClick={() => setMode('avancado')}>Avançado</button>
@@ -344,6 +420,7 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, 
           ))}
         </form>
       </div>
+      {!user && <LandingSections />}
     </main>
   )
 }

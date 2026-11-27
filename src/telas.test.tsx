@@ -14,7 +14,7 @@ const asyncNoop = async () => {}
 describe('telas novas', () => {
   it('filamentos: vazio e com dois rolos do mesmo fornecedor', () => {
     expect(renderToString(<Filamentos list={[]} onAdd={asyncNoop} onRemove={noop} msg="" />)).toContain('Nenhum rolo cadastrado')
-    const base = { name: 'PLA preto 001', supplier: 'F', material: 'PLA', color: 'preto', priceCents: 6800, weightG: 1000, boughtAt: '2026-10-01' }
+    const base = { name: 'PLA preto 001', supplier: 'F', brand: '', material: 'PLA', color: 'preto', priceCents: 6800, weightG: 1000, boughtAt: '2026-10-01' }
     const l = addFilament(addFilament([], base, 'a'), { ...base, name: 'PLA preto 002', priceCents: 7500, boughtAt: '2026-11-20' }, 'b')
     const html = renderToString(<Filamentos list={l} onAdd={asyncNoop} onRemove={noop} msg="" />)
     expect(html).toContain('PLA preto 001'); expect(html).toContain('PLA preto 002')
@@ -48,5 +48,33 @@ describe('telas novas', () => {
     expect(back.bought).toEqual(input.bought)
     expect(back.parts[0].hours).toBeCloseTo(input.parts[0].hours, 2)
     expect(calculateProduct(back).total).toBeGreaterThan(1250)
+  })
+})
+
+import { Estoque } from './Estoque'
+import { Fornecedores } from './Fornecedores'
+import { LandingHero, LandingSections } from './Landing'
+import { addSupplier } from './domain/supplier'
+import { addSupply } from './domain/supply'
+
+describe('telas: fornecedores, estoque e landing', () => {
+  it('fornecedores: vazio e com itens', () => {
+    expect(renderToString(<Fornecedores list={[]} onAdd={asyncNoop} onRemove={noop} msg="" />)).toContain('Nenhum fornecedor cadastrado')
+    const l = addSupplier([], { name: 'Masterprint', contact: '(43) 9', site: 'exemplo.com', notes: '' }, 'a')
+    const html = renderToString(<Fornecedores list={l} onAdd={asyncNoop} onRemove={noop} msg="" />)
+    expect(html).toContain('Masterprint'); expect(html).toContain('https://exemplo.com')
+  })
+  it('estoque: valor parado, aviso de baixo e botões de entrada e saída', () => {
+    const l = addSupply(addSupply([], { name: 'Copo de alumínio', category: '', supplier: '', qty: 2, min: 5, costCents: 1250 }, 'a'), { name: 'LED', category: '', supplier: '', qty: 100, min: 10, costCents: 35 }, 'b')
+    const html = renderToString(<Estoque list={l} suppliers={[]} onAdd={asyncNoop} onUpdate={asyncNoop} onRemove={noop} msg="" />).replace(/<!-- -->/g, '')
+    expect(html).toContain('Estoque baixo'); expect(html).toContain('Copo de alumínio (2)')
+    expect(html).toMatch(/R\$\s60,00/) // 2 x 12,50 + 100 x 0,35
+    expect(html).toContain('Tirar 1 de LED'); expect(html).toContain('Colocar 10 em LED')
+  })
+  it('landing: promessa, planos honestos e sem formulário quando não há nuvem', () => {
+    expect(renderToString(<LandingHero />)).toContain('Quanto custa de verdade')
+    const html = renderToString(<LandingSections />)
+    expect(html).toContain('Grátis'); expect(html).toContain('em breve')
+    expect(html).not.toContain('Quero ser avisado')
   })
 })

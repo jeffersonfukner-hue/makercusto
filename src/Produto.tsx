@@ -3,6 +3,7 @@ import { calculateProduct, lineGrams, validateProduct, type ProductInput, type P
 import { filamentLabel, pricePerKg as kgPrice, type Filament } from './domain/filament'
 import { fromHMS, toHMS } from './domain/time'
 import type { UserPrinter } from './domain/printers'
+import type { Supply } from './domain/supply'
 import { money, pct } from './format'
 import { readDraft, writeDraft } from './storage'
 
@@ -55,12 +56,12 @@ const loadDraft = (): State => {
 }
 
 type Props = {
-  filaments: Filament[]; printers: UserPrinter[]
+  filaments: Filament[]; printers: UserPrinter[]; supplies?: Supply[]
   products: SavedProduct[]; onSave: (name: string, i: ProductInput) => Promise<void>; onDelete: (id: string) => void; msg: string
   openId?: string
 }
 
-export function Produto({ filaments, printers, products, onSave, onDelete, msg }: Props) {
+export function Produto({ filaments, printers, supplies = [], products, onSave, onDelete, msg }: Props) {
   const [s, setS] = useState<State>(loadDraft)
   useEffect(() => { writeDraft(s) }, [s])
   const input = toInput(s)
@@ -162,6 +163,16 @@ export function Produto({ filaments, printers, products, onSave, onDelete, msg }
           <p className="note">O que você compra pronto e entra no produto, como o copo de alumínio. Não passa pela taxa de falhas.</p>
           {s.bought.map((b, n) => (
             <div className="line" key={n}>
+              {supplies.length > 0 && (
+                <label><span>Do estoque</span>
+                  <span className="input"><select value="" onChange={(e) => {
+                    const x = supplies.find((q) => q.id === e.target.value)
+                    if (x) setS({ ...s, bought: s.bought.map((y, i) => (i === n ? { ...y, name: x.name, price: t(x.costCents / 100) } : y)) })
+                  }}>
+                    <option value="">Escolher item cadastrado</option>
+                    {supplies.map((q) => <option key={q.id} value={q.id}>{q.name} ({(q.costCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</option>)}
+                  </select></span></label>
+              )}
               {field('Item', b.name, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, name: v } : x)) }), undefined, undefined, 'text')}
               <div className="two">
                 {field('Preço de cada', b.price, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, price: v } : x)) }), 'R$')}

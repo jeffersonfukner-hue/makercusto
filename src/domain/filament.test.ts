@@ -1,7 +1,24 @@
 import { describe, expect, it } from 'vitest'
 import { addFilament, filamentLabel, MAX_FILAMENTS, parseFilaments, pricePerKg, removeFilament, validateFilament, type FilamentDraft } from './filament'
 
-const base: FilamentDraft = { name: 'PLA preto 001', supplier: 'Fornecedor X', material: 'PLA', color: 'preto', priceCents: 6800, weightG: 1000, boughtAt: '2026-10-01' }
+const base: FilamentDraft = { name: 'PLA preto 001', supplier: 'Fornecedor X', brand: 'Masterprint', material: 'PLA', color: 'preto', priceCents: 6800, weightG: 1000, boughtAt: '2026-10-01' }
+
+describe('filamentos: marca e temperatura', () => {
+  it('guarda marca e temperaturas opcionais', () => {
+    const [f] = addFilament([], { ...base, nozzleC: 210, bedC: 60 }, 'a')
+    expect([f.brand, f.nozzleC, f.bedC]).toEqual(['Masterprint', 210, 60])
+    expect('nozzleC' in addFilament([], base, 'b')[0]).toBe(false)
+  })
+  it('valida temperatura', () => {
+    expect(validateFilament({ ...base, nozzleC: 600 })).toHaveLength(1)
+    expect(validateFilament({ ...base, bedC: -1 })).toHaveLength(1)
+    expect(validateFilament({ ...base, nozzleC: 210.5 })).toHaveLength(1)
+  })
+  it('cadastro antigo, sem marca, ainda é lido', () => {
+    const old = { id: 'a', name: 'PLA', supplier: '', material: 'PLA', color: '', priceCents: 6800, weightG: 1000, boughtAt: '2026-10-01' }
+    expect(parseFilaments(JSON.stringify([old]))[0].brand).toBe('')
+  })
+})
 
 describe('filamentos', () => {
   it('calcula o preço por kg a partir do rolo', () => {

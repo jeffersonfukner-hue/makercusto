@@ -35,3 +35,12 @@ export const readPrinters = () => rd<UserPrinter>('makercusto:impressoras', pars
 export const writePrinters = (l: UserPrinter[]) => wr('makercusto:impressoras', l)
 export const readDraft = (): unknown => { try { return JSON.parse(localStorage.getItem('makercusto:rascunho-produto') ?? 'null') } catch { return null } }
 export const writeDraft = (v: unknown) => wr('makercusto:rascunho-produto', v)
+
+import { parseSuppliers, type Supplier } from './domain/supplier'
+import { parseSupplies, type Supply } from './domain/supply'
+export const readSuppliers = () => rd<Supplier>('makercusto:fornecedores', parseSuppliers)
+export const writeSuppliers = (l: Supplier[]) => wr('makercusto:fornecedores', l)
+export const readSupplies = () => rd<Supply>('makercusto:insumos', parseSupplies)
+export const writeSupplies = (l: Supply[]) => wr('makercusto:insumos', l)
+export function readStartPage(): 'calculadora' | 'inicio' { try { return localStorage.getItem('makercusto:abrir') === 'inicio' ? 'inicio' : 'calculadora' } catch { return 'calculadora' } }
+export function writeStartPage(v: 'calculadora' | 'inicio') { try { localStorage.setItem('makercusto:abrir', v) } catch { /* vale só nesta sessão */ } }
