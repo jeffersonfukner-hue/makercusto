@@ -6,7 +6,6 @@ import { ICONES, MenuIcone } from './Icones'
 export const TEMAS = [
   { id: 'normal', label: 'Normal' },
   { id: 'neon', label: 'Neon' },
-  { id: 'minimalista', label: 'Minimalista' },
   { id: 'corporativo', label: 'Corporativo' },
 ] as const
 export type TemaId = (typeof TEMAS)[number]['id']
