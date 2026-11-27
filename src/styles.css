@@ -1,44 +1,51 @@
-:root { --bg:#edf1ef; --ink:#16242c; --mute:#55656d; --line:#cbd5d1; --panel:#fff; --main:#0f766e; --warn:#b4442f;
-  font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
-* { box-sizing: border-box }
-body { margin: 0; line-height: 1.5 }
-.wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px }
-h1 { font-size: 2rem; margin: 8px 0 4px; letter-spacing: -.02em }
-h2 { font-size: 1rem; margin: 0; color: var(--mute); font-weight: 600 }
-.lead { color: var(--mute); margin: 0 0 24px; max-width: 60ch }
-a { color: var(--main) } .back { font-size: .9rem }
-:focus-visible { outline: 3px solid #d98e04; outline-offset: 2px }
-.home { padding-top: 12vh } .choices { display: grid; gap: 12px; max-width: 560px }
-.choice { display: block; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--ink) }
-.choice.main { border: 2px solid var(--main) } .choice strong { display: block; font-size: 1.15rem } .choice span { color: var(--mute) }
-.choice:hover { border-color: var(--main) }
-.layout { display: grid; gap: 20px; align-items: start }
-@media (min-width: 860px) { .layout { grid-template-columns: 1fr 380px } .result { position: sticky; top: 16px } }
-fieldset { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin: 0 0 12px; padding: 8px 16px 12px }
-legend { font-weight: 700; padding: 0 6px }
+:root { --bg:#f6f8f7; --ink:#1b2227; --mute:#5b676e; --line:#d6ddda; --panel:#fff; --main:#0b6e5f; --amber:#e0a100; --warn:#b4442f; --soft:#e7f1ee;
+  --display: Sora, ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg) }
+* { box-sizing: border-box } body { margin: 0; line-height: 1.5 }
+.wrap { max-width: 1060px; margin: 0 auto; padding: 0 16px 56px }
+h1, h2, .big, .hero strong { font-family: var(--display) }
+h1 { font-size: 1.7rem; margin: 0; letter-spacing: -.02em } h2 { font-size: .95rem; margin: 0 0 8px; color: var(--mute); font-weight: 500 }
+.lead { color: var(--mute); margin: 8px 0 20px; max-width: 62ch } a { color: var(--main) } small { color: var(--mute); font-size: .8rem }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px }
+.nav { display: flex; gap: 20px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); margin-bottom: 20px }
+.nav a { text-decoration: none; color: var(--mute); padding: 4px 0; border-bottom: 2px solid transparent }
+.nav a[aria-current] { color: var(--ink); border-color: var(--main) } .nav .brand { font-family: var(--display); font-weight: 700; color: var(--ink); margin-right: auto; border: 0 }
+.top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between }
+.modes { display: inline-flex; background: #e4eae7; border-radius: 10px; padding: 3px }
+.modes button { border: 0; background: transparent; padding: 8px 18px; border-radius: 8px; font: inherit; font-weight: 600; color: var(--mute); cursor: pointer }
+.modes button[aria-pressed="true"] { background: var(--ink); color: #fff }
+.home { padding-top: 12vh } .home h1 { font-size: 2.4rem } .choices { display: grid; gap: 12px; max-width: 560px }
+.choice { display: block; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--ink) }
+.choice.main { border: 2px solid var(--main) } .choice strong { display: block; font-family: var(--display); font-size: 1.1rem } .choice span { color: var(--mute) } .choice:hover { border-color: var(--main) }
+.layout { display: flex; flex-direction: column; gap: 16px } .result { display: contents } .form { order: 1 } .details { order: 2 }
+.hero { position: sticky; top: 0; z-index: 5; order: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--ink); color: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 6px 20px #1b222733 }
+.hero small { color: #b7c3c9; display: block } .hero strong { font-size: 1.6rem; display: block; font-variant-numeric: tabular-nums } .hero .sug strong { color: var(--amber) }
+.hero.errors { display: block; background: #fff; color: var(--warn); border: 1px solid var(--warn); box-shadow: none } .errors ul { margin: 6px 0 0; padding-left: 18px }
+.details, .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px }
+@media (min-width: 860px) {
+  .layout { display: grid; grid-template-columns: 1fr 400px; gap: 20px; align-items: start }
+  .result { display: block; position: sticky; top: 16px; grid-column: 2; grid-row: 1 } .form { grid-column: 1; grid-row: 1 }
+  .hero { position: static; grid-template-columns: 1fr; padding: 20px } .hero strong { font-size: 2.3rem } .hero .sug strong { font-size: 1.6rem }
+  .details { margin-top: 12px }
+}
+fieldset { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); margin: 0 0 12px; padding: 8px 16px 14px } legend { font-weight: 600; padding: 0 6px }
 label { display: block; margin-top: 10px } label > span:first-child { display: block; font-size: .9rem }
-.input { display: flex; align-items: center; border: 1px solid #8fa09b; border-radius: 8px; background: #fff; padding-right: 10px }
-.input:focus-within { border-color: var(--main); box-shadow: 0 0 0 2px #0f766e33 }
-.input input { flex: 1; min-width: 0; border: 0; padding: 10px; font: inherit; background: transparent; outline: none }
-.input em { font-style: normal; color: var(--mute); font-size: .85rem } small { color: var(--mute); font-size: .8rem }
-.result { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px }
-.big { font-size: 2.4rem; font-weight: 700; margin: 0 0 8px; font-variant-numeric: tabular-nums }
-.bar { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: var(--line) }
+.input { display: flex; align-items: center; border: 1px solid #93a39e; border-radius: 8px; background: #fff; padding-right: 10px; transition: border-color .15s }
+.input:focus-within { border-color: var(--main); box-shadow: 0 0 0 3px #0b6e5f26 } .input input { flex: 1; min-width: 0; border: 0; padding: 11px 10px; font: inherit; background: transparent; outline: none }
+.input em { font-style: normal; color: var(--mute); font-size: .85rem }
+.adj { margin-bottom: 12px } .adj summary { cursor: pointer; font-weight: 600; padding: 12px 16px; background: var(--soft); border-radius: 12px; border: 1px solid var(--line) } .adj[open] summary { margin-bottom: 12px } .adj .note { margin: 0 0 12px }
+.bar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: var(--line) }
 .legend { list-style: none; padding: 0; margin: 12px 0 0 } .legend li { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-variant-numeric: tabular-nums }
 .legend b { width: 12px; height: 12px; border-radius: 3px } .legend span { margin-left: auto } .legend small { margin-left: 6px }
 .legend .sum { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; font-weight: 700 }
-.price { margin-top: 16px; display: grid; gap: 12px } .price > div { background: #e6f2ef; border-radius: 8px; padding: 12px; display: grid; gap: 2px }
-.price strong { font-size: 1.35rem } .price span { font-size: .85rem; color: var(--mute) }
-.loss { color: var(--warn) !important } .note { font-size: .8rem; color: var(--mute); margin-bottom: 0 }
-.errors { color: var(--warn) } .errors ul { margin: 6px 0 0; padding-left: 18px }
-.save { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px }
-button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #8fa09b; background: #fff; color: var(--ink); cursor: pointer }
+.price > div { background: var(--soft); border-radius: 10px; padding: 12px; display: grid; gap: 2px; margin-top: 12px } .price strong { font-family: var(--display); font-size: 1.2rem } .price span { font-size: .85rem; color: var(--mute) }
+.loss { color: var(--warn) !important } .note { font-size: .82rem; color: var(--mute) }
+.save { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px } .save p { margin: 8px 0 0; font-size: .9rem }
+button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #93a39e; background: #fff; color: var(--ink); cursor: pointer }
 .save button { background: var(--main); color: #fff; border-color: var(--main); margin-top: 10px; font-weight: 600 }
-.save p { margin: 8px 0 0; font-size: .9rem }
+.big { font-size: 2.2rem; font-weight: 700; margin: 0 0 8px; font-variant-numeric: tabular-nums }
 .dash { display: grid; gap: 16px } @media (min-width: 860px) { .dash { grid-template-columns: 1fr 1fr } .wide { grid-column: 1 / -1 } }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px }
-.scroll { overflow-x: auto } table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; margin-top: 8px }
-th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap } th { font-size: .8rem; color: var(--mute); font-weight: 600 }
-.jobs { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px }
-.jobs li { display: flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px } .jobs li.on { border-color: var(--main); background: #e6f2ef }
+.scroll { overflow-x: auto } table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums } th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap } th { font-size: .8rem; color: var(--mute); font-weight: 600 }
+.jobs { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px } .jobs li { display: flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px } .jobs li.on { border-color: var(--main); background: var(--soft) }
 .pick { flex: 1; text-align: left; border: 0; background: transparent; display: grid; padding: 4px 6px } .pick span { color: var(--mute); font-size: .85rem }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }

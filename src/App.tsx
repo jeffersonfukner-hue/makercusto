@@ -4,7 +4,8 @@ import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
 import { addSaved, summarize, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
-import { readSaved, writeSaved } from './storage'
+import { ESSENTIAL, inputForMode, type Mode } from './modes'
+import { readMode, readSaved, writeMode, writeSaved } from './storage'
 
 const OLD_URL = 'https://makercusto-preview.pages.dev/'
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
@@ -33,11 +34,13 @@ export default function App() {
   const route = useRoute()
   const [form, setForm] = useState<Form>(initial)
   const [saved, setSaved] = useState<SavedCalc[]>(readSaved)
+  const [mode, setModeState] = useState<Mode>(readMode)
+  const setMode = (m: Mode) => { setModeState(m); writeMode(m) }
   const update = (next: SavedCalc[]) => { setSaved(next); writeSaved(next) }
   if (route === 'calculadora') {
     const onSave = (name: string, input: CostInput) =>
       update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString()))
-    return <Calculator form={form} setForm={setForm} onSave={onSave} />
+    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} />
   }
   if (route === 'painel') {
     const onOpen = (id: string) => {
@@ -46,7 +49,7 @@ export default function App() {
     }
     return (
       <main className="wrap">
-        <a className="back" href="#/">Início</a>
+        <Nav route="painel" />
         <h1>Painel</h1>
         <p className="lead">Seus cálculos salvos neste navegador.</p>
         <Dashboard jobs={saved.map(summarize)} onOpen={onOpen} onDelete={(id) => update(saved.filter((x) => x.id !== id))} />
@@ -54,6 +57,17 @@ export default function App() {
     )
   }
   return <Home />
+}
+
+function Nav({ route }: { route: string }) {
+  const cur = (r: string) => (route === r ? 'page' : undefined)
+  return (
+    <nav className="nav">
+      <a className="brand" href="#/">MakerCusto</a>
+      <a href="#/calculadora" aria-current={cur('calculadora')}>Calculadora</a>
+      <a href="#/painel" aria-current={cur('painel')}>Painel</a>
+    </nav>
+  )
 }
 
 function Home() {
@@ -119,43 +133,99 @@ function toInput(f: Form): CostInput {
   }
 }
 
-function Calculator({ form, setForm, onSave }: { form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => void }) {
-  const input = toInput(form)
+const flat = groups.flatMap((g) => g.fields)
+const byKey = (k: string) => flat.find((f) => f.key === k)!
+const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
+
+function Calculator({ form, setForm, onSave, mode, setMode }: {
+  form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => void; mode: Mode; setMode: (m: Mode) => void
+}) {
+  const input = inputForMode(toInput(form), mode)
   const errors = validate(input)
   const result = errors.length ? null : calculateCost(input)
+  const basic = mode === 'basico'
+  const field = (f: Field) => (
+    <label key={f.key}>
+      <span>{f.label}</span>
+      <span className="input">
+        <input inputMode="decimal" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
+        <em>{f.unit}</em>
+      </span>
+      {f.hint && <small>{f.hint}</small>}
+    </label>
+  )
+  const adjust = groups
+    .map((g) => ({ ...g, fields: g.fields.filter((f) => !isEssential(f.key) && f.key !== 'soldPrice') }))
+    .filter((g) => g.fields.length)
 
   return (
     <main className="wrap">
-      <a className="back" href="#/">Início</a> · <a className="back" href="#/painel">Painel</a>
-      <h1>Calculadora</h1>
-      <p className="lead">Os valores abaixo são exemplos. Troque pelos seus.</p>
+      <Nav route="calculadora" />
+      <header className="top">
+        <h1>Calculadora</h1>
+        <div className="modes" role="group" aria-label="Modo da calculadora">
+          <button type="button" aria-pressed={basic} onClick={() => setMode('basico')}>Básico</button>
+          <button type="button" aria-pressed={!basic} onClick={() => setMode('avancado')}>Avançado</button>
+        </div>
+      </header>
+      <p className="lead">
+        {basic ? 'O essencial para chegar a um preço.' : 'Todos os custos, o preço que você cobra e o lucro real.'} Os valores são exemplos. Troque pelos seus.
+      </p>
       <div className="layout">
-        <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
-          {groups.map((g) => (
-            <fieldset key={g.title}>
-              <legend>{g.title}</legend>
-              {g.fields.map((f) => (
-                <label key={f.key}>
-                  <span>{f.label}</span>
-                  <span className="input">
-                    <input inputMode="decimal" value={form[f.key]}
-                      onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
-                    <em>{f.unit}</em>
-                  </span>
-                  {f.hint && <small>{f.hint}</small>}
-                </label>
-              ))}
-            </fieldset>
-          ))}
-        </form>
-        <section className="result" aria-live="polite">
-          {result ? <><Result r={result} margin={input.marginPct} /><SaveBox onSave={(n) => onSave(n, input)} /></> : (
-            <div className="errors"><strong>Corrija para ver o resultado:</strong>
+        <div className="result" aria-live="polite">
+          {result ? <Hero r={result} margin={input.marginPct} /> : (
+            <div className="hero errors"><strong>Corrija para ver o resultado:</strong>
               <ul>{errors.map((e) => <li key={e}>{e}</li>)}</ul></div>
           )}
-        </section>
+          {result && <Details r={result} basic={basic} onSave={(n) => onSave(n, input)} />}
+        </div>
+        <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
+          {basic ? (
+            <>
+              <fieldset><legend>Seu lote</legend>{ESSENTIAL.map((k) => field(byKey(k)))}</fieldset>
+              <details className="adj">
+                <summary>Ajustes da oficina</summary>
+                <p className="note">Energia, impressora, seu tempo e falhas. Já vêm preenchidos com exemplos. Confira com os seus dados.</p>
+                {adjust.map((g) => <fieldset key={g.title}><legend>{g.title}</legend>{g.fields.map(field)}</fieldset>)}
+              </details>
+            </>
+          ) : groups.map((g) => <fieldset key={g.title}><legend>{g.title}</legend>{g.fields.map(field)}</fieldset>)}
+        </form>
       </div>
     </main>
+  )
+}
+
+function Hero({ r, margin }: { r: CostResult; margin: number }) {
+  return (
+    <div className="hero">
+      <div><small>Custo por peça</small><strong>{money(r.unit)}</strong></div>
+      <div className="sug"><small>Preço sugerido ({pct(margin / 100)} de margem)</small><strong>{money(r.suggestedPrice)}</strong></div>
+    </div>
+  )
+}
+
+function Details({ r, basic, onSave }: { r: CostResult; basic: boolean; onSave: (name: string) => void }) {
+  return (
+    <div className="details">
+      {!basic && (
+        <>
+          <h2>Para onde vai o custo</h2>
+          <Composition r={r} />
+          <div className="price">
+            {r.priceIsSuggested ? <p className="note">Informe o preço que você cobra para ver o lucro real.</p> : (
+              <div><small>Com o preço que você cobra ({money(r.price)})</small>
+                <strong className={r.profitPerUnit < 0 ? 'loss' : ''}>Lucro {money(r.profitPerUnit)} por peça</strong>
+                <span>Margem {pct(r.margin)} · Markup {pct(r.markup)} · {money(r.profitPerHour)} por hora de máquina</span>
+                {r.profitPerUnit < 0 && <span className="loss">Esse preço está abaixo do custo.</span>}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      <p className="note">Margem é lucro ÷ preço. Markup é lucro ÷ custo. Falhas entram como custo ÷ (1 − taxa): as peças boas pagam as que falharam.</p>
+      <SaveBox onSave={onSave} />
+    </div>
   )
 }
 
@@ -172,26 +242,5 @@ function SaveBox({ onSave }: { onSave: (name: string) => void }) {
       <button type="button" onClick={save}>Salvar cálculo</button>
       {msg && <p role="status">{msg} {msg === 'Salvo.' && <a href="#/painel">Ver no painel</a>}</p>}
     </div>
-  )
-}
-
-function Result({ r, margin }: { r: CostResult; margin: number }) {
-  return (
-    <>
-      <h2>Custo por peça</h2>
-      <p className="big">{money(r.unit)}</p>
-      <Composition r={r} />
-      <div className="price">
-        <div><small>Preço sugerido (margem {pct(margin / 100)})</small><strong>{money(r.suggestedPrice)}</strong></div>
-        {!r.priceIsSuggested && (
-          <div><small>Com o preço que você cobra ({money(r.price)})</small>
-            <strong className={r.profitPerUnit < 0 ? 'loss' : ''}>Lucro {money(r.profitPerUnit)} por peça</strong>
-            <span>Margem {pct(r.margin)} · Markup {pct(r.markup)} · {money(r.profitPerHour)} por hora de máquina</span>
-            {r.profitPerUnit < 0 && <span className="loss">Esse preço está abaixo do custo.</span>}
-          </div>
-        )}
-      </div>
-      <p className="note">Margem é lucro ÷ preço. Markup é lucro ÷ custo. Falhas entram como <code>custo ÷ (1 − taxa)</code>: as peças boas pagam as que falharam.</p>
-    </>
   )
 }
