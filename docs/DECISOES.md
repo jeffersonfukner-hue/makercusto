@@ -66,3 +66,9 @@
 - Ainda falta: tipo Parte/Produto final (nome e tipo ao iniciar e ao salvar) e uso da Parte salva dentro do Produto (Opção 1).
 - Tipo Parte / Produto final: nome e tipo no topo da calculadora e ao salvar (mesmos valores). O tipo vai dentro do JSON `entrada` (chave `tipo`), sem migração. Cálculo antigo sem tipo vale como produto final.
 - Parte salva entra no Produto como item pronto (Opção 1): custo por peça do cálculo salvo, sem margem, sem falhas em dobro, com "Atualizar".
+
+## Importar do fatiador: o que o flamengo.3mf traz (27/11)
+- Arquivo do Anycubic Slicer Next, 4 placas, 3 filamentos (PLA preto, vermelho, branco; densidade 1,24), impressora Kobra X 0.4, camada 0,2, preenchimento 15%, torre de limpeza ligada.
+- Está fatiado? Não: `slice_info.config` vem vazio. Não há tempo por placa nem gramas por cor, só modelos e configurações.
+- Para importar tempo e gramas, o arquivo precisa ser exportado já fatiado (gcode.3mf) ou os números lidos na tela do fatiador. Estimar gramas só pelo volume da malha erra por causa de preenchimento, paredes, purga e torre.
+- Depois: importador de .3mf fatiado (leitura no navegador, sem enviar o arquivo a servidor).
