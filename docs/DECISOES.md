@@ -33,6 +33,11 @@
   - Data da compra em três escolhas: ano, mês, dia (o dia se ajusta ao mês).
   - Nuvem: tabelas `marcas` e `cores` (migração `20261127200000`), RLS, nome único por pessoa sem diferença de maiúscula, limite de 100 de cada.
   - Pendente: nomes de partes, cores e itens comprados dentro do Produto ainda não passam pelo padrão de escrita.
+- Pedidos do dono em 27/11/2026, 14:21 (aguardam a escolha do layout, nada disso foi implementado ainda):
+  - O padrão "+" com cadastro rápido em janela vale para tudo no app (hoje só em filamentos e no fornecedor do estoque).
+  - Ajuda em cada campo: "i" em um círculo logo depois da etiqueta, com explicação de como usar ou para que serve ao passar o mouse (no celular, ao tocar).
+  - Campos grandes demais: peso total do lote e preço do filamento ocupam uma linha cada. Remodelar o sistema inteiro com campos lado a lado e menos rolagem. Três opções de layout foram desenhadas no quadro de design para escolha: A (cards em pares), B (painel denso com rótulo à esquerda) e C (em etapas).
+  - Tipo do trabalho: nomear e escolher "Parte" ou "Produto final" ao começar o cálculo e de novo ao salvar. Parte salva pode ser usada depois para montar o produto final. Pergunta em aberto: a parte entra no produto pelo custo do cálculo salvo (sem margem), e esse custo já inclui as falhas daquela parte.
 - Bloco 4 (aguarda arquivo): importar .3mf ou .gcode do fatiador, lido só no navegador. Formato a confirmar com arquivo real.
 
 ## Direção de produto (ideias do dono, 27/11/2026, ainda sem decisão de ordem)
