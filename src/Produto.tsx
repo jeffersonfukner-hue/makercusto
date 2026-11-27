@@ -14,6 +14,9 @@ import type { FilamentDraft } from './domain/filament'
 import type { UserPrinterDraft } from './domain/printers'
 import type { SupplyDraft } from './domain/supply'
 import { summarize, type SavedCalc } from './domain/saved'
+import { ImportGcode } from './ImportGcode'
+import type { GcodeResult } from './domain/gcode'
+import { foldText } from './domain/texto'
 
 type LineF = { color: string; fil: string; price: string; model: string; flushed: string; tower: string }
 type PartF = { name: string; h: string; m: string; s: string; pieces: string; per: string; lines: LineF[] }
@@ -99,6 +102,20 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
     const b = s.bought[n]; const c = savedParts.find((x) => x.id === b?.ref)
     if (c) setS({ ...s, bought: s.bought.map((y, i) => (i === n ? { ...y, price: t(unitOf(c)) } : y)) })
   }
+  // Cada .gcode vira uma parte: tempo e, por cor, peça, purga (estimada) e torre. Rolo cadastrado da mesma cor entra com o preço.
+  const importParts = (rs: GcodeResult[]) => {
+    const fresh = (p: PartF) => !p.name.trim() && p.lines.every((l) => !l.model && !l.price && !l.color)
+    const built: PartF[] = rs.map((r) => {
+      const { h, m, s: sec } = toHMS(r.hours)
+      return { name: r.name, h: String(h), m: String(m), s: String(sec), pieces: '1', per: '1',
+        lines: r.tools.map((tl) => {
+          const f = [...filaments].reverse().find((x) => x.color && foldText(x.color).startsWith(foldText(tl.name)))
+          return { color: tl.name, fil: f?.id ?? '', price: f ? t(kgPrice(f)) : '', model: t(tl.modelG), flushed: t(tl.purgeG), tower: t(tl.towerG) }
+        }) }
+    })
+    const keep = s.parts.filter((p) => !fresh(p))
+    setS({ ...s, parts: [...keep, ...built] })
+  }
   const setShop = (patch: Partial<ShopF>) => setS({ ...s, shop: { ...s.shop, ...patch } })
   const pickPrinter = (id: string) => {
     const p = printers.find((x) => x.id === id)
@@ -122,7 +139,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
       <div className="result" aria-live="polite">
         {r ? <Result r={r} input={input} onSave={onSave} /> : (
           <div className="hero errors"><strong>Corrija para ver o resultado:</strong>
-            <ul>{errors.slice(0, 6).map((e) => <li key={e}>{e}</li>)}</ul></div>
+            <ul>{[...new Set(errors)].slice(0, 6).map((e) => <li key={e}>{e}</li>)}</ul></div>
         )}
         <section className="card" style={{ marginTop: 12 }}>
           <h2>Meus produtos</h2>
@@ -187,7 +204,12 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
               {s.parts.length > 1 && <> <button type="button" onClick={() => setS({ ...s, parts: s.parts.filter((_, i) => i !== n) })}>Remover esta parte</button></>}</p>
           </section>
         ))}
-        <p><button type="button" className="primary" onClick={() => setS({ ...s, parts: [...s.parts, newPart()] })}>Adicionar parte</button></p>
+        <div className="addrow">
+          <button type="button" className="primary" onClick={() => setS({ ...s, parts: [...s.parts, newPart()] })}>Adicionar parte</button>
+          <ImportGcode multiple label="Importar do fatiador (.gcode)" onResults={importParts} />
+          <Info label="Importar do fatiador" text={AJUDA.importar} />
+        </div>
+        <p className="note">Importou? Confira o preço do filamento em cada cor. A purga por cor é estimada: o total vem do fatiador.</p>
 
         <section className="card2" style={{ marginBottom: 12 }}>
           <h2>Itens comprados <Info label="Itens comprados" text={AJUDA.itemComprado} /></h2>

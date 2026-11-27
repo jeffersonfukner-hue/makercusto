@@ -176,3 +176,5 @@ fieldset.kind legend.lab { padding: 0; margin-bottom: 4px; font-size: .82rem; fo
 .addrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 } .addrow .input { min-width: 220px }
 .save .ibtn { background: transparent; color: var(--main); border: 1.5px solid var(--main); margin-top: 0; font-weight: 700; padding: 0 }
 .save .ibtn:hover, .save .ibtn[aria-expanded="true"] { background: var(--main); color: #fff }
+.importg { display: inline-flex; flex-direction: column; gap: 4px } .importg small { max-width: 52ch }
+.hero.errors strong { font-size: 1rem !important; display: inline }

@@ -74,3 +74,10 @@
 - Depois: importador de .3mf fatiado (leitura no navegador, sem enviar o arquivo a servidor).
 - Teste com `escudo_plate_04 ... 25m47s.gcode` (Anycubic Slicer Next): o cabeçalho traz `print_time = 25m 47s` e `used_filament = 3.64` (metros, total com purga). Diâmetro 1,75 mm e densidade 1,24 vêm no cabeçalho. Por cor dá para somar a extrusão por ferramenta (T0, T1, T2) e separar peça de torre (`;TYPE:Prime tower`). A purga das trocas fica em macros comentadas: só aparece como diferença entre o total do cabeçalho e o que foi somado.
 - Resultado desse arquivo: peça 5,03 g preto, 2,69 g vermelho, 0,80 g branco; torre 0,52 / 0,12 / 0,12 g; purga cerca de 1,6 g; total cerca de 10,9 g.
+
+## Importador de gcode (27/11)
+- Corrige a conta anterior: o total do cabeçalho (`used_filament`) é a extrusão líquida (soma de E com retrações) mais a purga das trocas. Em arquivo de uma cor só, os dois batem (24,65 m e 5,94 m). Purga = total do cabeçalho menos a extrusão líquida; dividida entre as cores pelo que cada uma puxou nos macros de troca. É estimativa.
+- Escudo (placa 4): 25 min 47 s, 10,86 g no total. Base: 4 h 24 min, 119,6 g. Superior: 3 h 51 min, 73,5 g. Montagem: 46 min 47 s, 17,7 g.
+- `src/domain/gcode.ts` (função pura, testada) e botão "Importar do fatiador" no Produto (vários arquivos, uma parte por arquivo) e na Calculadora (um arquivo). O arquivo é lido no navegador, nada é enviado.
+- Rolo cadastrado da mesma cor entra com o preço; sem rolo, o preço fica vazio para a pessoa preencher.
+- Depois: ler também .gcode.3mf (Bambu/Orca) e .3mf fatiado.

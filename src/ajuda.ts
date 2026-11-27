@@ -21,6 +21,8 @@ export const AJUDA = {
   nomeTrabalho: 'Dê um nome ao que está calculando. Ex.: Brasão do Flamengo. O nome fica em Título automaticamente.',
   tipoTrabalho: 'Parte entra depois em um produto, como o brasão ou a base. Produto final é a peça pronta para vender.',
 
+  importar: 'Escolha um ou vários arquivos .gcode fatiados. Cada arquivo vira uma parte, com tempo e gramas por cor. O arquivo é lido aqui no seu navegador, nada é enviado.',
+
   // Filamentos
   material: 'Tipo do plástico do rolo. Cada material tem preço e temperatura próprios.',
   cor: 'Digite para buscar na lista, que tem acabamentos (fosco, silk) e dual color. Se a sua cor não existe, use o + para cadastrar.',

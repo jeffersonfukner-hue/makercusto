@@ -13,6 +13,7 @@ import { addBrand, addColor, type Brand, type BrandDraft, type Color, type Color
 import { addSupply, type Supply, type SupplyDraft } from './domain/supply'
 import { AJUDA } from './ajuda'
 import { Fld, Info } from './Campos'
+import { ImportGcode } from './ImportGcode'
 import { QuickFilament, QuickPrinter } from './Rapido'
 import { Estoque } from './Estoque'
 import { Cores } from './Cores'
@@ -452,6 +453,12 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
               <Fld label="Nome do trabalho" info={AJUDA.nomeTrabalho} mode="text" value={work.name} onChange={(v) => setWork({ ...work, name: v })} placeholder="Ex.: Brasão do Flamengo" maxLength={60} />
               <KindPick value={work.kind} onChange={(k) => setWork({ ...work, kind: k })} />
             </div>
+            <ImportGcode label="Importar do fatiador (.gcode)" onResults={([r]) => {
+              const { h, m, s: sec } = toHMS(r.hours)
+              setForm({ ...form, grams: String(r.totalG).replace('.', ','), timeH: String(h), timeM: String(m), timeS: String(sec) })
+              setFil('')
+              if (!work.name.trim()) setWork({ ...work, name: r.name })
+            }} />
           </section>
           {basic ? (
             <>
