@@ -67,3 +67,8 @@ fieldset.time { border: 0; padding: 0; margin: 0; min-width: 0 }
 fieldset.time legend { padding: 0; font-weight: 500; margin-bottom: 6px }
 .hms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
 .hms label span:first-child { font-size: .8rem; color: var(--muted, #5b6b66) }
+
+/* Listas de escolha e botão principal */
+.input select { flex: 1; min-width: 0; border: 0; padding: 11px 10px; font: inherit; background: transparent; outline: none }
+button.primary { background: var(--main); border-color: var(--main); color: #fff; font-weight: 600 }
+td.acts { display: flex; gap: 6px; flex-wrap: wrap }

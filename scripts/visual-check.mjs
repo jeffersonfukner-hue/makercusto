@@ -8,12 +8,17 @@ const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome'
 const OUT = process.env.SHOTS_DIR || 'visual-out'
 const PORT = 4173
 const sizes = [{ n: 'celular-360', w: 360, h: 780 }, { n: 'tablet-768', w: 768, h: 900 }, { n: 'desktop-1280', w: 1280, h: 900 }]
-const routes = ['#/', '#/calculadora', '#/painel']
+const routes = ['#/', '#/calculadora', '#/painel', '#/filamentos', '#/calculadora?avancado']
 const sample = { grams: 50, pricePerKg: 100, hours: 3, watts: 150, tariff: 1.03, printerPrice: 3500, lifetimeHours: 3000,
   laborMinutes: 10, laborRate: 20, failurePct: 10, quantity: 1, marginPct: 50 }
 const seed = JSON.stringify([
   { id: 'a', name: 'Chaveiro azul', savedAt: '2026-11-27T10:00:00Z', input: { ...sample, soldPrice: 35 } },
   { id: 'b', name: 'Suporte de fone com nome bem comprido para testar quebra', savedAt: '2026-11-26T10:00:00Z', input: sample },
+])
+
+const fil = JSON.stringify([
+  { id: 'f1', name: 'PLA preto 002', supplier: 'Fornecedor com nome bem comprido', material: 'PLA', color: 'preto', priceCents: 7500, weightG: 1000, boughtAt: '2026-11-20' },
+  { id: 'f2', name: 'PLA preto 001', supplier: 'Fornecedor com nome bem comprido', material: 'PLA', color: 'preto', priceCents: 6800, weightG: 1000, boughtAt: '2026-10-01' },
 ])
 
 mkdirSync(OUT, { recursive: true })
@@ -25,14 +30,16 @@ const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-san
 const problems = []
 for (const s of sizes) {
   const ctx = await browser.newContext({ viewport: { width: s.w, height: s.h }, locale: 'pt-BR' })
-  await ctx.addInitScript((v) => { try { localStorage.setItem('makercusto:calculos', v) } catch {} }, seed)
+  await ctx.addInitScript(([v, f]) => { try { localStorage.setItem('makercusto:calculos', v); localStorage.setItem('makercusto:filamentos', f) } catch {} }, [seed, fil])
   const page = await ctx.newPage()
   // Fontes externas e favicon não contam: a rede de teste pode bloqueá-los.
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) problems.push(`[${s.n}] console: ${m.text()}`) })
   page.on('pageerror', (e) => problems.push(`[${s.n}] erro: ${e.message}`))
   for (const r of routes) {
-    await page.goto(base + r); await page.reload(); await page.waitForTimeout(300)
-    const name = `${s.n}-${r.replace('#/', '') || 'inicio'}`
+    const adv = r.endsWith('?avancado')
+    await page.goto(base + r.replace('?avancado', '')); await page.evaluate((a) => localStorage.setItem('makercusto:modo', a ? 'avancado' : 'basico'), adv)
+    await page.reload(); await page.waitForTimeout(300)
+    const name = `${s.n}-${r.replace('#/', '').replace('?avancado', '-avancado') || 'inicio'}`
     await page.screenshot({ path: `${OUT}/${name}.png`, fullPage: true })
     const over = await page.evaluate(() => {
       const w = document.documentElement.clientWidth

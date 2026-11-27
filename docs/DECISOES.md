@@ -16,11 +16,13 @@
 
 ## Seção 4: necessidades de maker (em andamento, um bloco por vez)
 - Bloco 1 (feito): tempo de impressão em campos separados de horas, minutos e segundos (`src/domain/time.ts`). O cálculo continua em horas decimais.
-- Bloco 2: produto com partes. Cada parte impressa tem tempo, cores e peso por cor; itens comprados (ex.: copo de alumínio) entram só como custo. Dado real do fatiador (Anycubic Slicer Next, caneca Flamengo, brasão): o peso total do filamento é modelo + purga (flushed) + torre, e a purga mais a torre foram mais da metade do total. Por isso o desperdício de troca de cor precisa ser um campo próprio por cor.
-- Bloco 3: importar .3mf ou .gcode do fatiador, lido só no navegador. Formato a confirmar com arquivo real.
-- Bloco 4: catálogo de impressoras mais usadas no Brasil com perfis pesquisados; clonar e personalizar é recurso do plano pago.
+- Bloco 2 (feito, parte local): cadastro de filamentos em #/filamentos. Cada rolo comprado é um registro (nome, fornecedor, material, cor, preço pago, peso do rolo, data). Preço por kg = preço do rolo ÷ peso. Na calculadora Avançado escolhe-se o rolo e o preço por kg vem preenchido; o Básico segue com o preço digitado. Regra de preço: vale o do rolo escolhido para o trabalho. Cálculos salvos guardam o preço da época. Guardado só neste navegador; a tabela na nuvem vem na etapa seguinte, com SQL a ser rodado pelo dono. Fora do escopo: estoque restante do rolo.
+- Bloco 3: produto com partes. Cada parte impressa tem tempo, cores e peso por cor; itens comprados (ex.: copo de alumínio) entram só como custo. Dado real do fatiador (Anycubic Slicer Next, caneca Flamengo, brasão): o peso total do filamento é modelo + purga (flushed) + torre, e a purga mais a torre foram mais da metade do total. Por isso o desperdício de troca de cor precisa ser um campo próprio por cor.
+- Bloco 4: importar .3mf ou .gcode do fatiador, lido só no navegador. Formato a confirmar com arquivo real.
+- Bloco 5: catálogo de impressoras mais usadas no Brasil com perfis pesquisados; clonar e personalizar é recurso do plano pago.
 
 ## Depois (fora do escopo atual)
 - Biblioteca de arquivos 3D limpos (.3mf) para download por quem paga (ideia do dono, 27/11/2026). Exige armazenamento, controle de quem pagou e decidir quais modelos podem ser distribuídos. Só depois dos primeiros pagantes.
+- Controle de quanto resta em cada rolo e baixa automática de estoque.
 - Conector ao vivo com o fatiador (exige programa instalado no computador).
 - Utilização da máquina, clientes, estoque, login e banco, importação de G-code, várias mesas, rateio.

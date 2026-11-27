@@ -5,9 +5,11 @@ import { calculateCost, validate, type CostInput, type CostResult } from './doma
 import { addSaved, summarize, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { fromHMS, toHMS } from './domain/time'
+import { filamentLabel, pricePerKg, type Filament } from './domain/filament'
+import { Filamentos } from './Filamentos'
 import { ESSENTIAL, inputForMode, type Mode } from './modes'
 import { cloud, onUser, signInWithGoogle, signOut, supabase } from './supabase'
-import { readMode, readSaved, writeMode, writeSaved } from './storage'
+import { readFilaments, readMode, readSaved, writeFilaments, writeMode, writeSaved } from './storage'
 
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 
@@ -18,7 +20,7 @@ function useRoute() {
     addEventListener('hashchange', on)
     return () => removeEventListener('hashchange', on)
   }, [])
-  return hash === '#/calculadora' ? 'calculadora' : hash === '#/painel' ? 'painel' : 'inicio'
+  return hash === '#/calculadora' ? 'calculadora' : hash === '#/painel' ? 'painel' : hash === '#/filamentos' ? 'filamentos' : 'inicio'
 }
 
 const toForm = (i: CostInput): Form => {
@@ -36,6 +38,8 @@ export default function App() {
   const [form, setForm] = useState<Form>(initial)
   const [saved, setSaved] = useState<SavedCalc[]>(readSaved)
   const [mode, setModeState] = useState<Mode>(readMode)
+  const [filaments, setFilaments] = useState<Filament[]>(readFilaments)
+  const updateFilaments = (n: Filament[]) => { setFilaments(n); writeFilaments(n) }
   const [user, setUser] = useState<string | null>(null)
   const [cloudMsg, setCloudMsg] = useState('')
   const setMode = (m: Mode) => { setModeState(m); writeMode(m) }
@@ -59,7 +63,17 @@ export default function App() {
   }
 
   if (route === 'calculadora') {
-    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} />
+    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} filaments={filaments} />
+  }
+  if (route === 'filamentos') {
+    return (
+      <main className="wrap">
+        <Nav route="filamentos" account={account} />
+        <h1>Meus filamentos</h1>
+        <p className="lead">Cadastre cada rolo com o preço que você pagou. Na calculadora (modo Avançado) você escolhe o rolo e o custo já vem certo.</p>
+        <Filamentos list={filaments} onChange={updateFilaments} />
+      </main>
+    )
   }
   if (route === 'painel') {
     const onOpen = (id: string) => {
@@ -91,6 +105,7 @@ function Nav({ route, account }: { route: string; account?: Account }) {
       <a className="brand" href="#/">MakerCusto</a>
       <a href="#/calculadora" aria-current={cur('calculadora')}>Calculadora</a>
       <a href="#/painel" aria-current={cur('painel')}>Painel</a>
+      <a href="#/filamentos" aria-current={cur('filamentos')}>Filamentos</a>
       {account && (account.user
         ? <span className="acct"><span title={account.user}>{account.user}</span><button type="button" onClick={account.signOut}>Sair</button></span>
         : <button type="button" className="acct" onClick={account.signIn}>Entrar com Google</button>)}
@@ -107,6 +122,10 @@ function Home() {
         <a className="choice main" href="#/calculadora">
           <strong>Calculadora</strong>
           <span>Custo por peça, preço sugerido e lucro.</span>
+        </a>
+        <a className="choice" href="#/filamentos">
+          <strong>Filamentos</strong>
+          <span>Cadastre cada rolo com o preço pago. Modo Avançado.</span>
         </a>
         <a className="choice" href="#/painel">
           <strong>Painel</strong>
@@ -161,13 +180,19 @@ const flat = groups.flatMap((g) => g.fields)
 const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
-function Calculator({ form, setForm, onSave, mode, setMode, account }: {
-  form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
+function Calculator({ form, setForm, onSave, mode, setMode, account, filaments }: {
+  filaments: Filament[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
 }) {
   const input = inputForMode(toInput(form), mode)
   const errors = validate(input)
   const result = errors.length ? null : calculateCost(input)
   const basic = mode === 'basico'
+  const [fil, setFil] = useState('')
+  const pickFilament = (id: string) => {
+    setFil(id)
+    const f = filaments.find((x) => x.id === id)
+    if (f) setForm({ ...form, pricePerKg: String(pricePerKg(f)).replace('.', ',') })
+  }
   const field = (f: Field) => f.key === 'hours' ? (
     <fieldset key="hours" className="time">
       <legend>{f.label}</legend>
@@ -188,7 +213,7 @@ function Calculator({ form, setForm, onSave, mode, setMode, account }: {
     <label key={f.key}>
       <span>{f.label}</span>
       <span className="input">
-        <input inputMode="decimal" value={form[f.key as keyof Form]} onChange={(e) => setForm({ ...form, [f.key as keyof Form]: e.target.value })} />
+        <input inputMode="decimal" value={form[f.key as keyof Form]} onChange={(e) => { if (f.key === 'pricePerKg') setFil(''); setForm({ ...form, [f.key as keyof Form]: e.target.value }) }} />
         <em>{f.unit}</em>
       </span>
       {f.hint && <small>{f.hint}</small>}
@@ -229,7 +254,22 @@ function Calculator({ form, setForm, onSave, mode, setMode, account }: {
                 {adjust.map((g) => <fieldset key={g.title}><legend>{g.title}</legend>{g.fields.map(field)}</fieldset>)}
               </details>
             </>
-          ) : groups.map((g) => <fieldset key={g.title}><legend>{g.title}</legend>{g.fields.map(field)}</fieldset>)}
+          ) : groups.map((g) => (
+            <fieldset key={g.title}><legend>{g.title}</legend>
+              {g.title === 'Material' && (
+                <label><span>Filamento cadastrado</span>
+                  <span className="input">
+                    <select value={fil} onChange={(e) => pickFilament(e.target.value)}>
+                      <option value="">Digitar o preço abaixo</option>
+                      {filaments.map((x) => <option key={x.id} value={x.id}>{filamentLabel(x)}</option>)}
+                    </select>
+                  </span>
+                  <small>{filaments.length ? 'Escolha o rolo e o preço por kg vem preenchido.' : <>Nenhum rolo cadastrado. <a href="#/filamentos">Cadastrar filamentos</a>.</>}</small>
+                </label>
+              )}
+              {g.fields.map(field)}
+            </fieldset>
+          ))}
         </form>
       </div>
     </main>
