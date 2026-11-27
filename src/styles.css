@@ -306,15 +306,15 @@ input, select, textarea { color: inherit }
   --main:#1b4f9c; --on-main:#fff; --amber:#c8962b; --on-amber:#0f2133; --warn:#b3261e;
   --amber-soft:#fbf4e1; --amber-soft-2:#f0dca8; --amber-ink:#5a4208;
   --hero-bg:linear-gradient(135deg, #0f2a4a, #173f6e); --on-dark:#fff; --on-dark-mute:#b9c8dd; --glow:0 6px 18px #0f2a4a33; --nav-bg:#fff;
-  --display: Georgia, "Times New Roman", serif;
+  --display: "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif; --texto: "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
 }
 :root[data-tema="corporativo"] .nav::before { border-bottom: 3px solid var(--main) }
 :root[data-tema="corporativo"] .card, :root[data-tema="corporativo"] .card2, :root[data-tema="corporativo"] .details, :root[data-tema="corporativo"] .modal, :root[data-tema="corporativo"] .choice { border-radius: 4px; box-shadow: 0 1px 2px #0f213314 }
 :root[data-tema="corporativo"] .hero { border-radius: 4px; border-bottom: 3px solid var(--amber) }
 :root[data-tema="corporativo"] .sumbar { border-radius: 4px 4px 0 0; border-top: 3px solid var(--amber) }
 :root[data-tema="corporativo"] .input, :root[data-tema="corporativo"] button, :root[data-tema="corporativo"] .modes { border-radius: 3px }
-:root[data-tema="corporativo"] h1, :root[data-tema="corporativo"] h2 { font-family: Georgia, "Times New Roman", serif }
-:root[data-tema="corporativo"] 
+:root[data-tema="corporativo"], :root[data-tema="corporativo"] button, :root[data-tema="corporativo"] input, :root[data-tema="corporativo"] select, :root[data-tema="corporativo"] textarea { font-family: var(--texto) }
+:root[data-tema="corporativo"] h1, :root[data-tema="corporativo"] h2, :root[data-tema="corporativo"] .big, :root[data-tema="corporativo"] .hero strong { font-weight: 600 }
 
 /* Confirmações: botão de ação perigosa */
 button.danger { background: var(--warn); border-color: var(--warn); color: #fff; font-weight: 600 }
@@ -369,3 +369,25 @@ button.primary, .save > button, .sumbar button { font-weight: 600 }
 .tabs .tabsearch svg { width: 16px; height: 16px }
 @media (max-width: 520px) { .tabs button { flex: 1 1 28%; font-size: .8rem } }
 .card2, .card { padding: 14px }
+
+/* ===== Refinamento global (vale para o app inteiro e para todos os temas): mais denso, delicado e premium ===== */
+:root { --ctl: 36px; font-size: 15px }
+h1 { font-size: 1.4rem; font-weight: 600 } h2 { font-size: .9rem }
+.lead { margin: 6px 0 14px; font-size: .92rem }
+.nav { padding: 10px 0; margin-bottom: 14px }
+label { margin-top: 8px } label > span:first-child { font-size: .8rem; font-weight: 500; color: var(--label); margin-bottom: 2px }
+.input { border-radius: 7px; border-color: var(--line-strong) } .input input, .input select { padding: 7px 10px; min-height: var(--ctl) }
+.input em { font-size: .78rem }
+select { font: inherit }
+button { padding: 5px 12px; border-radius: 7px; font-size: .88rem; font-weight: 500; min-height: 32px }
+fieldset, .card, .card2 { padding-top: 6px; padding-bottom: 10px; border-radius: 10px }
+.details summary, .adj summary { padding: 8px 14px; font-size: .9rem; border-radius: 10px }
+.choice { padding: 8px 12px } .choice strong { font-size: .95rem } .choice span { font-size: .78rem }
+.hero strong { font-size: 1.35rem } .hero { padding: 16px 18px }
+.big { font-size: 1.8rem }
+th, td { padding: 5px 8px; font-size: .88rem } th { font-weight: 500; color: var(--mute); font-size: .78rem }
+.modes button { padding: 5px 14px }
+.modal { padding: 16px 18px }
+button.plus, button.ibtn { min-height: 0 }
+
+@media (pointer: coarse) { button:not(.plus):not(.ibtn), .input input, .input select { min-height: 44px } }

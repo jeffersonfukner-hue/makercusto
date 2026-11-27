@@ -129,3 +129,7 @@
 - Calculadora e Produto com partes guardavam coisas separadas. Agora Produtos e Painel listam tudo junto (`domain/trabalhos.ts`, `ListaTrabalhos.tsx`): mesmo nome = um item com histórico, mostrando a origem de cada versão.
 - A lista é um componente só, usado em Produtos e no Painel. A composição do custo (`Composition`) mostra só as fatias que o trabalho tem (purga e itens comprados só no Produto).
 - Abrir: trabalho da Calculadora abre na Calculadora; do Produto abre no Produto. Etapas 2 e 3: seções compartilhadas (itens comprados, impressora, venda) e Calculadora no mesmo motor do Produto, para abrir qualquer trabalho em qualquer tela.
+
+## Refinamento global e fonte do Corporativo
+- O refinamento (campos, botões, títulos, tabelas mais compactos) vale para o app inteiro: bloco "Refinamento global" no fim de `styles.css`, controlado por `--ctl`. Em telas de toque (`pointer: coarse`) os alvos continuam com 44px.
+- Corporativo usava Georgia nos títulos e sans no resto. Agora usa uma família só (IBM Plex Sans) em texto, títulos e números (`--display` e `--texto`).
