@@ -220,3 +220,22 @@ fieldset.kind legend.lab { padding: 0; margin-bottom: 4px; font-size: .82rem; fo
 @media (max-width: 859px) { .result .hero.errors { display: none } }
 .sumbar .k .first { max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 @media (max-width: 520px) { .sumbar .k .first { max-width: 34ch } }
+
+/* O que falta + busca de campo */
+.modal.pend { width: min(560px, 100%); max-height: min(86vh, 720px); overflow: auto; display: flex; flex-direction: column; gap: 10px }
+.pendsearch { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line, #c9d3d8); border-radius: 10px; font: inherit }
+.fillall { border: 1px solid var(--amber); background: #fff8e1; border-radius: 12px; padding: 12px; display: grid; gap: 8px } .fillall p { margin: 0 }
+.fillall .fl { display: grid; gap: 4px; font-size: .9rem; font-weight: 600 } .fillall select { min-height: 44px }
+.pendlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px }
+.pendlist button { width: 100%; display: flex; justify-content: space-between; gap: 10px; align-items: center; text-align: left; padding: 10px 12px; min-height: 44px; border-radius: 10px }
+.pendlist button em { font-style: normal; font-size: .8rem; background: #e8eef0; border-radius: 999px; padding: 2px 8px; white-space: nowrap }
+.pendlist button small { color: var(--muted, #5a6770) }
+.tabsearch { flex: 0 0 auto !important; margin-left: auto; border: 1px solid var(--line, #c9d3d8) !important; border-radius: 8px !important; min-height: 36px !important; align-self: center }
+@keyframes flash { 0%, 100% { box-shadow: 0 0 0 0 #e0a10000 } 30% { box-shadow: 0 0 0 5px #e0a100aa } 60% { box-shadow: 0 0 0 2px #e0a10066 } }
+.input.flash { animation: flash 1.2s ease-out 1; border-color: var(--amber) }
+.fillall .input { display: flex; align-items: center; min-height: 44px; padding: 0 10px } .fillall .input input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; padding: 8px 0 } .fillall .input em { font-style: normal; color: var(--muted, #5a6770); font-weight: 400 }
+.fillall select { width: 100%; padding: 8px 10px; border: 1px solid var(--line, #c9d3d8); border-radius: 10px; background: #fff; font: inherit; font-weight: 400 }
+.modal.pend h2 { font-size: 1.15rem }
+.fillall .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px } .fillall .fl { min-width: 0 }
+@media (max-width: 520px) { .fillall .pair { grid-template-columns: 1fr } }
+.fillall .input, .fillall select { box-sizing: border-box; width: 100% }

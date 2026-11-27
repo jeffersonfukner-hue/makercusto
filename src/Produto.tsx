@@ -11,6 +11,7 @@ import { Fld, Info } from './Campos'
 import { QuickFilament, QuickPrinter, QuickSupply } from './Rapido'
 import { titleCase } from './domain/texto'
 import { groupVersions } from './domain/versions'
+import { Pendencias, type FieldItem } from './Pendencias'
 import type { FilamentDraft } from './domain/filament'
 import type { UserPrinterDraft } from './domain/printers'
 import type { SupplyDraft } from './domain/supply'
@@ -35,15 +36,22 @@ const initial = (): State => ({
 const REQUIRED = new Set(['Nome da parte', 'Peças por impressão', 'Peças por produto', 'Preço do filamento', 'Item', 'Preço de cada', 'Quantidade', 'Consumo médio', 'Tarifa de energia', 'Preço da impressora', 'Vida útil estimada', 'Seu tempo por produto', 'Valor da sua hora', 'Impressões que falham', 'Margem desejada'])
 const bad = (v: string) => v.trim() === '' || Number.isNaN(Number(v.replace(',', '.')))
 // Leva a pessoa ao primeiro campo laranja, já selecionado para só digitar.
-function focusMissing(openTab: (t: Tab) => void): boolean {
-  const el = document.querySelector<HTMLInputElement>('.input.missing input')
-  if (!el) return false
+// Abre a aba do campo, rola até ele, pisca e seleciona para digitar.
+function goTo(el: HTMLElement, openTab: (t: Tab) => void) {
   const t = el.closest<HTMLElement>('[data-tab]')?.dataset.tab as Tab | undefined
   if (t) openTab(t)
   window.setTimeout(() => {
     el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    window.setTimeout(() => { el.focus({ preventScroll: true }); el.select() }, 250)
+    const box = el.closest<HTMLElement>('.input') ?? el
+    box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash')
+    window.setTimeout(() => box.classList.remove('flash'), 1800)
+    window.setTimeout(() => { el.focus({ preventScroll: true }); (el as HTMLInputElement).select?.() }, 250)
   }, 60)
+}
+function focusMissing(openTab: (t: Tab) => void): boolean {
+  const el = document.querySelector<HTMLInputElement>('.input.missing input')
+  if (!el) return false
+  goTo(el, openTab)
   return true
 }
 type Tab = 'partes' | 'filamentos' | 'impressora' | 'itens' | 'venda' | 'produtos'
@@ -98,6 +106,11 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const [name, setName] = useState('')
   const [saveMsg, setSaveMsg] = useState('')
   const [tab, setTab] = useState<Tab>('partes')
+  const [dlg, setPend] = useState<null | 'faltam' | 'busca'>(null)
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPend('busca') } }
+    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
+  }, [])
   const [miss, setMiss] = useState<Record<string, number>>({})
   useEffect(() => {
     const m: Record<string, number> = {}
@@ -207,6 +220,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
               {l}{n > 0 && <span className="cnt">{n}</span>}{miss[k] > 0 && <span className="dot" title="Falta preencher" aria-label="falta preencher" />}
             </button>
           ))}
+          <button type="button" className="tabsearch" aria-label="Buscar campo (Ctrl+K)" title="Buscar campo (Ctrl+K)" onClick={() => setPend('busca')}>Buscar</button>
         </div>
         <div role="tabpanel" id="painel-partes" aria-labelledby="tab-partes" data-tab="partes" hidden={tab !== 'partes'}>
         {s.parts.map((p, n) => (
@@ -372,11 +386,22 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
 
         <p><button type="button" onClick={() => { if (confirm('Limpar tudo e começar um produto novo?')) setS(initial()) }}>Começar produto novo</button></p>
       </form>
+      {dlg && <Pendencias startSearch={dlg === 'busca'} onClose={() => setPend(null)}
+        onGo={(it: FieldItem) => { setPend(null); goTo(it.el, setTab) }}
+        fill={{
+          count: colorGroups.filter((g) => bad(s.parts[g.at[0][0]].lines[g.at[0][1]].price)).length,
+          filaments: filaments.map((f) => ({ id: f.id, label: filamentLabel(f), price: t(kgPrice(f)) })),
+          apply: (price, filId) => {
+            const todo = colorGroups.filter((g) => bad(s.parts[g.at[0][0]].lines[g.at[0][1]].price))
+            setS({ ...s, parts: s.parts.map((p, n) => ({ ...p, lines: p.lines.map((l, k) => (todo.some((g) => g.at.some(([a, b]) => a === n && b === k)) ? { ...l, price, fil: filId } : l)) })) })
+            setPend(null)
+          },
+        }} />}
       {quick?.kind === 'fil' && onAddFilament && <QuickFilament onAdd={onAddFilament} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'fil', name, n: quick.n, k: quick.k } }} />}
       {quick?.kind === 'prn' && onAddPrinter && <QuickPrinter onAdd={onAddPrinter} onClose={() => setQuick(null)} defaults={{ watts: s.shop.watts, price: s.shop.printerPrice, life: s.shop.life }} onSaved={(name) => { pend.current = { kind: 'prn', name, n: 0, k: 0 } }} />}
       {quick?.kind === 'sup' && onAddSupply && <QuickSupply onAdd={onAddSupply} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'sup', name, n: quick.n, k: 0 } }} />}
     </div>
-    <SummaryBar onMissing={() => focusMissing(setTab)} r={r} input={input} errors={[...new Set(errors)]} name={name} setName={setName} save={doSave} msg={saveMsg} />
+    <SummaryBar count={Object.values(miss).reduce((a, b) => a + b, 0)} onMissing={() => setPend('faltam')} r={r} input={input} errors={[...new Set(errors)]} name={name} setName={setName} save={doSave} msg={saveMsg} />
     </>
   )
 }
@@ -425,7 +450,8 @@ function Result({ r, input, name, setName, save, msg }: { r: ProductResult; inpu
 }
 
 // Barra de resumo fixa embaixo da tela: custo, preço sugerido e a opção de salvar. A coluna da direita continua com os cálculos.
-function SummaryBar({ r, input, errors, name, setName, save, msg, onMissing }: {
+function SummaryBar({ r, input, errors, name, setName, save, msg, onMissing, count }: {
+  count: number
   onMissing: () => boolean | void
   r: ProductResult | null; input: ProductInput; errors: string[]; name: string; setName: (n: string) => void; save: () => Promise<void>; msg: string
 }) {
@@ -443,7 +469,7 @@ function SummaryBar({ r, input, errors, name, setName, save, msg, onMissing }: {
         </>
       ) : (
         <>
-          <div className="k"><strong>Faltam {errors.length} {errors.length === 1 ? 'item' : 'itens'} para salvar</strong><small className="first">{errors[0]}</small></div>
+          <div className="k"><strong>Faltam {count || errors.length} {(count || errors.length) === 1 ? 'item' : 'itens'} para salvar</strong><small className="first">{errors[0]}</small></div>
           <button type="button" onClick={top}>Ver o que falta</button>
         </>
       )}

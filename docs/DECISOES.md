@@ -99,3 +99,9 @@
 - Preço do filamento saiu de dentro de cada cor da parte e foi para a aba Filamentos (ex.: 7 preços viraram 3 cores). Painel lateral e barra inferior continuam.
 - Aviso grande do topo removido (tirava o ar premium): só a barra inferior avisa, com o primeiro item que falta e o botão Ver o que falta.
 - Depois: abas parecidas na Calculadora simples? Guardar presets de filamento/impressora por produto como no fatiador.
+
+## O que falta (lista clicável), preço único para várias cores e busca de campo
+- "Ver o que falta" na barra abre uma lista dos campos pendentes; cada linha leva direto ao campo (abre a aba, rola, pisca em laranja e seleciona).
+- Quando faltam 2 ou mais preços de filamento, a lista oferece "mesmo preço para as N cores" (digitando o preço ou escolhendo um filamento cadastrado). Depois dá para ajustar cor por cor.
+- Busca de campo como no fatiador: botão Buscar na barra das abas ou Ctrl/Cmd+K; digita parte do nome (sem acento), Enter vai ao primeiro resultado.
+- Depois: o mesmo na Calculadora e nos cadastros; preço por rolo com validade (acabou o rolo, vale o próximo preço).
