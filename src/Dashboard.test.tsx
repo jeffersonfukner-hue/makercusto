@@ -20,5 +20,7 @@ describe('Dashboard', () => {
     for (const t of ['Últimos cálculos', 'Custo por peça', 'Margem bruta por trabalho', 'Preço praticado e preço sugerido', 'Lucro por hora de máquina', 'Chaveiro'])
       expect(html).toContain(t)
     expect(html).toContain('R$')
+    expect(html).toContain('data-label="Margem bruta"')
+    expect(html).toContain('data-label="Lucro por hora"')
   })
 })

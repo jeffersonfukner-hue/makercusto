@@ -49,3 +49,14 @@ button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid
 .jobs { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px } .jobs li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px } .jobs li.on { border-color: var(--main); background: var(--soft) }
 .pick { flex: 1 1 160px; min-width: 0; text-align: left; border: 0; background: transparent; display: grid; padding: 4px 6px } .pick span { color: var(--mute); font-size: .85rem }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+.acts { display: flex; gap: 6px; margin-left: auto }
+@media (max-width: 600px) {
+  .stack table, .stack tbody { display: block } .stack thead { display: none }
+  .stack tr { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--line) }
+  .stack td { border: 0; padding: 2px 0; white-space: normal }
+  .stack td:first-child { grid-column: 1 / -1; font-weight: 700 } .stack td:first-child::before { display: none }
+  .stack td::before { content: attr(data-label); display: block; font-size: .75rem; color: var(--mute) }
+}
+.nav { flex-wrap: wrap } .acct { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: .85rem }
+.acct > span { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mute) }
+.errors { color: var(--warn) }

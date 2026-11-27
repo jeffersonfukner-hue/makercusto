@@ -30,3 +30,11 @@ export function summarize(s: SavedCalc): JobSummary {
   const gross = revenue - result.total
   return { ...s, result, revenue, gross, grossPct: revenue > 0 ? gross / revenue : 0 }
 }
+
+// Linha da tabela `calculos` do Supabase para o formato do app. Linhas inválidas são ignoradas.
+export interface CloudRow { id: string; nome: string; entrada: unknown; criado_em: string }
+export function fromCloudRows(rows: CloudRow[]): SavedCalc[] {
+  return rows
+    .map((r) => ({ id: r.id, name: r.nome, savedAt: r.criado_em, input: r.entrada as CostInput }))
+    .filter(isSaved)
+}

@@ -12,4 +12,5 @@ Regras: nada disso roda em produção sem autorização. Nunca cole a chave `ser
 2. Em "URIs de redirecionamento autorizados", colocar a URL de callback que aparece em Supabase > Authentication > Providers > Google (formato `https://<ref-do-projeto>.supabase.co/auth/v1/callback`).
 3. Copiar o Client ID e o Client Secret para o Supabase, no mesmo provedor Google, e ativar.
 4. Em Supabase > Authentication > URL Configuration, em Redirect URLs, permitir o endereço do Preview (`https://*.makercusto-preview.pages.dev/**`) e `http://localhost:5173/**`.
-5. Variáveis no Cloudflare Pages (só as públicas): `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+5. Variáveis (só as públicas, em Cloudflare Pages > Settings > Variables, e em `.env.local` para testar no computador, modelo em `.env.example`): `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. A chave "anon" fica em Supabase > Project Settings > API. Depois de criar ou alterar variáveis no Cloudflare, é preciso fazer um novo deploy.
+6. Sem as duas variáveis, o app funciona como antes (salva só no navegador, sem botão de entrar).

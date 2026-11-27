@@ -5,6 +5,7 @@ import { calculateCost, validate, type CostInput, type CostResult } from './doma
 import { addSaved, summarize, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { ESSENTIAL, inputForMode, type Mode } from './modes'
+import { cloud, onUser, signInWithGoogle, signOut, supabase } from './supabase'
 import { readMode, readSaved, writeMode, writeSaved } from './storage'
 
 const OLD_URL = 'https://makercusto-preview.pages.dev/'
@@ -35,12 +36,30 @@ export default function App() {
   const [form, setForm] = useState<Form>(initial)
   const [saved, setSaved] = useState<SavedCalc[]>(readSaved)
   const [mode, setModeState] = useState<Mode>(readMode)
+  const [user, setUser] = useState<string | null>(null)
+  const [cloudMsg, setCloudMsg] = useState('')
   const setMode = (m: Mode) => { setModeState(m); writeMode(m) }
   const update = (next: SavedCalc[]) => { setSaved(next); writeSaved(next) }
+  const account: Account = supabase ? { user, signIn: signInWithGoogle, signOut } : null
+
+  useEffect(() => onUser(setUser), [])
+  useEffect(() => {
+    if (!cloud) return
+    if (!user) { setSaved(readSaved()); setCloudMsg(''); return }
+    cloud.list().then((l) => { setSaved(l); setCloudMsg('') }).catch((e: Error) => setCloudMsg(e.message))
+  }, [user])
+
+  const onSave = async (name: string, input: CostInput) => {
+    if (user && cloud) { await cloud.save(name, input); setSaved(await cloud.list()); return }
+    update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString()))
+  }
+  const onDelete = async (id: string) => {
+    if (!(user && cloud)) return update(saved.filter((x) => x.id !== id))
+    try { await cloud.remove(id); setSaved(await cloud.list()); setCloudMsg('') } catch (e) { setCloudMsg((e as Error).message) }
+  }
+
   if (route === 'calculadora') {
-    const onSave = (name: string, input: CostInput) =>
-      update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString()))
-    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} />
+    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} />
   }
   if (route === 'painel') {
     const onOpen = (id: string) => {
@@ -49,23 +68,32 @@ export default function App() {
     }
     return (
       <main className="wrap">
-        <Nav route="painel" />
+        <Nav route="painel" account={account} />
         <h1>Painel</h1>
-        <p className="lead">Seus cálculos salvos neste navegador.</p>
-        <Dashboard jobs={saved.map(summarize)} onOpen={onOpen} onDelete={(id) => update(saved.filter((x) => x.id !== id))} />
+        <p className="lead">
+          {user ? `Seus cálculos na nuvem, na conta ${user}. Os que você salvou antes de entrar continuam só neste navegador.`
+            : account ? 'Seus cálculos salvos neste navegador. Entre com Google para guardar na nuvem.' : 'Seus cálculos salvos neste navegador.'}
+        </p>
+        {cloudMsg && <p className="errors" role="alert">{cloudMsg}</p>}
+        <Dashboard jobs={saved.map(summarize)} onOpen={onOpen} onDelete={onDelete} />
       </main>
     )
   }
   return <Home />
 }
 
-function Nav({ route }: { route: string }) {
+type Account = { user: string | null; signIn: () => void; signOut: () => void } | null
+
+function Nav({ route, account }: { route: string; account?: Account }) {
   const cur = (r: string) => (route === r ? 'page' : undefined)
   return (
     <nav className="nav">
       <a className="brand" href="#/">MakerCusto</a>
       <a href="#/calculadora" aria-current={cur('calculadora')}>Calculadora</a>
       <a href="#/painel" aria-current={cur('painel')}>Painel</a>
+      {account && (account.user
+        ? <span className="acct"><span title={account.user}>{account.user}</span><button type="button" onClick={account.signOut}>Sair</button></span>
+        : <button type="button" className="acct" onClick={account.signIn}>Entrar com Google</button>)}
     </nav>
   )
 }
@@ -137,8 +165,8 @@ const flat = groups.flatMap((g) => g.fields)
 const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
-function Calculator({ form, setForm, onSave, mode, setMode }: {
-  form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => void; mode: Mode; setMode: (m: Mode) => void
+function Calculator({ form, setForm, onSave, mode, setMode, account }: {
+  form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
 }) {
   const input = inputForMode(toInput(form), mode)
   const errors = validate(input)
@@ -160,7 +188,7 @@ function Calculator({ form, setForm, onSave, mode, setMode }: {
 
   return (
     <main className="wrap">
-      <Nav route="calculadora" />
+      <Nav route="calculadora" account={account} />
       <header className="top">
         <h1>Calculadora</h1>
         <div className="modes" role="group" aria-label="Modo da calculadora">
@@ -205,7 +233,7 @@ function Hero({ r, margin }: { r: CostResult; margin: number }) {
   )
 }
 
-function Details({ r, basic, onSave }: { r: CostResult; basic: boolean; onSave: (name: string) => void }) {
+function Details({ r, basic, onSave }: { r: CostResult; basic: boolean; onSave: (name: string) => Promise<void> }) {
   return (
     <div className="details">
       {!basic && (
@@ -229,11 +257,11 @@ function Details({ r, basic, onSave }: { r: CostResult; basic: boolean; onSave: 
   )
 }
 
-function SaveBox({ onSave }: { onSave: (name: string) => void }) {
+function SaveBox({ onSave }: { onSave: (name: string) => Promise<void> }) {
   const [name, setName] = useState('')
   const [msg, setMsg] = useState('')
-  const save = () => {
-    try { onSave(name); setMsg('Salvo.'); setName('') } catch (e) { setMsg((e as Error).message) }
+  const save = async () => {
+    try { await onSave(name); setMsg('Salvo.'); setName('') } catch (e) { setMsg((e as Error).message) }
   }
   return (
     <div className="save">

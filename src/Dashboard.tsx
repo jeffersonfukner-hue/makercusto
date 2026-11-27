@@ -1,11 +1,17 @@
-import { useState, type ReactNode } from 'react'
+import { Children, cloneElement, useState, type ReactElement, type ReactNode } from 'react'
 import { Composition } from './Composition'
 import type { JobSummary } from './domain/saved'
 import { money, pct } from './format'
 
 const date = (iso: string) => new Date(iso).toLocaleDateString('pt-BR')
+// No celular cada linha vira um cartão: o data-label de cada célula vem do cabeçalho.
 const Table = ({ head, children }: { head: string[]; children: ReactNode }) => (
-  <div className="scroll"><table><thead><tr>{head.map((h) => <th key={h}>{h}</th>)}</tr></thead><tbody>{children}</tbody></table></div>
+  <div className="scroll stack"><table><thead><tr>{head.map((h) => <th key={h}>{h}</th>)}</tr></thead><tbody>
+    {Children.map(children, (tr) => {
+      const row = tr as ReactElement<{ children: ReactNode }>
+      return cloneElement(row, {}, Children.map(row.props.children, (td, i) => cloneElement(td as ReactElement<object>, { 'data-label': head[i] } as object)))
+    })}
+  </tbody></table></div>
 )
 
 export function Dashboard({ jobs, onOpen, onDelete }: { jobs: JobSummary[]; onOpen: (id: string) => void; onDelete: (id: string) => void }) {
@@ -29,8 +35,10 @@ export function Dashboard({ jobs, onOpen, onDelete }: { jobs: JobSummary[]; onOp
               <button className="pick" onClick={() => setSel(j.id)} aria-pressed={j.id === cur.id}>
                 <strong>{j.name}</strong><span>{date(j.savedAt)} · {money(j.result.unit)} por peça</span>
               </button>
-              <button onClick={() => onOpen(j.id)}>Abrir</button>
-              <button onClick={() => { if (confirm(`Excluir "${j.name}"?`)) onDelete(j.id) }}>Excluir</button>
+              <span className="acts">
+                <button onClick={() => onOpen(j.id)}>Abrir</button>
+                <button onClick={() => { if (confirm(`Excluir "${j.name}"?`)) onDelete(j.id) }}>Excluir</button>
+              </span>
             </li>
           ))}
         </ul>
