@@ -23,6 +23,16 @@
 - Catálogo: modelos escolhidos por disponibilidade de dados, não por ranking de vendas (não achei fonte de vendas). Preços em reais não entraram por falta de fonte.
 - Bloco 4 (aguarda arquivo): importar .3mf ou .gcode do fatiador, lido só no navegador. Formato a confirmar com arquivo real.
 
+## Direção de produto (ideias do dono, 27/11/2026, ainda sem decisão de ordem)
+- Primeira tela: abre direto a calculadora, sem painel. Mistura de calculadora e landing page, pensada para converter visitante em cliente.
+- Plano gratuito: calculadora no modo avançado simples, com até 3 impressoras prontas (Bambu Lab A1, Kobra X e uma Creality), configuração personalizada baseada em uma delas, salva no navegador. Plano pago: login e salvar na nuvem, com tudo o mais.
+- Depois do login: pesquisar o que abrir primeiro. Pesquisa feita: em SaaS o editor/ferramenta aparece mais que o dashboard como tela principal (56 contra 32 telas em 258 analisadas, com ressalva de amostra pequena e de medir telas, não comportamento pós-login); o plano gratuito deve ser útil mas ter um gatilho claro de upgrade, como limitar salvamentos. Recomendação: abrir a calculadora, com preferência "ao entrar abrir: Calculadora ou Início com atalhos grandes", guardada na conta. Rever quando existirem pedidos e estoque.
+- Fornecedores de filamento: marcas diferentes têm preços e configurações diferentes; controlar fornecedores.
+- Clientes e pedidos, e tudo que envolve.
+- Estoque de insumos (chaveiros, copos de alumínio, LEDs, velas artificiais, ímãs etc.) e estoque de produtos prontos (ex.: 40 chaveiros de Nossa Senhora).
+- Dependências: pedidos precisam de clientes, produtos e estoque; os itens comprados do produto com partes ligam com o estoque de insumos.
+- Cobrança (provedor, preço, liberar acesso por pagamento) ainda não definida; é gasto e conta externa, só com decisão do dono.
+
 ## Depois (fora do escopo atual)
 - Biblioteca de arquivos 3D limpos (.3mf) para download por quem paga (ideia do dono, 27/11/2026). Exige armazenamento, controle de quem pagou e decidir quais modelos podem ser distribuídos. Só depois dos primeiros pagantes.
 - Controle de quanto resta em cada rolo e baixa automática de estoque.
