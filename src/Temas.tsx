@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
+import { ICONES, MenuIcone } from './Icones'
 
 // Temas do app. Para criar um novo: 1) incluir aqui, 2) copiar o bloco :root[data-tema="..."] em styles.css e trocar as cores.
 // Todas as telas usam as mesmas variáveis de cor, então o tema vale para o app inteiro.
 export const TEMAS = [
   { id: 'normal', label: 'Normal' },
   { id: 'neon', label: 'Neon' },
+  { id: 'minimalista', label: 'Minimalista' },
+  { id: 'corporativo', label: 'Corporativo' },
 ] as const
 export type TemaId = (typeof TEMAS)[number]['id']
 const KEY = 'makercusto.tema'
@@ -28,11 +31,12 @@ export function useTema(): [TemaId, (t: TemaId) => void] {
 export function TemaSeletor() {
   const [tema, setTema] = useTema()
   return (
-    <label className="temasel">
-      <span className="sr">Tema visual</span>
-      <select value={tema} onChange={(e) => setTema(e.target.value as TemaId)} aria-label="Tema visual">
-        {TEMAS.map((t) => <option key={t.id} value={t.id}>Tema: {t.label}</option>)}
-      </select>
-    </label>
+    <MenuIcone icone={ICONES.paleta} label="Tema visual">
+      {(fechar) => TEMAS.map((t) => (
+        <button type="button" role="menuitemradio" aria-checked={tema === t.id} key={t.id} onClick={() => { setTema(t.id); fechar() }}>
+          <span>{t.label}</span>{tema === t.id && ICONES.check}
+        </button>
+      ))}
+    </MenuIcone>
   )
 }

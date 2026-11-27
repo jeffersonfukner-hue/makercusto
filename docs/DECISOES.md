@@ -110,3 +110,7 @@
 - Todas as cores saíram das regras e viraram variáveis (`--panel`, `--field`, `--hero-bg`, `--on-dark`, `--on-main`...). Tema Normal ficou igual ao anterior.
 - Tema Neon (gradientes, brilho, fundo escuro) só redefine variáveis, então vale para todas as telas. Seletor "Tema" no menu; escolha guardada neste navegador.
 - Depois: guardar o tema na conta (nuvem); temas extras (ex.: claro suave, alto contraste).
+
+## Menu com ícones discretos e temas Minimalista e Corporativo (modelos para aprovar)
+- Tema e conta viraram ícones sem contorno no canto do menu (`Icones.tsx`); o tema abre uma lista, a conta mostra o e-mail e "Sair". Vale para todos os temas.
+- Dois modelos novos para o dono aprovar: Minimalista (papel e preto, sem sombra) e Corporativo (azul-marinho, serifa nos títulos, faixa dourada). Se não aprovar, apagar o bloco do tema e a linha em `Temas.tsx`.

@@ -3,6 +3,7 @@ import { Composition } from './Composition'
 import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
 import { TemaSeletor } from './Temas'
+import { BotaoIcone, ICONES, MenuIcone } from './Icones'
 import { addSaved, KINDS, summarize, type Kind, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { fromHMS, toHMS } from './domain/time'
@@ -253,10 +254,14 @@ function Nav({ route, account }: { route: string; account?: Account }) {
           <a href="#/inicio" aria-current={cur('inicio')} onClick={close}>Início e preferências</a>
         </div>
       </details>
-      <TemaSeletor />
-      {account && (account.user
-        ? <span className="acct"><span title={account.user}>{account.user}</span><button type="button" onClick={account.signOut}>Sair</button></span>
-        : <button type="button" className="acct" onClick={account.signIn}>Entrar com Google</button>)}
+      <span className="navtools">
+        <TemaSeletor />
+        {account && (account.user
+          ? <MenuIcone icone={<span className="avatar" aria-hidden="true">{account.user.slice(0, 1).toUpperCase()}</span>} label={`Conta: ${account.user}`}>
+              {(fechar) => <><span className="who">{account.user}</span><button type="button" role="menuitem" onClick={() => { fechar(); account.signOut() }}>Sair</button></>}
+            </MenuIcone>
+          : <BotaoIcone icone={ICONES.usuario} label="Entrar com Google" onClick={account.signIn} />)}
+      </span>
     </nav>
   )
 }

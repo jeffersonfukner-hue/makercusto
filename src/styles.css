@@ -8,7 +8,7 @@ h1, h2, .big, .hero strong { font-family: var(--display) }
 h1 { font-size: 1.7rem; margin: 0; letter-spacing: -.02em } h2 { font-size: .95rem; margin: 0 0 8px; color: var(--mute); font-weight: 500 }
 .lead { color: var(--mute); margin: 8px 0 20px; max-width: 62ch } a { color: var(--main) } small { color: var(--mute); font-size: .8rem }
 :focus-visible { outline: 3px solid var(--amber); outline-offset: 2px }
-.nav { display: flex; gap: 20px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); margin-bottom: 20px }
+.nav { display: flex; gap: 20px; align-items: center; padding: 14px 0; margin-bottom: 20px }
 .nav a { text-decoration: none; color: var(--mute); padding: 4px 0; border-bottom: 2px solid transparent }
 .nav a[aria-current] { color: var(--ink); border-color: var(--main) } .nav .brand { font-family: var(--display); font-weight: 700; color: var(--ink); margin-right: auto; border: 0 }
 .top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between }
@@ -91,7 +91,9 @@ ul.sum li.tot { font-weight: 700; border-bottom: 0 }
 .details .scroll th, .details .scroll td { padding: 6px 6px; font-size: .85rem }
 
 /* Cabeçalho fixo e menu de cadastros */
-.nav { position: sticky; top: 0; z-index: 20; background: var(--nav-bg, var(--bg)); backdrop-filter: var(--nav-blur, none) }
+.nav { position: sticky; top: 0; z-index: 20; isolation: isolate }
+.nav::before { content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%); background: var(--nav-bg, var(--bg)); backdrop-filter: var(--nav-blur, none); border-bottom: 1px solid var(--line) }
+html { overflow-x: clip }
 .nav .more { position: relative }
 .nav .more summary { cursor: pointer; color: var(--mute); padding: 4px 0; list-style: none; border-bottom: 2px solid transparent }
 .nav .more summary::-webkit-details-marker { display: none }
@@ -266,3 +268,70 @@ input, select, textarea { color: inherit }
 :root[data-tema="neon"] .nav a[aria-current] { border-color: var(--main); text-shadow: 0 0 10px #00f0c888 }
 :root[data-tema="neon"] .nav .brand { background: linear-gradient(90deg, #00f0c8, #f72585); -webkit-background-clip: text; background-clip: text; color: transparent }
 :root[data-tema="neon"] :focus-visible { outline-color: var(--main) }
+
+/* ===== Neon: acabamento (vidro, cantos mais redondos, bordas suaves) ===== */
+:root[data-tema="neon"] {
+  --panel: #14143040; --field: #0a0a2299; --line:#322f70; --line-strong:#5552b8;
+}
+:root[data-tema="neon"] .card, :root[data-tema="neon"] .card2, :root[data-tema="neon"] .details, :root[data-tema="neon"] .modal, :root[data-tema="neon"] .choice, :root[data-tema="neon"] .hero.errors {
+  background: linear-gradient(160deg, #1b1a4a8c, #0f0f2a99); backdrop-filter: blur(14px); border-radius: 18px; border-color: #3d3a8a; box-shadow: inset 0 1px 0 #ffffff14, 0 8px 30px #00000066, 0 0 28px #7209b722 }
+:root[data-tema="neon"] .hero, :root[data-tema="neon"] .sumbar { border-radius: 18px }
+:root[data-tema="neon"] .sumbar { border-radius: 18px 18px 0 0 }
+:root[data-tema="neon"] .input, :root[data-tema="neon"] button, :root[data-tema="neon"] .temasel select, :root[data-tema="neon"] .fillall select { border-radius: 12px; transition: border-color .2s, box-shadow .2s, background .2s }
+:root[data-tema="neon"] .input { border-color: #3d3a8a }
+:root[data-tema="neon"] .input:hover { border-color: #6a66d8 }
+:root[data-tema="neon"] button:hover { border-color: var(--main); box-shadow: 0 0 12px #00f0c844 }
+:root[data-tema="neon"] .tabs { border-bottom-color: #3d3a8a }
+:root[data-tema="neon"] .modalback { background: #04041099; backdrop-filter: blur(4px) }
+:root[data-tema="neon"] .pendlist button, :root[data-tema="neon"] .hist li { background: #ffffff0a; border-color: #3d3a8a }
+:root[data-tema="neon"] .fillall { background: linear-gradient(160deg, #3a2d0833, #1a1530aa); border-color: #ffd23f88 }
+
+/* ===== Ícones discretos do menu (tema e conta), em todos os temas ===== */
+.navtools { margin-left: auto; display: inline-flex; align-items: center; gap: 4px }
+.iconbtn { width: 36px; height: 36px; padding: 0; display: inline-grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--mute); cursor: pointer; list-style: none; transition: background .15s, color .15s }
+.iconbtn::-webkit-details-marker { display: none }
+.iconbtn:hover, .iconmenu[open] > .iconbtn { background: var(--soft); color: var(--ink); box-shadow: none }
+.iconmenu { position: relative }
+.iconmenu .menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; display: grid; min-width: 170px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px #00000033 }
+.iconmenu .menu button { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 0; background: transparent; text-align: left; padding: 10px 12px; border-radius: 8px; color: var(--ink) }
+.iconmenu .menu button:hover { background: var(--soft); box-shadow: none }
+.iconmenu .who { padding: 8px 12px; font-size: .8rem; color: var(--mute); max-width: 240px; overflow: hidden; text-overflow: ellipsis }
+.avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--main); color: var(--on-main); font-size: .8rem; font-weight: 700 }
+:root[data-tema="neon"] .iconbtn:hover, :root[data-tema="neon"] .iconmenu[open] > .iconbtn { color: var(--main); box-shadow: 0 0 12px #00f0c833 }
+:root[data-tema="neon"] .iconmenu .menu { background: #12123aee; backdrop-filter: blur(14px); border-color: #3d3a8a }
+
+/* ===== Tema Minimalista: papel, preto e muito espaço. Sem sombra, linhas finas, cantos discretos. ===== */
+:root[data-tema="minimalista"] {
+  --bg:#fafaf8; --page:#fafaf8; --panel:#fafaf8; --field:#fff; --ink:#161616; --mute:#6b6b66; --label:#2a2a28; --line:#e4e4df; --line-strong:#bdbdb6; --chip:#efefea; --soft:#f1f1ec;
+  --main:#161616; --on-main:#fff; --amber:#b4470f; --on-amber:#fff; --warn:#b4261c;
+  --amber-soft:#fbf1e6; --amber-soft-2:#f3d9bd; --amber-ink:#5a2a08;
+  --hero-bg:#f1f1ec; --on-dark:#161616; --on-dark-mute:#6b6b66; --glow:none; --nav-bg:#fafaf8;
+  --display: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+}
+:root[data-tema="minimalista"] .card, :root[data-tema="minimalista"] .card2, :root[data-tema="minimalista"] .details, :root[data-tema="minimalista"] .modal, :root[data-tema="minimalista"] .choice { border-radius: 6px; box-shadow: none; background: #fff }
+:root[data-tema="minimalista"] .hero { border: 1px solid var(--line); border-radius: 6px; box-shadow: none }
+:root[data-tema="minimalista"] .sumbar { background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 6px 6px 0 0; box-shadow: none }
+:root[data-tema="minimalista"] .sumbar .k strong { color: var(--ink) }
+:root[data-tema="minimalista"] .sumbar .k small { color: var(--mute) }
+:root[data-tema="minimalista"] .sumbar button:not(.primary) { color: var(--ink); border-color: var(--line-strong) }
+:root[data-tema="minimalista"] .input, :root[data-tema="minimalista"] button, :root[data-tema="minimalista"] .modes { border-radius: 4px }
+:root[data-tema="minimalista"] h1 { font-weight: 600; letter-spacing: -.03em }
+:root[data-tema="minimalista"] .nav a[aria-current] { border-color: var(--ink) }
+:root[data-tema="minimalista"] .tabs button.on { background: transparent }
+:root[data-tema="minimalista"] .modes button[aria-pressed="true"] { background: var(--ink); color: #fff }
+
+/* ===== Tema Corporativo: azul-marinho, cinza e dourado discreto. Sólido, denso e formal. ===== */
+:root[data-tema="corporativo"] {
+  --bg:#eef1f6; --page:#eef1f6; --panel:#fff; --field:#fff; --ink:#0f2133; --mute:#55657a; --label:#22364d; --line:#d3dbe6; --line-strong:#9fb0c6; --chip:#e3e9f2; --soft:#e8eef8;
+  --main:#1b4f9c; --on-main:#fff; --amber:#c8962b; --on-amber:#0f2133; --warn:#b3261e;
+  --amber-soft:#fbf4e1; --amber-soft-2:#f0dca8; --amber-ink:#5a4208;
+  --hero-bg:linear-gradient(135deg, #0f2a4a, #173f6e); --on-dark:#fff; --on-dark-mute:#b9c8dd; --glow:0 6px 18px #0f2a4a33; --nav-bg:#fff;
+  --display: Georgia, "Times New Roman", serif;
+}
+:root[data-tema="corporativo"] .nav::before { border-bottom: 3px solid var(--main) }
+:root[data-tema="corporativo"] .card, :root[data-tema="corporativo"] .card2, :root[data-tema="corporativo"] .details, :root[data-tema="corporativo"] .modal, :root[data-tema="corporativo"] .choice { border-radius: 4px; box-shadow: 0 1px 2px #0f213314 }
+:root[data-tema="corporativo"] .hero { border-radius: 4px; border-bottom: 3px solid var(--amber) }
+:root[data-tema="corporativo"] .sumbar { border-radius: 4px 4px 0 0; border-top: 3px solid var(--amber) }
+:root[data-tema="corporativo"] .input, :root[data-tema="corporativo"] button, :root[data-tema="corporativo"] .modes { border-radius: 3px }
+:root[data-tema="corporativo"] h1, :root[data-tema="corporativo"] h2 { font-family: Georgia, "Times New Roman", serif }
+:root[data-tema="corporativo"] .tabs button.on { background: #fff; border-bottom-color: var(--amber) }
