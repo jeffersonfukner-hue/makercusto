@@ -117,8 +117,8 @@ html { overflow-x: clip }
 
 /* Campos com "+" de cadastro rápido, lista de sugestões e janela de cadastro */
 .field { margin-top: 10px } .lab { display: flex; align-items: center; gap: 8px; font-size: .9rem } .lab label { margin: 0; display: inline }
-.plus { position: relative; width: 16px; height: 16px; padding: 0; line-height: 1; border-radius: 50%; border: 1.5px solid var(--main); background: transparent; color: var(--main); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center }
-.plus::after { content: ''; position: absolute; inset: -5px }
+.plus { position: relative; margin-left: auto; width: 20px; height: 20px; padding: 0; line-height: 1; border-radius: 6px; border: 0; background: var(--chip); color: var(--main); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center }
+.plus::after { content: ''; position: absolute; inset: -6px }
 .plus:hover { background: var(--main); color: var(--on-main) }
 .textbtn { border: 0; background: transparent; padding: 2px 0; font-size: .85rem; color: var(--main); text-decoration: underline; cursor: pointer }
 .combo { position: relative }
