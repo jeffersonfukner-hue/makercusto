@@ -68,6 +68,7 @@ export const AJUDA = {
   precoCada: 'Quanto você paga em cada unidade.',
   quantidade: 'Quantas unidades o produto usa.',
   laborProduto: 'Seu tempo por produto: montagem, colagem e acabamento.',
+  filamentosProduto: 'Como no fatiador: escolha o filamento de cada cor uma vez. O preço vale para todas as partes que usam essa cor.',
   nomeProduto: 'Nome do produto pronto. Ex.: caneca Flamengo.',
 } as const
 

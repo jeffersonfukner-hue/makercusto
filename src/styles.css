@@ -205,3 +205,16 @@ fieldset.kind legend.lab { padding: 0; margin-bottom: 4px; font-size: .82rem; fo
 .jobs li.grp { flex-wrap: wrap }
 .hist { flex: 1 0 100%; margin-top: 6px; font-size: .92rem } .hist summary { cursor: pointer; color: var(--main); font-weight: 600 }
 .hist ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px } .hist li { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; padding: 6px 8px; border: 1px solid var(--line, #dfe5e8); border-radius: 8px; background: #fff }
+
+/* Abas do produto */
+.tabs { display: flex; gap: 4px; margin: 0 0 12px; border-bottom: 2px solid var(--line, #dfe5e8); overflow-x: auto }
+.tabs button { flex: 1 1 auto; min-height: 44px; padding: 8px 12px; border: 0; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; background: transparent; color: var(--muted, #5a6770); font-weight: 600; white-space: nowrap; margin-bottom: -2px; display: inline-flex; align-items: center; justify-content: center; gap: 6px }
+.tabs button.on { color: var(--main); border-bottom-color: var(--main); background: #fff }
+.tabs .cnt { font-size: .75rem; background: #e8eef0; color: var(--ink); border-radius: 999px; padding: 1px 7px }
+.tabs .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amber) }
+[role=tabpanel][hidden] { display: none }
+@media (max-width: 420px) { .tabs button { padding: 8px 8px; font-size: .88rem } }
+.tabs { flex-wrap: wrap; overflow: visible } .tabs button { flex: 1 1 auto }
+@media (max-width: 520px) { .tabs button { flex: 1 1 30%; padding: 8px 4px; font-size: .85rem; white-space: normal; line-height: 1.15 } }
+/* Celular: o aviso do topo e a barra inferior já dizem o que falta; a caixa vermelha só empurrava as abas para baixo */
+@media (max-width: 859px) { .result .hero.errors { display: none } }

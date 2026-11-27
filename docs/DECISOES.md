@@ -92,3 +92,9 @@
 - Salvar com nome já existente não cria outro produto nem substitui: entra como nova versão. A lista mostra um item por nome (versão mais nova em cima) e um "Histórico" com data, hora e custo de cada versão, cada uma com Abrir e Excluir.
 - Vale em Produto e na Calculadora/Painel (nome + tipo). Parte e Produto final com o mesmo nome ficam separados.
 - Sem mudança no banco: o agrupamento é feito na tela por nome (`src/domain/versions.ts`). Painel e tabelas de margem usam só a versão mais nova.
+
+## Produto em abas por categoria (modelo do fatiador)
+- Abas: Partes (placas, tempo, gramas por cor), Filamentos (um preço por cor, vale para todas as partes), Impressora, Itens comprados, Venda (tempo, falhas, margem, preço) e Meus produtos. Não há uma aba por parte.
+- Aba com campo faltando mostra um ponto laranja. "Ver o que falta" abre a aba certa e seleciona o campo.
+- Preço do filamento saiu de dentro de cada cor da parte e foi para a aba Filamentos (ex.: 7 preços viraram 3 cores). Painel lateral e barra inferior continuam.
+- Depois: abas parecidas na Calculadora simples? Guardar presets de filamento/impressora por produto como no fatiador.

@@ -35,13 +35,18 @@ const initial = (): State => ({
 const REQUIRED = new Set(['Nome da parte', 'Peças por impressão', 'Peças por produto', 'Preço do filamento', 'Item', 'Preço de cada', 'Quantidade', 'Consumo médio', 'Tarifa de energia', 'Preço da impressora', 'Vida útil estimada', 'Seu tempo por produto', 'Valor da sua hora', 'Impressões que falham', 'Margem desejada'])
 const bad = (v: string) => v.trim() === '' || Number.isNaN(Number(v.replace(',', '.')))
 // Leva a pessoa ao primeiro campo laranja, já selecionado para só digitar.
-function focusMissing(): boolean {
+function focusMissing(openTab: (t: Tab) => void): boolean {
   const el = document.querySelector<HTMLInputElement>('.input.missing input')
   if (!el) return false
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  window.setTimeout(() => { el.focus({ preventScroll: true }); el.select() }, 300)
+  const t = el.closest<HTMLElement>('[data-tab]')?.dataset.tab as Tab | undefined
+  if (t) openTab(t)
+  window.setTimeout(() => {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    window.setTimeout(() => { el.focus({ preventScroll: true }); el.select() }, 250)
+  }, 60)
   return true
 }
+type Tab = 'partes' | 'filamentos' | 'impressora' | 'itens' | 'venda' | 'produtos'
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 const grams = (s: string) => (s.trim() === '' ? 0 : num(s))
 const t = (n: number) => String(n).replace('.', ',')
@@ -92,6 +97,13 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const [suggest, setSuggest] = useState('')
   const [name, setName] = useState('')
   const [saveMsg, setSaveMsg] = useState('')
+  const [tab, setTab] = useState<Tab>('partes')
+  const [miss, setMiss] = useState<Record<string, number>>({})
+  useEffect(() => {
+    const m: Record<string, number> = {}
+    document.querySelectorAll<HTMLElement>('[data-tab]').forEach((p) => { m[p.dataset.tab!] = p.querySelectorAll('.input.missing').length })
+    setMiss((o) => (JSON.stringify(o) === JSON.stringify(m) ? o : m))
+  })
   useEffect(() => { if (suggest) setName((n) => n || suggest) }, [suggest])
   const doSave = async () => {
     try {
@@ -112,6 +124,23 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const setPart = (n: number, patch: Partial<PartF>) => setS({ ...s, parts: s.parts.map((p, i) => (i === n ? { ...p, ...patch } : p)) })
   const setLine = (n: number, k: number, patch: Partial<LineF>) =>
     setPart(n, { lines: s.parts[n].lines.map((l, i) => (i === k ? { ...l, ...patch } : l)) })
+  // Aba Filamentos: um preço por cor, aplicado a todas as partes que usam essa cor (como o fatiador).
+  const colorKey = (l: LineF, n: number, k: number) => l.color.trim().toLowerCase() || `#${n}.${k}`
+  const colorGroups = (() => {
+    const m = new Map<string, { key: string; label: string; at: [number, number][] }>()
+    s.parts.forEach((p, n) => p.lines.forEach((l, k) => {
+      const key = colorKey(l, n, k)
+      const g = m.get(key) ?? { key, label: l.color.trim() ? titleCase(l.color.trim()) : `Cor sem nome (parte ${n + 1})`, at: [] }
+      g.at.push([n, k]); m.set(key, g)
+    }))
+    return [...m.values()]
+  })()
+  const setGroup = (g: { at: [number, number][] }, patch: Partial<LineF>) =>
+    setS({ ...s, parts: s.parts.map((p, n) => ({ ...p, lines: p.lines.map((l, k) => (g.at.some(([a, b]) => a === n && b === k) ? { ...l, ...patch } : l)) })) })
+  const pickGroup = (g: { at: [number, number][] }, id: string) => {
+    const f = filaments.find((x) => x.id === id)
+    setGroup(g, f ? { fil: id, price: t(kgPrice(f)) } : { fil: '' })
+  }
   const pickFilament = (n: number, k: number, id: string) => {
     const f = filaments.find((x) => x.id === id)
     setLine(n, k, f ? { fil: id, price: t(kgPrice(f)), color: s.parts[n].lines[k].color || f.color } : { fil: '' })
@@ -148,13 +177,13 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
     setS({ ...s, printer: id, shop: p ? { ...s.shop, watts: t(p.watts), printerPrice: t(p.priceCents / 100), life: t(p.lifetimeHours) } : s.shop })
   }
   const field = (label: string, value: string, on: (v: string) => void, unit?: string, help?: AjudaKey, mode: 'decimal' | 'numeric' | 'text' = 'decimal') => (
-    <Fld label={label} info={help ? AJUDA[help] : undefined} unit={unit} value={value} onChange={on} mode={mode} missing={REQUIRED.has(label) && bad(value)} />
+    <Fld label={label} info={help ? AJUDA[help] : undefined} unit={unit} value={value} onChange={on} mode={mode} missing={REQUIRED.has(label) && (mode === 'text' ? value.trim() === '' : bad(value))} />
   )
   // Depois do cadastro rápido, o item novo já fica escolhido no ponto de onde a pessoa saiu.
   useEffect(() => {
     const q = pend.current
     if (!q) return
-    if (q.kind === 'fil') { const f = filaments.find((x) => x.name === q.name); if (f) { pend.current = null; setS({ ...sRef.current, parts: sRef.current.parts.map((p, i) => (i !== q.n ? p : { ...p, lines: p.lines.map((l, j) => (j === q.k ? { ...l, fil: f.id, price: t(kgPrice(f)), color: l.color || f.color } : l)) })) }) } }
+    if (q.kind === 'fil') { const f = filaments.find((x) => x.name === q.name); if (f) { pend.current = null; const cur = sRef.current; const key = cur.parts[q.n]?.lines[q.k]?.color.trim().toLowerCase() ?? ''; setS({ ...cur, parts: cur.parts.map((p, i) => ({ ...p, lines: p.lines.map((l, j) => ((i === q.n && j === q.k) || (key && l.color.trim().toLowerCase() === key) ? { ...l, fil: f.id, price: t(kgPrice(f)), color: l.color || f.color } : l)) })) }) } }
     if (q.kind === 'prn') { const p = printers.find((x) => x.name === q.name); if (p) { pend.current = null; setS({ ...sRef.current, printer: p.id, shop: { ...sRef.current.shop, watts: t(p.watts), printerPrice: t(p.priceCents / 100), life: t(p.lifetimeHours) } }) } }
     if (q.kind === 'sup') { const x = supplies.find((y) => y.name === q.name); if (x) { pend.current = null; setS({ ...sRef.current, bought: sRef.current.bought.map((y, i) => (i === q.n ? { ...y, name: x.name, price: t(x.costCents / 100) } : y)) }) } }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,7 +191,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
 
   return (
     <>
-    <SaveNotice errors={[...new Set(errors)]} />
+    <SaveNotice errors={[...new Set(errors)]} onMissing={() => focusMissing(setTab)} />
     <div className="layout compact">
       <div className="result" aria-live="polite">
         {r ? <Result r={r} input={input} name={name} setName={setName} save={doSave} msg={saveMsg} /> : (
@@ -170,35 +199,17 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
             <ul>{[...new Set(errors)].slice(0, 8).map((e) => <li key={e}>{e}</li>)}</ul>
             <p className="note">O botão Salvar produto aparece aqui, no lugar deste aviso, quando não houver mais nada para corrigir.</p></div>
         )}
-        <section className="card" style={{ marginTop: 12 }}>
-          <h2>Meus produtos</h2>
-          {msg && <p className="errors" role="alert">{msg}</p>}
-          {!products.length ? <p className="note">Nenhum produto salvo ainda.</p> : (
-            <ul className="jobs">
-              {groupVersions(products).map((g) => (
-                <li key={g.key} className="grp">
-                  <span className="pick"><strong>{g.name}</strong><span>{new Date(g.latest.savedAt).toLocaleDateString('pt-BR')} · {g.latest.input.parts.length} partes{g.history.length > 1 ? ` · ${g.history.length} versões` : ''}</span></span>
-                  <span className="acts">
-                    <button type="button" onClick={() => setS(fromInput(g.latest.input))}>Abrir</button>
-                    <button type="button" onClick={() => { if (confirm(`Excluir "${g.name}"${g.history.length > 1 ? ' e todas as versões' : ''}?`)) g.history.forEach((x) => onDelete(x.id)) }}>Excluir</button>
-                  </span>
-                  {g.history.length > 1 && (
-                    <details className="hist"><summary>Histórico ({g.history.length})</summary>
-                      <ul>{g.history.map((v, k) => (
-                        <li key={v.id}><span>{new Date(v.savedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}{(() => { try { return ` · custo ${money(calculateProduct(v.input).total)}` } catch { return '' } })()}{k === 0 ? ' (atual)' : ''}</span>
-                          <span className="acts"><button type="button" onClick={() => setS(fromInput(v.input))}>Abrir</button>
-                            <button type="button" onClick={() => { if (confirm('Excluir esta versão?')) onDelete(v.id) }}>Excluir</button></span></li>
-                      ))}</ul>
-                    </details>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
       </div>
 
       <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
+        <div className="tabs" role="tablist" aria-label="Seções do produto">
+          {([['partes', 'Partes', s.parts.length], ['filamentos', 'Filamentos', colorGroups.length], ['impressora', 'Impressora', 0], ['itens', 'Itens', s.bought.length], ['venda', 'Venda', 0], ['produtos', 'Meus produtos', products.length]] as const).map(([k, l, n]) => (
+            <button type="button" role="tab" key={k} id={`tab-${k}`} aria-selected={tab === k} aria-controls={`painel-${k}`} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
+              {l}{n > 0 && <span className="cnt">{n}</span>}{miss[k] > 0 && <span className="dot" title="Falta preencher" aria-label="falta preencher" />}
+            </button>
+          ))}
+        </div>
+        <div role="tabpanel" id="painel-partes" aria-labelledby="tab-partes" data-tab="partes" hidden={tab !== 'partes'}>
         {s.parts.map((p, n) => (
           <section className="card2 partcard" key={n} aria-label={`Parte ${n + 1}`}>
             <h2>Parte {n + 1}{p.name.trim() ? `: ${titleCase(p.name.trim())}` : ''}</h2>
@@ -218,18 +229,8 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
             <h3>Cores e peso (do fatiador)</h3>
             {p.lines.map((l, k) => (
               <div className="line" key={k}>
-                <div className="pair">
-                  <Fld label="Filamento cadastrado" info={AJUDA.filamentoCadastrado}
-                    plus={onAddFilament ? { label: 'Cadastrar novo filamento', onClick: () => setQuick({ kind: 'fil', n, k }) } : undefined}>
-                    <select value={l.fil} onChange={(e) => pickFilament(n, k, e.target.value)}>
-                      <option value="">Digitar o preço</option>
-                      {filaments.map((f) => <option key={f.id} value={f.id}>{filamentLabel(f)}</option>)}
-                    </select>
-                  </Fld>
-                  {field('Cor', l.color, (v) => setLine(n, k, { color: v }), undefined, 'corLinha', 'text')}
-                </div>
-                <div className="trio4">
-                  {field('Preço do filamento', l.price, (v) => setLine(n, k, { price: v, fil: '' }), 'R$/kg', 'pricePerKg')}
+                {field('Cor', l.color, (v) => setLine(n, k, { color: v }), undefined, 'corLinha', 'text')}
+                <div className="trio">
                   {field('Peça', l.model, (v) => setLine(n, k, { model: v }), 'g', 'pecaG')}
                   {field('Purga', l.flushed, (v) => setLine(n, k, { flushed: v }), 'g', 'purgaG')}
                   {field('Torre', l.tower, (v) => setLine(n, k, { tower: v }), 'g', 'torreG')}
@@ -248,7 +249,35 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
           <Info label="Importar do fatiador" text={AJUDA.importar} />
         </div>
         <p className="note">Importou? Confira o preço do filamento em cada cor. A purga por cor é estimada: o total vem do fatiador.</p>
+        </div>
 
+        <div role="tabpanel" id="painel-filamentos" aria-labelledby="tab-filamentos" data-tab="filamentos" hidden={tab !== 'filamentos'}>
+          <section className="card2">
+            <h2>Filamentos <Info label="Filamentos" text={AJUDA.filamentosProduto} /></h2>
+            {!colorGroups.length ? <p className="note">Adicione partes com cores para escolher o filamento de cada uma.</p> : colorGroups.map((g) => {
+              const first = s.parts[g.at[0][0]].lines[g.at[0][1]]
+              const total = g.at.reduce((sum, [a, b]) => { const l = s.parts[a].lines[b]; return sum + lineGrams({ color: '', pricePerKg: 0, modelG: grams(l.model) || 0, flushedG: grams(l.flushed) || 0, towerG: grams(l.tower) || 0 }) }, 0)
+              return (
+                <div className="line" key={g.key}>
+                  <h3>{g.label}</h3>
+                  <div className="pair">
+                    <Fld label="Filamento cadastrado" info={AJUDA.filamentoCadastrado}
+                      plus={onAddFilament ? { label: 'Cadastrar novo filamento', onClick: () => setQuick({ kind: 'fil', n: g.at[0][0], k: g.at[0][1] }) } : undefined}>
+                      <select value={first.fil} onChange={(e) => pickGroup(g, e.target.value)}>
+                        <option value="">Digitar o preço</option>
+                        {filaments.map((f) => <option key={f.id} value={f.id}>{filamentLabel(f)}</option>)}
+                      </select>
+                    </Fld>
+                    {field('Preço do filamento', first.price, (v) => setGroup(g, { price: v, fil: '' }), 'R$/kg', 'pricePerKg')}
+                  </div>
+                  <p className="note">Usada em {g.at.length} {g.at.length === 1 ? 'parte' : 'partes'} · {t(Math.round(total * 100) / 100)} g no total</p>
+                </div>
+              )
+            })}
+          </section>
+        </div>
+
+        <div role="tabpanel" id="painel-itens" aria-labelledby="tab-itens" data-tab="itens" hidden={tab !== 'itens'}>
         <section className="card2" style={{ marginBottom: 12 }}>
           <h2>Itens comprados <Info label="Itens comprados" text={AJUDA.itemComprado} /></h2>
           {s.bought.map((b, n) => (
@@ -282,8 +311,10 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
           </div>
         </section>
 
-        <div className="cards">
-          <section className="card2"><h2>Oficina</h2>
+        </div>
+
+        <div role="tabpanel" id="painel-impressora" aria-labelledby="tab-impressora" data-tab="impressora" hidden={tab !== 'impressora'}>
+          <section className="card2"><h2>Impressora e energia</h2>
             <Fld label="Minha impressora" info={AJUDA.impressoraCadastrada} plus={onAddPrinter ? { label: 'Cadastrar nova impressora', onClick: () => setQuick({ kind: 'prn' }) } : undefined}>
               <select value={s.printer} onChange={(e) => pickPrinter(e.target.value)}>
                 <option value="">Digitar abaixo</option>
@@ -297,6 +328,9 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
               {field('Vida útil estimada', s.shop.life, (v) => setShop({ life: v }), 'h', 'lifetimeHours')}
             </div>
           </section>
+        </div>
+
+        <div role="tabpanel" id="painel-venda" aria-labelledby="tab-venda" data-tab="venda" hidden={tab !== 'venda'}>
           <section className="card2"><h2>Seu tempo, riscos e venda</h2>
             <div className="pair">
               {field('Seu tempo por produto', s.shop.laborMin, (v) => setShop({ laborMin: v }), 'min', 'laborProduto')}
@@ -307,19 +341,49 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
             {field('Preço que você cobra (opcional)', s.shop.sold, (v) => setShop({ sold: v }), 'R$', 'soldPrice')}
           </section>
         </div>
+
+        <div role="tabpanel" id="painel-produtos" aria-labelledby="tab-produtos" data-tab="produtos" hidden={tab !== 'produtos'}>
+        <section className="card2">
+          <h2>Meus produtos</h2>
+          {msg && <p className="errors" role="alert">{msg}</p>}
+          {!products.length ? <p className="note">Nenhum produto salvo ainda.</p> : (
+            <ul className="jobs">
+              {groupVersions(products).map((g) => (
+                <li key={g.key} className="grp">
+                  <span className="pick"><strong>{g.name}</strong><span>{new Date(g.latest.savedAt).toLocaleDateString('pt-BR')} · {g.latest.input.parts.length} partes{g.history.length > 1 ? ` · ${g.history.length} versões` : ''}</span></span>
+                  <span className="acts">
+                    <button type="button" onClick={() => setS(fromInput(g.latest.input))}>Abrir</button>
+                    <button type="button" onClick={() => { if (confirm(`Excluir "${g.name}"${g.history.length > 1 ? ' e todas as versões' : ''}?`)) g.history.forEach((x) => onDelete(x.id)) }}>Excluir</button>
+                  </span>
+                  {g.history.length > 1 && (
+                    <details className="hist"><summary>Histórico ({g.history.length})</summary>
+                      <ul>{g.history.map((v, k) => (
+                        <li key={v.id}><span>{new Date(v.savedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}{(() => { try { return ` · custo ${money(calculateProduct(v.input).total)}` } catch { return '' } })()}{k === 0 ? ' (atual)' : ''}</span>
+                          <span className="acts"><button type="button" onClick={() => setS(fromInput(v.input))}>Abrir</button>
+                            <button type="button" onClick={() => { if (confirm('Excluir esta versão?')) onDelete(v.id) }}>Excluir</button></span></li>
+                      ))}</ul>
+                    </details>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        </div>
+
         <p><button type="button" onClick={() => { if (confirm('Limpar tudo e começar um produto novo?')) setS(initial()) }}>Começar produto novo</button></p>
       </form>
       {quick?.kind === 'fil' && onAddFilament && <QuickFilament onAdd={onAddFilament} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'fil', name, n: quick.n, k: quick.k } }} />}
       {quick?.kind === 'prn' && onAddPrinter && <QuickPrinter onAdd={onAddPrinter} onClose={() => setQuick(null)} defaults={{ watts: s.shop.watts, price: s.shop.printerPrice, life: s.shop.life }} onSaved={(name) => { pend.current = { kind: 'prn', name, n: 0, k: 0 } }} />}
       {quick?.kind === 'sup' && onAddSupply && <QuickSupply onAdd={onAddSupply} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'sup', name, n: quick.n, k: 0 } }} />}
     </div>
-    <SummaryBar r={r} input={input} errors={[...new Set(errors)]} name={name} setName={setName} save={doSave} msg={saveMsg} />
+    <SummaryBar onMissing={() => focusMissing(setTab)} r={r} input={input} errors={[...new Set(errors)]} name={name} setName={setName} save={doSave} msg={saveMsg} />
     </>
   )
 }
 
 // Aviso grande no topo: diz se já dá para salvar, o que falta e onde fica o botão.
-function SaveNotice({ errors }: { errors: string[] }) {
+function SaveNotice({ errors, onMissing }: { errors: string[]; onMissing: () => void }) {
   const go = () => {
     const box = document.getElementById('salvar-produto')
     box?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -343,7 +407,7 @@ function SaveNotice({ errors }: { errors: string[] }) {
       <p>Os campos que faltam estão pintados de <b>laranja</b>. O botão abaixo leva você ao primeiro e já deixa selecionado para digitar.</p>
       <p>Quando você importa do fatiador, vêm o tempo e os gramas de cada cor. <b>O preço do filamento (R$/kg) não vem no arquivo</b>: preencha em cada cor, ou escolha um rolo em "Filamento cadastrado" e o preço vem sozinho.</p>
       <ul>{errors.slice(0, 4).map((e) => <li key={e}>{e}</li>)}{errors.length > 4 && <li>e mais {errors.length - 4}.</li>}</ul>
-      <button type="button" className="primary" onClick={() => { focusMissing() }}>Ver o que falta</button>
+      <button type="button" className="primary" onClick={onMissing}>Ver o que falta</button>
     </section>
   )
 }
@@ -392,10 +456,11 @@ function Result({ r, input, name, setName, save, msg }: { r: ProductResult; inpu
 }
 
 // Barra de resumo fixa embaixo da tela: custo, preço sugerido e a opção de salvar. A coluna da direita continua com os cálculos.
-function SummaryBar({ r, input, errors, name, setName, save, msg }: {
+function SummaryBar({ r, input, errors, name, setName, save, msg, onMissing }: {
+  onMissing: () => boolean | void
   r: ProductResult | null; input: ProductInput; errors: string[]; name: string; setName: (n: string) => void; save: () => Promise<void>; msg: string
 }) {
-  const top = () => { if (!focusMissing()) document.getElementById('aviso-salvar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+  const top = () => { if (!onMissing()) document.getElementById('aviso-salvar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
   return (
     <div className="sumbar" role="region" aria-label="Resumo do produto">
       {r ? (
