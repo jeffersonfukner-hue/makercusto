@@ -17,7 +17,7 @@ h1 { font-size: 1.7rem; margin: 0; letter-spacing: -.02em } h2 { font-size: .95r
 .home { padding-top: 12vh } .home h1 { font-size: 2.4rem } .choices { display: grid; gap: 12px; max-width: 560px }
 .choice { display: block; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--ink) }
 .choice.main { border: 2px solid var(--main) } .choice strong { display: block; font-family: var(--display); font-size: 1.1rem } .choice span { color: var(--mute) } .choice:hover { border-color: var(--main) }
-.layout { display: flex; flex-direction: column; gap: 16px } .result { display: contents } .form { order: 1 } .details { order: 2 }
+.layout { display: flex; flex-direction: column; gap: 16px; min-width: 0 } .result { display: contents } .form { order: 1 } .details { order: 2 }
 .hero { position: sticky; top: 0; z-index: 5; order: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--ink); color: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 6px 20px #1b222733 }
 .hero small { color: #b7c3c9; display: block } .hero strong { font-size: 1.6rem; display: block; font-variant-numeric: tabular-nums } .hero .sug strong { color: var(--amber) }
 .hero.errors { display: block; background: #fff; color: var(--warn); border: 1px solid var(--warn); box-shadow: none } .errors ul { margin: 6px 0 0; padding-left: 18px }
@@ -44,8 +44,8 @@ label { display: block; margin-top: 10px } label > span:first-child { display: b
 button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #93a39e; background: #fff; color: var(--ink); cursor: pointer }
 .save button { background: var(--main); color: #fff; border-color: var(--main); margin-top: 10px; font-weight: 600 }
 .big { font-size: 2.2rem; font-weight: 700; margin: 0 0 8px; font-variant-numeric: tabular-nums }
-.dash { display: grid; gap: 16px } @media (min-width: 860px) { .dash { grid-template-columns: 1fr 1fr } .wide { grid-column: 1 / -1 } }
+.dash { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px } .dash > * { min-width: 0 } @media (min-width: 860px) { .dash { grid-template-columns: repeat(2, minmax(0, 1fr)) } .wide { grid-column: 1 / -1 } }
 .scroll { overflow-x: auto } table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums } th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap } th { font-size: .8rem; color: var(--mute); font-weight: 600 }
-.jobs { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px } .jobs li { display: flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px } .jobs li.on { border-color: var(--main); background: var(--soft) }
-.pick { flex: 1; text-align: left; border: 0; background: transparent; display: grid; padding: 4px 6px } .pick span { color: var(--mute); font-size: .85rem }
+.jobs { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px } .jobs li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px } .jobs li.on { border-color: var(--main); background: var(--soft) }
+.pick { flex: 1 1 160px; min-width: 0; text-align: left; border: 0; background: transparent; display: grid; padding: 4px 6px } .pick span { color: var(--mute); font-size: .85rem }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
