@@ -114,3 +114,5 @@
 ## Menu com ícones discretos e temas Minimalista e Corporativo (modelos para aprovar)
 - Tema e conta viraram ícones sem contorno no canto do menu (`Icones.tsx`); o tema abre uma lista, a conta mostra o e-mail e "Sair". Vale para todos os temas.
 - Corporativo aprovado (azul-marinho, serifa nos títulos, faixa dourada). Minimalista foi descartado por ser quase igual ao Normal e removido.
+
+- Temas finais: Minimalista (o antigo Normal, id `normal`), Neon e Corporativo. Padrão para quem não escolheu: Corporativo (`PADRAO` em `Temas.tsx`).

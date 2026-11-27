@@ -4,15 +4,16 @@ import { ICONES, MenuIcone } from './Icones'
 // Temas do app. Para criar um novo: 1) incluir aqui, 2) copiar o bloco :root[data-tema="..."] em styles.css e trocar as cores.
 // Todas as telas usam as mesmas variáveis de cor, então o tema vale para o app inteiro.
 export const TEMAS = [
-  { id: 'normal', label: 'Normal' },
+  { id: 'normal', label: 'Minimalista' },
   { id: 'neon', label: 'Neon' },
   { id: 'corporativo', label: 'Corporativo' },
 ] as const
 export type TemaId = (typeof TEMAS)[number]['id']
 const KEY = 'makercusto.tema'
+const PADRAO: TemaId = 'corporativo'  // tema de quem ainda não escolheu
 
 function lido(): TemaId {
-  try { const v = localStorage.getItem(KEY); return TEMAS.some((t) => t.id === v) ? (v as TemaId) : 'normal' } catch { return 'normal' }
+  try { const v = localStorage.getItem(KEY); return TEMAS.some((t) => t.id === v) ? (v as TemaId) : PADRAO } catch { return PADRAO }
 }
 
 // Aplica o tema salvo assim que o app abre, antes de qualquer tela.
