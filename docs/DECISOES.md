@@ -1,7 +1,7 @@
 # Decisões
 
 ## Seção 1: página inicial e calculadora
-- Projeto novo em branch separada (`feat/novo-makercusto`), a partir de `main`. O antigo continua em https://makercusto-preview.pages.dev/.
+- Projeto novo em branch separada (`feat/novo-makercusto`), a partir de `main`. O antigo foi abandonado por decisao do dono (27/11/2026); a producao e o projeto novo.
 - Sem login, banco ou backend. Estado só em memória nesta seção.
 - Falhas: `total = base ÷ (1 − taxa)` (as peças boas absorvem as perdas).
 - Preço sugerido por margem (lucro ÷ preço), arredondado para cima ao centavo.

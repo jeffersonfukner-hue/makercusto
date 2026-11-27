@@ -8,7 +8,6 @@ import { ESSENTIAL, inputForMode, type Mode } from './modes'
 import { cloud, onUser, signInWithGoogle, signOut, supabase } from './supabase'
 import { readMode, readSaved, writeMode, writeSaved } from './storage'
 
-const OLD_URL = 'https://makercusto-preview.pages.dev/'
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 
 function useRoute() {
@@ -111,10 +110,6 @@ function Home() {
         <a className="choice" href="#/painel">
           <strong>Painel</strong>
           <span>Seus cálculos salvos, margens e lucro por hora.</span>
-        </a>
-        <a className="choice" href={OLD_URL} target="_blank" rel="noopener noreferrer">
-          <strong>Versão anterior</strong>
-          <span>Abre o MakerCusto antigo em outra aba.</span>
         </a>
       </div>
     </main>
