@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colorName, nameFromFile, parseDuration, parseGcode } from './gcode'
+import { colorName, nameFromFile, namesFromFile, parseDuration, parseGcode } from './gcode'
 
 // Gcode mínimo com 2 cores: T0 preto (peça), troca para T1 vermelho com purga em macro e torre.
 const sample = [
@@ -34,6 +34,8 @@ describe('gcode', () => {
     expect(parseDuration('4h 24m 22s')).toBeCloseTo(4.4061, 3)
     expect(parseDuration('25m 47s')).toBeCloseTo(0.4297, 3)
     expect(nameFromFile('45d42da0-1127-1553-base_plate01_PLA_0.2_4h24m22s.gcode')).toBe('Base')
+    expect(namesFromFile('1127-1613-Caneca Flamengo - Base(01) PLA 0.2 4H24m22s.gcode')).toEqual({ product: 'Caneca Flamengo', part: 'Base' })
+    expect(namesFromFile('1127-1614-Caneca Flamengo - Aro(03) PLA 0.2 46M47s.gcode').part).toBe('Aro')
     expect(colorName('#FF0000')).toBe('Vermelho')
     expect(colorName('#FEFEFE')).toBe('Branco')
   })

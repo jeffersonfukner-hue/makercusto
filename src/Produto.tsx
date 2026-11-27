@@ -77,6 +77,7 @@ type Props = {
 export function Produto({ filaments, printers, supplies = [], products, onSave, onDelete, msg, onAddFilament, onAddPrinter, onAddSupply, savedParts = [] }: Props) {
   const [s, setS] = useState<State>(loadDraft)
   const [quick, setQuick] = useState<{ kind: 'fil'; n: number; k: number } | { kind: 'prn' } | { kind: 'sup'; n: number } | null>(null)
+  const [suggest, setSuggest] = useState('')
   const sRef = useRef(s)
   sRef.current = s
   const pend = useRef<{ kind: 'fil' | 'prn' | 'sup'; name: string; n: number; k: number } | null>(null)
@@ -115,6 +116,8 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
     })
     const keep = s.parts.filter((p) => !fresh(p))
     setS({ ...s, parts: [...keep, ...built] })
+    const prod = rs.find((r) => r.product)?.product
+    if (prod) setSuggest(prod)
   }
   const setShop = (patch: Partial<ShopF>) => setS({ ...s, shop: { ...s.shop, ...patch } })
   const pickPrinter = (id: string) => {
@@ -137,9 +140,10 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   return (
     <div className="layout compact">
       <div className="result" aria-live="polite">
-        {r ? <Result r={r} input={input} onSave={onSave} /> : (
+        {r ? <Result r={r} input={input} onSave={onSave} suggest={suggest} /> : (
           <div className="hero errors"><strong>Corrija para ver o resultado:</strong>
-            <ul>{[...new Set(errors)].slice(0, 6).map((e) => <li key={e}>{e}</li>)}</ul></div>
+            <ul>{[...new Set(errors)].slice(0, 8).map((e) => <li key={e}>{e}</li>)}</ul>
+            <p className="note">O botão Salvar produto aparece aqui, no lugar deste aviso, quando não houver mais nada para corrigir.</p></div>
         )}
         <section className="card" style={{ marginTop: 12 }}>
           <h2>Meus produtos</h2>
@@ -278,8 +282,9 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   )
 }
 
-function Result({ r, input, onSave }: { r: ProductResult; input: ProductInput; onSave: (name: string, i: ProductInput) => Promise<void> }) {
-  const [name, setName] = useState('')
+function Result({ r, input, onSave, suggest = '' }: { r: ProductResult; input: ProductInput; onSave: (name: string, i: ProductInput) => Promise<void>; suggest?: string }) {
+  const [name, setName] = useState(suggest)
+  useEffect(() => { if (suggest) setName((n) => n || suggest) }, [suggest])
   const [msg, setMsg] = useState('')
   const save = async () => { try { await onSave(name, input); setMsg('Salvo.'); setName('') } catch (e) { setMsg((e as Error).message) } }
   const g = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 })

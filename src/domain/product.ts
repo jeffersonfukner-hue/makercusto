@@ -51,7 +51,9 @@ export function validateProduct(i: ProductInput): string[] {
     if (!Number.isInteger(p.perProduct) || p.perProduct < 1) e.push(`${w}: peças por produto deve ser um número inteiro, 1 ou mais.`)
     if (!p.lines.length) e.push(`${w}: inclua pelo menos uma cor.`)
     for (const l of p.lines) {
-      if (![l.pricePerKg, l.modelG, l.flushedG, l.towerG].every((x) => x >= 0)) e.push(`${w}: pesos e preço devem ser zero ou mais.`)
+      const c = l.color.trim() ? `, cor ${l.color.trim()}` : ''
+      if (!(l.pricePerKg >= 0)) e.push(`${w}${c}: informe o preço do filamento em R$/kg.`)
+      if (![l.modelG, l.flushedG, l.towerG].every((x) => x >= 0)) e.push(`${w}${c}: os pesos devem ser zero ou mais.`)
     }
     if (p.lines.length && p.lines.every((l) => lineGrams(l) <= 0)) e.push(`${w}: informe o peso de pelo menos uma cor.`)
   })

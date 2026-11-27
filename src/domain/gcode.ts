@@ -9,6 +9,7 @@ export interface GcodeResult {
   tools: GcodeTool[] // só as cores usadas
   purgeIsEstimate: boolean
   name: string
+  product: string // nome do produto sugerido pelo arquivo, se houver
 }
 
 const BASES: [string, [number, number, number]][] = [
@@ -34,11 +35,16 @@ export function parseDuration(s: string): number {
   return (g('d') * 24 * 3600 + g('h') * 3600 + g('m') * 60 + g('s')) / 3600
 }
 
-export const nameFromFile = (file: string): string => {
-  const base = file.replace(/\.(gcode|txt)$/i, '').replace(/^[0-9a-f]{8}-\d{4}-\d{4}-/i, '')
-  const cut = base.split(/[_ -]*plate/i)[0].replace(/[_]+/g, ' ').trim()
-  return titleCase(cut || base)
+// Nome do arquivo -> produto e parte. Ex.: "1127-1613-Caneca Flamengo - Base(01) PLA 0.2 4H24m22s.gcode"
+// vira produto "Caneca Flamengo" e parte "Base". Sem " - ", o nome inteiro é a parte.
+export const namesFromFile = (file: string): { product: string; part: string } => {
+  let base = file.replace(/\.(gcode|txt)$/i, '').replace(/^[0-9a-f]{8}-\d{4}-\d{4}-/i, '').replace(/^\d{4}-\d{4}-/, '')
+  base = base.replace(/[ _](PLA|PETG|ABS|ASA|TPU|PA|PC|PVA|HIPS)\b.*$/i, '').replace(/[ _]*plate[ _]*\d*.*$/i, '').replace(/\(\d+\)/g, '').replace(/_+/g, ' ').trim()
+  const i = base.lastIndexOf(' - ')
+  if (i > 0) return { product: titleCase(base.slice(0, i).trim()), part: titleCase(base.slice(i + 3).trim()) }
+  return { product: '', part: titleCase(base) }
 }
+export const nameFromFile = (file: string): string => namesFromFile(file).part
 
 export function parseGcode(text: string, fileName = ''): GcodeResult | null {
   const lines = text.split('\n')
@@ -119,5 +125,5 @@ export function parseGcode(text: string, fileName = ''): GcodeResult | null {
       purgeG: wsum > 0 ? r2((purgeTotal * weight(t)) / wsum) : 0,
     }
   })
-  return { hours, totalG: r2(Math.max(totalFromHeader, activeG)), tools, purgeIsEstimate: purgeTotal > 0, name: nameFromFile(fileName) }
+  return { hours, totalG: r2(Math.max(totalFromHeader, activeG)), tools, purgeIsEstimate: purgeTotal > 0, name: nameFromFile(fileName), product: namesFromFile(fileName).product }
 }
