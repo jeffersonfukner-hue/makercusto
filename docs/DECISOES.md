@@ -82,3 +82,8 @@
 - Rolo cadastrado da mesma cor entra com o preço; sem rolo, o preço fica vazio para a pessoa preencher.
 - Depois: ler também .gcode.3mf (Bambu/Orca) e .3mf fatiado.
 - Produto: barra de resumo fixa no rodapé (custo, preço sugerido, nome e Salvar). A coluna da direita com os cálculos e o botão Salvar continuam. Nome sugerido: o do arquivo .3mf se for escolhido junto (só o nome é lido, o .3mf não traz fatiamento); sem ele, o produto que está no nome dos .gcode ("Caneca Flamengo - Base" vira produto "Caneca Flamengo", parte "Base").
+
+## Campos em laranja, barra escura e nome repetido
+- Campos obrigatórios vazios no Produto ficam em laranja; "Ver o que falta" leva ao primeiro e já o deixa selecionado para digitar.
+- Barra inferior escura, igual ao cartão de resultado (números brancos, preço sugerido em âmbar).
+- Salvar com nome já existente avisa e, no segundo clique, substitui o antigo (evita duplicar). Só vale para Produto; Calculadora ainda não.

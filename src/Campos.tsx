@@ -52,8 +52,8 @@ export function Label({ htmlFor, children, plus, info }: {
 }
 
 // Campo numérico ou de texto compacto: etiqueta + "i" + (opcional) "+", caixa com unidade à direita.
-export function Fld({ label, info, unit, value, onChange, mode = 'decimal', placeholder, maxLength, plus, children, id: forcedId }: {
-  id?: string; label: string; info?: string; unit?: string; value?: string; onChange?: (v: string) => void
+export function Fld({ label, info, unit, value, onChange, mode = 'decimal', placeholder, maxLength, plus, children, id: forcedId, missing }: {
+  id?: string; missing?: boolean; label: string; info?: string; unit?: string; value?: string; onChange?: (v: string) => void
   mode?: 'decimal' | 'numeric' | 'text'; placeholder?: string; maxLength?: number
   plus?: { label: string; onClick: () => void }; children?: ReactNode
 }) {
@@ -62,9 +62,9 @@ export function Fld({ label, info, unit, value, onChange, mode = 'decimal', plac
   return (
     <div className="field">
       <Label htmlFor={id} info={info} plus={plus}>{label}</Label>
-      {children ? <span className="input">{cloneElement(children as ReactElement<{ id?: string }>, { id })}</span> : (
-        <span className="input">
-          <input id={id} inputMode={mode === 'text' ? undefined : mode} value={value ?? ''} placeholder={placeholder} maxLength={maxLength}
+      {children ? <span className={missing ? 'input missing' : 'input'}>{cloneElement(children as ReactElement<{ id?: string }>, { id })}</span> : (
+        <span className={missing ? 'input missing' : 'input'}>
+          <input id={id} aria-invalid={missing || undefined} inputMode={mode === 'text' ? undefined : mode} value={value ?? ''} placeholder={placeholder} maxLength={maxLength}
             onChange={(e) => onChange?.(e.target.value)} />
           {unit && <em>{unit}</em>}
         </span>

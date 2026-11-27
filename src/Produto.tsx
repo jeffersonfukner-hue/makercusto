@@ -30,6 +30,17 @@ const initial = (): State => ({
   parts: [newPart()], bought: [], printer: '',
   shop: { watts: '150', tariff: '1,03', printerPrice: '3500', life: '3000', laborMin: '10', laborRate: '20', fail: '10', margin: '50', sold: '' },
 })
+// Campos obrigatórios: quando vazios ou inválidos, ficam em laranja.
+const REQUIRED = new Set(['Nome da parte', 'Peças por impressão', 'Peças por produto', 'Preço do filamento', 'Item', 'Preço de cada', 'Quantidade', 'Consumo médio', 'Tarifa de energia', 'Preço da impressora', 'Vida útil estimada', 'Seu tempo por produto', 'Valor da sua hora', 'Impressões que falham', 'Margem desejada'])
+const bad = (v: string) => v.trim() === '' || Number.isNaN(Number(v.replace(',', '.')))
+// Leva a pessoa ao primeiro campo laranja, já selecionado para só digitar.
+function focusMissing(): boolean {
+  const el = document.querySelector<HTMLInputElement>('.input.missing input')
+  if (!el) return false
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  window.setTimeout(() => { el.focus({ preventScroll: true }); el.select() }, 300)
+  return true
+}
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 const grams = (s: string) => (s.trim() === '' ? 0 : num(s))
 const t = (n: number) => String(n).replace('.', ',')
@@ -81,7 +92,22 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const [name, setName] = useState('')
   const [saveMsg, setSaveMsg] = useState('')
   useEffect(() => { if (suggest) setName((n) => n || suggest) }, [suggest])
-  const doSave = async () => { try { await onSave(name, toInput(s)); setSaveMsg('Salvo.'); setName('') } catch (e) { setSaveMsg((e as Error).message) } }
+  const dupAsked = useRef('')
+  const doSave = async () => {
+    try {
+      // Mesmo nome já salvo: avisa antes de duplicar. Salvar de novo com o mesmo nome substitui o antigo.
+      const key = titleCase(name).toLowerCase()
+      const same = products.filter((x) => x.name.toLowerCase() === key)
+      if (same.length && dupAsked.current !== key) {
+        dupAsked.current = key
+        setSaveMsg(`Já existe um produto chamado "${titleCase(name)}". Clique em Salvar de novo para substituir, ou mude o nome para guardar os dois.`)
+        return
+      }
+      await onSave(name, toInput(s))
+      same.forEach((x) => onDelete(x.id))
+      dupAsked.current = ''; setSaveMsg(same.length ? 'Salvo. O produto antigo com esse nome foi substituído.' : 'Salvo.'); setName('')
+    } catch (e) { setSaveMsg((e as Error).message) }
+  }
   const sRef = useRef(s)
   sRef.current = s
   const pend = useRef<{ kind: 'fil' | 'prn' | 'sup'; name: string; n: number; k: number } | null>(null)
@@ -129,7 +155,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
     setS({ ...s, printer: id, shop: p ? { ...s.shop, watts: t(p.watts), printerPrice: t(p.priceCents / 100), life: t(p.lifetimeHours) } : s.shop })
   }
   const field = (label: string, value: string, on: (v: string) => void, unit?: string, help?: AjudaKey, mode: 'decimal' | 'numeric' | 'text' = 'decimal') => (
-    <Fld label={label} info={help ? AJUDA[help] : undefined} unit={unit} value={value} onChange={on} mode={mode} />
+    <Fld label={label} info={help ? AJUDA[help] : undefined} unit={unit} value={value} onChange={on} mode={mode} missing={REQUIRED.has(label) && bad(value)} />
   )
   // Depois do cadastro rápido, o item novo já fica escolhido no ponto de onde a pessoa saiu.
   useEffect(() => {
@@ -180,7 +206,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
                 <legend className="lab">Tempo da impressão<Info label="Tempo da impressão" text={AJUDA.tempoParte} /></legend>
                 <div className="hms">
                   {([['h', 'horas', 'h'], ['m', 'minutos', 'm'], ['s', 'segundos', 's']] as const).map(([k, l, u]) => (
-                    <span className="input" key={k}><input inputMode="numeric" aria-label={`Parte ${n + 1}, ${l}`} value={p[k]} onChange={(e) => setPart(n, { [k]: e.target.value })} /><em>{u}</em></span>
+                    <span className={fromHMS(p.h, p.m, p.s) > 0 ? 'input' : 'input missing'} key={k}><input inputMode="numeric" aria-label={`Parte ${n + 1}, ${l}`} value={p[k]} onChange={(e) => setPart(n, { [k]: e.target.value })} /><em>{u}</em></span>
                   ))}
                 </div>
               </fieldset>
@@ -312,8 +338,10 @@ function SaveNotice({ errors }: { errors: string[] }) {
     <section id="aviso-salvar" className="savenotice warn" aria-live="polite">
       <strong>Ainda não dá para salvar: falta preencher {errors.length === 1 ? '1 item' : `${errors.length} itens`}.</strong>
       <p>O botão <b>Salvar produto</b> só aparece quando todos os campos obrigatórios estão preenchidos. Ele surge na coluna da direita, no lugar da caixa vermelha de avisos, embaixo do resultado.</p>
+      <p>Os campos que faltam estão pintados de <b>laranja</b>. O botão abaixo leva você ao primeiro e já deixa selecionado para digitar.</p>
       <p>Quando você importa do fatiador, vêm o tempo e os gramas de cada cor. <b>O preço do filamento (R$/kg) não vem no arquivo</b>: preencha em cada cor, ou escolha um rolo em "Filamento cadastrado" e o preço vem sozinho.</p>
       <ul>{errors.slice(0, 4).map((e) => <li key={e}>{e}</li>)}{errors.length > 4 && <li>e mais {errors.length - 4}.</li>}</ul>
+      <button type="button" className="primary" onClick={() => { focusMissing() }}>Ver o que falta</button>
     </section>
   )
 }
@@ -365,7 +393,7 @@ function Result({ r, input, name, setName, save, msg }: { r: ProductResult; inpu
 function SummaryBar({ r, input, errors, name, setName, save, msg }: {
   r: ProductResult | null; input: ProductInput; errors: string[]; name: string; setName: (n: string) => void; save: () => Promise<void>; msg: string
 }) {
-  const top = () => document.getElementById('aviso-salvar')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const top = () => { if (!focusMissing()) document.getElementById('aviso-salvar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
   return (
     <div className="sumbar" role="region" aria-label="Resumo do produto">
       {r ? (
