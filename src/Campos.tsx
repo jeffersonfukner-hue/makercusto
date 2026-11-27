@@ -52,12 +52,13 @@ export function Label({ htmlFor, children, plus, info }: {
 }
 
 // Campo numérico ou de texto compacto: etiqueta + "i" + (opcional) "+", caixa com unidade à direita.
-export function Fld({ label, info, unit, value, onChange, mode = 'decimal', placeholder, maxLength, plus, children }: {
-  label: string; info?: string; unit?: string; value?: string; onChange?: (v: string) => void
+export function Fld({ label, info, unit, value, onChange, mode = 'decimal', placeholder, maxLength, plus, children, id: forcedId }: {
+  id?: string; label: string; info?: string; unit?: string; value?: string; onChange?: (v: string) => void
   mode?: 'decimal' | 'numeric' | 'text'; placeholder?: string; maxLength?: number
   plus?: { label: string; onClick: () => void }; children?: ReactNode
 }) {
-  const id = useId()
+  const auto = useId()
+  const id = forcedId ?? auto
   return (
     <div className="field">
       <Label htmlFor={id} info={info} plus={plus}>{label}</Label>

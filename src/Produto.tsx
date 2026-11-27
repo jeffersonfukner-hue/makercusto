@@ -138,6 +138,8 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   }, [filaments, printers, supplies])
 
   return (
+    <>
+    <SaveNotice errors={[...new Set(errors)]} />
     <div className="layout compact">
       <div className="result" aria-live="polite">
         {r ? <Result r={r} input={input} onSave={onSave} suggest={suggest} /> : (
@@ -279,6 +281,35 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
       {quick?.kind === 'prn' && onAddPrinter && <QuickPrinter onAdd={onAddPrinter} onClose={() => setQuick(null)} defaults={{ watts: s.shop.watts, price: s.shop.printerPrice, life: s.shop.life }} onSaved={(name) => { pend.current = { kind: 'prn', name, n: 0, k: 0 } }} />}
       {quick?.kind === 'sup' && onAddSupply && <QuickSupply onAdd={onAddSupply} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'sup', name, n: quick.n, k: 0 } }} />}
     </div>
+    </>
+  )
+}
+
+// Aviso grande no topo: diz se já dá para salvar, o que falta e onde fica o botão.
+function SaveNotice({ errors }: { errors: string[] }) {
+  const go = () => {
+    const box = document.getElementById('salvar-produto')
+    box?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    window.setTimeout(() => document.getElementById('nome-produto-salvar')?.focus(), 350)
+  }
+  if (!errors.length) {
+    return (
+      <section className="savenotice ok" aria-live="polite">
+        <div>
+          <strong>Tudo certo para salvar este produto.</strong>
+          <p>O botão <b>Salvar produto</b> fica na coluna da direita, embaixo do resultado, junto com o campo de nome.</p>
+        </div>
+        <button type="button" className="primary" onClick={go}>Ir para o botão Salvar</button>
+      </section>
+    )
+  }
+  return (
+    <section className="savenotice warn" aria-live="polite">
+      <strong>Ainda não dá para salvar: falta preencher {errors.length === 1 ? '1 item' : `${errors.length} itens`}.</strong>
+      <p>O botão <b>Salvar produto</b> só aparece quando todos os campos obrigatórios estão preenchidos. Ele surge na coluna da direita, no lugar da caixa vermelha de avisos, embaixo do resultado.</p>
+      <p>Quando você importa do fatiador, vêm o tempo e os gramas de cada cor. <b>O preço do filamento (R$/kg) não vem no arquivo</b>: preencha em cada cor, ou escolha um rolo em "Filamento cadastrado" e o preço vem sozinho.</p>
+      <ul>{errors.slice(0, 4).map((e) => <li key={e}>{e}</li>)}{errors.length > 4 && <li>e mais {errors.length - 4}.</li>}</ul>
+    </section>
   )
 }
 
@@ -319,9 +350,11 @@ function Result({ r, input, onSave, suggest = '' }: { r: ProductResult; input: P
             <span>Margem {pct(r.margin)} · Markup {pct(r.markup)} · {money(r.profitPerHour)} por hora de máquina</span>
             {r.profit < 0 && <span className="loss">Esse preço está abaixo do custo.</span>}</div>
         )}
-        <Fld label="Nome do produto" info={AJUDA.nomeProduto} mode="text" value={name} onChange={setName} placeholder="Ex.: Caneca Flamengo" maxLength={60} />
+        <div id="salvar-produto" className="saveanchor">
+        <Fld id="nome-produto-salvar" label="Nome do produto" info={AJUDA.nomeProduto} mode="text" value={name} onChange={setName} placeholder="Ex.: Caneca Flamengo" maxLength={60} />
         <p><button type="button" className="primary" onClick={save}>Salvar produto</button></p>
         {msg && <p className="note" role="status">{msg}</p>}
+        </div>
       </div>
     </>
   )
