@@ -1,3 +1,4 @@
+import { Modal } from './Janela'
 import { cloneElement, useEffect, useId, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { canonical, searchOptions } from './domain/catalogo'
 import { foldText } from './domain/texto'
@@ -81,32 +82,13 @@ export function QuickForm({ title, fields, note, onSave, onClose }: {
   const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(fields.map((f) => [f.key, f.initial ?? ''])))
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
-  const box = useRef<HTMLDivElement>(null)
-  const tid = useId()
   const base = useId()
-  useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null
-    const first = box.current?.querySelector<HTMLElement>('input, select')
-    first?.focus(); (first as HTMLInputElement | null)?.select?.()
-    return () => prev?.focus?.()
-  }, [])
   const submit = async () => {
     setBusy(true); setErr('')
     try { await onSave(vals); onClose() } catch (e) { setErr((e as Error).message); setBusy(false) }
   }
-  const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') { e.preventDefault(); onClose(); return }
-    if (e.key !== 'Tab' || !box.current) return
-    const els = [...box.current.querySelectorAll<HTMLElement>('input, select, button')].filter((x) => !(x as HTMLButtonElement).disabled)
-    if (!els.length) return
-    const first = els[0]; const last = els[els.length - 1]
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-  }
   return (
-    <div className="modalback" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={tid} ref={box} onKeyDown={onKey}>
-        <h2 id={tid}>{title}</h2>
+    <Modal titulo={title} onClose={onClose}>
         <form onSubmit={(e) => { e.preventDefault(); void submit() }} noValidate>
           {fields.map((f) => (
             <div className="field" key={f.key}>
@@ -131,8 +113,7 @@ export function QuickForm({ title, fields, note, onSave, onClose }: {
             <button type="submit" className="primary" disabled={busy}>Salvar</button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -190,32 +171,14 @@ export function QuickAdd({ title, label, initial = '', placeholder, onSave, onCl
   const [name, setName] = useState(initial)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
-  const box = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLInputElement>(null)
-  const tid = useId()
   const iid = useId()
-  useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null
-    input.current?.focus(); input.current?.select()
-    return () => prev?.focus?.()
-  }, [])
   const submit = async () => {
     setBusy(true); setErr('')
     try { await onSave(name); onClose() } catch (e) { setErr((e as Error).message); setBusy(false) }
   }
-  const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') { e.preventDefault(); onClose(); return }
-    if (e.key !== 'Tab' || !box.current) return
-    const els = [...box.current.querySelectorAll<HTMLElement>('input, button')].filter((x) => !(x as HTMLButtonElement).disabled)
-    if (!els.length) return
-    const first = els[0]; const last = els[els.length - 1]
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-  }
   return (
-    <div className="modalback" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={tid} ref={box} onKeyDown={onKey}>
-        <h2 id={tid}>{title}</h2>
+    <Modal titulo={title} onClose={onClose}>
         <form onSubmit={(e) => { e.preventDefault(); void submit() }} noValidate>
           <label htmlFor={iid}>{label}</label>
           <span className="input"><input id={iid} ref={input} value={name} placeholder={placeholder} maxLength={60} onChange={(e) => setName(e.target.value)} /></span>
@@ -226,8 +189,7 @@ export function QuickAdd({ title, label, initial = '', placeholder, onSave, onCl
             <button type="submit" className="primary" disabled={busy}>Salvar</button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }
 

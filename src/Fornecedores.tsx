@@ -1,3 +1,4 @@
+import { BotaoExcluir } from './Janela'
 import { AJUDA } from './ajuda'
 import { Fld } from './Campos'
 import { useState } from 'react'
@@ -37,7 +38,7 @@ export function Fornecedores({ list, onAdd, onRemove, msg }: {
               <span className="pick"><strong>{s.name}</strong>
                 <span>{[s.contact, s.notes].filter(Boolean).join(' · ') || 'sem detalhes'}
                   {s.site && <> · <a href={link(s.site)} target="_blank" rel="noopener noreferrer">site</a></>}</span></span>
-              <span className="acts"><button type="button" onClick={() => { if (confirm(`Excluir "${s.name}"?`)) onRemove(s.id) }}>Excluir</button></span>
+              <span className="acts"><BotaoExcluir nome={s.name} onConfirm={() => onRemove(s.id)} /></span>
             </li>))}</ul>
         )}
       </section>

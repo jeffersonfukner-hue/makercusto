@@ -1,3 +1,4 @@
+import { BotaoExcluir } from './Janela'
 import { AJUDA } from './ajuda'
 import { Fld } from './Campos'
 import { useState } from 'react'
@@ -45,7 +46,7 @@ export function Impressoras({ list, onAdd, onRemove, msg }: {
           <ul className="jobs">{list.map((p) => (
             <li key={p.id}>
               <span className="pick"><strong>{p.name}</strong><span>{p.watts} W · {money(p.priceCents)} · {p.lifetimeHours} h</span></span>
-              <span className="acts"><button type="button" onClick={() => { if (confirm(`Excluir "${p.name}"?`)) onRemove(p.id) }}>Excluir</button></span>
+              <span className="acts"><BotaoExcluir nome={p.name} onConfirm={() => onRemove(p.id)} /></span>
             </li>))}</ul>
         )}
       </section>

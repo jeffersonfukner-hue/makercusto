@@ -1,3 +1,4 @@
+import { BotaoExcluir } from './Janela'
 import { AJUDA } from './ajuda'
 import { Fld } from './Campos'
 import { useState } from 'react'
@@ -41,7 +42,7 @@ export function Marcas({ list, onAdd, onRemove, msg }: { list: Brand[]; onAdd: (
               <span className="pick"><strong>{b.name}</strong>
                 <span>{b.nozzleC === undefined && b.bedC === undefined ? 'sem temperaturas' : `${b.nozzleC ?? '?'} / ${b.bedC ?? '?'} °C`}
                   {b.site && <> · <a href={link(b.site)} target="_blank" rel="noopener noreferrer">site</a></>}</span></span>
-              <span className="acts"><button type="button" onClick={() => { if (confirm(`Excluir "${b.name}"?`)) onRemove(b.id) }}>Excluir</button></span>
+              <span className="acts"><BotaoExcluir nome={b.name} onConfirm={() => onRemove(b.id)} /></span>
             </li>))}</ul>
         )}
       </section>

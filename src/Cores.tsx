@@ -1,3 +1,4 @@
+import { BotaoExcluir } from './Janela'
 import { AJUDA } from './ajuda'
 import { Fld } from './Campos'
 import { useState } from 'react'
@@ -25,7 +26,7 @@ export function Cores({ list, onAdd, onRemove, msg }: { list: Color[]; onAdd: (d
           <ul className="jobs">{list.map((c) => (
             <li key={c.id}>
               <span className="pick"><strong>{c.name}</strong></span>
-              <span className="acts"><button type="button" onClick={() => { if (confirm(`Excluir "${c.name}"?`)) onRemove(c.id) }}>Excluir</button></span>
+              <span className="acts"><BotaoExcluir nome={c.name} onConfirm={() => onRemove(c.id)} /></span>
             </li>))}</ul>
         )}
       </section>

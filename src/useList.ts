@@ -23,9 +23,11 @@ export function useList<T extends { id: string }, D>(o: {
     const next = o.addLocal(items, d, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
     setItems(next); o.write(next)
   }
-  const remove = async (id: string) => {
-    if (!online) { const next = items.filter((x) => x.id !== id); setItems(next); o.write(next); return }
-    try { await o.api!.remove(id); await reload() } catch (e) { setMsg((e as Error).message) }
+  // Aceita um id ou vários (ex.: todas as versões de um produto) e grava uma vez só.
+  const remove = async (ids: string | string[]) => {
+    const list = Array.isArray(ids) ? ids : [ids]
+    if (!online) { const next = items.filter((x) => !list.includes(x.id)); setItems(next); o.write(next); return }
+    try { for (const id of list) await o.api!.remove(id); await reload() } catch (e) { setMsg((e as Error).message) }
   }
   // Troca um item inteiro (ex.: nova quantidade em estoque).
   const update = async (next: T) => {

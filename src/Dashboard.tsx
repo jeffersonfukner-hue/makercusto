@@ -1,3 +1,4 @@
+import { BotaoExcluir } from './Janela'
 import { Children, cloneElement, useState, type ReactElement, type ReactNode } from 'react'
 import { Composition } from './Composition'
 import type { JobSummary } from './domain/saved'
@@ -15,7 +16,7 @@ const Table = ({ head, children }: { head: string[]; children: ReactNode }) => (
   </tbody></table></div>
 )
 
-export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: JobSummary[]; onOpen: (id: string) => void; onDelete: (id: string) => void }) {
+export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: JobSummary[]; onOpen: (id: string) => void; onDelete: (ids: string | string[]) => void }) {
   const [sel, setSel] = useState<string | null>(null)
   const groups = groupVersions(all)
   const jobs = groups.map((g) => g.latest)
@@ -40,14 +41,14 @@ export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: JobSummary[];
               </button>
               <span className="acts">
                 <button onClick={() => onOpen(j.id)}>Abrir</button>
-                <button onClick={() => { if (confirm(`Excluir "${j.name}"${g.history.length > 1 ? ' e todas as versões' : ''}?`)) g.history.forEach((x) => onDelete(x.id)) }}>Excluir</button>
+                <BotaoExcluir nome={j.name} versoes={g.history.length} onConfirm={() => onDelete(g.history.map((x) => x.id))} />
               </span>
               {g.history.length > 1 && (
                 <details className="hist"><summary>Histórico ({g.history.length})</summary>
                   <ul>{g.history.map((v, k) => (
                     <li key={v.id}><span>{new Date(v.savedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} · {money(v.result.unit)} por peça{k === 0 ? ' (atual)' : ''}</span>
                       <span className="acts"><button onClick={() => onOpen(v.id)}>Abrir</button>
-                        <button onClick={() => { if (confirm('Excluir esta versão?')) onDelete(v.id) }}>Excluir</button></span></li>
+                        <BotaoExcluir nome="esta versão" onConfirm={() => onDelete(v.id)} /></span></li>
                   ))}</ul>
                 </details>
               )}

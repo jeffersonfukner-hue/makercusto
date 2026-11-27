@@ -1,3 +1,4 @@
+import { BotaoExcluir } from './Janela'
 import { AJUDA } from './ajuda'
 import { useMemo, useState } from 'react'
 import { Combo, Fld, Label, QuickAdd } from './Campos'
@@ -75,7 +76,7 @@ export function Estoque({ list, suppliers, onAdd, onUpdate, onRemove, onAddSuppl
                     <button type="button" aria-label={`Tirar 1 de ${s.name}`} onClick={() => void onUpdate(withQty(s, s.qty - 1))}>-1</button>
                     <button type="button" aria-label={`Colocar 1 em ${s.name}`} onClick={() => void onUpdate(withQty(s, s.qty + 1))}>+1</button>
                     <button type="button" aria-label={`Colocar 10 em ${s.name}`} onClick={() => void onUpdate(withQty(s, s.qty + 10))}>+10</button>
-                    <button type="button" onClick={() => { if (confirm(`Excluir "${s.name}"?`)) onRemove(s.id) }}>Excluir</button>
+                    <BotaoExcluir nome={s.name} onConfirm={() => onRemove(s.id)} />
                   </div>
                 </td>
               </tr>))}</tbody>

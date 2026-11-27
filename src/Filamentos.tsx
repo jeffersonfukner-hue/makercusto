@@ -1,3 +1,4 @@
+import { BotaoExcluir } from './Janela'
 import { useMemo, useState } from 'react'
 import { DateParts, Combo, Fld, Info, Label, QuickAdd } from './Campos'
 import { AJUDA } from './ajuda'
@@ -163,7 +164,7 @@ export function Filamentos({ list, suppliers = [], brands = [], colors = [], onA
                 <td>
                   <div className="rowacts">
                     <button type="button" onClick={() => repeat(r)}>Novo rolo igual</button>
-                    <button type="button" onClick={() => { if (confirm(`Excluir "${r.name}"?`)) onRemove(r.id) }}>Excluir</button>
+                    <BotaoExcluir nome={r.name} onConfirm={() => onRemove(r.id)} />
                   </div>
                 </td>
               </tr>))}</tbody>

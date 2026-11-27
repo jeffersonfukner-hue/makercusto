@@ -108,10 +108,12 @@ export default function App() {
     if (user && cloud) { await cloud.save(name, input, kind); setSaved(await cloud.list()); return }
     update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString(), kind))
   }
-  const onDelete = async (id: string) => {
-    if (!(user && cloud)) return update(saved.filter((x) => x.id !== id))
-    try { await cloud.remove(id); setSaved(await cloud.list()); setCloudMsg('') } catch (e) { setCloudMsg((e as Error).message) }
+  const onDelete = async (ids: string | string[]) => {
+    const list = Array.isArray(ids) ? ids : [ids]
+    if (!(user && cloud)) return update(saved.filter((x) => !list.includes(x.id)))
+    try { for (const id of list) await cloud.remove(id); setSaved(await cloud.list()); setCloudMsg('') } catch (e) { setCloudMsg((e as Error).message) }
   }
+
 
   if (route === 'calculadora') {
     return <Calculator onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} work={work} setWork={setWork} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />

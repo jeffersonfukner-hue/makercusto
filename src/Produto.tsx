@@ -1,3 +1,4 @@
+import { BotaoExcluir, BotaoConfirmar } from './Janela'
 import { useEffect, useRef, useState } from 'react'
 import { calculateProduct, lineGrams, validateProduct, type ProductInput, type ProductResult, type SavedProduct } from './domain/product'
 import { filamentLabel, pricePerKg as kgPrice, type Filament } from './domain/filament'
@@ -11,6 +12,7 @@ import { Fld, Info } from './Campos'
 import { QuickFilament, QuickPrinter, QuickSupply } from './Rapido'
 import { titleCase } from './domain/texto'
 import { groupVersions } from './domain/versions'
+import { BotaoIcone, ICONES } from './Icones'
 import { Pendencias, type FieldItem } from './Pendencias'
 import type { FilamentDraft } from './domain/filament'
 import type { UserPrinterDraft } from './domain/printers'
@@ -93,7 +95,7 @@ const loadDraft = (): State => {
 
 type Props = {
   filaments: Filament[]; printers: UserPrinter[]; supplies?: Supply[]
-  products: SavedProduct[]; onSave: (name: string, i: ProductInput) => Promise<void>; onDelete: (id: string) => void; msg: string
+  products: SavedProduct[]; onSave: (name: string, i: ProductInput) => Promise<void>; onDelete: (ids: string | string[]) => void; msg: string
   openId?: string
   savedParts?: SavedCalc[]
   onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>; onAddSupply?: (d: SupplyDraft) => Promise<void>
@@ -220,7 +222,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
               {l}{n > 0 && <span className="cnt">{n}</span>}{miss[k] > 0 && <span className="dot" title="Falta preencher" aria-label="falta preencher" />}
             </button>
           ))}
-          <button type="button" className="tabsearch" aria-label="Buscar campo (Ctrl+K)" title="Buscar campo (Ctrl+K)" onClick={() => setPend('busca')}>Buscar</button>
+          <span className="tabsearch"><BotaoIcone icone={ICONES.lupa} label="Buscar campo (Ctrl+K)" onClick={() => setPend('busca')} /></span>
         </div>
         <div role="tabpanel" id="painel-partes" aria-labelledby="tab-partes" data-tab="partes" hidden={tab !== 'partes'}>
         {s.parts.map((p, n) => (
@@ -366,14 +368,14 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
                   <span className="pick"><strong>{g.name}</strong><span>{new Date(g.latest.savedAt).toLocaleDateString('pt-BR')} · {g.latest.input.parts.length} partes{g.history.length > 1 ? ` · ${g.history.length} versões` : ''}</span></span>
                   <span className="acts">
                     <button type="button" onClick={() => setS(fromInput(g.latest.input))}>Abrir</button>
-                    <button type="button" onClick={() => { if (confirm(`Excluir "${g.name}"${g.history.length > 1 ? ' e todas as versões' : ''}?`)) g.history.forEach((x) => onDelete(x.id)) }}>Excluir</button>
+                    <BotaoExcluir nome={g.name} versoes={g.history.length} onConfirm={() => onDelete(g.history.map((x) => x.id))} />
                   </span>
                   {g.history.length > 1 && (
                     <details className="hist"><summary>Histórico ({g.history.length})</summary>
                       <ul>{g.history.map((v, k) => (
                         <li key={v.id}><span>{new Date(v.savedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}{(() => { try { return ` · custo ${money(calculateProduct(v.input).total)}` } catch { return '' } })()}{k === 0 ? ' (atual)' : ''}</span>
                           <span className="acts"><button type="button" onClick={() => setS(fromInput(v.input))}>Abrir</button>
-                            <button type="button" onClick={() => { if (confirm('Excluir esta versão?')) onDelete(v.id) }}>Excluir</button></span></li>
+                            <BotaoExcluir nome="esta versão" onConfirm={() => onDelete(v.id)} /></span></li>
                       ))}</ul>
                     </details>
                   )}
@@ -384,7 +386,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
         </section>
         </div>
 
-        <p><button type="button" onClick={() => { if (confirm('Limpar tudo e começar um produto novo?')) setS(initial()) }}>Começar produto novo</button></p>
+        <p><BotaoConfirmar label="Começar produto novo" titulo="Começar um produto novo?" texto="Limpa as partes, os itens e os valores desta tela. Os produtos já salvos continuam em Produtos." acao="Limpar tudo" onConfirm={() => setS(initial())} /></p>
       </form>
       {dlg && <Pendencias startSearch={dlg === 'busca'} onClose={() => setPend(null)}
         onGo={(it: FieldItem) => { setPend(null); goTo(it.el, setTab) }}

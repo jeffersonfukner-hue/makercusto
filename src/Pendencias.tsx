@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Modal } from './Janela'
 
 // Lista de campos do formulário, lida da tela: serve para "o que falta" e para a busca de campo (como no fatiador).
 export interface FieldItem { tab: string; label: string; ctx: string; missing: boolean; el: HTMLElement }
@@ -33,20 +34,11 @@ export function Pendencias({ startSearch, onClose, onGo, fill }: {
   const [q, setQ] = useState('')
   const [price, setPrice] = useState('')
   const [fil, setFil] = useState('')
-  const box = useRef<HTMLDivElement>(null)
   const missing = items.filter((i) => i.missing)
   const list = q.trim() ? items.filter((i) => norm(`${i.label} ${i.ctx} ${TAB_LABEL[i.tab]}`).includes(norm(q))) : missing
-  useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null
-    box.current?.querySelector<HTMLElement>(startSearch ? 'input[type=search]' : 'button.go')?.focus()
-    return () => prev?.focus?.()
-  }, [startSearch])
-  const onKey = (e: React.KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose() } }
   const pickFil = (id: string) => { setFil(id); const f = fill.filaments.find((x) => x.id === id); if (f) setPrice(f.price) }
   return (
-    <div className="modalback" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal pend" role="dialog" aria-modal="true" aria-label="O que falta e busca de campo" ref={box} onKeyDown={onKey}>
-        <h2>{q.trim() ? 'Buscar campo' : missing.length ? `Faltam ${missing.length} ${missing.length === 1 ? 'item' : 'itens'}` : 'Nada faltando'}</h2>
+    <Modal titulo={q.trim() ? 'Buscar campo' : missing.length ? `Faltam ${missing.length} ${missing.length === 1 ? 'item' : 'itens'}` : 'Nada faltando'} onClose={onClose} className="pend" foco={startSearch ? 'input[type=search]' : 'button.go'}>
         <input type="search" className="pendsearch" placeholder="Buscar campo: preço, impressora, margem..." value={q} onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && list[0]) onGo(list[0]) }} aria-label="Buscar campo" />
         {!q.trim() && fill.count > 1 && (
@@ -74,7 +66,6 @@ export function Pendencias({ startSearch, onClose, onGo, fill }: {
           {!list.length && <li className="note">{q.trim() ? 'Nenhum campo com esse nome.' : 'Todos os campos obrigatórios estão preenchidos.'}</li>}
         </ul>
         <div className="rowacts modalacts"><button type="button" onClick={onClose}>Fechar</button></div>
-      </div>
-    </div>
+    </Modal>
   )
 }
