@@ -13,7 +13,7 @@ import { QuickFilament, QuickPrinter, QuickSupply } from './Rapido'
 import { titleCase } from './domain/texto'
 import { groupVersions } from './domain/versions'
 import { BotaoIcone, ICONES } from './Icones'
-import { Pendencias, type FieldItem } from './Pendencias'
+import { irParaCampo, Pendencias, useAtalhoBusca, type FieldItem } from './Pendencias'
 import type { FilamentDraft } from './domain/filament'
 import type { UserPrinterDraft } from './domain/printers'
 import type { SupplyDraft } from './domain/supply'
@@ -38,18 +38,7 @@ const initial = (): State => ({
 const REQUIRED = new Set(['Nome da parte', 'Peças por impressão', 'Peças por produto', 'Preço do filamento', 'Item', 'Preço de cada', 'Quantidade', 'Consumo médio', 'Tarifa de energia', 'Preço da impressora', 'Vida útil estimada', 'Seu tempo por produto', 'Valor da sua hora', 'Impressões que falham', 'Margem desejada'])
 const bad = (v: string) => v.trim() === '' || Number.isNaN(Number(v.replace(',', '.')))
 // Leva a pessoa ao primeiro campo laranja, já selecionado para só digitar.
-// Abre a aba do campo, rola até ele, pisca e seleciona para digitar.
-function goTo(el: HTMLElement, openTab: (t: Tab) => void) {
-  const t = el.closest<HTMLElement>('[data-tab]')?.dataset.tab as Tab | undefined
-  if (t) openTab(t)
-  window.setTimeout(() => {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    const box = el.closest<HTMLElement>('.input') ?? el
-    box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash')
-    window.setTimeout(() => box.classList.remove('flash'), 1800)
-    window.setTimeout(() => { el.focus({ preventScroll: true }); (el as HTMLInputElement).select?.() }, 250)
-  }, 60)
-}
+const goTo = (el: HTMLElement, openTab: (t: Tab) => void) => irParaCampo(el, (t) => openTab(t as Tab))
 function focusMissing(openTab: (t: Tab) => void): boolean {
   const el = document.querySelector<HTMLInputElement>('.input.missing input')
   if (!el) return false
@@ -109,10 +98,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const [saveMsg, setSaveMsg] = useState('')
   const [tab, setTab] = useState<Tab>('partes')
   const [dlg, setPend] = useState<null | 'faltam' | 'busca'>(null)
-  useEffect(() => {
-    const k = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPend('busca') } }
-    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
-  }, [])
+  useAtalhoBusca(() => setPend('busca'))
   const [miss, setMiss] = useState<Record<string, number>>({})
   useEffect(() => {
     const m: Record<string, number> = {}

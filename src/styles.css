@@ -321,3 +321,5 @@ button.danger { background: var(--warn); border-color: var(--warn); color: #fff;
 .modal p { margin: 0 0 8px }
 
 .tabsearch { margin-left: auto; align-self: center; flex: 0 0 auto }
+
+.top .topact { margin-left: auto } .top .topact + .modes { margin-left: 0 }

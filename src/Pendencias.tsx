@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Modal } from './Janela'
 
 // Lista de campos do formulário, lida da tela: serve para "o que falta" e para a busca de campo (como no fatiador).
 export interface FieldItem { tab: string; label: string; ctx: string; missing: boolean; el: HTMLElement }
 
-export const TAB_LABEL: Record<string, string> = { partes: 'Partes', filamentos: 'Filamentos', impressora: 'Impressora', itens: 'Itens', venda: 'Venda', produtos: 'Meus produtos' }
+export const TAB_LABEL: Record<string, string> = { calculadora: 'Calculadora', partes: 'Partes', filamentos: 'Filamentos', impressora: 'Impressora', itens: 'Itens', venda: 'Venda', produtos: 'Meus produtos' }
 
 export function collectFields(): FieldItem[] {
   const out: FieldItem[] = []
@@ -35,13 +35,13 @@ export function Pendencias({ startSearch, onClose, onGo, fill }: {
   const [price, setPrice] = useState('')
   const [fil, setFil] = useState('')
   const missing = items.filter((i) => i.missing)
-  const list = q.trim() ? items.filter((i) => norm(`${i.label} ${i.ctx} ${TAB_LABEL[i.tab]}`).includes(norm(q))) : missing
+  const list = q.trim() ? items.filter((i) => norm(`${i.label} ${i.ctx} ${TAB_LABEL[i.tab]}`).includes(norm(q))) : startSearch ? items : missing
   const pickFil = (id: string) => { setFil(id); const f = fill.filaments.find((x) => x.id === id); if (f) setPrice(f.price) }
   return (
-    <Modal titulo={q.trim() ? 'Buscar campo' : missing.length ? `Faltam ${missing.length} ${missing.length === 1 ? 'item' : 'itens'}` : 'Nada faltando'} onClose={onClose} className="pend" foco={startSearch ? 'input[type=search]' : 'button.go'}>
+    <Modal titulo={q.trim() || startSearch ? 'Buscar campo' : missing.length ? `Faltam ${missing.length} ${missing.length === 1 ? 'item' : 'itens'}` : 'Nada faltando'} onClose={onClose} className="pend" foco={startSearch ? 'input[type=search]' : 'button.go'}>
         <input type="search" className="pendsearch" placeholder="Buscar campo: preço, impressora, margem..." value={q} onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && list[0]) onGo(list[0]) }} aria-label="Buscar campo" />
-        {!q.trim() && fill.count > 1 && (
+        {!q.trim() && !startSearch && fill.count > 1 && (
           <div className="fillall">
             <strong>Mesmo preço para as {fill.count} cores que faltam</strong>
             <p className="note">Útil quando você usa o mesmo rolo em todas as peças. Depois dá para ajustar cor por cor na aba Filamentos.</p>
@@ -68,4 +68,26 @@ export function Pendencias({ startSearch, onClose, onGo, fill }: {
         <div className="rowacts modalacts"><button type="button" onClick={onClose}>Fechar</button></div>
     </Modal>
   )
+}
+
+// Leva a pessoa a um campo: abre a aba (se houver), rola, pisca e seleciona para digitar. Usado por todas as telas.
+export function irParaCampo(el: HTMLElement, abrirAba: (t: string) => void = () => {}) {
+  const t = el.closest<HTMLElement>('[data-tab]')?.dataset.tab
+  if (t) abrirAba(t)
+  el.closest('details')?.setAttribute('open', '') // campo dentro de bloco recolhido
+  window.setTimeout(() => {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const box = el.closest<HTMLElement>('.input') ?? el
+    box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash')
+    window.setTimeout(() => box.classList.remove('flash'), 1800)
+    window.setTimeout(() => { el.focus({ preventScroll: true }); (el as HTMLInputElement).select?.() }, 250)
+  }, 60)
+}
+
+// Ctrl/Cmd+K abre a busca de campo.
+export function useAtalhoBusca(abrir: () => void) {
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); abrir() } }
+    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k)
+  }, [abrir])
 }

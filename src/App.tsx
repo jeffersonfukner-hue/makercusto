@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Composition } from './Composition'
 import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
+import { irParaCampo, Pendencias, useAtalhoBusca } from './Pendencias'
 import { TemaSeletor } from './Temas'
 import { BotaoIcone, ICONES, MenuIcone } from './Icones'
 import { addSaved, KINDS, summarize, type Kind, type SavedCalc } from './domain/saved'
@@ -373,6 +374,8 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
   const [fil, setFil] = useState('')
   const [prn, setPrn] = useState('')
   const [quick, setQuick] = useState<'fil' | 'prn' | null>(null)
+  const [busca, setBusca] = useState(false)
+  useAtalhoBusca(() => setBusca(true))
   const pendingFil = useRef<string | null>(null)
   const pendingPrn = useRef<string | null>(null)
   const formRef = useRef(form)
@@ -440,6 +443,7 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
       {!user && <LandingHero />}
       <header className="top">
         {user ? <h1>Calculadora</h1> : <h2>Calculadora</h2>}
+        <span className="topact"><BotaoIcone icone={ICONES.lupa} label="Buscar campo (Ctrl+K)" onClick={() => setBusca(true)} /></span>
         <div className="modes" role="group" aria-label="Modo da calculadora">
           <button type="button" aria-pressed={basic} onClick={() => setMode('basico')}>Básico</button>
           <button type="button" aria-pressed={!basic} onClick={() => setMode('avancado')}>Avançado</button>
@@ -456,7 +460,7 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
           )}
           {result && <Details r={result} basic={basic} work={work} setWork={setWork} onSave={(n, k) => onSave(n, input, k)} />}
         </div>
-        <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
+        <form className="form" data-tab="calculadora" onSubmit={(e) => e.preventDefault()} noValidate>
           <section className="card2 start"><h2>Comece pelo nome e pelo tipo</h2>
             <div className="startrow">
               <Fld label="Nome do trabalho" info={AJUDA.nomeTrabalho} mode="text" value={work.name} onChange={(v) => setWork({ ...work, name: v })} placeholder="Ex.: Brasão do Flamengo" maxLength={60} />
@@ -509,6 +513,7 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
           )}
         </form>
       </div>
+      {busca && <Pendencias startSearch onClose={() => setBusca(false)} onGo={(it) => { setBusca(false); irParaCampo(it.el) }} fill={{ count: 0, filaments: [], apply: () => {} }} />}
       {quick === 'fil' && onAddFilament && <QuickFilament onAdd={onAddFilament} onClose={() => setQuick(null)} onSaved={(n) => { pendingFil.current = n }} />}
       {quick === 'prn' && onAddPrinter && <QuickPrinter onAdd={onAddPrinter} onClose={() => setQuick(null)} onSaved={(n) => { pendingPrn.current = n }} defaults={{ watts: form.watts, price: form.printerPrice, life: form.lifetimeHours }} />}
       {!user && <LandingSections />}
