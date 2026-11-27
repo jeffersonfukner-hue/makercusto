@@ -14,5 +14,12 @@
 - Visual: grafite, verde-bobina e âmbar; fonte Sora (Google Fonts, com fallback do sistema); resultado fixo no topo no celular.
 - Próximo (depois do uso real): Supabase.
 
+## Seção 4: necessidades de maker (em andamento, um bloco por vez)
+- Bloco 1 (feito): tempo de impressão em campos separados de horas, minutos e segundos (`src/domain/time.ts`). O cálculo continua em horas decimais.
+- Bloco 2: produto com partes. Cada parte impressa tem tempo, cores e peso por cor; itens comprados (ex.: copo de alumínio) entram só como custo. Dado real do fatiador (Anycubic Slicer Next, caneca Flamengo, brasão): o peso total do filamento é modelo + purga (flushed) + torre, e a purga mais a torre foram mais da metade do total. Por isso o desperdício de troca de cor precisa ser um campo próprio por cor.
+- Bloco 3: importar .3mf ou .gcode do fatiador, lido só no navegador. Formato a confirmar com arquivo real.
+- Bloco 4: catálogo de impressoras mais usadas no Brasil com perfis pesquisados; clonar e personalizar é recurso do plano pago.
+
 ## Depois (fora do escopo atual)
+- Conector ao vivo com o fatiador (exige programa instalado no computador).
 - Utilização da máquina, clientes, estoque, login e banco, importação de G-code, várias mesas, rateio.

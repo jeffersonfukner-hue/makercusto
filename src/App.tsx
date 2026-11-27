@@ -4,6 +4,7 @@ import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
 import { addSaved, summarize, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
+import { fromHMS, toHMS } from './domain/time'
 import { ESSENTIAL, inputForMode, type Mode } from './modes'
 import { cloud, onUser, signInWithGoogle, signOut, supabase } from './supabase'
 import { readMode, readSaved, writeMode, writeSaved } from './storage'
@@ -23,7 +24,7 @@ function useRoute() {
 const toForm = (i: CostInput): Form => {
   const t = (n: number) => String(n).replace('.', ',')
   return {
-    grams: t(i.grams), pricePerKg: t(i.pricePerKg), hours: t(i.hours), watts: t(i.watts), tariff: t(i.tariff),
+    grams: t(i.grams), pricePerKg: t(i.pricePerKg), timeH: String(toHMS(i.hours).h), timeM: String(toHMS(i.hours).m), timeS: String(toHMS(i.hours).s), watts: t(i.watts), tariff: t(i.tariff),
     printerPrice: t(i.printerPrice), lifetimeHours: t(i.lifetimeHours), laborMinutes: t(i.laborMinutes),
     laborRate: t(i.laborRate), failurePct: t(i.failurePct), quantity: t(i.quantity), marginPct: t(i.marginPct),
     soldPrice: i.soldPrice === undefined ? '' : t(i.soldPrice),
@@ -118,19 +119,19 @@ function Home() {
 
 // Valores de exemplo: troque pelos seus. Consumo, tarifa e vida útil são hipóteses.
 const initial = {
-  grams: '50', pricePerKg: '100', hours: '3', watts: '150', tariff: '1,03',
+  grams: '50', pricePerKg: '100', timeH: '3', timeM: '0', timeS: '0', watts: '150', tariff: '1,03',
   printerPrice: '3500', lifetimeHours: '3000', laborMinutes: '10', laborRate: '20',
   failurePct: '10', quantity: '1', marginPct: '50', soldPrice: '',
 }
 type Form = typeof initial
-type Field = { key: keyof Form; label: string; unit: string; hint?: string }
+type Field = { key: keyof Form | 'hours'; label: string; unit: string; hint?: string }
 
 const groups: { title: string; fields: Field[] }[] = [
   { title: 'Material', fields: [
     { key: 'grams', label: 'Peso total do lote', unit: 'g' },
     { key: 'pricePerKg', label: 'Preço do filamento', unit: 'R$/kg' } ] },
   { title: 'Impressão', fields: [
-    { key: 'hours', label: 'Tempo de impressão do lote', unit: 'h', hint: 'Use o tempo do fatiador.' },
+    { key: 'hours', label: 'Tempo de impressão do lote', unit: '', hint: 'Copie do fatiador: horas, minutos e segundos.' },
     { key: 'watts', label: 'Consumo médio da impressora', unit: 'W', hint: 'Estimativa. Meça com um wattímetro se puder.' },
     { key: 'tariff', label: 'Tarifa de energia', unit: 'R$/kWh', hint: 'Está na sua conta de luz.' } ] },
   { title: 'Impressora', fields: [
@@ -149,7 +150,7 @@ const groups: { title: string; fields: Field[] }[] = [
 function toInput(f: Form): CostInput {
   const sold = num(f.soldPrice)
   return {
-    grams: num(f.grams), pricePerKg: num(f.pricePerKg), hours: num(f.hours), watts: num(f.watts),
+    grams: num(f.grams), pricePerKg: num(f.pricePerKg), hours: fromHMS(f.timeH, f.timeM, f.timeS), watts: num(f.watts),
     tariff: num(f.tariff), printerPrice: num(f.printerPrice), lifetimeHours: num(f.lifetimeHours),
     laborMinutes: num(f.laborMinutes), laborRate: num(f.laborRate), failurePct: num(f.failurePct),
     quantity: num(f.quantity), marginPct: num(f.marginPct), soldPrice: f.soldPrice.trim() === '' ? undefined : sold,
@@ -167,11 +168,27 @@ function Calculator({ form, setForm, onSave, mode, setMode, account }: {
   const errors = validate(input)
   const result = errors.length ? null : calculateCost(input)
   const basic = mode === 'basico'
-  const field = (f: Field) => (
+  const field = (f: Field) => f.key === 'hours' ? (
+    <fieldset key="hours" className="time">
+      <legend>{f.label}</legend>
+      <div className="hms">
+        {([['timeH', 'horas'], ['timeM', 'minutos'], ['timeS', 'segundos']] as const).map(([k, l]) => (
+          <label key={k}>
+            <span>{l}</span>
+            <span className="input">
+              <input inputMode="numeric" aria-label={`${f.label}, ${l}`} value={form[k]}
+                onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
+            </span>
+          </label>
+        ))}
+      </div>
+      {f.hint && <small>{f.hint}</small>}
+    </fieldset>
+  ) : (
     <label key={f.key}>
       <span>{f.label}</span>
       <span className="input">
-        <input inputMode="decimal" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
+        <input inputMode="decimal" value={form[f.key as keyof Form]} onChange={(e) => setForm({ ...form, [f.key as keyof Form]: e.target.value })} />
         <em>{f.unit}</em>
       </span>
       {f.hint && <small>{f.hint}</small>}
