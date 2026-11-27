@@ -56,7 +56,9 @@ describe('nuvem: produtos', () => {
   it('salva nome e entrada, valida antes', async () => {
     const f = fake(); const c = createCloud(f.db).products
     await c.save({ name: ' Caneca ', input })
-    expect(f.insert).toHaveBeenCalledWith({ nome: 'Caneca', entrada: input })
+    expect(f.insert).toHaveBeenCalledWith({ nome: 'Caneca', entrada: { ...input, tipo: 'produto' } })
+    await c.save({ name: 'Base', input, kind: 'parte' })
+    expect(f.insert).toHaveBeenLastCalledWith({ nome: 'Base', entrada: { ...input, tipo: 'parte' } })
     await expect(c.save({ name: '', input })).rejects.toThrow('nome')
     await expect(c.save({ name: 'x', input: { ...input, parts: [] } })).rejects.toThrow()
   })

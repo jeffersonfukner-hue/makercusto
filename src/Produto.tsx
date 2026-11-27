@@ -19,7 +19,6 @@ import { irParaCampo, Pendencias, useAtalhoBusca, type FieldItem } from './Pende
 import type { FilamentDraft } from './domain/filament'
 import type { UserPrinterDraft } from './domain/printers'
 import type { SupplyDraft } from './domain/supply'
-import { summarize, type SavedCalc } from './domain/saved'
 import { ImportGcode } from './ImportGcode'
 import type { GcodeResult } from './domain/gcode'
 
@@ -88,7 +87,7 @@ type Props = {
   linhas: Linha[]; onSave: (name: string, i: ProductInput) => Promise<void>; onAbrir: (l: Linha) => void; onApagar: (ls: Linha[]) => void
   aberto?: SavedProduct | null; onAberto?: () => void; msg: string
   openId?: string
-  savedParts?: SavedCalc[]
+  savedParts?: Linha[]
   onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>; onAddSupply?: (d: SupplyDraft) => Promise<void>
 }
 

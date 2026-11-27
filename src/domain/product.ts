@@ -125,12 +125,12 @@ export const emptyPart = (): Part => ({ name: '', hours: 0, piecesPerPrint: 1, p
 export interface SavedProduct { id: string; name: string; savedAt: string; input: ProductInput; kind?: 'parte' | 'produto' }
 export const MAX_PRODUCTS = 50
 
-export function addSavedProduct(list: SavedProduct[], name: string, input: ProductInput, id: string, savedAt: string): SavedProduct[] {
+export function addSavedProduct(list: SavedProduct[], name: string, input: ProductInput, id: string, savedAt: string, kind: 'parte' | 'produto' = 'produto'): SavedProduct[] {
   const n = titleCase(name)
   if (!n) throw new Error('Dê um nome ao produto.')
   if (validateProduct(input).length) throw new Error('Corrija os campos antes de salvar.')
   if (list.length >= MAX_PRODUCTS) throw new Error(`Limite de ${MAX_PRODUCTS} produtos. Exclua algum.`)
-  return [{ id, name: n.slice(0, 60), savedAt, input }, ...list]
+  return [{ id, name: n.slice(0, 60), savedAt, input, kind }, ...list]
 }
 
 const isSavedProduct = (x: any): x is SavedProduct =>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Composition } from './Composition'
 import { Dashboard } from './Dashboard'
 import { todasAsLinhas, type Linha } from './domain/trabalhos'
-import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
+import { calcParaProduto, calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
 import { irParaCampo, Pendencias, useAtalhoBusca } from './Pendencias'
 import { TemaSeletor } from './Temas'
 import { BotaoIcone, ICONES, MenuIcone } from './Icones'
@@ -75,8 +75,8 @@ export default function App() {
     addLocal: addFilament, toDraft: ({ id: _id, ...d }) => d })
   const prn = useList<UserPrinter, UserPrinterDraft>({ read: readPrinters, write: writePrinters, user, api: cloud?.printers ?? null,
     addLocal: addPrinter, toDraft: ({ id: _id, ...d }) => d })
-  const prod = useList<SavedProduct, { name: string; input: ProductInput }>({ read: readProducts, write: writeProducts, user, api: cloud?.products ?? null,
-    addLocal: (l, d, id) => addSavedProduct(l, d.name, d.input, id, new Date().toISOString()), toDraft: (p) => ({ name: p.name, input: p.input }) })
+  const prod = useList<SavedProduct, { name: string; input: ProductInput; kind?: Kind }>({ read: readProducts, write: writeProducts, user, api: cloud?.products ?? null,
+    addLocal: (l, d, id) => addSavedProduct(l, d.name, d.input, id, new Date().toISOString(), d.kind), toDraft: (p) => ({ name: p.name, input: p.input, kind: p.kind }) })
   const sup = useList<Supplier, SupplierDraft>({ read: readSuppliers, write: writeSuppliers, user, api: cloud?.suppliers ?? null,
     addLocal: addSupplier, toDraft: ({ id: _id, ...d }) => d })
   const brd = useList<Brand, BrandDraft>({ read: readBrands, write: writeBrands, user, api: cloud?.brands ?? null,
@@ -108,8 +108,8 @@ export default function App() {
   }, [user])
 
   const onSave = async (name: string, input: CostInput, kind: Kind) => {
-    if (user && cloud) { await cloud.save(name, input, kind); setSaved(await cloud.list()); return }
-    update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString(), kind))
+    // Cadastro único: o que sai da Calculadora é salvo como produto de uma parte só, no mesmo lugar do Produto.
+    await prod.add({ name, input: calcParaProduto(input), kind })
   }
   const onDelete = async (ids: string | string[]) => {
     const list = Array.isArray(ids) ? ids : [ids]
@@ -119,6 +119,7 @@ export default function App() {
 
 
   const linhas = todasAsLinhas(saved, prod.items)
+  const partes = linhas.filter((l) => l.kind === 'parte')
   const [aberto, setAberto] = useState<SavedProduct | null>(null)
   // Abrir um trabalho salvo: cada origem abre na tela que tem os campos dela (por enquanto).
   const abrirLinha = (l: Linha) => {
@@ -138,7 +139,7 @@ export default function App() {
   }
 
   if (route === 'calculadora') {
-    return <Calculator supplies={stock.items} onAddSupply={stock.add} savedParts={saved.filter((x) => x.kind === 'parte')} onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} work={work} setWork={setWork} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
+    return <Calculator supplies={stock.items} onAddSupply={stock.add} savedParts={partes} onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} work={work} setWork={setWork} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
   }
   if (route === 'filamentos') {
     return (
@@ -216,7 +217,7 @@ export default function App() {
         <ImportBar count={prod.localCount} what="produtos" onImport={prod.importLocal} />
         <Produto filaments={fil.items} printers={prn.items} supplies={stock.items} linhas={linhas} msg={prod.msg}
           onSave={(name, input) => prod.add({ name, input })} onAbrir={abrirLinha} onApagar={apagarLinhas} aberto={aberto} onAberto={() => setAberto(null)}
-          onAddFilament={fil.add} onAddPrinter={prn.add} onAddSupply={stock.add} savedParts={saved.filter((x) => x.kind === 'parte')} />
+          onAddFilament={fil.add} onAddPrinter={prn.add} onAddSupply={stock.add} savedParts={partes} />
       </main>
     )
   }
@@ -383,7 +384,7 @@ const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
 function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, account, filaments, printers, user, onAddFilament, onAddPrinter, supplies, onAddSupply, savedParts }: {
-  supplies: Supply[]; onAddSupply?: (d: SupplyDraft) => Promise<void>; savedParts: SavedCalc[]
+  supplies: Supply[]; onAddSupply?: (d: SupplyDraft) => Promise<void>; savedParts: Linha[]
   user: string | null; filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput, kind: Kind) => Promise<void>; work: Work; setWork: (w: Work) => void; mode: Mode; setMode: (m: Mode) => void; account: Account
   onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>
 }) {

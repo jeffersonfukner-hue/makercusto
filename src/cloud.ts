@@ -47,9 +47,9 @@ export function createCloud(db: Db) {
         if (error) throw new Error('Não foi possível carregar os produtos da nuvem.')
         return productsFromRows(data ?? [])
       },
-      async save(d: { name: string; input: ProductInput }): Promise<void> {
-        const [v] = addSavedProduct([], d.name, d.input, 'novo', new Date().toISOString())
-        const { error } = await db.from('produtos').insert({ nome: v.name, entrada: v.input })
+      async save(d: { name: string; input: ProductInput; kind?: 'parte' | 'produto' }): Promise<void> {
+        const [v] = addSavedProduct([], d.name, d.input, 'novo', new Date().toISOString(), d.kind)
+        const { error } = await db.from('produtos').insert({ nome: v.name, entrada: { ...v.input, tipo: v.kind } })
         if (error) throw new Error(limitMsg('produtos', 50, error, 'Não foi possível salvar o produto na nuvem.'))
       },
       async remove(id: string): Promise<void> {

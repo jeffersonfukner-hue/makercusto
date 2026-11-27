@@ -1,3 +1,4 @@
+import { calculateProduct, type ProductInput } from './product'
 // Cálculo puro. Valores monetários em centavos inteiros; arredonda cada componente uma vez.
 // Item comprado pronto (argola, corrente, copo): custo por peça, fora da taxa de falhas. Usado pela Calculadora e pelo Produto.
 export interface Bought { name: string; price: number; qty: number } // price em R$ por unidade
@@ -29,6 +30,14 @@ export interface CostResult {
   profitPerUnit: number; margin: number; markup: number; profitPerHour: number;
 }
 
+// Adaptador: entrada da Calculadora (um lote) vira um produto de uma parte. O tempo de trabalho do lote é dividido pelas peças.
+export const calcParaProduto = (i: CostInput): ProductInput => ({
+  parts: [{ name: 'Lote', hours: i.hours, piecesPerPrint: i.quantity, perProduct: 1,
+    lines: [{ color: '', pricePerKg: i.pricePerKg, modelG: i.grams, flushedG: 0, towerG: 0 }] }],
+  bought: i.bought ?? [], watts: i.watts, tariff: i.tariff, printerPrice: i.printerPrice, lifetimeHours: i.lifetimeHours,
+  laborMinutes: i.laborMinutes / i.quantity, laborRate: i.laborRate, failurePct: i.failurePct, marginPct: i.marginPct, soldPrice: i.soldPrice,
+})
+
 export const toCents = (reais: number) => Math.round(reais * 100);
 
 export function validate(i: CostInput): string[] {
@@ -48,30 +57,20 @@ export function validate(i: CostInput): string[] {
   return e
 }
 
+// Motor único: a Calculadora é um produto de uma parte só. O lote vira uma impressão com `quantity` peças,
+// e cada peça é um produto. Todo o cálculo de custo está em product.ts.
 export function calculateCost(i: CostInput): CostResult {
   const errors = validate(i)
   if (errors.length) throw new Error(errors.join(' '))
-  const r = Math.round
-  const material = r((i.grams / 1000) * toCents(i.pricePerKg))
-  const energy = r((i.watts / 1000) * i.hours * toCents(i.tariff))
-  const machine = r((toCents(i.printerPrice) / i.lifetimeHours) * i.hours)
-  const labor = r((i.laborMinutes / 60) * toCents(i.laborRate))
-  const base = material + energy + machine + labor
-  // Falha: o custo das peças boas absorve as perdas. total = base / (1 - taxa).
-  const withFailure = r(base / (1 - i.failurePct / 100))
-  // Itens comprados entram por peça e ficam fora da taxa de falhas.
-  const bought = boughtCost(i.bought)
-  const total = withFailure + bought * i.quantity
-  const unit = r(withFailure / i.quantity) + bought
-  const suggestedPrice = Math.ceil(unit / (1 - i.marginPct / 100) - 1e-9)
-  const priceIsSuggested = i.soldPrice === undefined
-  const price = priceIsSuggested ? suggestedPrice : toCents(i.soldPrice as number)
-  const profitPerUnit = price - unit
+  const p = calculateProduct(calcParaProduto(i))
+  const part = p.parts[0]
+  const q = i.quantity
   return {
-    parts: { material, energy, machine, labor, failure: withFailure - base, ...(bought ? { bought: bought * i.quantity } : {}) },
-    total, unit, suggestedPrice, price, priceIsSuggested, profitPerUnit,
-    margin: price > 0 ? profitPerUnit / price : 0, // lucro ÷ preço
-    markup: unit > 0 ? profitPerUnit / unit : 0, // lucro ÷ custo
-    profitPerHour: r((profitPerUnit * i.quantity) / i.hours),
+    // Valores do lote inteiro, na mesma conta de antes (cada peça × quantidade).
+    parts: { material: part.material * q, energy: part.energy * q, machine: part.machine * q, labor: p.labor * q, failure: p.failure * q, ...(p.bought ? { bought: p.bought * q } : {}) },
+    total: p.total * q, unit: p.total, suggestedPrice: p.suggestedPrice,
+    price: p.price, priceIsSuggested: p.priceIsSuggested, profitPerUnit: p.profit,
+    margin: p.margin, markup: p.markup, profitPerHour: r0((p.profit * q) / i.hours),
   }
 }
+const r0 = Math.round

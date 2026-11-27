@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Supply, SupplyDraft } from './domain/supply'
 import type { Bought } from './domain/cost'
-import { summarize, type SavedCalc } from './domain/saved'
+import type { Linha } from './domain/trabalhos'
 import { money } from './format'
 import { AJUDA } from './ajuda'
 import { Fld, Info } from './Campos'
@@ -19,11 +19,11 @@ export const itensDoInput = (l: Bought[] = []): ItemF[] => l.map((b) => ({ name:
 export const itensValidos = (l: unknown): l is ItemF[] => Array.isArray(l) && l.every((b) => b && typeof b.name === 'string' && typeof b.price === 'string' && typeof b.qty === 'string')
 
 // Parte salva entra como item pronto: custo do cálculo salvo, sem margem e sem contar as falhas duas vezes.
-const unitOf = (c: SavedCalc) => summarize(c).result.unit / 100
+const unitOf = (c: Linha) => c.unit / 100
 
 /** Seção "Itens comprados": a mesma nas duas telas. Mudou aqui, mudou nas duas. */
 export function SecaoItens({ itens, onChange, supplies, onAddSupply, savedParts }: {
-  itens: ItemF[]; onChange: (l: ItemF[]) => void; supplies: Supply[]; onAddSupply?: (d: SupplyDraft) => Promise<void>; savedParts: SavedCalc[]
+  itens: ItemF[]; onChange: (l: ItemF[]) => void; supplies: Supply[]; onAddSupply?: (d: SupplyDraft) => Promise<void>; savedParts: Linha[]
 }) {
   const [quick, setQuick] = useState<number | null>(null)
   const pend = useRef<{ name: string; n: number } | null>(null)
@@ -74,7 +74,7 @@ export function SecaoItens({ itens, onChange, supplies, onAddSupply, savedParts 
         {savedParts.length > 0 && (
           <span className="input"><select aria-label="Adicionar parte salva" value="" onChange={(e) => addSaved(e.target.value)}>
             <option value="">Adicionar parte salva...</option>
-            {savedParts.map((c) => <option key={c.id} value={c.id}>{c.name} ({money(summarize(c).result.unit)})</option>)}
+            {savedParts.map((c) => <option key={c.id} value={c.id}>{c.name} ({money(c.unit)})</option>)}
           </select></span>
         )}
       </div>

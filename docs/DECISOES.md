@@ -138,3 +138,10 @@
 - `src/Itens.tsx` (`SecaoItens`) é a seção "Itens comprados" das duas telas: do estoque, item/preço/quantidade, parte salva com "Atualizar" e cadastro rápido. Mudou ali, mudou na Calculadora e no Produto.
 - A Calculadora agora aceita itens comprados (argola com corrente, por exemplo), no modo básico e no avançado. O custo usa `boughtCost` de `cost.ts`, o mesmo do Produto. Salvos antigos sem itens continuam válidos.
 - Falta (Etapa 3): Calculadora rodar no motor do Produto e salvar no mesmo cadastro.
+
+## Etapa 3 da unificação: um motor, um cadastro
+- Motor único: `calculateCost` (Calculadora e salvos antigos) agora chama `calculateProduct` por um adaptador (`calcParaProduto` em `cost.ts`): o lote vira um produto de uma parte, com o tempo de trabalho dividido pelas peças. Uma regra de custo para o app todo.
+- Efeito: componentes arredondados por peça, então o centavo pode diferir 1 do cálculo antigo por lote (ex.: 3 peças, R$ 10,67 virou R$ 10,66). Salvos antigos recalculam com o motor novo.
+- Cadastro único: o que a Calculadora salva vai para `produtos`, com o tipo (Parte ou Produto final) dentro de `entrada.tipo`, o mesmo do Produto. Salvos antigos da tabela `calculos` continuam aparecendo e abrindo na Calculadora.
+- "Adicionar parte salva" lista partes de qualquer origem (`Linha` com `kind: 'parte'`).
+- Falta: Produto escolher Parte ou Produto final ao salvar (hoje salva como produto final); abrir na Calculadora um produto de uma parte só.

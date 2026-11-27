@@ -30,8 +30,9 @@ describe('calculateCost', () => {
   })
   it('arredonda o preço sugerido para cima', () => {
     const r = calculateCost({ ...base, failurePct: 0, quantity: 3, marginPct: 30 })
-    expect(r.unit).toBe(1067)
-    expect(r.suggestedPrice).toBe(1525)
+    // Motor único: cada componente é arredondado por peça, então o centavo pode diferir 1 do cálculo antigo por lote.
+    expect(r.unit).toBe(1066)
+    expect(r.suggestedPrice).toBe(1523)
   })
 })
 
@@ -63,5 +64,20 @@ describe('itens comprados na calculadora', () => {
   })
   it('valida o item', () => {
     expect(validate({ ...base, bought: [{ name: ' ', price: 1, qty: 1 }] })[0]).toMatch(/Item comprado 1: dê um nome/)
+  })
+})
+
+describe('motor único (Calculadora roda no Produto)', () => {
+  it('adaptador gera produto de uma parte com o lote como uma impressão', async () => {
+    const { calcParaProduto } = await import('./cost')
+    const p = calcParaProduto({ ...base, quantity: 4, laborMinutes: 40 })
+    expect(p.parts).toHaveLength(1)
+    expect(p.parts[0].piecesPerPrint).toBe(4)
+    expect(p.laborMinutes).toBe(10)
+  })
+  it('com 1 peça o resultado é igual ao do produto', async () => {
+    const { calcParaProduto } = await import('./cost')
+    const { calculateProduct } = await import('./product')
+    expect(calculateCost({ ...base, quantity: 1 }).unit).toBe(calculateProduct(calcParaProduto({ ...base, quantity: 1 })).total)
   })
 })
