@@ -60,3 +60,4 @@ button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid
 .nav { flex-wrap: wrap } .acct { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: .85rem }
 .acct > span { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mute) }
 .errors { color: var(--warn) }
+fieldset { min-width: 0 } .form, .details, .hero { min-width: 0 } .form { max-width: 100% }
