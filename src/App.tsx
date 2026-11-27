@@ -28,6 +28,7 @@ import { LandingHero, LandingSections } from './Landing'
 import { Impressoras } from './Impressoras'
 import { ImportBar } from './ImportBar'
 import { Produto } from './Produto'
+import { SecaoItens, itensDoInput, itensParaInput, type ItemF } from './Itens'
 import { useList } from './useList'
 import { ESSENTIAL, inputForMode, type Mode } from './modes'
 import { cloud, onUser, signInWithGoogle, signOut, supabase } from './supabase'
@@ -53,7 +54,7 @@ const toForm = (i: CostInput): Form => {
     grams: t(i.grams), pricePerKg: t(i.pricePerKg), timeH: String(toHMS(i.hours).h), timeM: String(toHMS(i.hours).m), timeS: String(toHMS(i.hours).s), watts: t(i.watts), tariff: t(i.tariff),
     printerPrice: t(i.printerPrice), lifetimeHours: t(i.lifetimeHours), laborMinutes: t(i.laborMinutes),
     laborRate: t(i.laborRate), failurePct: t(i.failurePct), quantity: t(i.quantity), marginPct: t(i.marginPct),
-    soldPrice: i.soldPrice === undefined ? '' : t(i.soldPrice),
+    soldPrice: i.soldPrice === undefined ? '' : t(i.soldPrice), bought: itensDoInput(i.bought),
   }
 }
 
@@ -137,7 +138,7 @@ export default function App() {
   }
 
   if (route === 'calculadora') {
-    return <Calculator onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} work={work} setWork={setWork} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
+    return <Calculator supplies={stock.items} onAddSupply={stock.add} savedParts={saved.filter((x) => x.kind === 'parte')} onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} work={work} setWork={setWork} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
   }
   if (route === 'filamentos') {
     return (
@@ -340,6 +341,7 @@ const initial = {
   grams: '50', pricePerKg: '100', timeH: '3', timeM: '0', timeS: '0', watts: '150', tariff: '1,03',
   printerPrice: '3500', lifetimeHours: '3000', laborMinutes: '10', laborRate: '20',
   failurePct: '10', quantity: '1', marginPct: '50', soldPrice: '',
+  bought: [] as ItemF[],
 }
 type Form = typeof initial
 type Field = { key: keyof Form | 'hours'; label: string; unit: string; help: string }
@@ -372,6 +374,7 @@ function toInput(f: Form): CostInput {
     tariff: num(f.tariff), printerPrice: num(f.printerPrice), lifetimeHours: num(f.lifetimeHours),
     laborMinutes: num(f.laborMinutes), laborRate: num(f.laborRate), failurePct: num(f.failurePct),
     quantity: num(f.quantity), marginPct: num(f.marginPct), soldPrice: f.soldPrice.trim() === '' ? undefined : sold,
+    bought: itensParaInput(f.bought),
   }
 }
 
@@ -379,7 +382,8 @@ const flat = groups.flatMap((g) => g.fields)
 const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
-function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, account, filaments, printers, user, onAddFilament, onAddPrinter }: {
+function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, account, filaments, printers, user, onAddFilament, onAddPrinter, supplies, onAddSupply, savedParts }: {
+  supplies: Supply[]; onAddSupply?: (d: SupplyDraft) => Promise<void>; savedParts: SavedCalc[]
   user: string | null; filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput, kind: Kind) => Promise<void>; work: Work; setWork: (w: Work) => void; mode: Mode; setMode: (m: Mode) => void; account: Account
   onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>
 }) {
@@ -427,7 +431,7 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
       </div>
     </fieldset>
   ) : (
-    <Fld key={f.key} label={f.label} info={f.help} unit={f.unit} value={form[f.key as keyof Form]}
+    <Fld key={f.key} label={f.label} info={f.help} unit={f.unit} value={form[f.key as Exclude<keyof Form, 'bought'>]}
       onChange={(v) => { if (f.key === 'pricePerKg') setFil(''); setForm({ ...form, [f.key as keyof Form]: v }) }} />
   )
   const filSelect = (
@@ -498,6 +502,7 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
                 {field(byKey('hours'))}
                 <div className="pair">{ESSENTIAL.slice(3).map((k) => field(byKey(k)))}</div>
               </section>
+              <SecaoItens itens={form.bought} onChange={(bought) => setForm({ ...form, bought })} supplies={supplies} onAddSupply={onAddSupply} savedParts={savedParts} />
               <details className="adj">
                 <summary>Ajustes da oficina</summary>
                 <p className="note">Energia, impressora, seu tempo e falhas. Já vêm preenchidos com exemplos. Confira com os seus dados.</p>
@@ -522,6 +527,7 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
                 <div className="pair">{g('Seu tempo e riscos').slice(0, 2).map(field)}</div>
                 {field(g('Seu tempo e riscos')[2])}
               </section>
+              <div className="full"><SecaoItens itens={form.bought} onChange={(bought) => setForm({ ...form, bought })} supplies={supplies} onAddSupply={onAddSupply} savedParts={savedParts} /></div>
               <section className="card2 full"><h2>Venda</h2>
                 <div className="trio">{g('Venda').map(field)}</div>
               </section>

@@ -133,3 +133,8 @@
 ## Refinamento global e fonte do Corporativo
 - O refinamento (campos, botões, títulos, tabelas mais compactos) vale para o app inteiro: bloco "Refinamento global" no fim de `styles.css`, controlado por `--ctl`. Em telas de toque (`pointer: coarse`) os alvos continuam com 44px.
 - Corporativo usava Georgia nos títulos e sans no resto. Agora usa uma família só (IBM Plex Sans) em texto, títulos e números (`--display` e `--texto`).
+
+## Etapa 2 da unificação: Itens comprados em um só componente
+- `src/Itens.tsx` (`SecaoItens`) é a seção "Itens comprados" das duas telas: do estoque, item/preço/quantidade, parte salva com "Atualizar" e cadastro rápido. Mudou ali, mudou na Calculadora e no Produto.
+- A Calculadora agora aceita itens comprados (argola com corrente, por exemplo), no modo básico e no avançado. O custo usa `boughtCost` de `cost.ts`, o mesmo do Produto. Salvos antigos sem itens continuam válidos.
+- Falta (Etapa 3): Calculadora rodar no motor do Produto e salvar no mesmo cadastro.

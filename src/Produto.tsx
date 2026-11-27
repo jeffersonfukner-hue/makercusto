@@ -9,7 +9,8 @@ import { money, pct } from './format'
 import { readDraft, writeDraft } from './storage'
 import { AJUDA, type AjudaKey } from './ajuda'
 import { Fld, Info } from './Campos'
-import { QuickFilament, QuickPrinter, QuickSupply } from './Rapido'
+import { QuickFilament, QuickPrinter } from './Rapido'
+import { SecaoItens, type ItemF } from './Itens'
 import { titleCase } from './domain/texto'
 import type { Linha } from './domain/trabalhos'
 import { ListaTrabalhos } from './ListaTrabalhos'
@@ -24,7 +25,7 @@ import type { GcodeResult } from './domain/gcode'
 
 type LineF = { color: string; fil: string; price: string; model: string; flushed: string; tower: string }
 type PartF = { name: string; h: string; m: string; s: string; pieces: string; per: string; lines: LineF[] }
-type BoughtF = { name: string; price: string; qty: string; ref?: string }
+type BoughtF = ItemF
 type ShopF = { watts: string; tariff: string; printerPrice: string; life: string; laborMin: string; laborRate: string; fail: string; margin: string; sold: string }
 type State = { parts: PartF[]; bought: BoughtF[]; shop: ShopF; printer: string }
 
@@ -93,7 +94,7 @@ type Props = {
 
 export function Produto({ filaments, printers, supplies = [], linhas, onSave, onAbrir, onApagar, aberto, onAberto, msg, onAddFilament, onAddPrinter, onAddSupply, savedParts = [] }: Props) {
   const [s, setS] = useState<State>(loadDraft)
-  const [quick, setQuick] = useState<{ kind: 'fil'; n: number; k: number } | { kind: 'prn' } | { kind: 'sup'; n: number } | null>(null)
+  const [quick, setQuick] = useState<{ kind: 'fil'; n: number; k: number } | { kind: 'prn' } | null>(null)
   const [suggest, setSuggest] = useState('')
   const [name, setName] = useState('')
   const [saveMsg, setSaveMsg] = useState('')
@@ -148,16 +149,6 @@ export function Produto({ filaments, printers, supplies = [], linhas, onSave, on
     const f = filaments.find((x) => x.id === id)
     setLine(n, k, f ? { fil: id, price: t(kgPrice(f)), color: s.parts[n].lines[k].color || f.color } : { fil: '' })
   }
-  // Parte salva entra como item pronto: custo do cálculo salvo, sem margem e sem contar as falhas duas vezes.
-  const unitOf = (c: SavedCalc) => summarize(c).result.unit / 100
-  const addSavedPart = (id: string) => {
-    const c = savedParts.find((x) => x.id === id)
-    if (c) setS({ ...s, bought: [...s.bought, { name: `Parte: ${c.name}`, price: t(unitOf(c)), qty: '1', ref: c.id }] })
-  }
-  const refresh = (n: number) => {
-    const b = s.bought[n]; const c = savedParts.find((x) => x.id === b?.ref)
-    if (c) setS({ ...s, bought: s.bought.map((y, i) => (i === n ? { ...y, price: t(unitOf(c)) } : y)) })
-  }
   // Cada .gcode vira uma parte: tempo e, por cor, peça, purga (estimada) e torre. Rolo cadastrado da mesma cor entra com o preço.
   const importParts = (rs: GcodeResult[], extra: { projectName?: string } = {}) => {
     const fresh = (p: PartF) => !p.name.trim() && p.lines.every((l) => !l.model && !l.price && !l.color)
@@ -188,7 +179,6 @@ export function Produto({ filaments, printers, supplies = [], linhas, onSave, on
     if (!q) return
     if (q.kind === 'fil') { const f = filaments.find((x) => x.name === q.name); if (f) { pend.current = null; const cur = sRef.current; const key = cur.parts[q.n]?.lines[q.k]?.color.trim().toLowerCase() ?? ''; setS({ ...cur, parts: cur.parts.map((p, i) => ({ ...p, lines: p.lines.map((l, j) => ((i === q.n && j === q.k) || (key && l.color.trim().toLowerCase() === key) ? { ...l, fil: f.id, price: t(kgPrice(f)), color: l.color || f.color } : l)) })) }) } }
     if (q.kind === 'prn') { const p = printers.find((x) => x.name === q.name); if (p) { pend.current = null; setS({ ...sRef.current, printer: p.id, shop: { ...sRef.current.shop, watts: t(p.watts), printerPrice: t(p.priceCents / 100), life: t(p.lifetimeHours) } }) } }
-    if (q.kind === 'sup') { const x = supplies.find((y) => y.name === q.name); if (x) { pend.current = null; setS({ ...sRef.current, bought: sRef.current.bought.map((y, i) => (i === q.n ? { ...y, name: x.name, price: t(x.costCents / 100) } : y)) }) } }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filaments, printers, supplies])
 
@@ -292,38 +282,7 @@ export function Produto({ filaments, printers, supplies = [], linhas, onSave, on
         </div>
 
         <div role="tabpanel" id="painel-itens" aria-labelledby="tab-itens" data-tab="itens" hidden={tab !== 'itens'}>
-        <section className="card2" style={{ marginBottom: 12 }}>
-          <h2>Itens comprados <Info label="Itens comprados" text={AJUDA.itemComprado} /></h2>
-          {s.bought.map((b, n) => (
-            <div className="line" key={n}>
-              <Fld label="Do estoque" info={AJUDA.doEstoque} plus={onAddSupply ? { label: 'Cadastrar novo item de estoque', onClick: () => setQuick({ kind: 'sup', n }) } : undefined}>
-                <select value="" onChange={(e) => {
-                  const x = supplies.find((q) => q.id === e.target.value)
-                  if (x) setS({ ...s, bought: s.bought.map((y, i) => (i === n ? { ...y, name: x.name, price: t(x.costCents / 100) } : y)) })
-                }}>
-                  <option value="">Escolher item cadastrado</option>
-                  {supplies.map((q) => <option key={q.id} value={q.id}>{q.name} ({(q.costCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</option>)}
-                </select>
-              </Fld>
-              <div className="trio">
-                {field('Item', b.name, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, name: v } : x)) }), undefined, 'nomeItem', 'text')}
-                {field('Preço de cada', b.price, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, price: v } : x)) }), 'R$', 'precoCada')}
-                {field('Quantidade', b.qty, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, qty: v } : x)) }), 'un', 'quantidade', 'numeric')}
-              </div>
-              {b.ref && <p className="note">Parte salva. Custo do cálculo salvo, já com as falhas dela.{savedParts.some((c) => c.id === b.ref) && <> <button type="button" className="linkish" onClick={() => refresh(n)}>Atualizar</button></>}</p>}
-              <p><button type="button" onClick={() => setS({ ...s, bought: s.bought.filter((_, i) => i !== n) })}>Remover item</button></p>
-            </div>
-          ))}
-          <div className="addrow">
-            <button type="button" onClick={() => setS({ ...s, bought: [...s.bought, { name: '', price: '', qty: '1' }] })}>Adicionar item comprado</button>
-            {savedParts.length > 0 && (
-              <span className="input"><select aria-label="Adicionar parte salva" value="" onChange={(e) => addSavedPart(e.target.value)}>
-                <option value="">Adicionar parte salva...</option>
-                {savedParts.map((c) => <option key={c.id} value={c.id}>{c.name} ({money(summarize(c).result.unit)})</option>)}
-              </select></span>
-            )}
-          </div>
-        </section>
+        <SecaoItens itens={s.bought} onChange={(bought) => setS({ ...s, bought })} supplies={supplies} onAddSupply={onAddSupply} savedParts={savedParts} />
 
         </div>
 
@@ -371,7 +330,6 @@ export function Produto({ filaments, printers, supplies = [], linhas, onSave, on
         }} />}
       {quick?.kind === 'fil' && onAddFilament && <QuickFilament onAdd={onAddFilament} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'fil', name, n: quick.n, k: quick.k } }} />}
       {quick?.kind === 'prn' && onAddPrinter && <QuickPrinter onAdd={onAddPrinter} onClose={() => setQuick(null)} defaults={{ watts: s.shop.watts, price: s.shop.printerPrice, life: s.shop.life }} onSaved={(name) => { pend.current = { kind: 'prn', name, n: 0, k: 0 } }} />}
-      {quick?.kind === 'sup' && onAddSupply && <QuickSupply onAdd={onAddSupply} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'sup', name, n: quick.n, k: 0 } }} />}
     </div>
     <SummaryBar count={Object.values(miss).reduce((a, b) => a + b, 0)} onMissing={() => setPend('faltam')} r={r} input={input} errors={[...new Set(errors)]} name={name} setName={setName} save={doSave} msg={saveMsg} />
     </>
