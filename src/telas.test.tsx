@@ -32,7 +32,7 @@ describe('telas novas', () => {
     expect(renderToString(<ImportBar count={3} what="filamentos" onImport={noop} />).replace(/<!-- -->/g, '')).toContain('3 filamentos')
   })
   it('produto: estado inicial pede correção; estado preenchido mostra o custo', () => {
-    const html = renderToString(<Produto filaments={[]} printers={[]} products={[]} msg="" onSave={asyncNoop} onDelete={noop} />)
+    const html = renderToString(<Produto filaments={[]} printers={[]} linhas={[]} msg="" onSave={asyncNoop} onAbrir={noop} onApagar={noop} />)
     expect(html).toContain('Corrija para ver o resultado')
     expect(html).toContain('Adicionar parte'); expect(html).toContain('Itens comprados')
   })

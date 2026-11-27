@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Composition } from './Composition'
 import { Dashboard } from './Dashboard'
+import { todasAsLinhas, type Linha } from './domain/trabalhos'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
 import { irParaCampo, Pendencias, useAtalhoBusca } from './Pendencias'
 import { TemaSeletor } from './Temas'
@@ -116,6 +117,25 @@ export default function App() {
   }
 
 
+  const linhas = todasAsLinhas(saved, prod.items)
+  const [aberto, setAberto] = useState<SavedProduct | null>(null)
+  // Abrir um trabalho salvo: cada origem abre na tela que tem os campos dela (por enquanto).
+  const abrirLinha = (l: Linha) => {
+    if (l.origem === 'calculo') {
+      const c = saved.find((x) => x.id === l.id)
+      if (c) { setForm(toForm(c.input)); setWork({ name: c.name, kind: c.kind === 'parte' ? 'parte' : 'produto' }); location.hash = '#/calculadora' }
+      return
+    }
+    const p = prod.items.find((x) => x.id === l.id)
+    if (p) { setAberto(p); location.hash = '#/produto' }
+  }
+  const apagarLinhas = (ls: Linha[]) => {
+    const calc = ls.filter((l) => l.origem === 'calculo').map((l) => l.id)
+    const prods = ls.filter((l) => l.origem === 'produto').map((l) => l.id)
+    if (calc.length) void onDelete(calc)
+    if (prods.length) void prod.remove(prods)
+  }
+
   if (route === 'calculadora') {
     return <Calculator onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} work={work} setWork={setWork} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
   }
@@ -193,17 +213,13 @@ export default function App() {
         <h1>Produto com partes</h1>
         <p className="lead">Para produtos feitos de várias impressões, com várias cores e itens comprados. Copie do fatiador o tempo e o peso de cada cor.</p>
         <ImportBar count={prod.localCount} what="produtos" onImport={prod.importLocal} />
-        <Produto filaments={fil.items} printers={prn.items} supplies={stock.items} products={prod.items} msg={prod.msg}
-          onSave={(name, input) => prod.add({ name, input })} onDelete={prod.remove}
+        <Produto filaments={fil.items} printers={prn.items} supplies={stock.items} linhas={linhas} msg={prod.msg}
+          onSave={(name, input) => prod.add({ name, input })} onAbrir={abrirLinha} onApagar={apagarLinhas} aberto={aberto} onAberto={() => setAberto(null)}
           onAddFilament={fil.add} onAddPrinter={prn.add} onAddSupply={stock.add} savedParts={saved.filter((x) => x.kind === 'parte')} />
       </main>
     )
   }
   if (route === 'painel') {
-    const onOpen = (id: string) => {
-      const s = saved.find((x) => x.id === id)
-      if (s) { setForm(toForm(s.input)); setWork({ name: s.name, kind: s.kind === 'parte' ? 'parte' : 'produto' }); location.hash = '#/calculadora' }
-    }
     return (
       <main className="wrap">
         <Nav route="painel" account={account} />
@@ -214,7 +230,7 @@ export default function App() {
         </p>
         <ImportBar count={localCalcs} what="cálculos" onImport={importCalcs} />
         {cloudMsg && <p className="errors" role="alert">{cloudMsg}</p>}
-        <Dashboard jobs={saved.map(summarize)} onOpen={onOpen} onDelete={onDelete} />
+        <Dashboard jobs={linhas} onOpen={abrirLinha} onDelete={apagarLinhas} />
       </main>
     )
   }
@@ -536,7 +552,7 @@ function Details({ r, basic, onSave, work, setWork }: { r: CostResult; basic: bo
       {!basic && (
         <>
           <h2>Para onde vai o custo</h2>
-          <Composition r={r} />
+          <Composition r={r} totalLabel="Total do lote" />
           <div className="price">
             {r.priceIsSuggested ? <p className="note">Informe o preço que você cobra para ver o lucro real.</p> : (
               <div><small>Com o preço que você cobra ({money(r.price)})</small>

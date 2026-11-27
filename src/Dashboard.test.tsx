@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { renderToString } from 'react-dom/server'
 import { Dashboard } from './Dashboard'
-import { addSaved, summarize } from './domain/saved'
+import { addSaved } from './domain/saved'
+import { linhaDeCalc } from './domain/trabalhos'
 
 const input = {
   grams: 100, pricePerKg: 100, hours: 10, watts: 200, tariff: 1, printerPrice: 3000, lifetimeHours: 3000,
@@ -15,7 +16,7 @@ describe('Dashboard', () => {
     expect(html).toContain('Nenhum cálculo salvo ainda')
   })
   it('mostra os 5 blocos com um trabalho salvo', () => {
-    const jobs = addSaved([], 'Chaveiro', input, '1', '2026-11-27T12:00:00Z').map(summarize)
+    const jobs = addSaved([], 'Chaveiro', input, '1', '2026-11-27T12:00:00Z').map(linhaDeCalc)
     const html = renderToString(<Dashboard jobs={jobs} onOpen={noop} onDelete={noop} />)
     for (const t of ['Últimos cálculos', 'Custo por peça', 'Margem bruta por trabalho', 'Preço praticado e preço sugerido', 'Lucro por hora de máquina', 'Chaveiro'])
       expect(html).toContain(t)

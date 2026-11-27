@@ -1,9 +1,9 @@
-import { BotaoExcluir } from './Janela'
 import { Children, cloneElement, useState, type ReactElement, type ReactNode } from 'react'
 import { Composition } from './Composition'
-import type { JobSummary } from './domain/saved'
+import type { Linha } from './domain/trabalhos'
 import { money, pct } from './format'
 import { groupVersions } from './domain/versions'
+import { ListaTrabalhos } from './ListaTrabalhos'
 
 const date = (iso: string) => new Date(iso).toLocaleDateString('pt-BR')
 // No celular cada linha vira um cartão: o data-label de cada célula vem do cabeçalho.
@@ -16,7 +16,7 @@ const Table = ({ head, children }: { head: string[]; children: ReactNode }) => (
   </tbody></table></div>
 )
 
-export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: JobSummary[]; onOpen: (id: string) => void; onDelete: (ids: string | string[]) => void }) {
+export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: Linha[]; onOpen: (j: Linha) => void; onDelete: (js: Linha[]) => void }) {
   const [sel, setSel] = useState<string | null>(null)
   const groups = groupVersions(all)
   const jobs = groups.map((g) => g.latest)
@@ -28,44 +28,23 @@ export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: JobSummary[];
     </section>
   )
   const cur = jobs.find((j) => j.id === sel) ?? jobs[0]
-  const byHour = [...jobs].sort((a, b) => b.result.profitPerHour - a.result.profitPerHour)
+  const byHour = [...jobs].sort((a, b) => b.profitPerHour - a.profitPerHour)
   return (
     <div className="dash">
       <section className="card">
         <h2>Últimos cálculos</h2>
-        <ul className="jobs">
-          {groups.map((g) => { const j = g.latest; return (
-            <li key={g.key} className={j.id === cur.id ? 'on grp' : 'grp'}>
-              <button className="pick" onClick={() => setSel(j.id)} aria-pressed={j.id === cur.id}>
-                <strong>{j.name}{j.kind === 'parte' && <> <span className="tag parte">parte</span></>}</strong><span>{date(j.savedAt)} · {money(j.result.unit)} por peça{g.history.length > 1 ? ` · ${g.history.length} versões` : ''}</span>
-              </button>
-              <span className="acts">
-                <button onClick={() => onOpen(j.id)}>Abrir</button>
-                <BotaoExcluir nome={j.name} versoes={g.history.length} onConfirm={() => onDelete(g.history.map((x) => x.id))} />
-              </span>
-              {g.history.length > 1 && (
-                <details className="hist"><summary>Histórico ({g.history.length})</summary>
-                  <ul>{g.history.map((v, k) => (
-                    <li key={v.id}><span>{new Date(v.savedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} · {money(v.result.unit)} por peça{k === 0 ? ' (atual)' : ''}</span>
-                      <span className="acts"><button onClick={() => onOpen(v.id)}>Abrir</button>
-                        <BotaoExcluir nome="esta versão" onConfirm={() => onDelete(v.id)} /></span></li>
-                  ))}</ul>
-                </details>
-              )}
-            </li>
-          )})}
-        </ul>
+        <ListaTrabalhos linhas={all} onOpen={onOpen} onDelete={onDelete} selId={cur.id} onSelect={(l) => setSel(l.id)} />
       </section>
       <section className="card">
         <h2>Custo por peça: {cur.name}</h2>
-        <p className="big">{money(cur.result.unit)}</p>
-        <Composition r={cur.result} />
+        <p className="big">{money(cur.unit)}</p>
+        <Composition r={{ parts: cur.comp, total: cur.total }} totalLabel={cur.pieces > 1 ? 'Total do lote' : 'Total'} />
       </section>
       <section className="card wide">
         <h2>Margem bruta por trabalho</h2>
         <Table head={['Trabalho', 'Receita', 'Custo do lote', 'Margem bruta', '%']}>
           {jobs.map((j) => (
-            <tr key={j.id}><td>{j.name}</td><td>{money(j.revenue)}</td><td>{money(j.result.total)}</td>
+            <tr key={j.id}><td>{j.name}</td><td>{money(j.revenue)}</td><td>{money(j.total)}</td>
               <td className={j.gross < 0 ? 'loss' : ''}>{money(j.gross)}</td><td>{pct(j.grossPct)}</td></tr>
           ))}
         </Table>
@@ -75,10 +54,10 @@ export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: JobSummary[];
         <h2>Preço praticado e preço sugerido</h2>
         <Table head={['Trabalho', 'Sugerido', 'Praticado', 'Diferença', 'Lucro por peça']}>
           {jobs.map((j) => (
-            <tr key={j.id}><td>{j.name}</td><td>{money(j.result.suggestedPrice)}</td>
-              <td>{j.result.priceIsSuggested ? 'não informado' : money(j.result.price)}</td>
-              <td>{j.result.priceIsSuggested ? '-' : money(j.result.price - j.result.suggestedPrice)}</td>
-              <td className={j.result.profitPerUnit < 0 ? 'loss' : ''}>{money(j.result.profitPerUnit)}</td></tr>
+            <tr key={j.id}><td>{j.name}</td><td>{money(j.suggested)}</td>
+              <td>{j.priceIsSuggested ? 'não informado' : money(j.price)}</td>
+              <td>{j.priceIsSuggested ? '-' : money(j.price - j.suggested)}</td>
+              <td className={j.profitPerUnit < 0 ? 'loss' : ''}>{money(j.profitPerUnit)}</td></tr>
           ))}
         </Table>
       </section>
@@ -86,8 +65,8 @@ export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: JobSummary[];
         <h2>Lucro por hora de máquina</h2>
         <Table head={['Trabalho', 'Lucro por hora', 'Horas do lote']}>
           {byHour.map((j) => (
-            <tr key={j.id}><td>{j.name}</td><td className={j.result.profitPerHour < 0 ? 'loss' : ''}>{money(j.result.profitPerHour)}</td>
-              <td>{j.input.hours.toLocaleString('pt-BR')} h</td></tr>
+            <tr key={j.id}><td>{j.name}</td><td className={j.profitPerHour < 0 ? 'loss' : ''}>{money(j.profitPerHour)}</td>
+              <td>{j.hours.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} h</td></tr>
           ))}
         </Table>
         <p className="note">Lucro do lote ÷ horas de impressão. Mostra quais trabalhos rendem mais pelo tempo de máquina.</p>

@@ -11,7 +11,8 @@ import { AJUDA, type AjudaKey } from './ajuda'
 import { Fld, Info } from './Campos'
 import { QuickFilament, QuickPrinter, QuickSupply } from './Rapido'
 import { titleCase } from './domain/texto'
-import { groupVersions } from './domain/versions'
+import type { Linha } from './domain/trabalhos'
+import { ListaTrabalhos } from './ListaTrabalhos'
 import { BotaoIcone, ICONES } from './Icones'
 import { irParaCampo, Pendencias, useAtalhoBusca, type FieldItem } from './Pendencias'
 import type { FilamentDraft } from './domain/filament'
@@ -83,13 +84,14 @@ const loadDraft = (): State => {
 
 type Props = {
   filaments: Filament[]; printers: UserPrinter[]; supplies?: Supply[]
-  products: SavedProduct[]; onSave: (name: string, i: ProductInput) => Promise<void>; onDelete: (ids: string | string[]) => void; msg: string
+  linhas: Linha[]; onSave: (name: string, i: ProductInput) => Promise<void>; onAbrir: (l: Linha) => void; onApagar: (ls: Linha[]) => void
+  aberto?: SavedProduct | null; onAberto?: () => void; msg: string
   openId?: string
   savedParts?: SavedCalc[]
   onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>; onAddSupply?: (d: SupplyDraft) => Promise<void>
 }
 
-export function Produto({ filaments, printers, supplies = [], products, onSave, onDelete, msg, onAddFilament, onAddPrinter, onAddSupply, savedParts = [] }: Props) {
+export function Produto({ filaments, printers, supplies = [], linhas, onSave, onAbrir, onApagar, aberto, onAberto, msg, onAddFilament, onAddPrinter, onAddSupply, savedParts = [] }: Props) {
   const [s, setS] = useState<State>(loadDraft)
   const [quick, setQuick] = useState<{ kind: 'fil'; n: number; k: number } | { kind: 'prn' } | { kind: 'sup'; n: number } | null>(null)
   const [suggest, setSuggest] = useState('')
@@ -108,11 +110,12 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const doSave = async () => {
     try {
       // Mesmo nome = mesmo produto: o salvamento entra como nova versão no histórico.
-      const n = products.filter((x) => x.name.trim().toLowerCase() === name.trim().toLowerCase()).length
+      const n = linhas.filter((x) => x.name.trim().toLowerCase() === name.trim().toLowerCase()).length
       await onSave(name, toInput(s))
       setSaveMsg(n ? `Salvo como versão ${n + 1} de "${titleCase(name)}". As anteriores ficam no histórico.` : 'Salvo.'); setName('')
     } catch (e) { setSaveMsg((e as Error).message) }
   }
+  useEffect(() => { if (aberto) { setS(fromInput(aberto.input)); setName(aberto.name); onAberto?.() } }, [aberto]) // eslint-disable-line react-hooks/exhaustive-deps
   const sRef = useRef(s)
   sRef.current = s
   const pend = useRef<{ kind: 'fil' | 'prn' | 'sup'; name: string; n: number; k: number } | null>(null)
@@ -202,7 +205,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
 
       <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
         <div className="tabs" role="tablist" aria-label="Seções do produto">
-          {([['partes', 'Partes', s.parts.length], ['filamentos', 'Filamentos', colorGroups.length], ['impressora', 'Impressora', 0], ['itens', 'Itens', s.bought.length], ['venda', 'Venda', 0], ['produtos', 'Produtos', products.length]] as const).map(([k, l, n]) => (
+          {([['partes', 'Partes', s.parts.length], ['filamentos', 'Filamentos', colorGroups.length], ['impressora', 'Impressora', 0], ['itens', 'Itens', s.bought.length], ['venda', 'Venda', 0], ['produtos', 'Produtos', linhas.length]] as const).map(([k, l, n]) => (
             <button type="button" role="tab" key={k} id={`tab-${k}`} aria-selected={tab === k} aria-controls={`painel-${k}`} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
               {l}{n > 0 && <span className="cnt">{n}</span>}{miss[k] > 0 && <span className="dot" title="Falta preencher" aria-label="falta preencher" />}
             </button>
@@ -348,28 +351,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
         <section className="card2">
           <h2>Meus produtos</h2>
           {msg && <p className="errors" role="alert">{msg}</p>}
-          {!products.length ? <p className="note">Nenhum produto salvo ainda.</p> : (
-            <ul className="jobs">
-              {groupVersions(products).map((g) => (
-                <li key={g.key} className="grp">
-                  <span className="pick"><strong>{g.name}</strong><span>{new Date(g.latest.savedAt).toLocaleDateString('pt-BR')} · {g.latest.input.parts.length} partes{g.history.length > 1 ? ` · ${g.history.length} versões` : ''}</span></span>
-                  <span className="acts">
-                    <button type="button" onClick={() => setS(fromInput(g.latest.input))}>Abrir</button>
-                    <BotaoExcluir nome={g.name} versoes={g.history.length} onConfirm={() => onDelete(g.history.map((x) => x.id))} />
-                  </span>
-                  {g.history.length > 1 && (
-                    <details className="hist"><summary>Histórico ({g.history.length})</summary>
-                      <ul>{g.history.map((v, k) => (
-                        <li key={v.id}><span>{new Date(v.savedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}{(() => { try { return ` · custo ${money(calculateProduct(v.input).total)}` } catch { return '' } })()}{k === 0 ? ' (atual)' : ''}</span>
-                          <span className="acts"><button type="button" onClick={() => setS(fromInput(v.input))}>Abrir</button>
-                            <BotaoExcluir nome="esta versão" onConfirm={() => onDelete(v.id)} /></span></li>
-                      ))}</ul>
-                    </details>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+          {!linhas.length ? <p className="note">Nenhum produto salvo ainda.</p> : <ListaTrabalhos linhas={linhas} onOpen={onAbrir} onDelete={onApagar} />}
         </section>
         </div>
 

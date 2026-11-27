@@ -124,3 +124,8 @@
 - Janela e confirmação únicas (`Janela.tsx`): QuickForm, QuickAdd, o que falta e Excluir usam o mesmo `Modal`. Excluir produto apaga todas as versões de uma vez.
 - Busca de campo (Ctrl+K e lupa) também na Calculadora; vale em blocos recolhidos.
 - Falta unificar: lista Abrir/Excluir (`ListaItens`) e tabela que vira cartão (`Tabela`).
+
+## Etapa 1 da unificação: cadastro único de trabalhos
+- Calculadora e Produto com partes guardavam coisas separadas. Agora Produtos e Painel listam tudo junto (`domain/trabalhos.ts`, `ListaTrabalhos.tsx`): mesmo nome = um item com histórico, mostrando a origem de cada versão.
+- A lista é um componente só, usado em Produtos e no Painel. A composição do custo (`Composition`) mostra só as fatias que o trabalho tem (purga e itens comprados só no Produto).
+- Abrir: trabalho da Calculadora abre na Calculadora; do Produto abre no Produto. Etapas 2 e 3: seções compartilhadas (itens comprados, impressora, venda) e Calculadora no mesmo motor do Produto, para abrir qualquer trabalho em qualquer tela.

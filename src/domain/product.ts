@@ -126,7 +126,7 @@ export const emptyLine = (): ColorLine => ({ color: '', pricePerKg: 0, modelG: 0
 export const emptyPart = (): Part => ({ name: '', hours: 0, piecesPerPrint: 1, perProduct: 1, lines: [emptyLine()] })
 
 // Produtos salvos (local e nuvem).
-export interface SavedProduct { id: string; name: string; savedAt: string; input: ProductInput }
+export interface SavedProduct { id: string; name: string; savedAt: string; input: ProductInput; kind?: 'parte' | 'produto' }
 export const MAX_PRODUCTS = 50
 
 export function addSavedProduct(list: SavedProduct[], name: string, input: ProductInput, id: string, savedAt: string): SavedProduct[] {
@@ -148,4 +148,7 @@ export function parseProducts(raw: string | null): SavedProduct[] {
 }
 export interface ProductRow { id: string; nome: string; entrada: unknown; criado_em: string }
 export const productsFromRows = (rows: ProductRow[]): SavedProduct[] =>
-  rows.map((r) => ({ id: r.id, name: r.nome, savedAt: r.criado_em, input: r.entrada as ProductInput })).filter(isSavedProduct)
+  rows.map((r) => {
+    const { tipo, ...input } = (r.entrada ?? {}) as ProductInput & { tipo?: string }
+    return { id: r.id, name: r.nome, savedAt: r.criado_em, input: input as ProductInput, kind: (tipo === 'parte' ? 'parte' : 'produto') as 'parte' | 'produto' }
+  }).filter(isSavedProduct)
