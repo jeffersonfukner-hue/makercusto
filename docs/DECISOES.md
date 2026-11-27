@@ -72,3 +72,5 @@
 - Está fatiado? Não: `slice_info.config` vem vazio. Não há tempo por placa nem gramas por cor, só modelos e configurações.
 - Para importar tempo e gramas, o arquivo precisa ser exportado já fatiado (gcode.3mf) ou os números lidos na tela do fatiador. Estimar gramas só pelo volume da malha erra por causa de preenchimento, paredes, purga e torre.
 - Depois: importador de .3mf fatiado (leitura no navegador, sem enviar o arquivo a servidor).
+- Teste com `escudo_plate_04 ... 25m47s.gcode` (Anycubic Slicer Next): o cabeçalho traz `print_time = 25m 47s` e `used_filament = 3.64` (metros, total com purga). Diâmetro 1,75 mm e densidade 1,24 vêm no cabeçalho. Por cor dá para somar a extrusão por ferramenta (T0, T1, T2) e separar peça de torre (`;TYPE:Prime tower`). A purga das trocas fica em macros comentadas: só aparece como diferença entre o total do cabeçalho e o que foi somado.
+- Resultado desse arquivo: peça 5,03 g preto, 2,69 g vermelho, 0,80 g branco; torre 0,52 / 0,12 / 0,12 g; purga cerca de 1,6 g; total cerca de 10,9 g.
