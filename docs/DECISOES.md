@@ -86,4 +86,4 @@
 ## Campos em laranja, barra escura e nome repetido
 - Campos obrigatórios vazios no Produto ficam em laranja; "Ver o que falta" leva ao primeiro e já o deixa selecionado para digitar.
 - Barra inferior escura, igual ao cartão de resultado (números brancos, preço sugerido em âmbar).
-- Salvar com nome já existente avisa e, no segundo clique, substitui o antigo (evita duplicar). Só vale para Produto; Calculadora ainda não.
+- Salvar com nome já existente avisa e, no segundo clique, substitui o antigo (evita duplicar). Vale para Produto e para Parte/Produto final da Calculadora (mesmo nome e mesmo tipo).
