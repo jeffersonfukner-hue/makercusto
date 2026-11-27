@@ -5,15 +5,15 @@ import { calculateCost, validate, type CostInput, type CostResult } from './doma
 import { addSaved, summarize, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { fromHMS, toHMS } from './domain/time'
-import { addFilament, filamentLabel, MATERIALS, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
+import { addFilament, filamentLabel, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
 import { addPrinter, type UserPrinter, type UserPrinterDraft } from './domain/printers'
 import { addSavedProduct, type ProductInput, type SavedProduct } from './domain/product'
 import { addSupplier, type Supplier, type SupplierDraft } from './domain/supplier'
 import { addBrand, addColor, type Brand, type BrandDraft, type Color, type ColorDraft } from './domain/marca'
 import { addSupply, type Supply, type SupplyDraft } from './domain/supply'
 import { AJUDA } from './ajuda'
-import { Fld, Info, QuickForm } from './Campos'
-import { titleCase } from './domain/texto'
+import { Fld, Info } from './Campos'
+import { QuickFilament, QuickPrinter } from './Rapido'
 import { Estoque } from './Estoque'
 import { Cores } from './Cores'
 import { Filamentos } from './Filamentos'
@@ -186,7 +186,8 @@ export default function App() {
         <p className="lead">Para produtos feitos de várias impressões, com várias cores e itens comprados. Copie do fatiador o tempo e o peso de cada cor.</p>
         <ImportBar count={prod.localCount} what="produtos" onImport={prod.importLocal} />
         <Produto filaments={fil.items} printers={prn.items} supplies={stock.items} products={prod.items} msg={prod.msg}
-          onSave={(name, input) => prod.add({ name, input })} onDelete={prod.remove} />
+          onSave={(name, input) => prod.add({ name, input })} onDelete={prod.remove}
+          onAddFilament={fil.add} onAddPrinter={prn.add} onAddSupply={stock.add} />
       </main>
     )
   }
@@ -380,7 +381,6 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, 
     if (pendingPrn.current) { const p = printers.find((x) => x.name === pendingPrn.current); if (p) { pendingPrn.current = null; pickPrinter(p.id, printers) } }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filaments, printers])
-  const toCents = (s: string) => Math.round(num(s) * 100)
 
   const field = (f: Field) => f.key === 'hours' ? (
     <fieldset key="hours" className="time">
@@ -484,35 +484,8 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, 
           )}
         </form>
       </div>
-      {quick === 'fil' && onAddFilament && (
-        <QuickForm title="Novo filamento" onClose={() => setQuick(null)}
-          note="Só o essencial. Cor, marca, fornecedor e temperaturas você completa depois, em Filamentos."
-          fields={[
-            { key: 'name', label: 'Nome', info: AJUDA.nomeFilamento, initial: '' },
-            { key: 'material', label: 'Material', info: AJUDA.material, kind: 'select', options: [...MATERIALS], initial: 'PLA' },
-            { key: 'price', label: 'Preço pago no rolo', info: AJUDA.precoRolo, kind: 'number', unit: 'R$' },
-            { key: 'weight', label: 'Peso do rolo', info: AJUDA.pesoRolo, kind: 'number', unit: 'g', initial: '1000' },
-          ]}
-          onSave={async (v) => {
-            const name = titleCase(v.name)
-            await onAddFilament({ name, supplier: '', brand: '', material: v.material, color: '', priceCents: toCents(v.price), weightG: Math.round(num(v.weight)), boughtAt: new Date().toISOString().slice(0, 10) })
-            pendingFil.current = name
-          }} />
-      )}
-      {quick === 'prn' && onAddPrinter && (
-        <QuickForm title="Nova impressora" onClose={() => setQuick(null)}
-          fields={[
-            { key: 'name', label: 'Nome', info: AJUDA.nomeImpressora, initial: '' },
-            { key: 'watts', label: 'Consumo médio', info: AJUDA.wattsImpressora, kind: 'number', unit: 'W', initial: form.watts },
-            { key: 'price', label: 'Preço pago', info: AJUDA.precoImpressora, kind: 'number', unit: 'R$', initial: form.printerPrice },
-            { key: 'life', label: 'Vida útil', info: AJUDA.vidaImpressora, kind: 'number', unit: 'h', initial: form.lifetimeHours },
-          ]}
-          onSave={async (v) => {
-            const name = titleCase(v.name)
-            await onAddPrinter({ name, watts: num(v.watts), priceCents: toCents(v.price), lifetimeHours: num(v.life) })
-            pendingPrn.current = name
-          }} />
-      )}
+      {quick === 'fil' && onAddFilament && <QuickFilament onAdd={onAddFilament} onClose={() => setQuick(null)} onSaved={(n) => { pendingFil.current = n }} />}
+      {quick === 'prn' && onAddPrinter && <QuickPrinter onAdd={onAddPrinter} onClose={() => setQuick(null)} onSaved={(n) => { pendingPrn.current = n }} defaults={{ watts: form.watts, price: form.printerPrice, life: form.lifetimeHours }} />}
       {!user && <LandingSections />}
     </main>
   )

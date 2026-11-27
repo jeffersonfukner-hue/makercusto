@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { calculateProduct, lineGrams, validateProduct, type ProductInput, type ProductResult, type SavedProduct } from './domain/product'
 import { filamentLabel, pricePerKg as kgPrice, type Filament } from './domain/filament'
 import { fromHMS, toHMS } from './domain/time'
@@ -6,6 +6,13 @@ import type { UserPrinter } from './domain/printers'
 import type { Supply } from './domain/supply'
 import { money, pct } from './format'
 import { readDraft, writeDraft } from './storage'
+import { AJUDA, type AjudaKey } from './ajuda'
+import { Fld, Info } from './Campos'
+import { QuickFilament, QuickPrinter, QuickSupply } from './Rapido'
+import { titleCase } from './domain/texto'
+import type { FilamentDraft } from './domain/filament'
+import type { UserPrinterDraft } from './domain/printers'
+import type { SupplyDraft } from './domain/supply'
 
 type LineF = { color: string; fil: string; price: string; model: string; flushed: string; tower: string }
 type PartF = { name: string; h: string; m: string; s: string; pieces: string; per: string; lines: LineF[] }
@@ -59,10 +66,15 @@ type Props = {
   filaments: Filament[]; printers: UserPrinter[]; supplies?: Supply[]
   products: SavedProduct[]; onSave: (name: string, i: ProductInput) => Promise<void>; onDelete: (id: string) => void; msg: string
   openId?: string
+  onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>; onAddSupply?: (d: SupplyDraft) => Promise<void>
 }
 
-export function Produto({ filaments, printers, supplies = [], products, onSave, onDelete, msg }: Props) {
+export function Produto({ filaments, printers, supplies = [], products, onSave, onDelete, msg, onAddFilament, onAddPrinter, onAddSupply }: Props) {
   const [s, setS] = useState<State>(loadDraft)
+  const [quick, setQuick] = useState<{ kind: 'fil'; n: number; k: number } | { kind: 'prn' } | { kind: 'sup'; n: number } | null>(null)
+  const sRef = useRef(s)
+  sRef.current = s
+  const pend = useRef<{ kind: 'fil' | 'prn' | 'sup'; name: string; n: number; k: number } | null>(null)
   useEffect(() => { writeDraft(s) }, [s])
   const input = toInput(s)
   const errors = validateProduct(input)
@@ -80,16 +92,21 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
     const p = printers.find((x) => x.id === id)
     setS({ ...s, printer: id, shop: p ? { ...s.shop, watts: t(p.watts), printerPrice: t(p.priceCents / 100), life: t(p.lifetimeHours) } : s.shop })
   }
-  const field = (label: string, value: string, on: (v: string) => void, unit?: string, hint?: string, mode: 'decimal' | 'numeric' | 'text' = 'decimal') => (
-    <label>
-      <span>{label}</span>
-      <span className="input"><input inputMode={mode} value={value} onChange={(e) => on(e.target.value)} />{unit && <em>{unit}</em>}</span>
-      {hint && <small>{hint}</small>}
-    </label>
+  const field = (label: string, value: string, on: (v: string) => void, unit?: string, help?: AjudaKey, mode: 'decimal' | 'numeric' | 'text' = 'decimal') => (
+    <Fld label={label} info={help ? AJUDA[help] : undefined} unit={unit} value={value} onChange={on} mode={mode} />
   )
+  // Depois do cadastro rápido, o item novo já fica escolhido no ponto de onde a pessoa saiu.
+  useEffect(() => {
+    const q = pend.current
+    if (!q) return
+    if (q.kind === 'fil') { const f = filaments.find((x) => x.name === q.name); if (f) { pend.current = null; setS({ ...sRef.current, parts: sRef.current.parts.map((p, i) => (i !== q.n ? p : { ...p, lines: p.lines.map((l, j) => (j === q.k ? { ...l, fil: f.id, price: t(kgPrice(f)), color: l.color || f.color } : l)) })) }) } }
+    if (q.kind === 'prn') { const p = printers.find((x) => x.name === q.name); if (p) { pend.current = null; setS({ ...sRef.current, printer: p.id, shop: { ...sRef.current.shop, watts: t(p.watts), printerPrice: t(p.priceCents / 100), life: t(p.lifetimeHours) } }) } }
+    if (q.kind === 'sup') { const x = supplies.find((y) => y.name === q.name); if (x) { pend.current = null; setS({ ...sRef.current, bought: sRef.current.bought.map((y, i) => (i === q.n ? { ...y, name: x.name, price: t(x.costCents / 100) } : y)) }) } }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filaments, printers, supplies])
 
   return (
-    <div className="layout">
+    <div className="layout compact">
       <div className="result" aria-live="polite">
         {r ? <Result r={r} input={input} onSave={onSave} /> : (
           <div className="hero errors"><strong>Corrija para ver o resultado:</strong>
@@ -116,37 +133,39 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
 
       <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
         {s.parts.map((p, n) => (
-          <fieldset key={n}>
-            <legend>Parte {n + 1}{p.name.trim() ? `: ${p.name.trim()}` : ''}</legend>
-            {field('Nome da parte', p.name, (v) => setPart(n, { name: v }), undefined, 'Ex.: brasão, base, aro. Uma parte = uma impressão (uma placa do fatiador).', 'text')}
-            <fieldset className="time">
-              <legend>Tempo da impressão</legend>
-              <div className="hms">
-                {([['h', 'horas'], ['m', 'minutos'], ['s', 'segundos']] as const).map(([k, l]) => (
-                  <label key={k}><span>{l}</span><span className="input"><input inputMode="numeric" aria-label={`Parte ${n + 1}, ${l}`} value={p[k]} onChange={(e) => setPart(n, { [k]: e.target.value })} /></span></label>
-                ))}
-              </div>
-            </fieldset>
-            <div className="two">
-              {field('Peças por impressão', p.pieces, (v) => setPart(n, { pieces: v }), 'un', 'Quantas saem da mesma placa.', 'numeric')}
-              {field('Peças por produto', p.per, (v) => setPart(n, { per: v }), 'un', 'Quantas o produto usa.', 'numeric')}
+          <section className="card2 partcard" key={n} aria-label={`Parte ${n + 1}`}>
+            <h2>Parte {n + 1}{p.name.trim() ? `: ${titleCase(p.name.trim())}` : ''}</h2>
+            <div className="partgrid">
+              {field('Nome da parte', p.name, (v) => setPart(n, { name: v }), undefined, 'nomeParte', 'text')}
+              <fieldset className="time">
+                <legend className="lab">Tempo da impressão<Info label="Tempo da impressão" text={AJUDA.tempoParte} /></legend>
+                <div className="hms">
+                  {([['h', 'horas', 'h'], ['m', 'minutos', 'm'], ['s', 'segundos', 's']] as const).map(([k, l, u]) => (
+                    <span className="input" key={k}><input inputMode="numeric" aria-label={`Parte ${n + 1}, ${l}`} value={p[k]} onChange={(e) => setPart(n, { [k]: e.target.value })} /><em>{u}</em></span>
+                  ))}
+                </div>
+              </fieldset>
+              {field('Peças por impressão', p.pieces, (v) => setPart(n, { pieces: v }), 'un', 'pecasPorImpressao', 'numeric')}
+              {field('Peças por produto', p.per, (v) => setPart(n, { per: v }), 'un', 'pecasPorProduto', 'numeric')}
             </div>
             <h3>Cores e peso (do fatiador)</h3>
             {p.lines.map((l, k) => (
               <div className="line" key={k}>
-                {filaments.length > 0 && (
-                  <label><span>Filamento cadastrado</span>
-                    <span className="input"><select value={l.fil} onChange={(e) => pickFilament(n, k, e.target.value)}>
+                <div className="pair">
+                  <Fld label="Filamento cadastrado" info={AJUDA.filamentoCadastrado}
+                    plus={onAddFilament ? { label: 'Cadastrar novo filamento', onClick: () => setQuick({ kind: 'fil', n, k }) } : undefined}>
+                    <select value={l.fil} onChange={(e) => pickFilament(n, k, e.target.value)}>
                       <option value="">Digitar o preço</option>
                       {filaments.map((f) => <option key={f.id} value={f.id}>{filamentLabel(f)}</option>)}
-                    </select></span></label>
-                )}
-                {field('Cor', l.color, (v) => setLine(n, k, { color: v }), undefined, undefined, 'text')}
-                {field('Preço do filamento', l.price, (v) => setLine(n, k, { price: v, fil: '' }), 'R$/kg')}
-                <div className="three">
-                  {field('Peça', l.model, (v) => setLine(n, k, { model: v }), 'g')}
-                  {field('Purga', l.flushed, (v) => setLine(n, k, { flushed: v }), 'g')}
-                  {field('Torre', l.tower, (v) => setLine(n, k, { tower: v }), 'g')}
+                    </select>
+                  </Fld>
+                  {field('Cor', l.color, (v) => setLine(n, k, { color: v }), undefined, 'corLinha', 'text')}
+                </div>
+                <div className="trio4">
+                  {field('Preço do filamento', l.price, (v) => setLine(n, k, { price: v, fil: '' }), 'R$/kg', 'pricePerKg')}
+                  {field('Peça', l.model, (v) => setLine(n, k, { model: v }), 'g', 'pecaG')}
+                  {field('Purga', l.flushed, (v) => setLine(n, k, { flushed: v }), 'g', 'purgaG')}
+                  {field('Torre', l.tower, (v) => setLine(n, k, { tower: v }), 'g', 'torreG')}
                 </div>
                 <p className="note">Total desta cor: {t(Math.round(lineGrams({ color: '', pricePerKg: 0, modelG: grams(l.model) || 0, flushedG: grams(l.flushed) || 0, towerG: grams(l.tower) || 0 }) * 100) / 100)} g
                   {p.lines.length > 1 && <> · <button type="button" className="linkish" onClick={() => setPart(n, { lines: p.lines.filter((_, i) => i !== k) })}>Remover cor</button></>}</p>
@@ -154,61 +173,64 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
             ))}
             <p><button type="button" onClick={() => setPart(n, { lines: [...p.lines, newLine()] })}>Adicionar cor</button>
               {s.parts.length > 1 && <> <button type="button" onClick={() => setS({ ...s, parts: s.parts.filter((_, i) => i !== n) })}>Remover esta parte</button></>}</p>
-          </fieldset>
+          </section>
         ))}
         <p><button type="button" className="primary" onClick={() => setS({ ...s, parts: [...s.parts, newPart()] })}>Adicionar parte</button></p>
 
-        <fieldset>
-          <legend>Itens comprados</legend>
-          <p className="note">O que você compra pronto e entra no produto, como o copo de alumínio. Não passa pela taxa de falhas.</p>
+        <section className="card2" style={{ marginBottom: 12 }}>
+          <h2>Itens comprados <Info label="Itens comprados" text={AJUDA.itemComprado} /></h2>
           {s.bought.map((b, n) => (
             <div className="line" key={n}>
-              {supplies.length > 0 && (
-                <label><span>Do estoque</span>
-                  <span className="input"><select value="" onChange={(e) => {
-                    const x = supplies.find((q) => q.id === e.target.value)
-                    if (x) setS({ ...s, bought: s.bought.map((y, i) => (i === n ? { ...y, name: x.name, price: t(x.costCents / 100) } : y)) })
-                  }}>
-                    <option value="">Escolher item cadastrado</option>
-                    {supplies.map((q) => <option key={q.id} value={q.id}>{q.name} ({(q.costCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</option>)}
-                  </select></span></label>
-              )}
-              {field('Item', b.name, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, name: v } : x)) }), undefined, undefined, 'text')}
-              <div className="two">
-                {field('Preço de cada', b.price, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, price: v } : x)) }), 'R$')}
-                {field('Quantidade', b.qty, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, qty: v } : x)) }), 'un', undefined, 'numeric')}
+              <Fld label="Do estoque" info={AJUDA.doEstoque} plus={onAddSupply ? { label: 'Cadastrar novo item de estoque', onClick: () => setQuick({ kind: 'sup', n }) } : undefined}>
+                <select value="" onChange={(e) => {
+                  const x = supplies.find((q) => q.id === e.target.value)
+                  if (x) setS({ ...s, bought: s.bought.map((y, i) => (i === n ? { ...y, name: x.name, price: t(x.costCents / 100) } : y)) })
+                }}>
+                  <option value="">Escolher item cadastrado</option>
+                  {supplies.map((q) => <option key={q.id} value={q.id}>{q.name} ({(q.costCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</option>)}
+                </select>
+              </Fld>
+              <div className="trio">
+                {field('Item', b.name, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, name: v } : x)) }), undefined, 'nomeItem', 'text')}
+                {field('Preço de cada', b.price, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, price: v } : x)) }), 'R$', 'precoCada')}
+                {field('Quantidade', b.qty, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, qty: v } : x)) }), 'un', 'quantidade', 'numeric')}
               </div>
               <p><button type="button" onClick={() => setS({ ...s, bought: s.bought.filter((_, i) => i !== n) })}>Remover item</button></p>
             </div>
           ))}
           <p><button type="button" onClick={() => setS({ ...s, bought: [...s.bought, { name: '', price: '', qty: '1' }] })}>Adicionar item comprado</button></p>
-        </fieldset>
+        </section>
 
-        <fieldset>
-          <legend>Oficina</legend>
-          {printers.length > 0 && (
-            <label><span>Minha impressora</span>
-              <span className="input"><select value={s.printer} onChange={(e) => pickPrinter(e.target.value)}>
+        <div className="cards">
+          <section className="card2"><h2>Oficina</h2>
+            <Fld label="Minha impressora" info={AJUDA.impressoraCadastrada} plus={onAddPrinter ? { label: 'Cadastrar nova impressora', onClick: () => setQuick({ kind: 'prn' }) } : undefined}>
+              <select value={s.printer} onChange={(e) => pickPrinter(e.target.value)}>
                 <option value="">Digitar abaixo</option>
                 {printers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select></span></label>
-          )}
-          {field('Consumo médio da impressora', s.shop.watts, (v) => setShop({ watts: v }), 'W', 'Estimativa. Meça com um wattímetro se puder.')}
-          {field('Tarifa de energia', s.shop.tariff, (v) => setShop({ tariff: v }), 'R$/kWh')}
-          {field('Preço da impressora', s.shop.printerPrice, (v) => setShop({ printerPrice: v }), 'R$')}
-          {field('Vida útil estimada', s.shop.life, (v) => setShop({ life: v }), 'h')}
-          {field('Trabalho manual por produto', s.shop.laborMin, (v) => setShop({ laborMin: v }), 'min', 'Montagem, colagem, acabamento.')}
-          {field('Valor da sua hora', s.shop.laborRate, (v) => setShop({ laborRate: v }), 'R$/h')}
-          {field('Impressões que falham', s.shop.fail, (v) => setShop({ fail: v }), '%', 'Entre 5 e 15% é comum.')}
-        </fieldset>
-
-        <fieldset>
-          <legend>Venda</legend>
-          {field('Margem desejada', s.shop.margin, (v) => setShop({ margin: v }), '%', 'Margem = lucro ÷ preço. Não é o mesmo que markup.')}
-          {field('Preço que você cobra (opcional)', s.shop.sold, (v) => setShop({ sold: v }), 'R$', 'Preencha para ver o lucro real.')}
-        </fieldset>
+              </select>
+            </Fld>
+            <div className="pair">
+              {field('Consumo médio', s.shop.watts, (v) => setShop({ watts: v }), 'W', 'watts')}
+              {field('Tarifa de energia', s.shop.tariff, (v) => setShop({ tariff: v }), 'R$/kWh', 'tariff')}
+              {field('Preço da impressora', s.shop.printerPrice, (v) => setShop({ printerPrice: v }), 'R$', 'printerPrice')}
+              {field('Vida útil estimada', s.shop.life, (v) => setShop({ life: v }), 'h', 'lifetimeHours')}
+            </div>
+          </section>
+          <section className="card2"><h2>Seu tempo, riscos e venda</h2>
+            <div className="pair">
+              {field('Seu tempo por produto', s.shop.laborMin, (v) => setShop({ laborMin: v }), 'min', 'laborProduto')}
+              {field('Valor da sua hora', s.shop.laborRate, (v) => setShop({ laborRate: v }), 'R$/h', 'laborRate')}
+              {field('Impressões que falham', s.shop.fail, (v) => setShop({ fail: v }), '%', 'failurePct')}
+              {field('Margem desejada', s.shop.margin, (v) => setShop({ margin: v }), '%', 'marginPct')}
+            </div>
+            {field('Preço que você cobra (opcional)', s.shop.sold, (v) => setShop({ sold: v }), 'R$', 'soldPrice')}
+          </section>
+        </div>
         <p><button type="button" onClick={() => { if (confirm('Limpar tudo e começar um produto novo?')) setS(initial()) }}>Começar produto novo</button></p>
       </form>
+      {quick?.kind === 'fil' && onAddFilament && <QuickFilament onAdd={onAddFilament} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'fil', name, n: quick.n, k: quick.k } }} />}
+      {quick?.kind === 'prn' && onAddPrinter && <QuickPrinter onAdd={onAddPrinter} onClose={() => setQuick(null)} defaults={{ watts: s.shop.watts, price: s.shop.printerPrice, life: s.shop.life }} onSaved={(name) => { pend.current = { kind: 'prn', name, n: 0, k: 0 } }} />}
+      {quick?.kind === 'sup' && onAddSupply && <QuickSupply onAdd={onAddSupply} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'sup', name, n: quick.n, k: 0 } }} />}
     </div>
   )
 }
@@ -249,7 +271,7 @@ function Result({ r, input, onSave }: { r: ProductResult; input: ProductInput; o
             <span>Margem {pct(r.margin)} · Markup {pct(r.markup)} · {money(r.profitPerHour)} por hora de máquina</span>
             {r.profit < 0 && <span className="loss">Esse preço está abaixo do custo.</span>}</div>
         )}
-        <label><span>Nome do produto</span><span className="input"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: caneca Flamengo" /></span></label>
+        <Fld label="Nome do produto" info={AJUDA.nomeProduto} mode="text" value={name} onChange={setName} placeholder="Ex.: Caneca Flamengo" maxLength={60} />
         <p><button type="button" className="primary" onClick={save}>Salvar produto</button></p>
         {msg && <p className="note" role="status">{msg}</p>}
       </div>

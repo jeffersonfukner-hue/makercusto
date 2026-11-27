@@ -149,3 +149,14 @@ ul.sum li.tot { font-weight: 700; border-bottom: 0 }
 .hms .field .lab { font-weight: 500; color: var(--mute) }
 @media (min-width: 860px) { .layout.compact { grid-template-columns: 1fr 320px } }
 .pair, .trio { align-items: end } .pair > .field, .trio > .field { margin-top: 10px } .card2 > .field:first-of-type, .card2 > .pair:first-of-type > .field { margin-top: 0 }
+.partgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: end } .partgrid > .field { margin-top: 0 } .partgrid fieldset.time { margin: 0 }
+.trio4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: end } .trio4 > .field { margin-top: 10px }
+@media (min-width: 640px) { .partgrid { grid-template-columns: 2fr 2fr 1fr 1fr } .trio4 { grid-template-columns: 1.4fr 1fr 1fr 1fr } }
+fieldset.time legend.lab { padding: 0; margin-bottom: 4px; font-size: .82rem; font-weight: 600; color: #33443f; display: flex; gap: 8px; align-items: center }
+.hms .input { padding-right: 8px } .hms .input input { padding: 8px 6px 8px 10px }
+.card2 > h2 .info { margin-left: 4px } .card2 h3 { font-size: .85rem; margin: 12px 0 0 }
+.field, .card2 section, .partgrid > *, .trio4 > *, .pair > *, .trio > * { min-width: 0 }
+.field .input select { text-overflow: ellipsis } .lab { flex-wrap: wrap }
+.lab { flex-wrap: nowrap } .lab label { min-width: 0 } .lab .info, .lab .plus { flex: none }
+@media (min-width: 640px) { .partgrid { grid-template-columns: minmax(0, 1.5fr) minmax(190px, 1.7fr) minmax(0, 1fr) minmax(0, 1fr) } }
+.hms .input input { min-width: 0; width: 100% }
