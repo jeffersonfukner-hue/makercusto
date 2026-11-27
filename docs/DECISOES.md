@@ -97,4 +97,5 @@
 - Abas: Partes (placas, tempo, gramas por cor), Filamentos (um preço por cor, vale para todas as partes), Impressora, Itens comprados, Venda (tempo, falhas, margem, preço) e Meus produtos. Não há uma aba por parte.
 - Aba com campo faltando mostra um ponto laranja. "Ver o que falta" abre a aba certa e seleciona o campo.
 - Preço do filamento saiu de dentro de cada cor da parte e foi para a aba Filamentos (ex.: 7 preços viraram 3 cores). Painel lateral e barra inferior continuam.
+- Aviso grande do topo removido (tirava o ar premium): só a barra inferior avisa, com o primeiro item que falta e o botão Ver o que falta.
 - Depois: abas parecidas na Calculadora simples? Guardar presets de filamento/impressora por produto como no fatiador.

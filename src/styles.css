@@ -218,3 +218,5 @@ fieldset.kind legend.lab { padding: 0; margin-bottom: 4px; font-size: .82rem; fo
 @media (max-width: 520px) { .tabs button { flex: 1 1 30%; padding: 8px 4px; font-size: .85rem; white-space: normal; line-height: 1.15 } }
 /* Celular: o aviso do topo e a barra inferior já dizem o que falta; a caixa vermelha só empurrava as abas para baixo */
 @media (max-width: 859px) { .result .hero.errors { display: none } }
+.sumbar .k .first { max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+@media (max-width: 520px) { .sumbar .k .first { max-width: 34ch } }

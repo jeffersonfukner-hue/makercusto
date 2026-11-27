@@ -191,7 +191,6 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
 
   return (
     <>
-    <SaveNotice errors={[...new Set(errors)]} onMissing={() => focusMissing(setTab)} />
     <div className="layout compact">
       <div className="result" aria-live="polite">
         {r ? <Result r={r} input={input} name={name} setName={setName} save={doSave} msg={saveMsg} /> : (
@@ -382,36 +381,6 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   )
 }
 
-// Aviso grande no topo: diz se já dá para salvar, o que falta e onde fica o botão.
-function SaveNotice({ errors, onMissing }: { errors: string[]; onMissing: () => void }) {
-  const go = () => {
-    const box = document.getElementById('salvar-produto')
-    box?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    window.setTimeout(() => document.getElementById('nome-produto-salvar')?.focus(), 350)
-  }
-  if (!errors.length) {
-    return (
-      <section id="aviso-salvar" className="savenotice ok" aria-live="polite">
-        <div>
-          <strong>Tudo certo para salvar este produto.</strong>
-          <p>O botão <b>Salvar produto</b> fica na coluna da direita, embaixo do resultado, junto com o campo de nome.</p>
-        </div>
-        <button type="button" className="primary" onClick={go}>Ir para o botão Salvar</button>
-      </section>
-    )
-  }
-  return (
-    <section id="aviso-salvar" className="savenotice warn" aria-live="polite">
-      <strong>Ainda não dá para salvar: falta preencher {errors.length === 1 ? '1 item' : `${errors.length} itens`}.</strong>
-      <p>O botão <b>Salvar produto</b> só aparece quando todos os campos obrigatórios estão preenchidos. Ele surge na coluna da direita, no lugar da caixa vermelha de avisos, embaixo do resultado.</p>
-      <p>Os campos que faltam estão pintados de <b>laranja</b>. O botão abaixo leva você ao primeiro e já deixa selecionado para digitar.</p>
-      <p>Quando você importa do fatiador, vêm o tempo e os gramas de cada cor. <b>O preço do filamento (R$/kg) não vem no arquivo</b>: preencha em cada cor, ou escolha um rolo em "Filamento cadastrado" e o preço vem sozinho.</p>
-      <ul>{errors.slice(0, 4).map((e) => <li key={e}>{e}</li>)}{errors.length > 4 && <li>e mais {errors.length - 4}.</li>}</ul>
-      <button type="button" className="primary" onClick={onMissing}>Ver o que falta</button>
-    </section>
-  )
-}
-
 function Result({ r, input, name, setName, save, msg }: { r: ProductResult; input: ProductInput; name: string; setName: (n: string) => void; save: () => Promise<void>; msg: string }) {
   const g = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
   return (
@@ -460,7 +429,7 @@ function SummaryBar({ r, input, errors, name, setName, save, msg, onMissing }: {
   onMissing: () => boolean | void
   r: ProductResult | null; input: ProductInput; errors: string[]; name: string; setName: (n: string) => void; save: () => Promise<void>; msg: string
 }) {
-  const top = () => { if (!onMissing()) document.getElementById('aviso-salvar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+  const top = () => { onMissing() }
   return (
     <div className="sumbar" role="region" aria-label="Resumo do produto">
       {r ? (
@@ -474,7 +443,7 @@ function SummaryBar({ r, input, errors, name, setName, save, msg, onMissing }: {
         </>
       ) : (
         <>
-          <div className="k"><strong>Faltam {errors.length} {errors.length === 1 ? 'item' : 'itens'} para salvar</strong><small>Preencha o preço do filamento de cada cor.</small></div>
+          <div className="k"><strong>Faltam {errors.length} {errors.length === 1 ? 'item' : 'itens'} para salvar</strong><small className="first">{errors[0]}</small></div>
           <button type="button" onClick={top}>Ver o que falta</button>
         </>
       )}
