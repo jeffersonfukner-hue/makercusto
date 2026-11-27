@@ -31,3 +31,14 @@ label { display: block; margin-top: 10px } label > span:first-child { display: b
 .price strong { font-size: 1.35rem } .price span { font-size: .85rem; color: var(--mute) }
 .loss { color: var(--warn) !important } .note { font-size: .8rem; color: var(--mute); margin-bottom: 0 }
 .errors { color: var(--warn) } .errors ul { margin: 6px 0 0; padding-left: 18px }
+.save { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px }
+button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #8fa09b; background: #fff; color: var(--ink); cursor: pointer }
+.save button { background: var(--main); color: #fff; border-color: var(--main); margin-top: 10px; font-weight: 600 }
+.save p { margin: 8px 0 0; font-size: .9rem }
+.dash { display: grid; gap: 16px } @media (min-width: 860px) { .dash { grid-template-columns: 1fr 1fr } .wide { grid-column: 1 / -1 } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px }
+.scroll { overflow-x: auto } table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; margin-top: 8px }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap } th { font-size: .8rem; color: var(--mute); font-weight: 600 }
+.jobs { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px }
+.jobs li { display: flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 6px } .jobs li.on { border-color: var(--main); background: #e6f2ef }
+.pick { flex: 1; text-align: left; border: 0; background: transparent; display: grid; padding: 4px 6px } .pick span { color: var(--mute); font-size: .85rem }

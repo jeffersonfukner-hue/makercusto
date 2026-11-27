@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { Composition } from './Composition'
+import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
+import { addSaved, summarize, type SavedCalc } from './domain/saved'
+import { money, pct } from './format'
+import { readSaved, writeSaved } from './storage'
 
 const OLD_URL = 'https://makercusto-preview.pages.dev/'
-const money = (c: number) => (c / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const pct = (x: number) => (x * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 
 function useRoute() {
@@ -13,11 +16,44 @@ function useRoute() {
     addEventListener('hashchange', on)
     return () => removeEventListener('hashchange', on)
   }, [])
-  return hash === '#/calculadora' ? 'calculadora' : 'inicio'
+  return hash === '#/calculadora' ? 'calculadora' : hash === '#/painel' ? 'painel' : 'inicio'
+}
+
+const toForm = (i: CostInput): Form => {
+  const t = (n: number) => String(n).replace('.', ',')
+  return {
+    grams: t(i.grams), pricePerKg: t(i.pricePerKg), hours: t(i.hours), watts: t(i.watts), tariff: t(i.tariff),
+    printerPrice: t(i.printerPrice), lifetimeHours: t(i.lifetimeHours), laborMinutes: t(i.laborMinutes),
+    laborRate: t(i.laborRate), failurePct: t(i.failurePct), quantity: t(i.quantity), marginPct: t(i.marginPct),
+    soldPrice: i.soldPrice === undefined ? '' : t(i.soldPrice),
+  }
 }
 
 export default function App() {
-  return useRoute() === 'calculadora' ? <Calculator /> : <Home />
+  const route = useRoute()
+  const [form, setForm] = useState<Form>(initial)
+  const [saved, setSaved] = useState<SavedCalc[]>(readSaved)
+  const update = (next: SavedCalc[]) => { setSaved(next); writeSaved(next) }
+  if (route === 'calculadora') {
+    const onSave = (name: string, input: CostInput) =>
+      update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString()))
+    return <Calculator form={form} setForm={setForm} onSave={onSave} />
+  }
+  if (route === 'painel') {
+    const onOpen = (id: string) => {
+      const s = saved.find((x) => x.id === id)
+      if (s) { setForm(toForm(s.input)); location.hash = '#/calculadora' }
+    }
+    return (
+      <main className="wrap">
+        <a className="back" href="#/">Início</a>
+        <h1>Painel</h1>
+        <p className="lead">Seus cálculos salvos neste navegador.</p>
+        <Dashboard jobs={saved.map(summarize)} onOpen={onOpen} onDelete={(id) => update(saved.filter((x) => x.id !== id))} />
+      </main>
+    )
+  }
+  return <Home />
 }
 
 function Home() {
@@ -29,6 +65,10 @@ function Home() {
         <a className="choice main" href="#/calculadora">
           <strong>Calculadora</strong>
           <span>Custo por peça, preço sugerido e lucro.</span>
+        </a>
+        <a className="choice" href="#/painel">
+          <strong>Painel</strong>
+          <span>Seus cálculos salvos, margens e lucro por hora.</span>
         </a>
         <a className="choice" href={OLD_URL} target="_blank" rel="noopener noreferrer">
           <strong>Versão anterior</strong>
@@ -69,14 +109,6 @@ const groups: { title: string; fields: Field[] }[] = [
     { key: 'soldPrice', label: 'Preço que você cobra (opcional)', unit: 'R$/peça', hint: 'Preencha para ver o lucro real.' } ] },
 ]
 
-const parts: { key: keyof CostResult['parts']; label: string; color: string }[] = [
-  { key: 'material', label: 'Material', color: '#0f766e' },
-  { key: 'energy', label: 'Energia', color: '#d98e04' },
-  { key: 'machine', label: 'Máquina', color: '#3b5b92' },
-  { key: 'labor', label: 'Seu tempo', color: '#8a4f7d' },
-  { key: 'failure', label: 'Falhas', color: '#b4442f' },
-]
-
 function toInput(f: Form): CostInput {
   const sold = num(f.soldPrice)
   return {
@@ -87,15 +119,14 @@ function toInput(f: Form): CostInput {
   }
 }
 
-function Calculator() {
-  const [form, setForm] = useState<Form>(initial)
+function Calculator({ form, setForm, onSave }: { form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => void }) {
   const input = toInput(form)
   const errors = validate(input)
   const result = errors.length ? null : calculateCost(input)
 
   return (
     <main className="wrap">
-      <a className="back" href="#/">Início</a>
+      <a className="back" href="#/">Início</a> · <a className="back" href="#/painel">Painel</a>
       <h1>Calculadora</h1>
       <p className="lead">Os valores abaixo são exemplos. Troque pelos seus.</p>
       <div className="layout">
@@ -118,7 +149,7 @@ function Calculator() {
           ))}
         </form>
         <section className="result" aria-live="polite">
-          {result ? <Result r={result} margin={input.marginPct} /> : (
+          {result ? <><Result r={result} margin={input.marginPct} /><SaveBox onSave={(n) => onSave(n, input)} /></> : (
             <div className="errors"><strong>Corrija para ver o resultado:</strong>
               <ul>{errors.map((e) => <li key={e}>{e}</li>)}</ul></div>
           )}
@@ -128,25 +159,28 @@ function Calculator() {
   )
 }
 
+function SaveBox({ onSave }: { onSave: (name: string) => void }) {
+  const [name, setName] = useState('')
+  const [msg, setMsg] = useState('')
+  const save = () => {
+    try { onSave(name); setMsg('Salvo.'); setName('') } catch (e) { setMsg((e as Error).message) }
+  }
+  return (
+    <div className="save">
+      <label><span>Nome do trabalho</span>
+        <span className="input"><input value={name} maxLength={60} placeholder="Ex.: chaveiro azul" onChange={(e) => setName(e.target.value)} /></span></label>
+      <button type="button" onClick={save}>Salvar cálculo</button>
+      {msg && <p role="status">{msg} {msg === 'Salvo.' && <a href="#/painel">Ver no painel</a>}</p>}
+    </div>
+  )
+}
+
 function Result({ r, margin }: { r: CostResult; margin: number }) {
   return (
     <>
       <h2>Custo por peça</h2>
       <p className="big">{money(r.unit)}</p>
-      <div className="bar" role="img" aria-label="Composição do custo">
-        {parts.map((p) => r.parts[p.key] > 0 && (
-          <i key={p.key} style={{ width: `${(r.parts[p.key] / r.total) * 100}%`, background: p.color }} />
-        ))}
-      </div>
-      <ul className="legend">
-        {parts.map((p) => (
-          <li key={p.key}>
-            <b style={{ background: p.color }} />{p.label}
-            <span>{money(r.parts[p.key])} <small>{pct(r.parts[p.key] / r.total)}</small></span>
-          </li>
-        ))}
-        <li className="sum">Total do lote<span>{money(r.total)}</span></li>
-      </ul>
+      <Composition r={r} />
       <div className="price">
         <div><small>Preço sugerido (margem {pct(margin / 100)})</small><strong>{money(r.suggestedPrice)}</strong></div>
         {!r.priceIsSuggested && (

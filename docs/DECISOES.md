@@ -6,8 +6,8 @@
 - Falhas: `total = base ÷ (1 − taxa)` (as peças boas absorvem as perdas).
 - Preço sugerido por margem (lucro ÷ preço), arredondado para cima ao centavo.
 
-## Próximas seções (aprovadas)
-- Seção 2: dashboard com 5 blocos: custo por peça e composição, margem bruta por trabalho, preço praticado vs sugerido, lucro por hora de máquina, últimos cálculos salvos (no navegador).
+## Seção 2: painel (feita)
+- Rota #/painel com 5 blocos: custo por peça e composição, margem bruta por trabalho, preço praticado vs sugerido, lucro por hora de máquina, últimos cálculos salvos (no navegador).. Cálculos salvos em localStorage (até 50), sem login nem backend.
 
 ## Depois (fora do escopo atual)
 - Utilização da máquina, clientes, estoque, login e banco, importação de G-code, várias mesas, rateio.
