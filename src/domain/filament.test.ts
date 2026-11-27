@@ -114,3 +114,16 @@ describe('último preço do fornecedor', () => {
     expect(lastTemps(t, { brand: 'Masterprint', material: 'PLA' })).toBeUndefined()
   })
 })
+
+import { latestRollFor } from './filament'
+describe('latestRollFor', () => {
+  const base = { supplier: '', brand: '', material: 'PLA', weightG: 1000 }
+  const l = [
+    { ...base, id: 'a', name: 'PLA Preto 001', color: 'Preto', priceCents: 7000, boughtAt: '2026-01-10' },
+    { ...base, id: 'b', name: 'PLA Preto 002', color: 'Preto Fosco', priceCents: 9000, boughtAt: '2026-09-02' },
+    { ...base, id: 'c', name: 'PLA Branco 001', color: 'Branco', priceCents: 6000, boughtAt: '2026-05-01' },
+  ]
+  it('acha o rolo mais recente da cor', () => { expect(latestRollFor(l, 'Preto')?.id).toBe('b') })
+  it('ignora acento e maiúscula', () => { expect(latestRollFor(l, 'BRANCO')?.id).toBe('c') })
+  it('não acha cor que não existe', () => { expect(latestRollFor(l, 'Azul')).toBeUndefined(); expect(latestRollFor(l, '  ')).toBeUndefined() })
+})

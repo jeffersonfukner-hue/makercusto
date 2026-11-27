@@ -119,3 +119,11 @@ export function lastTemps(list: Filament[], s: { brand: string; material: string
   const f = sortFilaments(list).find((x) => foldText(x.brand) === foldText(s.brand) && x.material === s.material && (x.nozzleC !== undefined || x.bedC !== undefined))
   return f ? { nozzleC: f.nozzleC, bedC: f.bedC } : undefined
 }
+
+// Rolo mais recente (maior data de compra) cuja cor combina com o nome da cor do fatiador ("Preto" acha "Preto Fosco").
+// É o rolo que se usa hoje; rolos antigos com outro preço ficam no cadastro mas não são sugeridos.
+export function latestRollFor(list: Filament[], colorName: string): Filament | undefined {
+  const c = foldText(colorName.trim())
+  if (!c) return undefined
+  return sortFilaments(list).find((f) => f.color && foldText(f.color).startsWith(c))
+}

@@ -116,3 +116,11 @@
 - Corporativo aprovado (azul-marinho, serifa nos títulos, faixa dourada). Minimalista foi descartado por ser quase igual ao Normal e removido.
 
 - Temas finais: Minimalista (o antigo Normal, id `normal`), Neon e Corporativo. Padrão para quem não escolheu: Corporativo (`PADRAO` em `Temas.tsx`).
+
+## Rolo mais recente por cor (primeiro passo do preço por rolo)
+- Ao importar do fatiador, cada cor pega o preço do rolo cadastrado mais recente daquela cor (antes pegava o mais antigo). Na aba Filamentos, cor sem rolo escolhido mostra "Rolo mais recente desta cor" com botão "Usar este".
+- Compra nova de rolo com preço novo passa a valer nos próximos produtos; produtos já salvos mantêm o preço da época.
+- Depois (passo 2): status do rolo (em uso, reserva, acabou) e desconto do consumo ao salvar produtos. Exige coluna nova em `filamentos` e tela de rolos.
+- Janela e confirmação únicas (`Janela.tsx`): QuickForm, QuickAdd, o que falta e Excluir usam o mesmo `Modal`. Excluir produto apaga todas as versões de uma vez.
+- Busca de campo (Ctrl+K e lupa) também na Calculadora; vale em blocos recolhidos.
+- Falta unificar: lista Abrir/Excluir (`ListaItens`) e tabela que vira cartão (`Tabela`).

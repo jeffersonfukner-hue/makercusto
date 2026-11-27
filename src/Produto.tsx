@@ -1,7 +1,7 @@
 import { BotaoExcluir, BotaoConfirmar } from './Janela'
 import { useEffect, useRef, useState } from 'react'
 import { calculateProduct, lineGrams, validateProduct, type ProductInput, type ProductResult, type SavedProduct } from './domain/product'
-import { filamentLabel, pricePerKg as kgPrice, type Filament } from './domain/filament'
+import { filamentLabel, latestRollFor, pricePerKg as kgPrice, type Filament } from './domain/filament'
 import { fromHMS, toHMS } from './domain/time'
 import type { UserPrinter } from './domain/printers'
 import type { Supply } from './domain/supply'
@@ -20,7 +20,6 @@ import type { SupplyDraft } from './domain/supply'
 import { summarize, type SavedCalc } from './domain/saved'
 import { ImportGcode } from './ImportGcode'
 import type { GcodeResult } from './domain/gcode'
-import { foldText } from './domain/texto'
 
 type LineF = { color: string; fil: string; price: string; model: string; flushed: string; tower: string }
 type PartF = { name: string; h: string; m: string; s: string; pieces: string; per: string; lines: LineF[] }
@@ -163,7 +162,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
       const { h, m, s: sec } = toHMS(r.hours)
       return { name: r.name, h: String(h), m: String(m), s: String(sec), pieces: '1', per: '1',
         lines: r.tools.map((tl) => {
-          const f = [...filaments].reverse().find((x) => x.color && foldText(x.color).startsWith(foldText(tl.name)))
+          const f = latestRollFor(filaments, tl.name)
           return { color: tl.name, fil: f?.id ?? '', price: f ? t(kgPrice(f)) : '', model: t(tl.modelG), flushed: t(tl.purgeG), tower: t(tl.towerG) }
         }) }
     })
@@ -271,6 +270,8 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
                     </Fld>
                     {field('Preço do filamento', first.price, (v) => setGroup(g, { price: v, fil: '' }), 'R$/kg', 'pricePerKg')}
                   </div>
+                  {!first.fil && (() => { const r = latestRollFor(filaments, g.label); return r ? (
+                    <p className="note">Rolo mais recente desta cor: <strong>{filamentLabel(r)}</strong> <button type="button" className="linkish" onClick={() => pickGroup(g, r.id)}>Usar este</button></p>) : null })()}
                   <p className="note">Usada em {g.at.length} {g.at.length === 1 ? 'parte' : 'partes'} · {t(Math.round(total * 100) / 100)} g no total</p>
                 </div>
               )
