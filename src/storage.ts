@@ -24,3 +24,14 @@ export function readFilaments(): Filament[] {
 export function writeFilaments(list: Filament[]): boolean {
   try { localStorage.setItem(FKEY, JSON.stringify(list)); return true } catch { return false }
 }
+
+import { parseProducts, type SavedProduct } from './domain/product'
+import { parsePrinters, type UserPrinter } from './domain/printers'
+const rd = <T,>(k: string, parse: (r: string | null) => T[]): T[] => { try { return parse(localStorage.getItem(k)) } catch { return [] } }
+const wr = (k: string, v: unknown): boolean => { try { localStorage.setItem(k, JSON.stringify(v)); return true } catch { return false } }
+export const readProducts = () => rd<SavedProduct>('makercusto:produtos', parseProducts)
+export const writeProducts = (l: SavedProduct[]) => wr('makercusto:produtos', l)
+export const readPrinters = () => rd<UserPrinter>('makercusto:impressoras', parsePrinters)
+export const writePrinters = (l: UserPrinter[]) => wr('makercusto:impressoras', l)
+export const readDraft = (): unknown => { try { return JSON.parse(localStorage.getItem('makercusto:rascunho-produto') ?? 'null') } catch { return null } }
+export const writeDraft = (v: unknown) => wr('makercusto:rascunho-produto', v)

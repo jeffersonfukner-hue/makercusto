@@ -5,11 +5,17 @@ import { calculateCost, validate, type CostInput, type CostResult } from './doma
 import { addSaved, summarize, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { fromHMS, toHMS } from './domain/time'
-import { filamentLabel, pricePerKg, type Filament } from './domain/filament'
+import { addFilament, filamentLabel, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
+import { addPrinter, type UserPrinter, type UserPrinterDraft } from './domain/printers'
+import { addSavedProduct, type ProductInput, type SavedProduct } from './domain/product'
 import { Filamentos } from './Filamentos'
+import { Impressoras } from './Impressoras'
+import { ImportBar } from './ImportBar'
+import { Produto } from './Produto'
+import { useList } from './useList'
 import { ESSENTIAL, inputForMode, type Mode } from './modes'
 import { cloud, onUser, signInWithGoogle, signOut, supabase } from './supabase'
-import { readFilaments, readMode, readSaved, writeFilaments, writeMode, writeSaved } from './storage'
+import { readFilaments, readMode, readPrinters, readProducts, readSaved, writeFilaments, writeMode, writePrinters, writeProducts, writeSaved } from './storage'
 
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 
@@ -20,7 +26,7 @@ function useRoute() {
     addEventListener('hashchange', on)
     return () => removeEventListener('hashchange', on)
   }, [])
-  return hash === '#/calculadora' ? 'calculadora' : hash === '#/painel' ? 'painel' : hash === '#/filamentos' ? 'filamentos' : 'inicio'
+  return hash === '#/calculadora' ? 'calculadora' : hash === '#/painel' ? 'painel' : hash === '#/filamentos' ? 'filamentos' : hash === '#/produto' ? 'produto' : hash === '#/impressoras' ? 'impressoras' : 'inicio'
 }
 
 const toForm = (i: CostInput): Form => {
@@ -38,8 +44,6 @@ export default function App() {
   const [form, setForm] = useState<Form>(initial)
   const [saved, setSaved] = useState<SavedCalc[]>(readSaved)
   const [mode, setModeState] = useState<Mode>(readMode)
-  const [filaments, setFilaments] = useState<Filament[]>(readFilaments)
-  const updateFilaments = (n: Filament[]) => { setFilaments(n); writeFilaments(n) }
   const [user, setUser] = useState<string | null>(null)
   const [cloudMsg, setCloudMsg] = useState('')
   const setMode = (m: Mode) => { setModeState(m); writeMode(m) }
@@ -47,6 +51,22 @@ export default function App() {
   const account: Account = supabase ? { user, signIn: signInWithGoogle, signOut } : null
 
   useEffect(() => onUser(setUser), [])
+  const fil = useList<Filament, FilamentDraft>({ read: readFilaments, write: writeFilaments, user, api: cloud?.filaments ?? null,
+    addLocal: addFilament, toDraft: ({ id: _id, ...d }) => d })
+  const prn = useList<UserPrinter, UserPrinterDraft>({ read: readPrinters, write: writePrinters, user, api: cloud?.printers ?? null,
+    addLocal: addPrinter, toDraft: ({ id: _id, ...d }) => d })
+  const prod = useList<SavedProduct, { name: string; input: ProductInput }>({ read: readProducts, write: writeProducts, user, api: cloud?.products ?? null,
+    addLocal: (l, d, id) => addSavedProduct(l, d.name, d.input, id, new Date().toISOString()), toDraft: (p) => ({ name: p.name, input: p.input }) })
+  const localCalcs = user && cloud ? readSaved().length : 0
+  const importCalcs = async () => {
+    if (!(user && cloud)) return
+    const local = readSaved(); let sent = 0
+    try {
+      for (const c of [...local].reverse()) { await cloud.save(c.name, c.input); sent++ }
+      writeSaved([]); setCloudMsg(`${sent} cálculos enviados para a nuvem.`)
+    } catch (e) { writeSaved(local.slice(0, local.length - sent)); setCloudMsg((e as Error).message) }
+    setSaved(await cloud.list())
+  }
   useEffect(() => {
     if (!cloud) return
     if (!user) { setSaved(readSaved()); setCloudMsg(''); return }
@@ -63,7 +83,7 @@ export default function App() {
   }
 
   if (route === 'calculadora') {
-    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} filaments={filaments} />
+    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} />
   }
   if (route === 'filamentos') {
     return (
@@ -71,7 +91,31 @@ export default function App() {
         <Nav route="filamentos" account={account} />
         <h1>Meus filamentos</h1>
         <p className="lead">Cadastre cada rolo com o preço que você pagou. Na calculadora (modo Avançado) você escolhe o rolo e o custo já vem certo.</p>
-        <Filamentos list={filaments} onChange={updateFilaments} />
+        <ImportBar count={fil.localCount} what="filamentos" onImport={fil.importLocal} />
+        <Filamentos list={fil.items} onAdd={fil.add} onRemove={fil.remove} msg={fil.msg} />
+      </main>
+    )
+  }
+  if (route === 'impressoras') {
+    return (
+      <main className="wrap">
+        <Nav route="impressoras" account={account} />
+        <h1>Impressoras</h1>
+        <p className="lead">Cadastre a sua impressora com o consumo, o preço e a vida útil. Na calculadora e no produto você escolhe e os campos já vêm preenchidos.</p>
+        <ImportBar count={prn.localCount} what="impressoras" onImport={prn.importLocal} />
+        <Impressoras list={prn.items} onAdd={prn.add} onRemove={prn.remove} msg={prn.msg} />
+      </main>
+    )
+  }
+  if (route === 'produto') {
+    return (
+      <main className="wrap">
+        <Nav route="produto" account={account} />
+        <h1>Produto com partes</h1>
+        <p className="lead">Para produtos feitos de várias impressões, com várias cores e itens comprados. Copie do fatiador o tempo e o peso de cada cor.</p>
+        <ImportBar count={prod.localCount} what="produtos" onImport={prod.importLocal} />
+        <Produto filaments={fil.items} printers={prn.items} products={prod.items} msg={prod.msg}
+          onSave={(name, input) => prod.add({ name, input })} onDelete={prod.remove} />
       </main>
     )
   }
@@ -88,6 +132,7 @@ export default function App() {
           {user ? `Seus cálculos na nuvem, na conta ${user}. Os que você salvou antes de entrar continuam só neste navegador.`
             : account ? 'Seus cálculos salvos neste navegador. Entre com Google para guardar na nuvem.' : 'Seus cálculos salvos neste navegador.'}
         </p>
+        <ImportBar count={localCalcs} what="cálculos" onImport={importCalcs} />
         {cloudMsg && <p className="errors" role="alert">{cloudMsg}</p>}
         <Dashboard jobs={saved.map(summarize)} onOpen={onOpen} onDelete={onDelete} />
       </main>
@@ -104,8 +149,10 @@ function Nav({ route, account }: { route: string; account?: Account }) {
     <nav className="nav">
       <a className="brand" href="#/">MakerCusto</a>
       <a href="#/calculadora" aria-current={cur('calculadora')}>Calculadora</a>
-      <a href="#/painel" aria-current={cur('painel')}>Painel</a>
+      <a href="#/produto" aria-current={cur('produto')}>Produto</a>
       <a href="#/filamentos" aria-current={cur('filamentos')}>Filamentos</a>
+      <a href="#/impressoras" aria-current={cur('impressoras')}>Impressoras</a>
+      <a href="#/painel" aria-current={cur('painel')}>Painel</a>
       {account && (account.user
         ? <span className="acct"><span title={account.user}>{account.user}</span><button type="button" onClick={account.signOut}>Sair</button></span>
         : <button type="button" className="acct" onClick={account.signIn}>Entrar com Google</button>)}
@@ -122,6 +169,14 @@ function Home() {
         <a className="choice main" href="#/calculadora">
           <strong>Calculadora</strong>
           <span>Custo por peça, preço sugerido e lucro.</span>
+        </a>
+        <a className="choice" href="#/produto">
+          <strong>Produto com partes</strong>
+          <span>Várias impressões, cores, purga e itens comprados.</span>
+        </a>
+        <a className="choice" href="#/impressoras">
+          <strong>Impressoras</strong>
+          <span>Catálogo com fonte e a sua impressora cadastrada.</span>
         </a>
         <a className="choice" href="#/filamentos">
           <strong>Filamentos</strong>
@@ -180,14 +235,20 @@ const flat = groups.flatMap((g) => g.fields)
 const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
-function Calculator({ form, setForm, onSave, mode, setMode, account, filaments }: {
-  filaments: Filament[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
+function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, printers }: {
+  filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
 }) {
   const input = inputForMode(toInput(form), mode)
   const errors = validate(input)
   const result = errors.length ? null : calculateCost(input)
   const basic = mode === 'basico'
   const [fil, setFil] = useState('')
+  const [prn, setPrn] = useState('')
+  const pickPrinter = (id: string) => {
+    setPrn(id)
+    const p = printers.find((x) => x.id === id)
+    if (p) setForm({ ...form, watts: String(p.watts).replace('.', ','), printerPrice: String(p.priceCents / 100).replace('.', ','), lifetimeHours: String(p.lifetimeHours).replace('.', ',') })
+  }
   const pickFilament = (id: string) => {
     setFil(id)
     const f = filaments.find((x) => x.id === id)
@@ -265,6 +326,17 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments }
                     </select>
                   </span>
                   <small>{filaments.length ? 'Escolha o rolo e o preço por kg vem preenchido.' : <>Nenhum rolo cadastrado. <a href="#/filamentos">Cadastrar filamentos</a>.</>}</small>
+                </label>
+              )}
+              {g.title === 'Impressora' && printers.length > 0 && (
+                <label><span>Minha impressora</span>
+                  <span className="input">
+                    <select value={prn} onChange={(e) => pickPrinter(e.target.value)}>
+                      <option value="">Digitar abaixo</option>
+                      {printers.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                    </select>
+                  </span>
+                  <small>Preenche consumo, preço e vida útil.</small>
                 </label>
               )}
               {g.fields.map(field)}

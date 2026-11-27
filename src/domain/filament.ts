@@ -22,7 +22,7 @@ export function validateFilament(d: FilamentDraft): string[] {
   if (!d.name.trim()) e.push('Dê um nome ao filamento. Ex.: PLA preto 001.')
   if (!Number.isInteger(d.priceCents) || d.priceCents <= 0) e.push('Informe o preço pago no rolo, maior que zero.')
   else if (d.priceCents > 1_000_000) e.push('Preço do rolo acima de R$ 10.000. Confira o valor.')
-  if (!Number.isFinite(d.weightG) || d.weightG <= 0) e.push('Informe o peso do rolo em gramas, maior que zero.')
+  if (!Number.isInteger(d.weightG) || d.weightG <= 0) e.push('Informe o peso do rolo em gramas (número inteiro), maior que zero.')
   else if (d.weightG > 20000) e.push('Peso do rolo acima de 20 kg. Confira o valor.')
   if (!isDate(d.boughtAt)) e.push('Informe a data da compra.')
   return e

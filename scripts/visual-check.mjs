@@ -8,7 +8,7 @@ const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome'
 const OUT = process.env.SHOTS_DIR || 'visual-out'
 const PORT = 4173
 const sizes = [{ n: 'celular-360', w: 360, h: 780 }, { n: 'tablet-768', w: 768, h: 900 }, { n: 'desktop-1280', w: 1280, h: 900 }]
-const routes = ['#/', '#/calculadora', '#/painel', '#/filamentos', '#/calculadora?avancado']
+const routes = ['#/', '#/calculadora', '#/painel', '#/filamentos', '#/calculadora?avancado', '#/produto', '#/impressoras']
 const sample = { grams: 50, pricePerKg: 100, hours: 3, watts: 150, tariff: 1.03, printerPrice: 3500, lifetimeHours: 3000,
   laborMinutes: 10, laborRate: 20, failurePct: 10, quantity: 1, marginPct: 50 }
 const seed = JSON.stringify([
@@ -21,6 +21,17 @@ const fil = JSON.stringify([
   { id: 'f2', name: 'PLA preto 001', supplier: 'Fornecedor com nome bem comprido', material: 'PLA', color: 'preto', priceCents: 6800, weightG: 1000, boughtAt: '2026-10-01' },
 ])
 
+const draft = JSON.stringify({
+  printer: '', bought: [{ name: 'Copo de alumínio com nome comprido para testar', price: '12,5', qty: '1' }],
+  parts: [{ name: 'Brasão', h: '0', m: '36', s: '34', pieces: '1', per: '1', lines: [
+    { color: 'preto', fil: '', price: '68', model: '2,77', flushed: '0,09', tower: '0,09' },
+    { color: 'vermelho', fil: '', price: '75', model: '0,88', flushed: '1,04', tower: '0,53' },
+    { color: 'branco', fil: '', price: '68', model: '0,11', flushed: '2,08', tower: '0,12' }] },
+    { name: 'Aro', h: '1', m: '20', s: '0', pieces: '1', per: '1', lines: [{ color: 'vermelho', fil: '', price: '75', model: '30', flushed: '0', tower: '0' }] }],
+  shop: { watts: '150', tariff: '1,03', printerPrice: '3500', life: '3000', laborMin: '10', laborRate: '20', fail: '10', margin: '50', sold: '' },
+})
+const prns = JSON.stringify([{ id: 'p1', name: 'Anycubic Kobra X da oficina', watts: 150, priceCents: 300000, lifetimeHours: 3000 }])
+
 mkdirSync(OUT, { recursive: true })
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' })
 const base = `http://localhost:${PORT}/`
@@ -30,7 +41,7 @@ const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-san
 const problems = []
 for (const s of sizes) {
   const ctx = await browser.newContext({ viewport: { width: s.w, height: s.h }, locale: 'pt-BR' })
-  await ctx.addInitScript(([v, f]) => { try { localStorage.setItem('makercusto:calculos', v); localStorage.setItem('makercusto:filamentos', f) } catch {} }, [seed, fil])
+  await ctx.addInitScript(([v, f, d, p]) => { try { localStorage.setItem('makercusto:calculos', v); localStorage.setItem('makercusto:filamentos', f); localStorage.setItem('makercusto:rascunho-produto', d); localStorage.setItem('makercusto:impressoras', p) } catch {} }, [seed, fil, draft, prns])
   const page = await ctx.newPage()
   // Fontes externas e favicon não contam: a rede de teste pode bloqueá-los.
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) problems.push(`[${s.n}] console: ${m.text()}`) })

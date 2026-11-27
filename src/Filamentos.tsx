@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { addFilament, MATERIALS, pricePerKg, type Filament } from './domain/filament'
+import { MATERIALS, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
 import { money } from './format'
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -7,20 +7,20 @@ const toCents = (s: string) => Math.round(Number(s.replace(',', '.')) * 100)
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const empty = () => ({ name: '', supplier: '', material: 'PLA', color: '', price: '', weight: '1000', boughtAt: today() })
 
-export function Filamentos({ list, onChange }: { list: Filament[]; onChange: (next: Filament[]) => void }) {
+export function Filamentos({ list, onAdd, onRemove, msg: cloudMsg }: { list: Filament[]; onAdd: (d: FilamentDraft) => Promise<void>; onRemove: (id: string) => void; msg: string }) {
   const [f, setF] = useState(empty)
   const [msg, setMsg] = useState('')
   const set = (k: keyof ReturnType<typeof empty>) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
 
-  const save = () => {
+  const save = async () => {
     try {
-      const next = addFilament(list, {
+      await onAdd({
         name: f.name, supplier: f.supplier, material: f.material, color: f.color,
         priceCents: f.price.trim() === '' ? NaN : toCents(f.price),
         weightG: f.weight.trim() === '' ? NaN : Number(f.weight.replace(',', '.')),
         boughtAt: f.boughtAt,
-      }, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
-      onChange(next); setF({ ...empty(), supplier: f.supplier, material: f.material }); setMsg('Salvo.')
+      })
+      setF({ ...empty(), supplier: f.supplier, material: f.material }); setMsg('Salvo.')
     } catch (e) { setMsg((e as Error).message) }
   }
   const repeat = (r: Filament) => {
@@ -33,7 +33,7 @@ export function Filamentos({ list, onChange }: { list: Filament[]; onChange: (ne
     <div className="dash">
       <section className="card">
         <h2>Novo rolo</h2>
-        <form onSubmit={(e) => { e.preventDefault(); save() }} noValidate>
+        <form onSubmit={(e) => { e.preventDefault(); void save() }} noValidate>
           <label><span>Nome</span><span className="input"><input value={f.name} onChange={set('name')} placeholder="Ex.: PLA preto 001" /></span></label>
           <label><span>Fornecedor (opcional)</span><span className="input"><input value={f.supplier} onChange={set('supplier')} /></span></label>
           <label><span>Material</span>
@@ -47,8 +47,9 @@ export function Filamentos({ list, onChange }: { list: Filament[]; onChange: (ne
           {msg && <p className="note" role="status">{msg}</p>}
         </form>
       </section>
-      <section className="card">
+      <section className="card wide">
         <h2>Meus filamentos</h2>
+        {cloudMsg && <p className="errors" role="alert">{cloudMsg}</p>}
         {!list.length ? (
           <p>Nenhum rolo cadastrado. Cadastre um e ele aparece na calculadora (modo Avançado).</p>
         ) : (
@@ -62,9 +63,11 @@ export function Filamentos({ list, onChange }: { list: Filament[]; onChange: (ne
                 <td data-label="Compra">{new Date(r.boughtAt + 'T12:00:00').toLocaleDateString('pt-BR')}</td>
                 <td data-label="Rolo">{money(r.priceCents)} · {r.weightG} g</td>
                 <td data-label="Preço por kg"><strong>{brl(pricePerKg(r))}</strong></td>
-                <td className="acts">
-                  <button type="button" onClick={() => repeat(r)}>Novo rolo igual</button>
-                  <button type="button" onClick={() => { if (confirm(`Excluir "${r.name}"?`)) onChange(list.filter((x) => x.id !== r.id)) }}>Excluir</button>
+                <td>
+                  <div className="rowacts">
+                    <button type="button" onClick={() => repeat(r)}>Novo rolo igual</button>
+                    <button type="button" onClick={() => { if (confirm(`Excluir "${r.name}"?`)) onRemove(r.id) }}>Excluir</button>
+                  </div>
                 </td>
               </tr>))}</tbody>
           </table></div>
