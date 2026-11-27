@@ -48,3 +48,20 @@ describe('validate', () => {
     expect(() => calculateCost({ ...base, marginPct: 100 })).toThrow()
   })
 })
+
+describe('itens comprados na calculadora', () => {
+  const base = { grams: 100, pricePerKg: 100, hours: 10, watts: 200, tariff: 1, printerPrice: 3000, lifetimeHours: 3000, laborMinutes: 30, laborRate: 20, failurePct: 20, quantity: 4, marginPct: 50 }
+  it('sem itens o resultado não muda', () => {
+    expect(calculateCost({ ...base, bought: [] })).toEqual(calculateCost(base))
+  })
+  it('item entra por peça e fica fora da taxa de falhas', () => {
+    const a = calculateCost(base)
+    const b = calculateCost({ ...base, bought: [{ name: 'Argola', price: 1.5, qty: 2 }] })
+    expect(b.unit).toBe(a.unit + 300)
+    expect(b.total).toBe(a.total + 300 * 4)
+    expect(b.parts.bought).toBe(1200)
+  })
+  it('valida o item', () => {
+    expect(validate({ ...base, bought: [{ name: ' ', price: 1, qty: 1 }] })[0]).toMatch(/Item comprado 1: dê um nome/)
+  })
+})

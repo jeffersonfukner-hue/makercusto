@@ -97,7 +97,7 @@ export function Produto({ filaments, printers, supplies = [], linhas, onSave, on
   const [suggest, setSuggest] = useState('')
   const [name, setName] = useState('')
   const [saveMsg, setSaveMsg] = useState('')
-  const [tab, setTab] = useState<Tab>('partes')
+  const [tab, setTab] = useState<Tab>('produtos')
   const [dlg, setPend] = useState<null | 'faltam' | 'busca'>(null)
   useAtalhoBusca(() => setPend('busca'))
   const [miss, setMiss] = useState<Record<string, number>>({})
@@ -115,7 +115,7 @@ export function Produto({ filaments, printers, supplies = [], linhas, onSave, on
       setSaveMsg(n ? `Salvo como versão ${n + 1} de "${titleCase(name)}". As anteriores ficam no histórico.` : 'Salvo.'); setName('')
     } catch (e) { setSaveMsg((e as Error).message) }
   }
-  useEffect(() => { if (aberto) { setS(fromInput(aberto.input)); setName(aberto.name); onAberto?.() } }, [aberto]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (aberto) { setS(fromInput(aberto.input)); setName(aberto.name); onAberto?.(); setTab('partes') } }, [aberto]) // eslint-disable-line react-hooks/exhaustive-deps
   const sRef = useRef(s)
   sRef.current = s
   const pend = useRef<{ kind: 'fil' | 'prn' | 'sup'; name: string; n: number; k: number } | null>(null)
@@ -205,13 +205,22 @@ export function Produto({ filaments, printers, supplies = [], linhas, onSave, on
 
       <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
         <div className="tabs" role="tablist" aria-label="Seções do produto">
-          {([['partes', 'Partes', s.parts.length], ['filamentos', 'Filamentos', colorGroups.length], ['impressora', 'Impressora', 0], ['itens', 'Itens', s.bought.length], ['venda', 'Venda', 0], ['produtos', 'Produtos', linhas.length]] as const).map(([k, l, n]) => (
+          {([['produtos', 'Produtos', linhas.length], ['partes', 'Partes', s.parts.length], ['filamentos', 'Filamentos', colorGroups.length], ['impressora', 'Impressora', 0], ['itens', 'Itens', s.bought.length], ['venda', 'Venda', 0]] as const).map(([k, l, n]) => (
             <button type="button" role="tab" key={k} id={`tab-${k}`} aria-selected={tab === k} aria-controls={`painel-${k}`} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
               {l}{n > 0 && <span className="cnt">{n}</span>}{miss[k] > 0 && <span className="dot" title="Falta preencher" aria-label="falta preencher" />}
             </button>
           ))}
           <span className="tabsearch"><BotaoIcone icone={ICONES.lupa} label="Buscar campo (Ctrl+K)" onClick={() => setPend('busca')} /></span>
         </div>
+        <div role="tabpanel" id="painel-produtos" aria-labelledby="tab-produtos" data-tab="produtos" hidden={tab !== 'produtos'}>
+        <section className="card2">
+          <div className="listhead"><h2>Meus produtos</h2>
+            <BotaoConfirmar label="Novo produto" titulo="Começar um produto novo?" texto="Limpa as partes, os itens e os valores desta tela. Os produtos já salvos continuam na lista." acao="Começar" perigoso={false} onConfirm={() => { setS(initial()); setName(''); setTab('partes') }} /></div>
+          {msg && <p className="errors" role="alert">{msg}</p>}
+          {!linhas.length ? <p className="note">Nenhum produto salvo ainda.</p> : <ListaTrabalhos linhas={linhas} onOpen={(l) => { onAbrir(l); setTab('partes') }} onDelete={onApagar} />}
+        </section>
+        </div>
+
         <div role="tabpanel" id="painel-partes" aria-labelledby="tab-partes" data-tab="partes" hidden={tab !== 'partes'}>
         {s.parts.map((p, n) => (
           <section className="card2 partcard" key={n} aria-label={`Parte ${n + 1}`}>
@@ -347,15 +356,7 @@ export function Produto({ filaments, printers, supplies = [], linhas, onSave, on
           </section>
         </div>
 
-        <div role="tabpanel" id="painel-produtos" aria-labelledby="tab-produtos" data-tab="produtos" hidden={tab !== 'produtos'}>
-        <section className="card2">
-          <h2>Meus produtos</h2>
-          {msg && <p className="errors" role="alert">{msg}</p>}
-          {!linhas.length ? <p className="note">Nenhum produto salvo ainda.</p> : <ListaTrabalhos linhas={linhas} onOpen={onAbrir} onDelete={onApagar} />}
-        </section>
-        </div>
 
-        <p><BotaoConfirmar label="Começar produto novo" titulo="Começar um produto novo?" texto="Limpa as partes, os itens e os valores desta tela. Os produtos já salvos continuam em Produtos." acao="Limpar tudo" onConfirm={() => setS(initial())} /></p>
       </form>
       {dlg && <Pendencias startSearch={dlg === 'busca'} onClose={() => setPend(null)}
         onGo={(it: FieldItem) => { setPend(null); goTo(it.el, setTab) }}

@@ -3,7 +3,8 @@ import { titleCase } from './texto'
 // O fatiador separa o peso de cada cor em peça (model), purga (flushed) e torre (tower): tudo isso é filamento gasto.
 // Itens comprados (ex.: copo de alumínio) entram só como custo, fora da taxa de falhas.
 // Valores monetários em centavos inteiros; cada componente é arredondado uma vez por parte.
-import { toCents } from './cost'
+import { boughtCost, toCents, validateBought, type Bought } from './cost'
+export type { Bought }
 
 export interface ColorLine {
   color: string
@@ -19,7 +20,6 @@ export interface Part {
   perProduct: number // quantas dessas peças cada produto usa
   lines: ColorLine[]
 }
-export interface Bought { name: string; price: number; qty: number } // price em R$ por unidade
 export interface ProductInput {
   parts: Part[]
   bought: Bought[]
@@ -57,11 +57,7 @@ export function validateProduct(i: ProductInput): string[] {
     }
     if (p.lines.length && p.lines.every((l) => lineGrams(l) <= 0)) e.push(`${w}: informe o peso de pelo menos uma cor.`)
   })
-  i.bought.forEach((b, n) => {
-    if (!b.name.trim()) e.push(`Item comprado ${n + 1}: dê um nome.`)
-    if (!(b.price >= 0)) e.push(`Item comprado ${n + 1}: preço deve ser zero ou mais.`)
-    if (!Number.isInteger(b.qty) || b.qty < 1) e.push(`Item comprado ${n + 1}: quantidade deve ser um número inteiro, 1 ou mais.`)
-  })
+  e.push(...validateBought(i.bought))
   for (const [v, label] of [[i.watts, 'Potência'], [i.tariff, 'Tarifa'], [i.printerPrice, 'Preço da impressora'], [i.laborMinutes, 'Tempo de trabalho'], [i.laborRate, 'Valor da hora']] as const) {
     if (!(v >= 0)) e.push(`${label} deve ser zero ou mais.`)
   }
@@ -97,7 +93,7 @@ export function calculateProduct(i: ProductInput): ProductResult {
     return { name: p.name.trim(), material, waste, energy, machine, subtotal: material + waste + energy + machine }
   })
 
-  const bought = i.bought.reduce((s, b) => s + r(toCents(b.price) * b.qty), 0)
+  const bought = boughtCost(i.bought)
   const labor = r((i.laborMinutes / 60) * toCents(i.laborRate))
   const printed = parts.reduce((s, p) => s + p.subtotal, 0)
   const base = printed + labor
