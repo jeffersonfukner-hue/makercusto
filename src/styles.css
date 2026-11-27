@@ -200,3 +200,8 @@ fieldset.kind legend.lab { padding: 0; margin-bottom: 4px; font-size: .82rem; fo
 .sumbar button { height: 42px; padding: 0 20px; flex: none; font-weight: 700; background: var(--amber); color: var(--ink); border-color: var(--amber) }
 .sumbar button:not(.primary) { background: transparent; color: #fff; border-color: #fff }
 .sumbar .msg { flex: 1 0 100%; color: #b7c3c9 } @media (min-width: 860px) { .sumbar .msg { flex: none } }
+
+/* Histórico de versões do mesmo produto */
+.jobs li.grp { flex-wrap: wrap }
+.hist { flex: 1 0 100%; margin-top: 6px; font-size: .92rem } .hist summary { cursor: pointer; color: var(--main); font-weight: 600 }
+.hist ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px } .hist li { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; padding: 6px 8px; border: 1px solid var(--line, #dfe5e8); border-radius: 8px; background: #fff }

@@ -10,6 +10,7 @@ import { AJUDA, type AjudaKey } from './ajuda'
 import { Fld, Info } from './Campos'
 import { QuickFilament, QuickPrinter, QuickSupply } from './Rapido'
 import { titleCase } from './domain/texto'
+import { groupVersions } from './domain/versions'
 import type { FilamentDraft } from './domain/filament'
 import type { UserPrinterDraft } from './domain/printers'
 import type { SupplyDraft } from './domain/supply'
@@ -92,20 +93,12 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const [name, setName] = useState('')
   const [saveMsg, setSaveMsg] = useState('')
   useEffect(() => { if (suggest) setName((n) => n || suggest) }, [suggest])
-  const dupAsked = useRef('')
   const doSave = async () => {
     try {
-      // Mesmo nome já salvo: avisa antes de duplicar. Salvar de novo com o mesmo nome substitui o antigo.
-      const key = titleCase(name).toLowerCase()
-      const same = products.filter((x) => x.name.toLowerCase() === key)
-      if (same.length && dupAsked.current !== key) {
-        dupAsked.current = key
-        setSaveMsg(`Já existe um produto chamado "${titleCase(name)}". Clique em Salvar de novo para substituir, ou mude o nome para guardar os dois.`)
-        return
-      }
+      // Mesmo nome = mesmo produto: o salvamento entra como nova versão no histórico.
+      const n = products.filter((x) => x.name.trim().toLowerCase() === name.trim().toLowerCase()).length
       await onSave(name, toInput(s))
-      same.forEach((x) => onDelete(x.id))
-      dupAsked.current = ''; setSaveMsg(same.length ? 'Salvo. O produto antigo com esse nome foi substituído.' : 'Salvo.'); setName('')
+      setSaveMsg(n ? `Salvo como versão ${n + 1} de "${titleCase(name)}". As anteriores ficam no histórico.` : 'Salvo.'); setName('')
     } catch (e) { setSaveMsg((e as Error).message) }
   }
   const sRef = useRef(s)
@@ -182,13 +175,22 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
           {msg && <p className="errors" role="alert">{msg}</p>}
           {!products.length ? <p className="note">Nenhum produto salvo ainda.</p> : (
             <ul className="jobs">
-              {products.map((p) => (
-                <li key={p.id}>
-                  <span className="pick"><strong>{p.name}</strong><span>{new Date(p.savedAt).toLocaleDateString('pt-BR')} · {p.input.parts.length} partes</span></span>
+              {groupVersions(products).map((g) => (
+                <li key={g.key} className="grp">
+                  <span className="pick"><strong>{g.name}</strong><span>{new Date(g.latest.savedAt).toLocaleDateString('pt-BR')} · {g.latest.input.parts.length} partes{g.history.length > 1 ? ` · ${g.history.length} versões` : ''}</span></span>
                   <span className="acts">
-                    <button type="button" onClick={() => setS(fromInput(p.input))}>Abrir</button>
-                    <button type="button" onClick={() => { if (confirm(`Excluir "${p.name}"?`)) onDelete(p.id) }}>Excluir</button>
+                    <button type="button" onClick={() => setS(fromInput(g.latest.input))}>Abrir</button>
+                    <button type="button" onClick={() => { if (confirm(`Excluir "${g.name}"${g.history.length > 1 ? ' e todas as versões' : ''}?`)) g.history.forEach((x) => onDelete(x.id)) }}>Excluir</button>
                   </span>
+                  {g.history.length > 1 && (
+                    <details className="hist"><summary>Histórico ({g.history.length})</summary>
+                      <ul>{g.history.map((v, k) => (
+                        <li key={v.id}><span>{new Date(v.savedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}{(() => { try { return ` · custo ${money(calculateProduct(v.input).total)}` } catch { return '' } })()}{k === 0 ? ' (atual)' : ''}</span>
+                          <span className="acts"><button type="button" onClick={() => setS(fromInput(v.input))}>Abrir</button>
+                            <button type="button" onClick={() => { if (confirm('Excluir esta versão?')) onDelete(v.id) }}>Excluir</button></span></li>
+                      ))}</ul>
+                    </details>
+                  )}
                 </li>
               ))}
             </ul>

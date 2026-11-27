@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Composition } from './Composition'
 import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
-import { addSaved, kindOf, KINDS, summarize, type Kind, type SavedCalc } from './domain/saved'
-import { titleCase } from './domain/texto'
+import { addSaved, KINDS, summarize, type Kind, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { fromHMS, toHMS } from './domain/time'
 import { addFilament, filamentLabel, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
@@ -103,12 +102,9 @@ export default function App() {
     cloud.list().then((l) => { setSaved(l); setCloudMsg('') }).catch((e: Error) => setCloudMsg(e.message))
   }, [user])
 
-  const onSave = async (name: string, input: CostInput, kind: Kind, replace = false) => {
-    const same = saved.filter((x) => x.name.toLowerCase() === titleCase(name).toLowerCase() && kindOf(x) === kind)
-    if (same.length && !replace) throw new DupError(titleCase(name))
-    if (user && cloud) { await cloud.save(name, input, kind); for (const x of same) await cloud.remove(x.id); setSaved(await cloud.list()); return }
-    const base = saved.filter((x) => !same.includes(x))
-    update(addSaved(base, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString(), kind))
+  const onSave = async (name: string, input: CostInput, kind: Kind) => {
+    if (user && cloud) { await cloud.save(name, input, kind); setSaved(await cloud.list()); return }
+    update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString(), kind))
   }
   const onDelete = async (id: string) => {
     if (!(user && cloud)) return update(saved.filter((x) => x.id !== id))
@@ -358,7 +354,7 @@ const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
 function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, account, filaments, printers, user, onAddFilament, onAddPrinter }: {
-  user: string | null; filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput, kind: Kind, replace?: boolean) => Promise<void>; work: Work; setWork: (w: Work) => void; mode: Mode; setMode: (m: Mode) => void; account: Account
+  user: string | null; filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput, kind: Kind) => Promise<void>; work: Work; setWork: (w: Work) => void; mode: Mode; setMode: (m: Mode) => void; account: Account
   onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>
 }) {
   const input = inputForMode(toInput(form), mode)
@@ -449,7 +445,7 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
             <div className="hero errors"><strong>Corrija para ver o resultado:</strong>
               <ul>{errors.map((e) => <li key={e}>{e}</li>)}</ul></div>
           )}
-          {result && <Details r={result} basic={basic} work={work} setWork={setWork} onSave={(n, k, rep) => onSave(n, input, k, rep)} />}
+          {result && <Details r={result} basic={basic} work={work} setWork={setWork} onSave={(n, k) => onSave(n, input, k)} />}
         </div>
         <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
           <section className="card2 start"><h2>Comece pelo nome e pelo tipo</h2>
@@ -520,7 +516,7 @@ function Hero({ r, margin }: { r: CostResult; margin: number }) {
   )
 }
 
-function Details({ r, basic, onSave, work, setWork }: { r: CostResult; basic: boolean; work: Work; setWork: (w: Work) => void; onSave: (name: string, kind: Kind, replace?: boolean) => Promise<void> }) {
+function Details({ r, basic, onSave, work, setWork }: { r: CostResult; basic: boolean; work: Work; setWork: (w: Work) => void; onSave: (name: string, kind: Kind) => Promise<void> }) {
   return (
     <div className="details">
       {!basic && (
@@ -559,20 +555,15 @@ function KindPick({ value, onChange }: { value: Kind; onChange: (k: Kind) => voi
   )
 }
 
-class DupError extends Error { constructor(public nome: string) { super('nome repetido') } }
-function SaveBox({ onSave, work, setWork }: { onSave: (name: string, kind: Kind, replace?: boolean) => Promise<void>; work: Work; setWork: (w: Work) => void }) {
+function SaveBox({ onSave, work, setWork }: { onSave: (name: string, kind: Kind) => Promise<void>; work: Work; setWork: (w: Work) => void }) {
   const [msg, setMsg] = useState('')
-  const [dup, setDup] = useState(false)
   const save = async () => {
-    try { await onSave(work.name, work.kind, dup); setDup(false); setMsg('Salvo.'); setWork({ name: '', kind: work.kind }) }
-    catch (e) {
-      if (e instanceof DupError) { setDup(true); setMsg(`Já existe "${e.nome}". Clique de novo para substituir, ou mude o nome para guardar os dois.`) } else setMsg((e as Error).message)
-    }
+    try { await onSave(work.name, work.kind); setMsg('Salvo.'); setWork({ name: '', kind: work.kind }) } catch (e) { setMsg((e as Error).message) }
   }
   const label = work.kind === 'parte' ? 'Salvar como parte' : 'Salvar como produto final'
   return (
     <div className="save">
-      <Fld label="Nome do trabalho" info={AJUDA.nomeTrabalho} mode="text" value={work.name} onChange={(v) => { setDup(false); setWork({ ...work, name: v }) }} placeholder="Ex.: Chaveiro Azul" maxLength={60} />
+      <Fld label="Nome do trabalho" info={AJUDA.nomeTrabalho} mode="text" value={work.name} onChange={(v) => setWork({ ...work, name: v })} placeholder="Ex.: Chaveiro Azul" maxLength={60} />
       <KindPick value={work.kind} onChange={(k) => setWork({ ...work, kind: k })} />
       <button type="button" onClick={save}>{label}</button>
       {msg && <p role="status">{msg} {msg === 'Salvo.' && <a href="#/painel">Ver no painel</a>}</p>}

@@ -2,6 +2,7 @@ import { Children, cloneElement, useState, type ReactElement, type ReactNode } f
 import { Composition } from './Composition'
 import type { JobSummary } from './domain/saved'
 import { money, pct } from './format'
+import { groupVersions } from './domain/versions'
 
 const date = (iso: string) => new Date(iso).toLocaleDateString('pt-BR')
 // No celular cada linha vira um cartão: o data-label de cada célula vem do cabeçalho.
@@ -14,8 +15,10 @@ const Table = ({ head, children }: { head: string[]; children: ReactNode }) => (
   </tbody></table></div>
 )
 
-export function Dashboard({ jobs, onOpen, onDelete }: { jobs: JobSummary[]; onOpen: (id: string) => void; onDelete: (id: string) => void }) {
+export function Dashboard({ jobs: all, onOpen, onDelete }: { jobs: JobSummary[]; onOpen: (id: string) => void; onDelete: (id: string) => void }) {
   const [sel, setSel] = useState<string | null>(null)
+  const groups = groupVersions(all)
+  const jobs = groups.map((g) => g.latest)
   if (!jobs.length) return (
     <section className="card">
       <p><strong>Nenhum cálculo salvo ainda.</strong></p>
@@ -30,17 +33,26 @@ export function Dashboard({ jobs, onOpen, onDelete }: { jobs: JobSummary[]; onOp
       <section className="card">
         <h2>Últimos cálculos</h2>
         <ul className="jobs">
-          {jobs.map((j) => (
-            <li key={j.id} className={j.id === cur.id ? 'on' : ''}>
+          {groups.map((g) => { const j = g.latest; return (
+            <li key={g.key} className={j.id === cur.id ? 'on grp' : 'grp'}>
               <button className="pick" onClick={() => setSel(j.id)} aria-pressed={j.id === cur.id}>
-                <strong>{j.name}{j.kind === 'parte' && <> <span className="tag parte">parte</span></>}</strong><span>{date(j.savedAt)} · {money(j.result.unit)} por peça</span>
+                <strong>{j.name}{j.kind === 'parte' && <> <span className="tag parte">parte</span></>}</strong><span>{date(j.savedAt)} · {money(j.result.unit)} por peça{g.history.length > 1 ? ` · ${g.history.length} versões` : ''}</span>
               </button>
               <span className="acts">
                 <button onClick={() => onOpen(j.id)}>Abrir</button>
-                <button onClick={() => { if (confirm(`Excluir "${j.name}"?`)) onDelete(j.id) }}>Excluir</button>
+                <button onClick={() => { if (confirm(`Excluir "${j.name}"${g.history.length > 1 ? ' e todas as versões' : ''}?`)) g.history.forEach((x) => onDelete(x.id)) }}>Excluir</button>
               </span>
+              {g.history.length > 1 && (
+                <details className="hist"><summary>Histórico ({g.history.length})</summary>
+                  <ul>{g.history.map((v, k) => (
+                    <li key={v.id}><span>{new Date(v.savedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} · {money(v.result.unit)} por peça{k === 0 ? ' (atual)' : ''}</span>
+                      <span className="acts"><button onClick={() => onOpen(v.id)}>Abrir</button>
+                        <button onClick={() => { if (confirm('Excluir esta versão?')) onDelete(v.id) }}>Excluir</button></span></li>
+                  ))}</ul>
+                </details>
+              )}
             </li>
-          ))}
+          )})}
         </ul>
       </section>
       <section className="card">

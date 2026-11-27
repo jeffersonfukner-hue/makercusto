@@ -87,3 +87,8 @@
 - Campos obrigatórios vazios no Produto ficam em laranja; "Ver o que falta" leva ao primeiro e já o deixa selecionado para digitar.
 - Barra inferior escura, igual ao cartão de resultado (números brancos, preço sugerido em âmbar).
 - Salvar com nome já existente avisa e, no segundo clique, substitui o antigo (evita duplicar). Vale para Produto e para Parte/Produto final da Calculadora (mesmo nome e mesmo tipo).
+
+## Mesmo nome = mesmo produto, com histórico (substitui a regra de nome repetido)
+- Salvar com nome já existente não cria outro produto nem substitui: entra como nova versão. A lista mostra um item por nome (versão mais nova em cima) e um "Histórico" com data, hora e custo de cada versão, cada uma com Abrir e Excluir.
+- Vale em Produto e na Calculadora/Painel (nome + tipo). Parte e Produto final com o mesmo nome ficam separados.
+- Sem mudança no banco: o agrupamento é feito na tela por nome (`src/domain/versions.ts`). Painel e tabelas de margem usam só a versão mais nova.
