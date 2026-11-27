@@ -62,3 +62,5 @@
 - "+" com cadastro rápido em Filamento cadastrado e Minha impressora (`QuickForm`); o item novo já fica escolhido.
 - Regra da Parte dentro do Produto: Opção 1 confirmada (custo do cálculo salvo, sem margem, falhas não contadas duas vezes, botão Atualizar).
 - Depois: aplicar o mesmo layout em Produto e telas de cadastro; tipo Parte/Produto final ao iniciar e ao salvar.
+- Layout A aplicado em Produto, Filamentos, Estoque, Fornecedores, Marcas, Cores e Impressoras. "+" rápido em Produto: filamento, impressora e item de estoque (`src/Rapido.tsx`).
+- Ainda falta: tipo Parte/Produto final (nome e tipo ao iniciar e ao salvar) e uso da Parte salva dentro do Produto (Opção 1).

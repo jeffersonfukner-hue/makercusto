@@ -1,3 +1,5 @@
+import { AJUDA } from './ajuda'
+import { Fld } from './Campos'
 import { useState } from 'react'
 import { CATALOG, cloneFromCatalog, type CatalogPrinter, type UserPrinter, type UserPrinterDraft } from './domain/printers'
 import { money } from './format'
@@ -28,12 +30,12 @@ export function Impressoras({ list, onAdd, onRemove, msg }: {
       <section className="card">
         <h2>Minha impressora</h2>
         <form onSubmit={(e) => { e.preventDefault(); void save() }} noValidate>
-          <label><span>Nome</span><span className="input"><input value={f.name} onChange={set('name')} placeholder="Ex.: Kobra X da oficina" /></span></label>
-          <label><span>Consumo médio</span><span className="input"><input inputMode="decimal" value={f.watts} onChange={set('watts')} /><em>W</em></span>
-            <small>Estimativa. Meça com um wattímetro se puder.</small></label>
-          <label><span>Preço que você pagou</span><span className="input"><input inputMode="decimal" value={f.price} onChange={set('price')} /><em>R$</em></span></label>
-          <label><span>Vida útil estimada</span><span className="input"><input inputMode="numeric" value={f.life} onChange={set('life')} /><em>h</em></span>
-            <small>Quantas horas você espera imprimir com ela.</small></label>
+          <Fld label="Nome" info={AJUDA.nomeImpressora} mode="text" value={f.name} onChange={(v) => setF({ ...f, name: v })} placeholder="Ex.: Kobra X da oficina" />
+          <div className="trio">
+            <Fld label="Consumo médio" info={AJUDA.wattsImpressora} unit="W" value={f.watts} onChange={(v) => setF({ ...f, watts: v })} />
+            <Fld label="Preço pago" info={AJUDA.precoImpressora} unit="R$" value={f.price} onChange={(v) => setF({ ...f, price: v })} />
+            <Fld label="Vida útil" info={AJUDA.vidaImpressora} mode="numeric" unit="h" value={f.life} onChange={(v) => setF({ ...f, life: v })} />
+          </div>
           <p><button type="submit" className="primary">Salvar impressora</button></p>
           {note && <p className="note" role="status">{note}</p>}
         </form>

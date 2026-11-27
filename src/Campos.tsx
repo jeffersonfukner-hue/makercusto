@@ -235,7 +235,7 @@ const daysIn = (y: number, m: number) => new Date(y, m, 0).getDate()
 const pad = (n: number) => String(n).padStart(2, '0')
 
 // Data em três escolhas, nesta ordem: ano, mês e dia. O dia se ajusta ao mês (fevereiro, meses de 30 dias).
-export function DateParts({ value, onChange, legend }: { value: string; onChange: (v: string) => void; legend: string }) {
+export function DateParts({ value, onChange, legend, info }: { value: string; onChange: (v: string) => void; legend: string; info?: string }) {
   const now = new Date()
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
   const y = m ? Number(m[1]) : now.getFullYear(); const mo = m ? Number(m[2]) : now.getMonth() + 1; const d = m ? Number(m[3]) : now.getDate()
@@ -244,7 +244,7 @@ export function DateParts({ value, onChange, legend }: { value: string; onChange
   const set = (ny: number, nm: number, nd: number) => onChange(`${ny}-${pad(nm)}-${pad(Math.min(nd, daysIn(ny, nm)))}`)
   return (
     <fieldset className="date">
-      <legend>{legend}</legend>
+      <legend className="lab">{legend}{info && <Info label={legend} text={info} />}</legend>
       <div className="three">
         <label><span>Ano</span><span className="input"><select aria-label={`${legend}, ano`} value={y} onChange={(e) => set(Number(e.target.value), mo, d)}>
           {years.map((v) => <option key={v} value={v}>{v}</option>)}</select></span></label>

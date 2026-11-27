@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { DateParts, Combo, Label, QuickAdd } from './Campos'
+import { DateParts, Combo, Fld, Info, Label, QuickAdd } from './Campos'
+import { AJUDA } from './ajuda'
 import { BRANDS, COLORS, canonical, mergeOptions } from './domain/catalogo'
 import { MATERIALS, generateName, lastPurchase, lastTemps, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
 import type { Brand, BrandDraft, Color, ColorDraft } from './domain/marca'
@@ -95,26 +96,30 @@ export function Filamentos({ list, suppliers = [], brands = [], colors = [], onA
       <section className="card">
         <h2>Novo rolo</h2>
         <form onSubmit={(e) => { e.preventDefault(); void save() }} noValidate>
+          <div className="pair">
           <div className="field">
-            <Label htmlFor="f-material">Material</Label>
+            <Label htmlFor="f-material" info={AJUDA.material}>Material</Label>
             <span className="input"><select id="f-material" value={f.material} onChange={(e) => change({ material: e.target.value })}>{MATERIALS.map((m) => <option key={m}>{m}</option>)}</select></span>
           </div>
           <div className="field">
-            <Label htmlFor="f-cor" plus={plus('color', 'Cadastrar nova cor', !!onAddColor)}>Cor (opcional)</Label>
-            <Combo id="f-cor" value={f.color} onChange={(v) => change({ color: v })} options={colorOpts} placeholder="Digite para buscar: preto, azul, dual..." onCreate={onCreate('color', !!onAddColor)} />
+            <Label htmlFor="f-cor" info={AJUDA.cor} plus={plus('color', 'Cadastrar nova cor', !!onAddColor)}>Cor (opcional)</Label>
+            <Combo id="f-cor" value={f.color} onChange={(v) => change({ color: v })} options={colorOpts} placeholder="Buscar: preto, azul, dual..." onCreate={onCreate('color', !!onAddColor)} />
           </div>
+          </div>
+          <div className="pair">
           <div className="field">
-            <Label htmlFor="f-marca" plus={plus('brand', 'Cadastrar nova marca', !!onAddBrand)}>Marca (opcional)</Label>
+            <Label htmlFor="f-marca" info={AJUDA.marca} plus={plus('brand', 'Cadastrar nova marca', !!onAddBrand)}>Marca (opcional)</Label>
             <Combo id="f-marca" value={f.brand} onChange={(v) => change({ brand: v })} options={brandOpts} placeholder="Ex.: Masterprint" onCreate={onCreate('brand', !!onAddBrand)} />
           </div>
           <div className="field">
-            <Label htmlFor="f-forn" plus={plus('supplier', 'Cadastrar novo fornecedor', !!onAddSupplier)}>Fornecedor (opcional)</Label>
+            <Label htmlFor="f-forn" info={AJUDA.fornecedor} plus={plus('supplier', 'Cadastrar novo fornecedor', !!onAddSupplier)}>Fornecedor (opcional)</Label>
             <Combo id="f-forn" value={f.supplier} onChange={(v) => change({ supplier: v })} options={supplierOpts} onCreate={onCreate('supplier', !!onAddSupplier)} />
-            <small>Ao escolher o fornecedor, o último preço pago nele é preenchido.</small>
+          </div>
           </div>
           <div className="field">
             <div className="lab">
               <label htmlFor="f-nome">Nome</label>
+              <Info label="Nome" text={AJUDA.nomeFilamento} />
               <button type="button" className="textbtn" onClick={() => { if (!customName) setName(autoName); setCustomName(!customName) }}>
                 {customName ? 'Voltar ao automático' : 'Personalizar'}
               </button>
@@ -123,17 +128,17 @@ export function Filamentos({ list, suppliers = [], brands = [], colors = [], onA
               <input id="f-nome" value={customName ? name : autoName} readOnly={!customName} maxLength={60}
                 onChange={(e) => setName(e.target.value)} onBlur={() => { if (customName) setName(titleCase(name)) }} />
             </span>
-            <small>{customName ? 'Nome escrito por você.' : 'Montado com material, cor, marca e um código que sobe a cada rolo novo.'}</small>
           </div>
-          <label><span>Preço pago no rolo</span><span className="input"><input inputMode="decimal" value={f.price} onChange={(e) => { setPriceAuto(false); setF({ ...f, price: e.target.value }) }} /><em>R$</em></span>
-            {last && <small>Último preço neste fornecedor: {money(last.priceCents)} em {new Date(last.boughtAt + 'T12:00:00').toLocaleDateString('pt-BR')} ({last.name}).</small>}</label>
-          <label><span>Peso do rolo</span><span className="input"><input inputMode="numeric" value={f.weight} onChange={(e) => { setPriceAuto(false); setF({ ...f, weight: e.target.value }) }} /><em>g</em></span>
-            <small>Rolo comum: 1000 g (1 kg).</small></label>
-          <div className="two">
-            <label><span>Temperatura do bico (opcional)</span><span className="input"><input inputMode="numeric" value={f.nozzle} onChange={(e) => { setTempAuto(false); setF({ ...f, nozzle: e.target.value }) }} /><em>°C</em></span></label>
-            <label><span>Temperatura da mesa (opcional)</span><span className="input"><input inputMode="numeric" value={f.bed} onChange={(e) => { setTempAuto(false); setF({ ...f, bed: e.target.value }) }} /><em>°C</em></span></label>
+          <div className="pair">
+            <Fld label="Preço pago no rolo" info={AJUDA.precoRolo} unit="R$" value={f.price} onChange={(v) => { setPriceAuto(false); setF({ ...f, price: v }) }} />
+            <Fld label="Peso do rolo" info={AJUDA.pesoRolo} mode="numeric" unit="g" value={f.weight} onChange={(v) => { setPriceAuto(false); setF({ ...f, weight: v }) }} />
           </div>
-          <DateParts legend="Data da compra" value={f.boughtAt} onChange={(v) => setF({ ...f, boughtAt: v })} />
+          {last && <small>Último preço neste fornecedor: {money(last.priceCents)} em {new Date(last.boughtAt + 'T12:00:00').toLocaleDateString('pt-BR')} ({last.name}).</small>}
+          <div className="pair">
+            <Fld label="Temp. do bico (opcional)" info={AJUDA.tempBico} mode="numeric" unit="°C" value={f.nozzle} onChange={(v) => { setTempAuto(false); setF({ ...f, nozzle: v }) }} />
+            <Fld label="Temp. da mesa (opcional)" info={AJUDA.tempMesa} mode="numeric" unit="°C" value={f.bed} onChange={(v) => { setTempAuto(false); setF({ ...f, bed: v }) }} />
+          </div>
+          <DateParts legend="Data da compra" info={AJUDA.dataCompra} value={f.boughtAt} onChange={(v) => setF({ ...f, boughtAt: v })} />
           <p><button type="submit" className="primary">Salvar rolo</button></p>
           {msg && <p className="note" role="status">{msg}</p>}
         </form>

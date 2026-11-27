@@ -90,7 +90,7 @@ for (const s of sizes) {
   await page.fill('#f-forn', 'fornecedor com'); await page.click('[role=option]')
   ok((await page.inputValue('#f-forn')) === 'Fornecedor com Nome Bem Comprido', 'fornecedor não foi escolhido')
   ok((await page.inputValue('#f-nome')) === 'PLA Preto Fosco Voolt3D 001', `nome gerado inesperado: ${await page.inputValue('#f-nome')}`)
-  ok(/75/.test(await page.inputValue('label:has-text("Preço pago no rolo") input')), 'último preço do fornecedor não foi preenchido')
+  ok(/75/.test(await page.getByRole('textbox', { name: 'Preço pago no rolo', exact: true }).inputValue()), 'último preço do fornecedor não foi preenchido')
   await page.click('button[aria-label="Cadastrar nova marca"]')
   await page.waitForSelector('[role=dialog]')
   ok(await page.evaluate(() => document.activeElement?.closest('[role=dialog]') !== null), 'foco não foi para a janela de cadastro')

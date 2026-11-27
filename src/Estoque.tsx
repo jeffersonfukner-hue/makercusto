@@ -1,5 +1,6 @@
+import { AJUDA } from './ajuda'
 import { useMemo, useState } from 'react'
-import { Combo, Label, QuickAdd } from './Campos'
+import { Combo, Fld, Label, QuickAdd } from './Campos'
 import { canonical } from './domain/catalogo'
 import type { Supplier, SupplierDraft } from './domain/supplier'
 import { foldText, titleCase } from './domain/texto'
@@ -31,16 +32,18 @@ export function Estoque({ list, suppliers, onAdd, onUpdate, onRemove, onAddSuppl
         <h2>Novo item</h2>
         <p className="note">Insumos que você compra pronto para montar o produto: chaveiros, copos de alumínio, LEDs, velas artificiais, ímãs.</p>
         <form onSubmit={(e) => { e.preventDefault(); void save() }} noValidate>
-          <label><span>Nome</span><span className="input"><input value={f.name} onChange={set('name')} placeholder="Ex.: Copo de alumínio" /></span></label>
-          <label><span>Categoria (opcional)</span><span className="input"><input value={f.category} onChange={set('category')} placeholder="Ex.: Canecas" /></span></label>
+          <div className="pair">
+            <Fld label="Nome" info={AJUDA.nomeItem} mode="text" value={f.name} onChange={(v) => setF({ ...f, name: v })} placeholder="Ex.: Copo de alumínio" />
+            <Fld label="Categoria (opcional)" info={AJUDA.categoria} mode="text" value={f.category} onChange={(v) => setF({ ...f, category: v })} placeholder="Ex.: Canecas" />
+          </div>
           <div className="field">
-            <Label htmlFor="e-forn" plus={onAddSupplier ? { label: 'Cadastrar novo fornecedor', onClick: () => setModal('') } : undefined}>Fornecedor (opcional)</Label>
+            <Label htmlFor="e-forn" info={AJUDA.fornecedor} plus={onAddSupplier ? { label: 'Cadastrar novo fornecedor', onClick: () => setModal('') } : undefined}>Fornecedor (opcional)</Label>
             <Combo id="e-forn" value={f.supplier} onChange={(v) => setF({ ...f, supplier: v })} options={supplierOpts} onCreate={onAddSupplier ? (t) => setModal(t) : undefined} />
           </div>
-          <label><span>Custo de cada unidade</span><span className="input"><input inputMode="decimal" value={f.cost} onChange={set('cost')} /><em>R$</em></span></label>
-          <div className="two">
-            <label><span>Quantidade agora</span><span className="input"><input inputMode="numeric" value={f.qty} onChange={set('qty')} /><em>un</em></span></label>
-            <label><span>Avisar quando chegar a</span><span className="input"><input inputMode="numeric" value={f.min} onChange={set('min')} /><em>un</em></span></label>
+          <div className="trio">
+            <Fld label="Custo de cada" info={AJUDA.custoUnidade} unit="R$" value={f.cost} onChange={(v) => setF({ ...f, cost: v })} />
+            <Fld label="Quantidade agora" info={AJUDA.qtdAgora} mode="numeric" unit="un" value={f.qty} onChange={(v) => setF({ ...f, qty: v })} />
+            <Fld label="Avisar em" info={AJUDA.minimo} mode="numeric" unit="un" value={f.min} onChange={(v) => setF({ ...f, min: v })} />
           </div>
           <p><button type="submit" className="primary">Salvar item</button></p>
           {note && <p className="note" role="status">{note}</p>}

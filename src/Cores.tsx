@@ -1,3 +1,5 @@
+import { AJUDA } from './ajuda'
+import { Fld } from './Campos'
 import { useState } from 'react'
 import { COLORS } from './domain/catalogo'
 import type { Color, ColorDraft } from './domain/marca'
@@ -11,8 +13,7 @@ export function Cores({ list, onAdd, onRemove, msg }: { list: Color[]; onAdd: (d
       <section className="card">
         <h2>Nova cor</h2>
         <form onSubmit={(e) => { e.preventDefault(); void save() }} noValidate>
-          <label><span>Nome</span><span className="input"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Azul Bebê" maxLength={30} /></span></label>
-          <small>Escreva como quiser: o nome fica sempre em "Título" (Preto Fosco).</small>
+          <Fld label="Nome" info={AJUDA.nomeCor} mode="text" value={name} onChange={setName} placeholder="Ex.: Azul Bebê" maxLength={30} />
           <p><button type="submit" className="primary">Salvar cor</button></p>
           {note && <p className="note" role="status">{note}</p>}
         </form>

@@ -1,3 +1,5 @@
+import { AJUDA } from './ajuda'
+import { Fld } from './Campos'
 import { useState } from 'react'
 import type { Supplier, SupplierDraft } from './domain/supplier'
 
@@ -16,10 +18,12 @@ export function Fornecedores({ list, onAdd, onRemove, msg }: {
       <section className="card">
         <h2>Novo fornecedor</h2>
         <form onSubmit={(e) => { e.preventDefault(); void save() }} noValidate>
-          <label><span>Nome</span><span className="input"><input value={f.name} onChange={set('name')} placeholder="Ex.: Masterprint" /></span></label>
-          <label><span>Contato (opcional)</span><span className="input"><input value={f.contact} onChange={set('contact')} placeholder="WhatsApp, e-mail ou telefone" /></span></label>
-          <label><span>Site (opcional)</span><span className="input"><input value={f.site} onChange={set('site')} placeholder="exemplo.com.br" /></span></label>
-          <label><span>Observações (opcional)</span><span className="input"><input value={f.notes} onChange={set('notes')} placeholder="Prazo, frete, condições" /></span></label>
+          <div className="pair">
+            <Fld label="Nome" info={AJUDA.nomeFornecedor} mode="text" value={f.name} onChange={(v) => setF({ ...f, name: v })} placeholder="Ex.: Masterprint" />
+            <Fld label="Contato (opcional)" info={AJUDA.contato} mode="text" value={f.contact} onChange={(v) => setF({ ...f, contact: v })} placeholder="WhatsApp, e-mail ou telefone" />
+            <Fld label="Site (opcional)" info={AJUDA.site} mode="text" value={f.site} onChange={(v) => setF({ ...f, site: v })} placeholder="exemplo.com.br" />
+            <Fld label="Observações (opcional)" info={AJUDA.obs} mode="text" value={f.notes} onChange={(v) => setF({ ...f, notes: v })} placeholder="Prazo, frete, condições" />
+          </div>
           <p><button type="submit" className="primary">Salvar fornecedor</button></p>
           {note && <p className="note" role="status">{note}</p>}
         </form>

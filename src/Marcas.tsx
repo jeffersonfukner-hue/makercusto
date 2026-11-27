@@ -1,3 +1,5 @@
+import { AJUDA } from './ajuda'
+import { Fld } from './Campos'
 import { useState } from 'react'
 import { BRANDS } from './domain/catalogo'
 import type { Brand, BrandDraft } from './domain/marca'
@@ -20,13 +22,12 @@ export function Marcas({ list, onAdd, onRemove, msg }: { list: Brand[]; onAdd: (
       <section className="card">
         <h2>Nova marca</h2>
         <form onSubmit={(e) => { e.preventDefault(); void save() }} noValidate>
-          <label><span>Nome</span><span className="input"><input value={f.name} onChange={set('name')} placeholder="Ex.: Voolt3D" maxLength={30} /></span></label>
-          <label><span>Site (opcional)</span><span className="input"><input value={f.site} onChange={set('site')} placeholder="exemplo.com.br" /></span></label>
-          <div className="two">
-            <label><span>Temperatura do bico (opcional)</span><span className="input"><input inputMode="numeric" value={f.nozzle} onChange={set('nozzle')} /><em>°C</em></span></label>
-            <label><span>Temperatura da mesa (opcional)</span><span className="input"><input inputMode="numeric" value={f.bed} onChange={set('bed')} /><em>°C</em></span></label>
+          <div className="pair">
+            <Fld label="Nome" info={AJUDA.nomeMarca} mode="text" value={f.name} onChange={(v) => setF({ ...f, name: v })} placeholder="Ex.: Voolt3D" maxLength={30} />
+            <Fld label="Site (opcional)" info={AJUDA.site} mode="text" value={f.site} onChange={(v) => setF({ ...f, site: v })} placeholder="exemplo.com.br" />
+            <Fld label="Temp. do bico (opcional)" info={AJUDA.tempBico} mode="numeric" unit="°C" value={f.nozzle} onChange={(v) => setF({ ...f, nozzle: v })} />
+            <Fld label="Temp. da mesa (opcional)" info={AJUDA.tempMesa} mode="numeric" unit="°C" value={f.bed} onChange={(v) => setF({ ...f, bed: v })} />
           </div>
-          <small>As temperaturas vêm preenchidas quando você escolhe essa marca em um filamento novo.</small>
           <p><button type="submit" className="primary">Salvar marca</button></p>
           {note && <p className="note" role="status">{note}</p>}
         </form>
