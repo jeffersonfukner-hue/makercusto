@@ -11,7 +11,8 @@ Regra do projeto: **cada coisa existe em um lugar só.** Mudou ali, muda em tudo
 | Cálculo de custo e de produto | `domain/` (funções puras, com teste) | Calculadora, Produto, Painel |
 | Histórico por nome | `domain/versions.ts` | Produto, Painel |
 | O que falta + busca de campo | `Pendencias.tsx` | Produto |
-| Cores, sombras, bordas | `styles.css` (variáveis `--main`, `--amber`, `--ink`) | tudo |
+| Cores, sombras, bordas | `styles.css` (variáveis de cor no `:root`; nenhuma tela usa cor solta) | tudo |
+| Temas (Normal, Neon) | `Temas.tsx` + blocos `:root[data-tema="..."]` em `styles.css` | o app inteiro |
 
 ## Repetições encontradas (a unificar na próxima rodada)
 1. **Janela (modal):** `modalback` escrito em 3 lugares. Criar `Modal` único (foco, Esc, clique fora).
@@ -27,3 +28,8 @@ Regra do projeto: **cada coisa existe em um lugar só.** Mudou ali, muda em tudo
 
 ## Como mudar um padrão
 Alterar o componente ou a variável de CSS. As telas não repetem estilo próprio. Se uma tela precisa de uma exceção, a exceção vira uma opção do componente, não uma cópia.
+
+## Como criar um tema novo
+1. Em `Temas.tsx`, incluir `{ id: 'x', label: 'X' }` em `TEMAS`.
+2. Em `styles.css`, copiar o bloco `:root[data-tema="neon"]` e trocar as variáveis (`--bg`, `--panel`, `--ink`, `--main`, `--hero-bg`...). Brilhos e gradientes extras ficam no mesmo bloco.
+3. Pronto: o tema vale para todas as telas, atuais e futuras. Regra: **nenhuma cor escrita direto em componente ou tela**, só variáveis.

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Composition } from './Composition'
 import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
+import { TemaSeletor } from './Temas'
 import { addSaved, KINDS, summarize, type Kind, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { fromHMS, toHMS } from './domain/time'
@@ -252,6 +253,7 @@ function Nav({ route, account }: { route: string; account?: Account }) {
           <a href="#/inicio" aria-current={cur('inicio')} onClick={close}>Início e preferências</a>
         </div>
       </details>
+      <TemaSeletor />
       {account && (account.user
         ? <span className="acct"><span title={account.user}>{account.user}</span><button type="button" onClick={account.signOut}>Sair</button></span>
         : <button type="button" className="acct" onClick={account.signIn}>Entrar com Google</button>)}

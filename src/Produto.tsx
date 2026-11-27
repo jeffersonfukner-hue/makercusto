@@ -215,7 +215,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
 
       <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
         <div className="tabs" role="tablist" aria-label="Seções do produto">
-          {([['partes', 'Partes', s.parts.length], ['filamentos', 'Filamentos', colorGroups.length], ['impressora', 'Impressora', 0], ['itens', 'Itens', s.bought.length], ['venda', 'Venda', 0], ['produtos', 'Meus produtos', products.length]] as const).map(([k, l, n]) => (
+          {([['partes', 'Partes', s.parts.length], ['filamentos', 'Filamentos', colorGroups.length], ['impressora', 'Impressora', 0], ['itens', 'Itens', s.bought.length], ['venda', 'Venda', 0], ['produtos', 'Produtos', products.length]] as const).map(([k, l, n]) => (
             <button type="button" role="tab" key={k} id={`tab-${k}`} aria-selected={tab === k} aria-controls={`painel-${k}`} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
               {l}{n > 0 && <span className="cnt">{n}</span>}{miss[k] > 0 && <span className="dot" title="Falta preencher" aria-label="falta preencher" />}
             </button>

@@ -105,3 +105,8 @@
 - Quando faltam 2 ou mais preços de filamento, a lista oferece "mesmo preço para as N cores" (digitando o preço ou escolhendo um filamento cadastrado). Depois dá para ajustar cor por cor.
 - Busca de campo como no fatiador: botão Buscar na barra das abas ou Ctrl/Cmd+K; digita parte do nome (sem acento), Enter vai ao primeiro resultado.
 - Depois: o mesmo na Calculadora e nos cadastros; preço por rolo com validade (acabou o rolo, vale o próximo preço).
+
+## Temas visuais
+- Todas as cores saíram das regras e viraram variáveis (`--panel`, `--field`, `--hero-bg`, `--on-dark`, `--on-main`...). Tema Normal ficou igual ao anterior.
+- Tema Neon (gradientes, brilho, fundo escuro) só redefine variáveis, então vale para todas as telas. Seletor "Tema" no menu; escolha guardada neste navegador.
+- Depois: guardar o tema na conta (nuvem); temas extras (ex.: claro suave, alto contraste).
