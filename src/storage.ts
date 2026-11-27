@@ -44,3 +44,9 @@ export const readSupplies = () => rd<Supply>('makercusto:insumos', parseSupplies
 export const writeSupplies = (l: Supply[]) => wr('makercusto:insumos', l)
 export function readStartPage(): 'calculadora' | 'inicio' { try { return localStorage.getItem('makercusto:abrir') === 'inicio' ? 'inicio' : 'calculadora' } catch { return 'calculadora' } }
 export function writeStartPage(v: 'calculadora' | 'inicio') { try { localStorage.setItem('makercusto:abrir', v) } catch { /* vale só nesta sessão */ } }
+
+import { parseBrands, parseColors, type Brand, type Color } from './domain/marca'
+export const readBrands = () => rd<Brand>('makercusto:marcas', parseBrands)
+export const writeBrands = (l: Brand[]) => wr('makercusto:marcas', l)
+export const readColors = () => rd<Color>('makercusto:cores', parseColors)
+export const writeColors = (l: Color[]) => wr('makercusto:cores', l)

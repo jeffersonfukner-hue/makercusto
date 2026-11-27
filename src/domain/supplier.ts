@@ -1,4 +1,5 @@
 // Fornecedores: de onde vêm filamentos e insumos.
+import { foldText, titleCase } from './texto'
 export interface Supplier { id: string; name: string; contact: string; site: string; notes: string }
 export type SupplierDraft = Omit<Supplier, 'id'>
 export const MAX_SUPPLIERS = 50
@@ -17,8 +18,8 @@ export function addSupplier(list: Supplier[], d: SupplierDraft, id: string): Sup
   const e = validateSupplier(d)
   if (e.length) throw new Error(e[0])
   if (list.length >= MAX_SUPPLIERS) throw new Error(`Limite de ${MAX_SUPPLIERS} fornecedores. Exclua algum.`)
-  if (list.some((s) => s.name.trim().toLowerCase() === d.name.trim().toLowerCase())) throw new Error('Já existe um fornecedor com esse nome.')
-  return [...list, { id, name: d.name.trim(), contact: d.contact.trim(), site: d.site.trim(), notes: d.notes.trim() }]
+  if (list.some((s) => foldText(s.name).trim() === foldText(d.name).trim())) throw new Error('Já existe um fornecedor com esse nome.')
+  return [...list, { id, name: titleCase(d.name), contact: d.contact.trim(), site: d.site.trim(), notes: d.notes.trim() }]
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
 }
 

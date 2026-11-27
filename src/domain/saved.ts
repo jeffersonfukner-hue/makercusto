@@ -1,3 +1,4 @@
+import { titleCase } from './texto'
 import { calculateCost, validate, type CostInput, type CostResult } from './cost'
 
 export interface SavedCalc { id: string; name: string; savedAt: string; input: CostInput }
@@ -5,7 +6,7 @@ export interface JobSummary extends SavedCalc { result: CostResult; revenue: num
 export const MAX_SAVED = 50
 
 export function addSaved(list: SavedCalc[], name: string, input: CostInput, id: string, savedAt: string): SavedCalc[] {
-  const n = name.trim()
+  const n = titleCase(name)
   if (!n) throw new Error('Dê um nome ao trabalho.')
   if (validate(input).length) throw new Error('Corrija os campos antes de salvar.')
   return [{ id, name: n.slice(0, 60), savedAt, input }, ...list].slice(0, MAX_SAVED)

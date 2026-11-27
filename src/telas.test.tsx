@@ -17,7 +17,7 @@ describe('telas novas', () => {
     const base = { name: 'PLA preto 001', supplier: 'F', brand: '', material: 'PLA', color: 'preto', priceCents: 6800, weightG: 1000, boughtAt: '2026-10-01' }
     const l = addFilament(addFilament([], base, 'a'), { ...base, name: 'PLA preto 002', priceCents: 7500, boughtAt: '2026-11-20' }, 'b')
     const html = renderToString(<Filamentos list={l} onAdd={asyncNoop} onRemove={noop} msg="" />)
-    expect(html).toContain('PLA preto 001'); expect(html).toContain('PLA preto 002')
+    expect(html).toContain('PLA Preto 001'); expect(html).toContain('PLA Preto 002')
     expect(html).toMatch(/R\$\s75,00/); expect(html).toMatch(/R\$\s68,00/)
     expect(html).toContain('data-label="Preço por kg"')
   })
@@ -67,7 +67,7 @@ describe('telas: fornecedores, estoque e landing', () => {
   it('estoque: valor parado, aviso de baixo e botões de entrada e saída', () => {
     const l = addSupply(addSupply([], { name: 'Copo de alumínio', category: '', supplier: '', qty: 2, min: 5, costCents: 1250 }, 'a'), { name: 'LED', category: '', supplier: '', qty: 100, min: 10, costCents: 35 }, 'b')
     const html = renderToString(<Estoque list={l} suppliers={[]} onAdd={asyncNoop} onUpdate={asyncNoop} onRemove={noop} msg="" />).replace(/<!-- -->/g, '')
-    expect(html).toContain('Estoque baixo'); expect(html).toContain('Copo de alumínio (2)')
+    expect(html).toContain('Estoque baixo'); expect(html).toContain('Copo de Alumínio (2)')
     expect(html).toMatch(/R\$\s60,00/) // 2 x 12,50 + 100 x 0,35
     expect(html).toContain('Tirar 1 de LED'); expect(html).toContain('Colocar 10 em LED')
   })

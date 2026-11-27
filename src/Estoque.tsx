@@ -1,21 +1,26 @@
-import { useState } from 'react'
-import type { Supplier } from './domain/supplier'
+import { useMemo, useState } from 'react'
+import { Combo, Label, QuickAdd } from './Campos'
+import { canonical } from './domain/catalogo'
+import type { Supplier, SupplierDraft } from './domain/supplier'
+import { foldText, titleCase } from './domain/texto'
 import { isLow, stockValueCents, withQty, type Supply, type SupplyDraft } from './domain/supply'
 import { money } from './format'
 
 const empty = () => ({ name: '', category: '', supplier: '', qty: '0', min: '0', cost: '' })
 const toCents = (s: string) => Math.round(Number(s.replace(',', '.')) * 100)
 
-export function Estoque({ list, suppliers, onAdd, onUpdate, onRemove, msg }: {
-  list: Supply[]; suppliers: Supplier[]; onAdd: (d: SupplyDraft) => Promise<void>; onUpdate: (s: Supply) => Promise<void>
+export function Estoque({ list, suppliers, onAdd, onUpdate, onRemove, onAddSupplier, msg }: {
+  list: Supply[]; suppliers: Supplier[]; onAddSupplier?: (d: SupplierDraft) => Promise<void>; onAdd: (d: SupplyDraft) => Promise<void>; onUpdate: (s: Supply) => Promise<void>
   onRemove: (id: string) => void; msg: string
 }) {
   const [f, setF] = useState(empty)
   const [note, setNote] = useState('')
+  const [modal, setModal] = useState<string | null>(null)
+  const supplierOpts = useMemo(() => suppliers.map((s) => s.name), [suppliers])
   const set = (k: keyof ReturnType<typeof empty>) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
   const save = async () => {
     try {
-      await onAdd({ name: f.name, category: f.category, supplier: f.supplier, qty: Number(f.qty), min: Number(f.min), costCents: f.cost.trim() === '' ? NaN : toCents(f.cost) })
+      await onAdd({ name: f.name, category: f.category, supplier: canonical(supplierOpts, f.supplier), qty: Number(f.qty), min: Number(f.min), costCents: f.cost.trim() === '' ? NaN : toCents(f.cost) })
       setF({ ...empty(), category: f.category, supplier: f.supplier }); setNote('Salvo.')
     } catch (e) { setNote((e as Error).message) }
   }
@@ -28,8 +33,10 @@ export function Estoque({ list, suppliers, onAdd, onUpdate, onRemove, msg }: {
         <form onSubmit={(e) => { e.preventDefault(); void save() }} noValidate>
           <label><span>Nome</span><span className="input"><input value={f.name} onChange={set('name')} placeholder="Ex.: Copo de alumínio" /></span></label>
           <label><span>Categoria (opcional)</span><span className="input"><input value={f.category} onChange={set('category')} placeholder="Ex.: Canecas" /></span></label>
-          <label><span>Fornecedor (opcional)</span><span className="input"><input list="fornecedores-estoque" value={f.supplier} onChange={set('supplier')} /></span></label>
-          <datalist id="fornecedores-estoque">{suppliers.map((x) => <option key={x.id} value={x.name} />)}</datalist>
+          <div className="field">
+            <Label htmlFor="e-forn" plus={onAddSupplier ? { label: 'Cadastrar novo fornecedor', onClick: () => setModal('') } : undefined}>Fornecedor (opcional)</Label>
+            <Combo id="e-forn" value={f.supplier} onChange={(v) => setF({ ...f, supplier: v })} options={supplierOpts} onCreate={onAddSupplier ? (t) => setModal(t) : undefined} />
+          </div>
           <label><span>Custo de cada unidade</span><span className="input"><input inputMode="decimal" value={f.cost} onChange={set('cost')} /><em>R$</em></span></label>
           <div className="two">
             <label><span>Quantidade agora</span><span className="input"><input inputMode="numeric" value={f.qty} onChange={set('qty')} /><em>un</em></span></label>
@@ -73,6 +80,12 @@ export function Estoque({ list, suppliers, onAdd, onUpdate, onRemove, msg }: {
         )}
         <p className="note">Entrada e saída são feitas aqui, na mão. A baixa automática por pedido vem junto com os pedidos.</p>
       </section>
+      {modal !== null && onAddSupplier && <QuickAdd title="Novo fornecedor" label="Nome do fornecedor" placeholder="Ex.: Masterprint" initial={modal}
+        onSave={async (n) => {
+          const existing = supplierOpts.find((o) => foldText(o) === foldText(n))
+          if (!existing) await onAddSupplier({ name: titleCase(n), contact: '', site: '', notes: '' })
+          setF({ ...f, supplier: existing ?? titleCase(n) })
+        }} onClose={() => setModal(null)} />}
     </div>
   )
 }

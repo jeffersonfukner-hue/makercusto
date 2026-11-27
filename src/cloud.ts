@@ -1,9 +1,11 @@
 import type { CostInput } from './domain/cost'
 import { addSaved, fromCloudRows, type SavedCalc } from './domain/saved'
-import { parseFilaments, validateFilament, type Filament, type FilamentDraft } from './domain/filament'
+import { normalizeFilament, parseFilaments, validateFilament, type Filament, type FilamentDraft } from './domain/filament'
+import { normalizeBrand, parseBrands, parseColors, validateBrand, validateColor, type Brand, type BrandDraft, type Color, type ColorDraft } from './domain/marca'
+import { titleCase } from './domain/texto'
 import { validatePrinter, type UserPrinter, type UserPrinterDraft } from './domain/printers'
 import { validateSupplier, type Supplier, type SupplierDraft } from './domain/supplier'
-import { validateSupply, type Supply, type SupplyDraft } from './domain/supply'
+import { normalizeSupply, validateSupply, type Supply, type SupplyDraft } from './domain/supply'
 import { addSavedProduct, productsFromRows, type ProductInput, type SavedProduct } from './domain/product'
 
 // Só o que usamos do cliente do Supabase, para poder testar sem rede.
@@ -28,9 +30,10 @@ export function createCloud(db: Db) {
       async save(d: FilamentDraft): Promise<void> {
         const e = validateFilament(d)
         if (e.length) throw new Error(e[0])
-        const { error } = await db.from('filamentos').insert({ nome: d.name.trim(), fornecedor: d.supplier.trim(), marca: d.brand.trim(), material: d.material,
-          cor: d.color.trim(), preco_centavos: d.priceCents, peso_g: d.weightG, comprado_em: d.boughtAt,
-          temp_bico: d.nozzleC ?? null, temp_mesa: d.bedC ?? null })
+        const n = normalizeFilament(d)
+        const { error } = await db.from('filamentos').insert({ nome: n.name, fornecedor: n.supplier, marca: n.brand, material: n.material,
+          cor: n.color, preco_centavos: n.priceCents, peso_g: n.weightG, comprado_em: n.boughtAt,
+          temp_bico: n.nozzleC ?? null, temp_mesa: n.bedC ?? null })
         if (error) throw new Error(limitMsg('filamentos', 100, error, 'Não foi possível salvar o filamento na nuvem.'))
       },
       async remove(id: string): Promise<void> {
@@ -64,7 +67,7 @@ export function createCloud(db: Db) {
       async save(d: SupplierDraft): Promise<void> {
         const e = validateSupplier(d)
         if (e.length) throw new Error(e[0])
-        const { error } = await db.from('fornecedores').insert({ nome: d.name.trim(), contato: d.contact.trim(), site: d.site.trim(), obs: d.notes.trim() })
+        const { error } = await db.from('fornecedores').insert({ nome: titleCase(d.name), contato: d.contact.trim(), site: d.site.trim(), obs: d.notes.trim() })
         if (error) throw new Error(limitMsg('fornecedores', 50, error, 'Não foi possível salvar o fornecedor na nuvem.'))
       },
       async remove(id: string): Promise<void> {
@@ -82,18 +85,58 @@ export function createCloud(db: Db) {
       async save(d: SupplyDraft): Promise<void> {
         const e = validateSupply(d)
         if (e.length) throw new Error(e[0])
-        const { error } = await db.from('insumos').insert({ nome: d.name.trim(), categoria: d.category.trim(), fornecedor: d.supplier.trim(), qtd: d.qty, minimo: d.min, custo_centavos: d.costCents })
+        const n = normalizeSupply(d)
+        const { error } = await db.from('insumos').insert({ nome: n.name, categoria: n.category, fornecedor: n.supplier, qtd: n.qty, minimo: n.min, custo_centavos: n.costCents })
         if (error) throw new Error(limitMsg('itens', 200, error, 'Não foi possível salvar o item na nuvem.'))
       },
       async update(id: string, s: Supply): Promise<void> {
         const e = validateSupply(s)
         if (e.length) throw new Error(e[0])
-        const { error } = await db.from('insumos').update({ nome: s.name.trim(), categoria: s.category.trim(), fornecedor: s.supplier.trim(), qtd: s.qty, minimo: s.min, custo_centavos: s.costCents }).eq('id', id)
+        const n = normalizeSupply(s)
+        const { error } = await db.from('insumos').update({ nome: n.name, categoria: n.category, fornecedor: n.supplier, qtd: n.qty, minimo: n.min, custo_centavos: n.costCents }).eq('id', id)
         if (error) throw new Error('Não foi possível atualizar o item na nuvem.')
       },
       async remove(id: string): Promise<void> {
         const { error } = await db.from('insumos').delete().eq('id', id)
         if (error) throw new Error('Não foi possível excluir o item na nuvem.')
+      },
+    },
+    brands: {
+      async list(): Promise<Brand[]> {
+        const { data, error } = await db.from('marcas').select('id, nome, site, temp_bico, temp_mesa').order('nome', { ascending: true })
+        if (error) throw new Error('Não foi possível carregar as marcas da nuvem.')
+        return parseBrands(JSON.stringify((data ?? []).map((r: any) => ({ id: r.id, name: r.nome, site: r.site,
+          ...(r.temp_bico != null ? { nozzleC: r.temp_bico } : {}), ...(r.temp_mesa != null ? { bedC: r.temp_mesa } : {}) }))))
+      },
+      async save(d: BrandDraft): Promise<void> {
+        const e = validateBrand(d)
+        if (e.length) throw new Error(e[0])
+        const n = normalizeBrand(d)
+        const { error } = await db.from('marcas').insert({ nome: n.name, site: n.site, temp_bico: d.nozzleC ?? null, temp_mesa: d.bedC ?? null })
+        if (error?.code === '23505') throw new Error('Você já cadastrou essa marca.')
+        if (error) throw new Error(limitMsg('marcas', 100, error, 'Não foi possível salvar a marca na nuvem.'))
+      },
+      async remove(id: string): Promise<void> {
+        const { error } = await db.from('marcas').delete().eq('id', id)
+        if (error) throw new Error('Não foi possível excluir a marca na nuvem.')
+      },
+    },
+    colors: {
+      async list(): Promise<Color[]> {
+        const { data, error } = await db.from('cores').select('id, nome').order('nome', { ascending: true })
+        if (error) throw new Error('Não foi possível carregar as cores da nuvem.')
+        return parseColors(JSON.stringify((data ?? []).map((r: any) => ({ id: r.id, name: r.nome }))))
+      },
+      async save(d: ColorDraft): Promise<void> {
+        const e = validateColor(d)
+        if (e.length) throw new Error(e[0])
+        const { error } = await db.from('cores').insert({ nome: titleCase(d.name) })
+        if (error?.code === '23505') throw new Error('Você já cadastrou essa cor.')
+        if (error) throw new Error(limitMsg('cores', 100, error, 'Não foi possível salvar a cor na nuvem.'))
+      },
+      async remove(id: string): Promise<void> {
+        const { error } = await db.from('cores').delete().eq('id', id)
+        if (error) throw new Error('Não foi possível excluir a cor na nuvem.')
       },
     },
     waitlist: {
@@ -115,7 +158,7 @@ export function createCloud(db: Db) {
       async save(d: UserPrinterDraft): Promise<void> {
         const e = validatePrinter(d)
         if (e.length) throw new Error(e[0])
-        const { error } = await db.from('impressoras').insert({ nome: d.name.trim(), dados: { watts: d.watts, priceCents: d.priceCents, lifetimeHours: d.lifetimeHours } })
+        const { error } = await db.from('impressoras').insert({ nome: titleCase(d.name).slice(0, 60), dados: { watts: d.watts, priceCents: d.priceCents, lifetimeHours: d.lifetimeHours } })
         if (error) throw new Error(limitMsg('impressoras', 20, error, 'Não foi possível salvar a impressora na nuvem.'))
       },
       async remove(id: string): Promise<void> {

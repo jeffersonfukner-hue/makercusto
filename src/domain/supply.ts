@@ -1,5 +1,6 @@
 // Estoque de insumos: o que você compra pronto para montar o produto (chaveiros, copos, LEDs, ímãs...).
 // Dinheiro em centavos inteiros. Quantidade em unidades inteiras.
+import { titleCase } from './texto'
 export interface Supply {
   id: string
   name: string
@@ -24,11 +25,13 @@ export function validateSupply(d: SupplyDraft): string[] {
   return e
 }
 
+export const normalizeSupply = (d: SupplyDraft): SupplyDraft => ({ ...d, name: titleCase(d.name), category: titleCase(d.category), supplier: titleCase(d.supplier) })
+
 export function addSupply(list: Supply[], d: SupplyDraft, id: string): Supply[] {
   const e = validateSupply(d)
   if (e.length) throw new Error(e[0])
   if (list.length >= MAX_SUPPLIES) throw new Error(`Limite de ${MAX_SUPPLIES} itens. Exclua algum.`)
-  return sortSupplies([...list, { id, name: d.name.trim(), category: d.category.trim(), qty: d.qty, min: d.min, costCents: d.costCents, supplier: d.supplier.trim() }])
+  return sortSupplies([...list, { id, ...normalizeSupply(d) }])
 }
 
 export const sortSupplies = (l: Supply[]) => [...l].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))

@@ -1,3 +1,4 @@
+import { titleCase } from './texto'
 // Produto com partes. Cada parte é uma impressão (uma placa do fatiador) com uma ou mais cores.
 // O fatiador separa o peso de cada cor em peça (model), purga (flushed) e torre (tower): tudo isso é filamento gasto.
 // Itens comprados (ex.: copo de alumínio) entram só como custo, fora da taxa de falhas.
@@ -127,7 +128,7 @@ export interface SavedProduct { id: string; name: string; savedAt: string; input
 export const MAX_PRODUCTS = 50
 
 export function addSavedProduct(list: SavedProduct[], name: string, input: ProductInput, id: string, savedAt: string): SavedProduct[] {
-  const n = name.trim()
+  const n = titleCase(name)
   if (!n) throw new Error('Dê um nome ao produto.')
   if (validateProduct(input).length) throw new Error('Corrija os campos antes de salvar.')
   if (list.length >= MAX_PRODUCTS) throw new Error(`Limite de ${MAX_PRODUCTS} produtos. Exclua algum.`)

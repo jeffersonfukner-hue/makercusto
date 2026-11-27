@@ -17,7 +17,7 @@ describe('nuvem: filamentos', () => {
   it('salva com os nomes das colunas e sem user_id', async () => {
     const f = fake(); await createCloud(f.db).filaments.save(fil)
     expect(f.from).toHaveBeenCalledWith('filamentos')
-    expect(f.insert).toHaveBeenCalledWith({ nome: 'PLA preto 001', fornecedor: 'Forn', marca: 'Masterprint', material: 'PLA', cor: 'preto', preco_centavos: 6800, peso_g: 1000, comprado_em: '2026-11-20', temp_bico: null, temp_mesa: null })
+    expect(f.insert).toHaveBeenCalledWith({ nome: 'PLA Preto 001', fornecedor: 'Forn', marca: 'Masterprint', material: 'PLA', cor: 'Preto', preco_centavos: 6800, peso_g: 1000, comprado_em: '2026-11-20', temp_bico: null, temp_mesa: null })
   })
   it('valida antes de chamar a rede', async () => {
     const f = fake()

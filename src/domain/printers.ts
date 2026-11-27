@@ -1,3 +1,4 @@
+import { titleCase } from './texto'
 // Impressoras. O catálogo traz só dados com fonte (potência nominal e volume do fabricante).
 // Consumo médio, preço e vida útil são hipóteses do usuário: o catálogo não os inventa.
 export interface CatalogPrinter {
@@ -42,7 +43,7 @@ export function addPrinter(list: UserPrinter[], d: UserPrinterDraft, id: string)
   const e = validatePrinter(d)
   if (e.length) throw new Error(e[0])
   if (list.length >= MAX_PRINTERS) throw new Error(`Limite de ${MAX_PRINTERS} impressoras. Exclua alguma.`)
-  return [...list, { id, name: d.name.trim().slice(0, 60), watts: d.watts, priceCents: d.priceCents, lifetimeHours: d.lifetimeHours }]
+  return [...list, { id, name: titleCase(d.name).slice(0, 60), watts: d.watts, priceCents: d.priceCents, lifetimeHours: d.lifetimeHours }]
 }
 
 // Clonar do catálogo: leva o nome; consumo, preço e vida útil ficam com os valores de partida do usuário.

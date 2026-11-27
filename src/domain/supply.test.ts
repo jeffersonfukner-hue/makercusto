@@ -6,7 +6,7 @@ const d: SupplyDraft = { name: 'Copo de alumínio', category: 'Canecas', qty: 10
 describe('estoque de insumos', () => {
   it('cadastra e ordena por nome', () => {
     const l = addSupply(addSupply([], { ...d, name: 'Ímã' }, 'b'), d, 'a')
-    expect(l.map((s) => s.name)).toEqual(['Copo de alumínio', 'Ímã'])
+    expect(l.map((s) => s.name)).toEqual(['Copo de Alumínio', 'Ímã'])
   })
   it('entrada e saída nunca passam de zero para baixo', () => {
     const [s] = addSupply([], d, 'a')

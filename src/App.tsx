@@ -9,9 +9,12 @@ import { addFilament, filamentLabel, pricePerKg, type Filament, type FilamentDra
 import { addPrinter, type UserPrinter, type UserPrinterDraft } from './domain/printers'
 import { addSavedProduct, type ProductInput, type SavedProduct } from './domain/product'
 import { addSupplier, type Supplier, type SupplierDraft } from './domain/supplier'
+import { addBrand, addColor, type Brand, type BrandDraft, type Color, type ColorDraft } from './domain/marca'
 import { addSupply, type Supply, type SupplyDraft } from './domain/supply'
 import { Estoque } from './Estoque'
+import { Cores } from './Cores'
 import { Filamentos } from './Filamentos'
+import { Marcas } from './Marcas'
 import { Fornecedores } from './Fornecedores'
 import { LandingHero, LandingSections } from './Landing'
 import { Impressoras } from './Impressoras'
@@ -20,7 +23,7 @@ import { Produto } from './Produto'
 import { useList } from './useList'
 import { ESSENTIAL, inputForMode, type Mode } from './modes'
 import { cloud, onUser, signInWithGoogle, signOut, supabase } from './supabase'
-import { readFilaments, readMode, readPrinters, readProducts, readSaved, readStartPage, readSuppliers, readSupplies, writeFilaments, writeMode, writePrinters, writeProducts, writeSaved, writeStartPage, writeSuppliers, writeSupplies } from './storage'
+import { readBrands, readColors, writeBrands, writeColors, readFilaments, readMode, readPrinters, readProducts, readSaved, readStartPage, readSuppliers, readSupplies, writeFilaments, writeMode, writePrinters, writeProducts, writeSaved, writeStartPage, writeSuppliers, writeSupplies } from './storage'
 
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')))
 
@@ -32,7 +35,7 @@ function useRoute() {
     return () => removeEventListener('hashchange', on)
   }, [])
   const r = hash.replace(/^#\/?/, '')
-  return (['painel', 'filamentos', 'produto', 'impressoras', 'fornecedores', 'estoque', 'inicio'] as const).find((x) => x === r) ?? 'calculadora'
+  return (['painel', 'filamentos', 'produto', 'impressoras', 'fornecedores', 'marcas', 'cores', 'estoque', 'inicio'] as const).find((x) => x === r) ?? 'calculadora'
 }
 
 const toForm = (i: CostInput): Form => {
@@ -65,6 +68,10 @@ export default function App() {
     addLocal: (l, d, id) => addSavedProduct(l, d.name, d.input, id, new Date().toISOString()), toDraft: (p) => ({ name: p.name, input: p.input }) })
   const sup = useList<Supplier, SupplierDraft>({ read: readSuppliers, write: writeSuppliers, user, api: cloud?.suppliers ?? null,
     addLocal: addSupplier, toDraft: ({ id: _id, ...d }) => d })
+  const brd = useList<Brand, BrandDraft>({ read: readBrands, write: writeBrands, user, api: cloud?.brands ?? null,
+    addLocal: addBrand, toDraft: ({ id: _id, ...d }) => d })
+  const col = useList<Color, ColorDraft>({ read: readColors, write: writeColors, user, api: cloud?.colors ?? null,
+    addLocal: addColor, toDraft: ({ id: _id, ...d }) => d })
   const stock = useList<Supply, SupplyDraft>({ read: readSupplies, write: writeSupplies, user, api: cloud?.supplies ?? null,
     addLocal: addSupply, toDraft: ({ id: _id, ...d }) => d })
   // Ao entrar na conta, abre a tela que a pessoa escolheu (padrão: a calculadora).
@@ -108,7 +115,8 @@ export default function App() {
         <h1>Meus filamentos</h1>
         <p className="lead">Cadastre cada rolo com o preço que você pagou. Na calculadora (modo Avançado) você escolhe o rolo e o custo já vem certo.</p>
         <ImportBar count={fil.localCount} what="filamentos" onImport={fil.importLocal} />
-        <Filamentos list={fil.items} suppliers={sup.items} onAdd={fil.add} onRemove={fil.remove} msg={fil.msg} />
+        <Filamentos list={fil.items} suppliers={sup.items} brands={brd.items} colors={col.items} onAdd={fil.add} onRemove={fil.remove}
+          onAddSupplier={sup.add} onAddBrand={brd.add} onAddColor={col.add} msg={fil.msg} />
       </main>
     )
   }
@@ -123,6 +131,28 @@ export default function App() {
       </main>
     )
   }
+  if (route === 'marcas') {
+    return (
+      <main className="wrap">
+        <Nav route="marcas" account={account} />
+        <h1>Marcas</h1>
+        <p className="lead">Marcas de filamento além das sugestões, com site e as temperaturas que o fabricante recomenda.</p>
+        <ImportBar count={brd.localCount} what="marcas" onImport={brd.importLocal} />
+        <Marcas list={brd.items} onAdd={brd.add} onRemove={brd.remove} msg={brd.msg} />
+      </main>
+    )
+  }
+  if (route === 'cores') {
+    return (
+      <main className="wrap">
+        <Nav route="cores" account={account} />
+        <h1>Cores</h1>
+        <p className="lead">Cores além da lista de sugestões. Elas aparecem na busca ao cadastrar um filamento.</p>
+        <ImportBar count={col.localCount} what="cores" onImport={col.importLocal} />
+        <Cores list={col.items} onAdd={col.add} onRemove={col.remove} msg={col.msg} />
+      </main>
+    )
+  }
   if (route === 'estoque') {
     return (
       <main className="wrap">
@@ -130,7 +160,7 @@ export default function App() {
         <h1>Estoque de insumos</h1>
         <p className="lead">Chaveiros, copos de alumínio, LEDs, ímãs e tudo que você compra pronto. Esses itens também aparecem no produto com partes.</p>
         <ImportBar count={stock.localCount} what="itens de estoque" onImport={stock.importLocal} />
-        <Estoque list={stock.items} suppliers={sup.items} onAdd={stock.add} onUpdate={stock.update} onRemove={stock.remove} msg={stock.msg} />
+        <Estoque list={stock.items} suppliers={sup.items} onAdd={stock.add} onUpdate={stock.update} onRemove={stock.remove} onAddSupplier={sup.add} msg={stock.msg} />
       </main>
     )
   }
@@ -196,7 +226,7 @@ function Nav({ route, account }: { route: string; account?: Account }) {
   }, [])
   const cur = (r: string) => (route === r ? 'page' : undefined)
   const close = (e: { currentTarget: Element }) => e.currentTarget.closest('details')?.removeAttribute('open')
-  const registers = ['filamentos', 'fornecedores', 'estoque', 'impressoras']
+  const registers = ['filamentos', 'marcas', 'cores', 'fornecedores', 'estoque', 'impressoras']
   return (
     <nav className="nav" ref={ref}>
       <a className="brand" href="#/">MakerCusto</a>
@@ -207,6 +237,8 @@ function Nav({ route, account }: { route: string; account?: Account }) {
         <summary aria-current={registers.includes(route) ? 'page' : undefined}>Cadastros</summary>
         <div className="menu">
           <a href="#/filamentos" aria-current={cur('filamentos')} onClick={close}>Filamentos</a>
+          <a href="#/marcas" aria-current={cur('marcas')} onClick={close}>Marcas</a>
+          <a href="#/cores" aria-current={cur('cores')} onClick={close}>Cores</a>
           <a href="#/fornecedores" aria-current={cur('fornecedores')} onClick={close}>Fornecedores</a>
           <a href="#/estoque" aria-current={cur('estoque')} onClick={close}>Estoque</a>
           <a href="#/impressoras" aria-current={cur('impressoras')} onClick={close}>Impressoras</a>
@@ -248,6 +280,10 @@ function Home({ account }: { account?: Account }) {
         <a className="choice" href="#/filamentos">
           <strong>Filamentos</strong>
           <span>Cada rolo com o preço pago, marca e temperaturas.</span>
+        </a>
+        <a className="choice" href="#/marcas">
+          <strong>Marcas e cores</strong>
+          <span>Além das sugestões, com site e temperaturas.</span>
         </a>
         <a className="choice" href="#/fornecedores">
           <strong>Fornecedores</strong>
