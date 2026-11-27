@@ -1,0 +1,33 @@
+:root { --bg:#edf1ef; --ink:#16242c; --mute:#55656d; --line:#cbd5d1; --panel:#fff; --main:#0f766e; --warn:#b4442f;
+  font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+* { box-sizing: border-box }
+body { margin: 0; line-height: 1.5 }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px }
+h1 { font-size: 2rem; margin: 8px 0 4px; letter-spacing: -.02em }
+h2 { font-size: 1rem; margin: 0; color: var(--mute); font-weight: 600 }
+.lead { color: var(--mute); margin: 0 0 24px; max-width: 60ch }
+a { color: var(--main) } .back { font-size: .9rem }
+:focus-visible { outline: 3px solid #d98e04; outline-offset: 2px }
+.home { padding-top: 12vh } .choices { display: grid; gap: 12px; max-width: 560px }
+.choice { display: block; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--ink) }
+.choice.main { border: 2px solid var(--main) } .choice strong { display: block; font-size: 1.15rem } .choice span { color: var(--mute) }
+.choice:hover { border-color: var(--main) }
+.layout { display: grid; gap: 20px; align-items: start }
+@media (min-width: 860px) { .layout { grid-template-columns: 1fr 380px } .result { position: sticky; top: 16px } }
+fieldset { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin: 0 0 12px; padding: 8px 16px 12px }
+legend { font-weight: 700; padding: 0 6px }
+label { display: block; margin-top: 10px } label > span:first-child { display: block; font-size: .9rem }
+.input { display: flex; align-items: center; border: 1px solid #8fa09b; border-radius: 8px; background: #fff; padding-right: 10px }
+.input:focus-within { border-color: var(--main); box-shadow: 0 0 0 2px #0f766e33 }
+.input input { flex: 1; min-width: 0; border: 0; padding: 10px; font: inherit; background: transparent; outline: none }
+.input em { font-style: normal; color: var(--mute); font-size: .85rem } small { color: var(--mute); font-size: .8rem }
+.result { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px }
+.big { font-size: 2.4rem; font-weight: 700; margin: 0 0 8px; font-variant-numeric: tabular-nums }
+.bar { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: var(--line) }
+.legend { list-style: none; padding: 0; margin: 12px 0 0 } .legend li { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-variant-numeric: tabular-nums }
+.legend b { width: 12px; height: 12px; border-radius: 3px } .legend span { margin-left: auto } .legend small { margin-left: 6px }
+.legend .sum { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; font-weight: 700 }
+.price { margin-top: 16px; display: grid; gap: 12px } .price > div { background: #e6f2ef; border-radius: 8px; padding: 12px; display: grid; gap: 2px }
+.price strong { font-size: 1.35rem } .price span { font-size: .85rem; color: var(--mute) }
+.loss { color: var(--warn) !important } .note { font-size: .8rem; color: var(--mute); margin-bottom: 0 }
+.errors { color: var(--warn) } .errors ul { margin: 6px 0 0; padding-left: 18px }
