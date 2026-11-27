@@ -55,3 +55,10 @@
 - Controle de quanto resta em cada rolo e baixa automática de estoque.
 - Conector ao vivo com o fatiador (exige programa instalado no computador).
 - Utilização da máquina, clientes, estoque, login e banco, importação de G-code, várias mesas, rateio.
+
+## Layout A, "i" de ajuda e "+" na calculadora (27/11)
+- Calculadora em cartões de 2 colunas, campos em pares, coluna de resultado de 320 px. Menos rolagem.
+- "i" depois da etiqueta com tooltip (hover, foco, toque fixa, Esc fecha). Textos em `src/ajuda.ts`.
+- "+" com cadastro rápido em Filamento cadastrado e Minha impressora (`QuickForm`); o item novo já fica escolhido.
+- Regra da Parte dentro do Produto: Opção 1 confirmada (custo do cálculo salvo, sem margem, falhas não contadas duas vezes, botão Atualizar).
+- Depois: aplicar o mesmo layout em Produto e telas de cadastro; tipo Parte/Produto final ao iniciar e ao salvar.

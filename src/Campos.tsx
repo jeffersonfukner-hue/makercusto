@@ -1,13 +1,136 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { cloneElement, useEffect, useId, useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { canonical, searchOptions } from './domain/catalogo'
 import { foldText } from './domain/texto'
 
-// Etiqueta do campo com um "+" na mesma linha: abre o cadastro rápido sem sair da tela.
-export function Label({ htmlFor, children, plus }: { htmlFor: string; children: ReactNode; plus?: { label: string; onClick: () => void } }) {
+// "i" de ajuda: aparece ao passar o mouse ou focar, e fixa ao clicar ou tocar. Esc ou clique fora fecha.
+export function Info({ label, text }: { label: string; text: string }) {
+  const [hover, setHover] = useState(false)
+  const [pinned, setPinned] = useState(false)
+  const [shift, setShift] = useState(0)
+  const root = useRef<HTMLSpanElement>(null)
+  const tip = useRef<HTMLSpanElement>(null)
+  const id = useId()
+  const open = hover || pinned
+  useEffect(() => {
+    if (!open || !tip.current) return
+    // Mantém a caixa dentro da tela: empurra para a esquerda se passar da borda direita, para a direita se passar da esquerda.
+    const r = tip.current.getBoundingClientRect()
+    const base = r.left - shift
+    const over = base + r.width - (window.innerWidth - 8)
+    setShift(over > 0 ? -over : base < 8 ? 8 - base : 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+  useEffect(() => {
+    if (!pinned) return
+    const out = (e: MouseEvent | TouchEvent) => { if (!root.current?.contains(e.target as Node)) setPinned(false) }
+    document.addEventListener('mousedown', out); document.addEventListener('touchstart', out)
+    return () => { document.removeEventListener('mousedown', out); document.removeEventListener('touchstart', out) }
+  }, [pinned])
+  return (
+    <span className="info" ref={root} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <button type="button" className="ibtn" aria-label={`Ajuda: ${label}`} aria-describedby={open ? id : undefined} aria-expanded={open}
+        onFocus={() => setHover(true)} onBlur={() => setHover(false)}
+        onClick={() => setPinned((p) => !p)}
+        onKeyDown={(e) => { if (e.key === 'Escape') { setPinned(false); setHover(false) } }}>i</button>
+      {open && <span role="tooltip" id={id} ref={tip} className="tip" style={{ transform: `translateX(${shift}px)` }}>{text}</span>}
+    </span>
+  )
+}
+
+// Etiqueta do campo com "i" de ajuda e "+" de cadastro rápido, tudo na mesma linha.
+export function Label({ htmlFor, children, plus, info }: {
+  htmlFor?: string; children: ReactNode; plus?: { label: string; onClick: () => void }; info?: string
+}) {
+  const text = typeof children === 'string' ? children : ''
   return (
     <div className="lab">
       <label htmlFor={htmlFor}>{children}</label>
+      {info && <Info label={text} text={info} />}
       {plus && <button type="button" className="plus" aria-label={plus.label} title={plus.label} onClick={plus.onClick}>+</button>}
+    </div>
+  )
+}
+
+// Campo numérico ou de texto compacto: etiqueta + "i" + (opcional) "+", caixa com unidade à direita.
+export function Fld({ label, info, unit, value, onChange, mode = 'decimal', placeholder, maxLength, plus, children }: {
+  label: string; info?: string; unit?: string; value?: string; onChange?: (v: string) => void
+  mode?: 'decimal' | 'numeric' | 'text'; placeholder?: string; maxLength?: number
+  plus?: { label: string; onClick: () => void }; children?: ReactNode
+}) {
+  const id = useId()
+  return (
+    <div className="field">
+      <Label htmlFor={id} info={info} plus={plus}>{label}</Label>
+      {children ? <span className="input">{cloneElement(children as ReactElement<{ id?: string }>, { id })}</span> : (
+        <span className="input">
+          <input id={id} inputMode={mode === 'text' ? undefined : mode} value={value ?? ''} placeholder={placeholder} maxLength={maxLength}
+            onChange={(e) => onChange?.(e.target.value)} />
+          {unit && <em>{unit}</em>}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// Cadastro rápido com poucos campos, para o "+" de qualquer lista: salva e devolve a pessoa ao ponto onde estava.
+export type QuickField = { key: string; label: string; info?: string; initial?: string; unit?: string; kind?: 'text' | 'number' | 'select'; options?: string[] }
+export function QuickForm({ title, fields, note, onSave, onClose }: {
+  title: string; fields: QuickField[]; note?: string; onSave: (v: Record<string, string>) => Promise<void>; onClose: () => void
+}) {
+  const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(fields.map((f) => [f.key, f.initial ?? ''])))
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  const tid = useId()
+  const base = useId()
+  useEffect(() => {
+    const prev = document.activeElement as HTMLElement | null
+    const first = box.current?.querySelector<HTMLElement>('input, select')
+    first?.focus(); (first as HTMLInputElement | null)?.select?.()
+    return () => prev?.focus?.()
+  }, [])
+  const submit = async () => {
+    setBusy(true); setErr('')
+    try { await onSave(vals); onClose() } catch (e) { setErr((e as Error).message); setBusy(false) }
+  }
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') { e.preventDefault(); onClose(); return }
+    if (e.key !== 'Tab' || !box.current) return
+    const els = [...box.current.querySelectorAll<HTMLElement>('input, select, button')].filter((x) => !(x as HTMLButtonElement).disabled)
+    if (!els.length) return
+    const first = els[0]; const last = els[els.length - 1]
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+  }
+  return (
+    <div className="modalback" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={tid} ref={box} onKeyDown={onKey}>
+        <h2 id={tid}>{title}</h2>
+        <form onSubmit={(e) => { e.preventDefault(); void submit() }} noValidate>
+          {fields.map((f) => (
+            <div className="field" key={f.key}>
+              <Label htmlFor={`${base}-${f.key}`} info={f.info}>{f.label}</Label>
+              <span className="input">
+                {f.kind === 'select' ? (
+                  <select id={`${base}-${f.key}`} value={vals[f.key]} onChange={(e) => setVals({ ...vals, [f.key]: e.target.value })}>
+                    {f.options?.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ) : (
+                  <input id={`${base}-${f.key}`} inputMode={f.kind === 'number' ? 'decimal' : undefined} value={vals[f.key]} maxLength={60}
+                    onChange={(e) => setVals({ ...vals, [f.key]: e.target.value })} />
+                )}
+                {f.unit && <em>{f.unit}</em>}
+              </span>
+            </div>
+          ))}
+          <small>{note ?? 'Só o essencial. Os detalhes você completa depois, na tela de cadastro.'}</small>
+          {err && <p className="errors" role="alert">{err}</p>}
+          <div className="rowacts modalacts">
+            <button type="button" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="primary" disabled={busy}>Salvar</button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

@@ -78,3 +78,22 @@ describe('telas: fornecedores, estoque e landing', () => {
     expect(html).not.toContain('Quero ser avisado')
   })
 })
+
+describe('ajuda e campos compactos', () => {
+  it('Fld liga a etiqueta ao campo e mostra o i de ajuda com nome acessível', async () => {
+    const { Fld } = await import('./Campos')
+    const html = renderToString(<Fld label="Preço do filamento" info="Quanto você paga no quilo." unit="R$/kg" value="100" onChange={() => {}} />)
+    expect(html).toContain('Preço do filamento')
+    expect(html).toContain('aria-label="Ajuda: Preço do filamento"')
+    expect(html).toContain('R$/kg')
+    expect(html).toMatch(/<label for="([^"]+)"/)
+  })
+  it('todo texto de ajuda tem conteúdo curto e sem travessão', async () => {
+    const { AJUDA } = await import('./ajuda')
+    for (const [k, v] of Object.entries(AJUDA)) {
+      expect(v.length, k).toBeGreaterThan(10)
+      expect(v.length, k).toBeLessThan(200)
+      expect(v, k).not.toContain('—')
+    }
+  })
+})

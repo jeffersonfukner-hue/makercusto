@@ -5,12 +5,15 @@ import { calculateCost, validate, type CostInput, type CostResult } from './doma
 import { addSaved, summarize, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { fromHMS, toHMS } from './domain/time'
-import { addFilament, filamentLabel, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
+import { addFilament, filamentLabel, MATERIALS, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
 import { addPrinter, type UserPrinter, type UserPrinterDraft } from './domain/printers'
 import { addSavedProduct, type ProductInput, type SavedProduct } from './domain/product'
 import { addSupplier, type Supplier, type SupplierDraft } from './domain/supplier'
 import { addBrand, addColor, type Brand, type BrandDraft, type Color, type ColorDraft } from './domain/marca'
 import { addSupply, type Supply, type SupplyDraft } from './domain/supply'
+import { AJUDA } from './ajuda'
+import { Fld, Info, QuickForm } from './Campos'
+import { titleCase } from './domain/texto'
 import { Estoque } from './Estoque'
 import { Cores } from './Cores'
 import { Filamentos } from './Filamentos'
@@ -106,7 +109,7 @@ export default function App() {
   }
 
   if (route === 'calculadora') {
-    return <Calculator form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
+    return <Calculator onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
   }
   if (route === 'filamentos') {
     return (
@@ -309,27 +312,27 @@ const initial = {
   failurePct: '10', quantity: '1', marginPct: '50', soldPrice: '',
 }
 type Form = typeof initial
-type Field = { key: keyof Form | 'hours'; label: string; unit: string; hint?: string }
+type Field = { key: keyof Form | 'hours'; label: string; unit: string; help: string }
 
 const groups: { title: string; fields: Field[] }[] = [
   { title: 'Material', fields: [
-    { key: 'grams', label: 'Peso total do lote', unit: 'g' },
-    { key: 'pricePerKg', label: 'Preço do filamento', unit: 'R$/kg' } ] },
+    { key: 'grams', label: 'Peso total do lote', unit: 'g', help: AJUDA.grams },
+    { key: 'pricePerKg', label: 'Preço do filamento', unit: 'R$/kg', help: AJUDA.pricePerKg } ] },
   { title: 'Impressão', fields: [
-    { key: 'hours', label: 'Tempo de impressão do lote', unit: '', hint: 'Copie do fatiador: horas, minutos e segundos.' },
-    { key: 'watts', label: 'Consumo médio da impressora', unit: 'W', hint: 'Estimativa. Meça com um wattímetro se puder.' },
-    { key: 'tariff', label: 'Tarifa de energia', unit: 'R$/kWh', hint: 'Está na sua conta de luz.' } ] },
+    { key: 'hours', label: 'Tempo de impressão do lote', unit: '', help: AJUDA.hours },
+    { key: 'watts', label: 'Consumo médio', unit: 'W', help: AJUDA.watts },
+    { key: 'tariff', label: 'Tarifa de energia', unit: 'R$/kWh', help: AJUDA.tariff } ] },
   { title: 'Impressora', fields: [
-    { key: 'printerPrice', label: 'Preço da impressora', unit: 'R$' },
-    { key: 'lifetimeHours', label: 'Vida útil estimada', unit: 'h', hint: 'Quantas horas você espera imprimir com ela.' } ] },
+    { key: 'printerPrice', label: 'Preço da impressora', unit: 'R$', help: AJUDA.printerPrice },
+    { key: 'lifetimeHours', label: 'Vida útil estimada', unit: 'h', help: AJUDA.lifetimeHours } ] },
   { title: 'Seu tempo e riscos', fields: [
-    { key: 'laborMinutes', label: 'Trabalho manual no lote', unit: 'min', hint: 'Preparar, tirar da mesa, acabamento.' },
-    { key: 'laborRate', label: 'Valor da sua hora', unit: 'R$/h' },
-    { key: 'failurePct', label: 'Impressões que falham', unit: '%', hint: 'Entre 5 e 15% é comum. Ajuste com a sua experiência.' } ] },
+    { key: 'laborMinutes', label: 'Trabalho manual no lote', unit: 'min', help: AJUDA.laborMinutes },
+    { key: 'laborRate', label: 'Valor da sua hora', unit: 'R$/h', help: AJUDA.laborRate },
+    { key: 'failurePct', label: 'Impressões que falham', unit: '%', help: AJUDA.failurePct } ] },
   { title: 'Venda', fields: [
-    { key: 'quantity', label: 'Peças no lote', unit: 'un' },
-    { key: 'marginPct', label: 'Margem desejada', unit: '%', hint: 'Margem = lucro ÷ preço. Não é o mesmo que markup.' },
-    { key: 'soldPrice', label: 'Preço que você cobra (opcional)', unit: 'R$/peça', hint: 'Preencha para ver o lucro real.' } ] },
+    { key: 'quantity', label: 'Peças no lote', unit: 'un', help: AJUDA.quantity },
+    { key: 'marginPct', label: 'Margem desejada', unit: '%', help: AJUDA.marginPct },
+    { key: 'soldPrice', label: 'Preço que você cobra (opcional)', unit: 'R$/peça', help: AJUDA.soldPrice } ] },
 ]
 
 function toInput(f: Form): CostInput {
@@ -346,8 +349,9 @@ const flat = groups.flatMap((g) => g.fields)
 const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
-function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, printers, user }: {
+function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, printers, user, onAddFilament, onAddPrinter }: {
   user: string | null; filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
+  onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>
 }) {
   const input = inputForMode(toInput(form), mode)
   const errors = validate(input)
@@ -355,45 +359,68 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, 
   const basic = mode === 'basico'
   const [fil, setFil] = useState('')
   const [prn, setPrn] = useState('')
-  const pickPrinter = (id: string) => {
+  const [quick, setQuick] = useState<'fil' | 'prn' | null>(null)
+  const pendingFil = useRef<string | null>(null)
+  const pendingPrn = useRef<string | null>(null)
+  const formRef = useRef(form)
+  formRef.current = form
+  const pickPrinter = (id: string, list = printers) => {
     setPrn(id)
-    const p = printers.find((x) => x.id === id)
-    if (p) setForm({ ...form, watts: String(p.watts).replace('.', ','), printerPrice: String(p.priceCents / 100).replace('.', ','), lifetimeHours: String(p.lifetimeHours).replace('.', ',') })
+    const p = list.find((x) => x.id === id)
+    if (p) setForm({ ...formRef.current, watts: String(p.watts).replace('.', ','), printerPrice: String(p.priceCents / 100).replace('.', ','), lifetimeHours: String(p.lifetimeHours).replace('.', ',') })
   }
-  const pickFilament = (id: string) => {
+  const pickFilament = (id: string, list = filaments) => {
     setFil(id)
-    const f = filaments.find((x) => x.id === id)
-    if (f) setForm({ ...form, pricePerKg: String(pricePerKg(f)).replace('.', ',') })
+    const f = list.find((x) => x.id === id)
+    if (f) setForm({ ...formRef.current, pricePerKg: String(pricePerKg(f)).replace('.', ',') })
   }
+  // Depois do cadastro rápido, o item novo já fica escolhido.
+  useEffect(() => {
+    if (pendingFil.current) { const f = filaments.find((x) => x.name === pendingFil.current); if (f) { pendingFil.current = null; pickFilament(f.id, filaments) } }
+    if (pendingPrn.current) { const p = printers.find((x) => x.name === pendingPrn.current); if (p) { pendingPrn.current = null; pickPrinter(p.id, printers) } }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filaments, printers])
+  const toCents = (s: string) => Math.round(num(s) * 100)
+
   const field = (f: Field) => f.key === 'hours' ? (
     <fieldset key="hours" className="time">
-      <legend>{f.label}</legend>
+      <legend className="lab">{f.label}<Info label={f.label} text={f.help} /></legend>
       <div className="hms">
-        {([['timeH', 'horas'], ['timeM', 'minutos'], ['timeS', 'segundos']] as const).map(([k, l]) => (
-          <label key={k}>
-            <span>{l}</span>
-            <span className="input">
-              <input inputMode="numeric" aria-label={`${f.label}, ${l}`} value={form[k]}
-                onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
-            </span>
-          </label>
+        {([['timeH', 'h'], ['timeM', 'min'], ['timeS', 's']] as const).map(([k, l]) => (
+          <span className="input" key={k}>
+            <input inputMode="numeric" aria-label={`${f.label}, ${{ h: 'horas', min: 'minutos', s: 'segundos' }[l]}`} value={form[k]}
+              onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
+            <em>{l}</em>
+          </span>
         ))}
       </div>
-      {f.hint && <small>{f.hint}</small>}
     </fieldset>
   ) : (
-    <label key={f.key}>
-      <span>{f.label}</span>
-      <span className="input">
-        <input inputMode="decimal" value={form[f.key as keyof Form]} onChange={(e) => { if (f.key === 'pricePerKg') setFil(''); setForm({ ...form, [f.key as keyof Form]: e.target.value }) }} />
-        <em>{f.unit}</em>
-      </span>
-      {f.hint && <small>{f.hint}</small>}
-    </label>
+    <Fld key={f.key} label={f.label} info={f.help} unit={f.unit} value={form[f.key as keyof Form]}
+      onChange={(v) => { if (f.key === 'pricePerKg') setFil(''); setForm({ ...form, [f.key as keyof Form]: v }) }} />
+  )
+  const filSelect = (
+    <Fld label="Filamento cadastrado" info={AJUDA.filamentoCadastrado}
+      plus={onAddFilament ? { label: 'Cadastrar novo filamento', onClick: () => setQuick('fil') } : undefined}>
+      <select value={fil} onChange={(e) => pickFilament(e.target.value)}>
+        <option value="">Digitar o preço</option>
+        {filaments.map((x) => <option key={x.id} value={x.id}>{filamentLabel(x)}</option>)}
+      </select>
+    </Fld>
+  )
+  const prnSelect = (
+    <Fld label="Minha impressora" info={AJUDA.impressoraCadastrada}
+      plus={onAddPrinter ? { label: 'Cadastrar nova impressora', onClick: () => setQuick('prn') } : undefined}>
+      <select value={prn} onChange={(e) => pickPrinter(e.target.value)}>
+        <option value="">Digitar abaixo</option>
+        {printers.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+      </select>
+    </Fld>
   )
   const adjust = groups
     .map((g) => ({ ...g, fields: g.fields.filter((f) => !isEssential(f.key) && f.key !== 'soldPrice') }))
     .filter((g) => g.fields.length)
+  const g = (t: string) => groups.find((x) => x.title === t)!.fields
 
   return (
     <main className="wrap">
@@ -409,7 +436,7 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, 
       <p className="lead">
         {basic ? 'O essencial para chegar a um preço.' : 'Todos os custos, o preço que você cobra e o lucro real.'} Os valores são exemplos. Troque pelos seus.
       </p>
-      <div className="layout">
+      <div className="layout compact">
         <div className="result" aria-live="polite">
           {result ? <Hero r={result} margin={input.marginPct} /> : (
             <div className="hero errors"><strong>Corrija para ver o resultado:</strong>
@@ -420,42 +447,72 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, 
         <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
           {basic ? (
             <>
-              <fieldset><legend>Seu lote</legend>{ESSENTIAL.map((k) => field(byKey(k)))}</fieldset>
+              <section className="card2"><h2>Seu lote</h2>
+                <div className="pair">{ESSENTIAL.slice(0, 2).map((k) => field(byKey(k)))}</div>
+                {filSelect}
+                {field(byKey('hours'))}
+                <div className="pair">{ESSENTIAL.slice(3).map((k) => field(byKey(k)))}</div>
+              </section>
               <details className="adj">
                 <summary>Ajustes da oficina</summary>
                 <p className="note">Energia, impressora, seu tempo e falhas. Já vêm preenchidos com exemplos. Confira com os seus dados.</p>
-                {adjust.map((g) => <fieldset key={g.title}><legend>{g.title}</legend>{g.fields.map(field)}</fieldset>)}
+                <div className="cards">{adjust.map((x) => <section className="card2" key={x.title}><h2>{x.title}</h2>{x.fields.map(field)}</section>)}</div>
               </details>
             </>
-          ) : groups.map((g) => (
-            <fieldset key={g.title}><legend>{g.title}</legend>
-              {g.title === 'Material' && (
-                <label><span>Filamento cadastrado</span>
-                  <span className="input">
-                    <select value={fil} onChange={(e) => pickFilament(e.target.value)}>
-                      <option value="">Digitar o preço abaixo</option>
-                      {filaments.map((x) => <option key={x.id} value={x.id}>{filamentLabel(x)}</option>)}
-                    </select>
-                  </span>
-                  <small>{filaments.length ? 'Escolha o rolo e o preço por kg vem preenchido.' : <>Nenhum rolo cadastrado. <a href="#/filamentos">Cadastrar filamentos</a>.</>}</small>
-                </label>
-              )}
-              {g.title === 'Impressora' && printers.length > 0 && (
-                <label><span>Minha impressora</span>
-                  <span className="input">
-                    <select value={prn} onChange={(e) => pickPrinter(e.target.value)}>
-                      <option value="">Digitar abaixo</option>
-                      {printers.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
-                    </select>
-                  </span>
-                  <small>Preenche consumo, preço e vida útil.</small>
-                </label>
-              )}
-              {g.fields.map(field)}
-            </fieldset>
-          ))}
+          ) : (
+            <div className="cards">
+              <section className="card2"><h2>Material</h2>
+                <div className="pair">{g('Material').map(field)}</div>
+                {filSelect}
+              </section>
+              <section className="card2"><h2>Impressão</h2>
+                {field(g('Impressão')[0])}
+                <div className="pair">{g('Impressão').slice(1).map(field)}</div>
+              </section>
+              <section className="card2"><h2>Impressora</h2>
+                {prnSelect}
+                <div className="pair">{g('Impressora').map(field)}</div>
+              </section>
+              <section className="card2"><h2>Seu tempo e riscos</h2>
+                <div className="pair">{g('Seu tempo e riscos').slice(0, 2).map(field)}</div>
+                {field(g('Seu tempo e riscos')[2])}
+              </section>
+              <section className="card2 full"><h2>Venda</h2>
+                <div className="trio">{g('Venda').map(field)}</div>
+              </section>
+            </div>
+          )}
         </form>
       </div>
+      {quick === 'fil' && onAddFilament && (
+        <QuickForm title="Novo filamento" onClose={() => setQuick(null)}
+          note="Só o essencial. Cor, marca, fornecedor e temperaturas você completa depois, em Filamentos."
+          fields={[
+            { key: 'name', label: 'Nome', info: AJUDA.nomeFilamento, initial: '' },
+            { key: 'material', label: 'Material', info: AJUDA.material, kind: 'select', options: [...MATERIALS], initial: 'PLA' },
+            { key: 'price', label: 'Preço pago no rolo', info: AJUDA.precoRolo, kind: 'number', unit: 'R$' },
+            { key: 'weight', label: 'Peso do rolo', info: AJUDA.pesoRolo, kind: 'number', unit: 'g', initial: '1000' },
+          ]}
+          onSave={async (v) => {
+            const name = titleCase(v.name)
+            await onAddFilament({ name, supplier: '', brand: '', material: v.material, color: '', priceCents: toCents(v.price), weightG: Math.round(num(v.weight)), boughtAt: new Date().toISOString().slice(0, 10) })
+            pendingFil.current = name
+          }} />
+      )}
+      {quick === 'prn' && onAddPrinter && (
+        <QuickForm title="Nova impressora" onClose={() => setQuick(null)}
+          fields={[
+            { key: 'name', label: 'Nome', info: AJUDA.nomeImpressora, initial: '' },
+            { key: 'watts', label: 'Consumo médio', info: AJUDA.wattsImpressora, kind: 'number', unit: 'W', initial: form.watts },
+            { key: 'price', label: 'Preço pago', info: AJUDA.precoImpressora, kind: 'number', unit: 'R$', initial: form.printerPrice },
+            { key: 'life', label: 'Vida útil', info: AJUDA.vidaImpressora, kind: 'number', unit: 'h', initial: form.lifetimeHours },
+          ]}
+          onSave={async (v) => {
+            const name = titleCase(v.name)
+            await onAddPrinter({ name, watts: num(v.watts), priceCents: toCents(v.price), lifetimeHours: num(v.life) })
+            pendingPrn.current = name
+          }} />
+      )}
       {!user && <LandingSections />}
     </main>
   )

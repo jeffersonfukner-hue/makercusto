@@ -126,3 +126,26 @@ ul.sum li.tot { font-weight: 700; border-bottom: 0 }
 .modal { background: #fff; border-radius: 12px; padding: 18px; width: min(420px, 100%); box-shadow: 0 16px 48px #0b1f1a4d } .modal h2 { margin-top: 0 }
 .modalacts { margin-top: 14px; justify-content: flex-end }
 .date .three { grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) minmax(0, .9fr) }
+
+/* "i" de ajuda e tooltip */
+.info { position: relative; display: inline-flex; align-items: center }
+.ibtn { width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 1.5px solid var(--main); background: transparent; color: var(--main); font-size: 10px; font-weight: 700; line-height: 1; display: inline-flex; align-items: center; justify-content: center }
+.ibtn::after { content: ''; position: absolute; inset: -5px }
+.ibtn:hover, .ibtn[aria-expanded="true"] { background: var(--main); color: #fff }
+.tip { position: absolute; left: 0; top: calc(100% + 6px); z-index: 40; width: max-content; max-width: min(270px, calc(100vw - 32px)); background: var(--ink); color: #fff; font-size: .78rem; font-weight: 400; line-height: 1.45; padding: 9px 11px; border-radius: 8px; box-shadow: 0 8px 20px #0b1f1a40; white-space: normal }
+
+/* Layout compacto: campos em pares e cartões lado a lado */
+.field.nomargin { margin-top: 0 }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px }
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px }
+.cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start }
+@media (min-width: 640px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)) } .cards .full { grid-column: 1 / -1 } }
+.card2 { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px 14px; min-width: 0 }
+.card2 > h2 { font-size: .95rem; color: var(--ink); font-weight: 700; margin: 0 0 4px; font-family: var(--display) }
+.card2 .field:first-of-type { margin-top: 0 }
+.field .input input, .field .input select { padding: 8px 10px }
+.field .lab { font-size: .82rem; font-weight: 600; color: #33443f }
+.field .hms { gap: 6px }
+.hms .field .lab { font-weight: 500; color: var(--mute) }
+@media (min-width: 860px) { .layout.compact { grid-template-columns: 1fr 320px } }
+.pair, .trio { align-items: end } .pair > .field, .trio > .field { margin-top: 10px } .card2 > .field:first-of-type, .card2 > .pair:first-of-type > .field { margin-top: 0 }
