@@ -1,5 +1,5 @@
 import type { CostInput } from './domain/cost'
-import { addSaved, fromCloudRows, type SavedCalc } from './domain/saved'
+import { addSaved, fromCloudRows, type Kind, type SavedCalc } from './domain/saved'
 import { normalizeFilament, parseFilaments, validateFilament, type Filament, type FilamentDraft } from './domain/filament'
 import { normalizeBrand, parseBrands, parseColors, validateBrand, validateColor, type Brand, type BrandDraft, type Color, type ColorDraft } from './domain/marca'
 import { titleCase } from './domain/texto'
@@ -171,9 +171,9 @@ export function createCloud(db: Db) {
       if (error) throw new Error('Não foi possível carregar da nuvem.')
       return fromCloudRows(data ?? [])
     },
-    async save(name: string, input: CostInput): Promise<void> {
-      const [v] = addSaved([], name, input, 'novo', new Date().toISOString()) // valida nome e campos
-      const { error } = await db.from('calculos').insert({ nome: v.name, entrada: v.input })
+    async save(name: string, input: CostInput, kind: Kind = 'produto'): Promise<void> {
+      const [v] = addSaved([], name, input, 'novo', new Date().toISOString(), kind) // valida nome e campos
+      const { error } = await db.from('calculos').insert({ nome: v.name, entrada: { ...v.input, tipo: kind } })
       if (error) throw new Error(/limite/i.test(error.message ?? '') ? 'Limite de 50 cálculos na nuvem. Exclua algum.' : 'Não foi possível salvar na nuvem.')
     },
     async remove(id: string): Promise<void> {

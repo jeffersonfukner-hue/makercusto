@@ -1,15 +1,21 @@
 import { titleCase } from './texto'
 import { calculateCost, validate, type CostInput, type CostResult } from './cost'
 
-export interface SavedCalc { id: string; name: string; savedAt: string; input: CostInput }
+export type Kind = 'parte' | 'produto'
+export const KINDS: { value: Kind; label: string; text: string }[] = [
+  { value: 'parte', label: 'Parte', text: 'Entra em um produto, como o brasão ou a base.' },
+  { value: 'produto', label: 'Produto final', text: 'Peça pronta para vender.' },
+]
+export interface SavedCalc { id: string; name: string; savedAt: string; input: CostInput; kind?: Kind }
+export const kindOf = (s: { kind?: Kind }): Kind => (s.kind === 'parte' ? 'parte' : 'produto')
 export interface JobSummary extends SavedCalc { result: CostResult; revenue: number; gross: number; grossPct: number }
 export const MAX_SAVED = 50
 
-export function addSaved(list: SavedCalc[], name: string, input: CostInput, id: string, savedAt: string): SavedCalc[] {
+export function addSaved(list: SavedCalc[], name: string, input: CostInput, id: string, savedAt: string, kind: Kind = 'produto'): SavedCalc[] {
   const n = titleCase(name)
   if (!n) throw new Error('Dê um nome ao trabalho.')
   if (validate(input).length) throw new Error('Corrija os campos antes de salvar.')
-  return [{ id, name: n.slice(0, 60), savedAt, input }, ...list].slice(0, MAX_SAVED)
+  return [{ id, name: n.slice(0, 60), savedAt, input, kind }, ...list].slice(0, MAX_SAVED)
 }
 
 const isSaved = (x: any): x is SavedCalc =>
@@ -36,6 +42,9 @@ export function summarize(s: SavedCalc): JobSummary {
 export interface CloudRow { id: string; nome: string; entrada: unknown; criado_em: string }
 export function fromCloudRows(rows: CloudRow[]): SavedCalc[] {
   return rows
-    .map((r) => ({ id: r.id, name: r.nome, savedAt: r.criado_em, input: r.entrada as CostInput }))
+    .map((r) => {
+      const { tipo, ...input } = (r.entrada ?? {}) as CostInput & { tipo?: string }
+      return { id: r.id, name: r.nome, savedAt: r.criado_em, input: input as CostInput, kind: (tipo === 'parte' ? 'parte' : 'produto') as Kind }
+    })
     .filter(isSaved)
 }

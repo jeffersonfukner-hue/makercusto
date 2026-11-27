@@ -160,3 +160,19 @@ fieldset.time legend.lab { padding: 0; margin-bottom: 4px; font-size: .82rem; fo
 .lab { flex-wrap: nowrap } .lab label { min-width: 0 } .lab .info, .lab .plus { flex: none }
 @media (min-width: 640px) { .partgrid { grid-template-columns: minmax(0, 1.5fr) minmax(190px, 1.7fr) minmax(0, 1fr) minmax(0, 1fr) } }
 .hms .input input { min-width: 0; width: 100% }
+
+/* Nome e tipo do trabalho */
+.startrow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-items: start } @media (min-width: 640px) { .startrow { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) } }
+.startrow .field { margin-top: 0 }
+fieldset.kind { border: 0; padding: 0; margin: 10px 0 0; min-width: 0 } .startrow fieldset.kind { margin: 0 }
+fieldset.kind legend.lab { padding: 0; margin-bottom: 4px; font-size: .82rem; font-weight: 600; color: #33443f; display: flex; gap: 8px; align-items: center }
+.kindopts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px }
+.kindopts button { text-align: left; padding: 7px 10px; border-radius: 10px; display: grid; gap: 1px; line-height: 1.25 } .kindopts button strong { font-size: .9rem } .kindopts button span { font-size: .72rem; color: var(--mute) }
+.kindopts button[aria-pressed="true"] { border: 2px solid var(--main); background: var(--soft); padding: 6px 9px }
+.save button:not(.kindopts button) { margin-top: 10px }
+.tag.parte { background: var(--soft); color: var(--main) }
+.save .kindopts button { background: #fff; color: var(--ink); border-color: #93a39e; margin-top: 0; font-weight: 400 }
+.save .kindopts button[aria-pressed="true"] { background: var(--soft); border-color: var(--main) }
+.addrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 } .addrow .input { min-width: 220px }
+.save .ibtn { background: transparent; color: var(--main); border: 1.5px solid var(--main); margin-top: 0; font-weight: 700; padding: 0 }
+.save .ibtn:hover, .save .ibtn[aria-expanded="true"] { background: var(--main); color: #fff }

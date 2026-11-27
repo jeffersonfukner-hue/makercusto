@@ -64,3 +64,5 @@
 - Depois: aplicar o mesmo layout em Produto e telas de cadastro; tipo Parte/Produto final ao iniciar e ao salvar.
 - Layout A aplicado em Produto, Filamentos, Estoque, Fornecedores, Marcas, Cores e Impressoras. "+" rápido em Produto: filamento, impressora e item de estoque (`src/Rapido.tsx`).
 - Ainda falta: tipo Parte/Produto final (nome e tipo ao iniciar e ao salvar) e uso da Parte salva dentro do Produto (Opção 1).
+- Tipo Parte / Produto final: nome e tipo no topo da calculadora e ao salvar (mesmos valores). O tipo vai dentro do JSON `entrada` (chave `tipo`), sem migração. Cálculo antigo sem tipo vale como produto final.
+- Parte salva entra no Produto como item pronto (Opção 1): custo por peça do cálculo salvo, sem margem, sem falhas em dobro, com "Atualizar".

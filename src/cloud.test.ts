@@ -29,7 +29,12 @@ describe('cloud', () => {
   it('salva só nome e dados, sem user_id (o banco preenche)', async () => {
     const f = fakeDb({})
     await createCloud(f.db).save('  Chaveiro  ', input)
-    expect(f.insert).toHaveBeenCalledWith({ nome: 'Chaveiro', entrada: input })
+    expect(f.insert).toHaveBeenCalledWith({ nome: 'Chaveiro', entrada: { ...input, tipo: 'produto' } })
+  })
+  it('grava o tipo parte e o devolve ao listar', async () => {
+    const f = fakeDb({})
+    await createCloud(f.db).save('Brasão', input, 'parte')
+    expect(f.insert).toHaveBeenCalledWith({ nome: 'Brasão', entrada: { ...input, tipo: 'parte' } })
   })
   it('valida antes de chamar a rede', async () => {
     const f = fakeDb({})

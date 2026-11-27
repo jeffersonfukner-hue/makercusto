@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Composition } from './Composition'
 import { Dashboard } from './Dashboard'
 import { calculateCost, validate, type CostInput, type CostResult } from './domain/cost'
-import { addSaved, summarize, type SavedCalc } from './domain/saved'
+import { addSaved, KINDS, summarize, type Kind, type SavedCalc } from './domain/saved'
 import { money, pct } from './format'
 import { fromHMS, toHMS } from './domain/time'
 import { addFilament, filamentLabel, pricePerKg, type Filament, type FilamentDraft } from './domain/filament'
@@ -41,6 +41,7 @@ function useRoute() {
   return (['painel', 'filamentos', 'produto', 'impressoras', 'fornecedores', 'marcas', 'cores', 'estoque', 'inicio'] as const).find((x) => x === r) ?? 'calculadora'
 }
 
+type Work = { name: string; kind: Kind }
 const toForm = (i: CostInput): Form => {
   const t = (n: number) => String(n).replace('.', ',')
   return {
@@ -56,6 +57,7 @@ export default function App() {
   const [form, setForm] = useState<Form>(initial)
   const [saved, setSaved] = useState<SavedCalc[]>(readSaved)
   const [mode, setModeState] = useState<Mode>(readMode)
+  const [work, setWork] = useState<Work>({ name: '', kind: 'produto' })
   const [user, setUser] = useState<string | null>(null)
   const [cloudMsg, setCloudMsg] = useState('')
   const setMode = (m: Mode) => { setModeState(m); writeMode(m) }
@@ -99,9 +101,9 @@ export default function App() {
     cloud.list().then((l) => { setSaved(l); setCloudMsg('') }).catch((e: Error) => setCloudMsg(e.message))
   }, [user])
 
-  const onSave = async (name: string, input: CostInput) => {
-    if (user && cloud) { await cloud.save(name, input); setSaved(await cloud.list()); return }
-    update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString()))
+  const onSave = async (name: string, input: CostInput, kind: Kind) => {
+    if (user && cloud) { await cloud.save(name, input, kind); setSaved(await cloud.list()); return }
+    update(addSaved(saved, name, input, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, new Date().toISOString(), kind))
   }
   const onDelete = async (id: string) => {
     if (!(user && cloud)) return update(saved.filter((x) => x.id !== id))
@@ -109,7 +111,7 @@ export default function App() {
   }
 
   if (route === 'calculadora') {
-    return <Calculator onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
+    return <Calculator onAddFilament={fil.add} onAddPrinter={prn.add} form={form} setForm={setForm} onSave={onSave} work={work} setWork={setWork} mode={mode} setMode={setMode} account={account} filaments={fil.items} printers={prn.items} user={user} />
   }
   if (route === 'filamentos') {
     return (
@@ -187,14 +189,14 @@ export default function App() {
         <ImportBar count={prod.localCount} what="produtos" onImport={prod.importLocal} />
         <Produto filaments={fil.items} printers={prn.items} supplies={stock.items} products={prod.items} msg={prod.msg}
           onSave={(name, input) => prod.add({ name, input })} onDelete={prod.remove}
-          onAddFilament={fil.add} onAddPrinter={prn.add} onAddSupply={stock.add} />
+          onAddFilament={fil.add} onAddPrinter={prn.add} onAddSupply={stock.add} savedParts={saved.filter((x) => x.kind === 'parte')} />
       </main>
     )
   }
   if (route === 'painel') {
     const onOpen = (id: string) => {
       const s = saved.find((x) => x.id === id)
-      if (s) { setForm(toForm(s.input)); location.hash = '#/calculadora' }
+      if (s) { setForm(toForm(s.input)); setWork({ name: s.name, kind: s.kind === 'parte' ? 'parte' : 'produto' }); location.hash = '#/calculadora' }
     }
     return (
       <main className="wrap">
@@ -350,8 +352,8 @@ const flat = groups.flatMap((g) => g.fields)
 const byKey = (k: string) => flat.find((f) => f.key === k)!
 const isEssential = (k: string) => (ESSENTIAL as readonly string[]).includes(k)
 
-function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, printers, user, onAddFilament, onAddPrinter }: {
-  user: string | null; filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput) => Promise<void>; mode: Mode; setMode: (m: Mode) => void; account: Account
+function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, account, filaments, printers, user, onAddFilament, onAddPrinter }: {
+  user: string | null; filaments: Filament[]; printers: UserPrinter[]; form: Form; setForm: (f: Form) => void; onSave: (name: string, i: CostInput, kind: Kind) => Promise<void>; work: Work; setWork: (w: Work) => void; mode: Mode; setMode: (m: Mode) => void; account: Account
   onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>
 }) {
   const input = inputForMode(toInput(form), mode)
@@ -442,9 +444,15 @@ function Calculator({ form, setForm, onSave, mode, setMode, account, filaments, 
             <div className="hero errors"><strong>Corrija para ver o resultado:</strong>
               <ul>{errors.map((e) => <li key={e}>{e}</li>)}</ul></div>
           )}
-          {result && <Details r={result} basic={basic} onSave={(n) => onSave(n, input)} />}
+          {result && <Details r={result} basic={basic} work={work} setWork={setWork} onSave={(n, k) => onSave(n, input, k)} />}
         </div>
         <form className="form" onSubmit={(e) => e.preventDefault()} noValidate>
+          <section className="card2 start"><h2>Comece pelo nome e pelo tipo</h2>
+            <div className="startrow">
+              <Fld label="Nome do trabalho" info={AJUDA.nomeTrabalho} mode="text" value={work.name} onChange={(v) => setWork({ ...work, name: v })} placeholder="Ex.: Brasão do Flamengo" maxLength={60} />
+              <KindPick value={work.kind} onChange={(k) => setWork({ ...work, kind: k })} />
+            </div>
+          </section>
           {basic ? (
             <>
               <section className="card2"><h2>Seu lote</h2>
@@ -500,7 +508,7 @@ function Hero({ r, margin }: { r: CostResult; margin: number }) {
   )
 }
 
-function Details({ r, basic, onSave }: { r: CostResult; basic: boolean; onSave: (name: string) => Promise<void> }) {
+function Details({ r, basic, onSave, work, setWork }: { r: CostResult; basic: boolean; work: Work; setWork: (w: Work) => void; onSave: (name: string, kind: Kind) => Promise<void> }) {
   return (
     <div className="details">
       {!basic && (
@@ -519,22 +527,37 @@ function Details({ r, basic, onSave }: { r: CostResult; basic: boolean; onSave: 
         </>
       )}
       <p className="note">Margem é lucro ÷ preço. Markup é lucro ÷ custo. Falhas entram como custo ÷ (1 − taxa): as peças boas pagam as que falharam.</p>
-      <SaveBox onSave={onSave} />
+      <SaveBox onSave={onSave} work={work} setWork={setWork} />
     </div>
   )
 }
 
-function SaveBox({ onSave }: { onSave: (name: string) => Promise<void> }) {
-  const [name, setName] = useState('')
+function KindPick({ value, onChange }: { value: Kind; onChange: (k: Kind) => void }) {
+  return (
+    <fieldset className="kind">
+      <legend className="lab">Tipo<Info label="Tipo" text={AJUDA.tipoTrabalho} /></legend>
+      <div className="kindopts">
+        {KINDS.map((k) => (
+          <button type="button" key={k.value} aria-pressed={value === k.value} onClick={() => onChange(k.value)}>
+            <strong>{k.label}</strong><span>{k.text}</span>
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+function SaveBox({ onSave, work, setWork }: { onSave: (name: string, kind: Kind) => Promise<void>; work: Work; setWork: (w: Work) => void }) {
   const [msg, setMsg] = useState('')
   const save = async () => {
-    try { await onSave(name); setMsg('Salvo.'); setName('') } catch (e) { setMsg((e as Error).message) }
+    try { await onSave(work.name, work.kind); setMsg('Salvo.'); setWork({ name: '', kind: work.kind }) } catch (e) { setMsg((e as Error).message) }
   }
+  const label = work.kind === 'parte' ? 'Salvar como parte' : 'Salvar como produto final'
   return (
     <div className="save">
-      <label><span>Nome do trabalho</span>
-        <span className="input"><input value={name} maxLength={60} placeholder="Ex.: chaveiro azul" onChange={(e) => setName(e.target.value)} /></span></label>
-      <button type="button" onClick={save}>Salvar cálculo</button>
+      <Fld label="Nome do trabalho" info={AJUDA.nomeTrabalho} mode="text" value={work.name} onChange={(v) => setWork({ ...work, name: v })} placeholder="Ex.: Chaveiro Azul" maxLength={60} />
+      <KindPick value={work.kind} onChange={(k) => setWork({ ...work, kind: k })} />
+      <button type="button" onClick={save}>{label}</button>
       {msg && <p role="status">{msg} {msg === 'Salvo.' && <a href="#/painel">Ver no painel</a>}</p>}
     </div>
   )

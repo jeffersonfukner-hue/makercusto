@@ -41,3 +41,13 @@ describe('saved', () => {
     expect(s.revenue).toBe(8000)
   })
 })
+
+import { fromCloudRows, kindOf } from './saved'
+describe('tipo do cálculo', () => {
+  it('lê o tipo da nuvem e assume produto final quando não há tipo', () => {
+    const base = { hours: 3, grams: 50, pricePerKg: 100, watts: 150, tariff: 1, printerPrice: 3500, lifetimeHours: 3000, laborMinutes: 10, laborRate: 20, failurePct: 10, quantity: 1, marginPct: 50 }
+    const l = fromCloudRows([{ id: 'a', nome: 'A', criado_em: 'x', entrada: { ...base, tipo: 'parte' } }, { id: 'b', nome: 'B', criado_em: 'x', entrada: base }])
+    expect(l.map(kindOf)).toEqual(['parte', 'produto'])
+    expect('tipo' in l[0].input).toBe(false)
+  })
+})

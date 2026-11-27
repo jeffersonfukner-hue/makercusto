@@ -18,6 +18,9 @@ export const AJUDA = {
   filamentoCadastrado: 'Escolha um rolo que você cadastrou e o preço por quilo vem preenchido. Use o + para cadastrar um novo sem sair daqui.',
   impressoraCadastrada: 'Escolha a sua impressora e consumo, preço e vida útil vêm preenchidos. Use o + para cadastrar uma nova.',
 
+  nomeTrabalho: 'Dê um nome ao que está calculando. Ex.: Brasão do Flamengo. O nome fica em Título automaticamente.',
+  tipoTrabalho: 'Parte entra depois em um produto, como o brasão ou a base. Produto final é a peça pronta para vender.',
+
   // Filamentos
   material: 'Tipo do plástico do rolo. Cada material tem preço e temperatura próprios.',
   cor: 'Digite para buscar na lista, que tem acabamentos (fosco, silk) e dual color. Se a sua cor não existe, use o + para cadastrar.',

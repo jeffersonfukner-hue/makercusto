@@ -33,7 +33,7 @@ export function Dashboard({ jobs, onOpen, onDelete }: { jobs: JobSummary[]; onOp
           {jobs.map((j) => (
             <li key={j.id} className={j.id === cur.id ? 'on' : ''}>
               <button className="pick" onClick={() => setSel(j.id)} aria-pressed={j.id === cur.id}>
-                <strong>{j.name}</strong><span>{date(j.savedAt)} · {money(j.result.unit)} por peça</span>
+                <strong>{j.name}{j.kind === 'parte' && <> <span className="tag parte">parte</span></>}</strong><span>{date(j.savedAt)} · {money(j.result.unit)} por peça</span>
               </button>
               <span className="acts">
                 <button onClick={() => onOpen(j.id)}>Abrir</button>

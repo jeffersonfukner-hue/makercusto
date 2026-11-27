@@ -13,10 +13,11 @@ import { titleCase } from './domain/texto'
 import type { FilamentDraft } from './domain/filament'
 import type { UserPrinterDraft } from './domain/printers'
 import type { SupplyDraft } from './domain/supply'
+import { summarize, type SavedCalc } from './domain/saved'
 
 type LineF = { color: string; fil: string; price: string; model: string; flushed: string; tower: string }
 type PartF = { name: string; h: string; m: string; s: string; pieces: string; per: string; lines: LineF[] }
-type BoughtF = { name: string; price: string; qty: string }
+type BoughtF = { name: string; price: string; qty: string; ref?: string }
 type ShopF = { watts: string; tariff: string; printerPrice: string; life: string; laborMin: string; laborRate: string; fail: string; margin: string; sold: string }
 type State = { parts: PartF[]; bought: BoughtF[]; shop: ShopF; printer: string }
 
@@ -66,10 +67,11 @@ type Props = {
   filaments: Filament[]; printers: UserPrinter[]; supplies?: Supply[]
   products: SavedProduct[]; onSave: (name: string, i: ProductInput) => Promise<void>; onDelete: (id: string) => void; msg: string
   openId?: string
+  savedParts?: SavedCalc[]
   onAddFilament?: (d: FilamentDraft) => Promise<void>; onAddPrinter?: (d: UserPrinterDraft) => Promise<void>; onAddSupply?: (d: SupplyDraft) => Promise<void>
 }
 
-export function Produto({ filaments, printers, supplies = [], products, onSave, onDelete, msg, onAddFilament, onAddPrinter, onAddSupply }: Props) {
+export function Produto({ filaments, printers, supplies = [], products, onSave, onDelete, msg, onAddFilament, onAddPrinter, onAddSupply, savedParts = [] }: Props) {
   const [s, setS] = useState<State>(loadDraft)
   const [quick, setQuick] = useState<{ kind: 'fil'; n: number; k: number } | { kind: 'prn' } | { kind: 'sup'; n: number } | null>(null)
   const sRef = useRef(s)
@@ -86,6 +88,16 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const pickFilament = (n: number, k: number, id: string) => {
     const f = filaments.find((x) => x.id === id)
     setLine(n, k, f ? { fil: id, price: t(kgPrice(f)), color: s.parts[n].lines[k].color || f.color } : { fil: '' })
+  }
+  // Parte salva entra como item pronto: custo do cálculo salvo, sem margem e sem contar as falhas duas vezes.
+  const unitOf = (c: SavedCalc) => summarize(c).result.unit / 100
+  const addSavedPart = (id: string) => {
+    const c = savedParts.find((x) => x.id === id)
+    if (c) setS({ ...s, bought: [...s.bought, { name: `Parte: ${c.name}`, price: t(unitOf(c)), qty: '1', ref: c.id }] })
+  }
+  const refresh = (n: number) => {
+    const b = s.bought[n]; const c = savedParts.find((x) => x.id === b?.ref)
+    if (c) setS({ ...s, bought: s.bought.map((y, i) => (i === n ? { ...y, price: t(unitOf(c)) } : y)) })
   }
   const setShop = (patch: Partial<ShopF>) => setS({ ...s, shop: { ...s.shop, ...patch } })
   const pickPrinter = (id: string) => {
@@ -195,10 +207,19 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
                 {field('Preço de cada', b.price, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, price: v } : x)) }), 'R$', 'precoCada')}
                 {field('Quantidade', b.qty, (v) => setS({ ...s, bought: s.bought.map((x, i) => (i === n ? { ...x, qty: v } : x)) }), 'un', 'quantidade', 'numeric')}
               </div>
+              {b.ref && <p className="note">Parte salva. Custo do cálculo salvo, já com as falhas dela.{savedParts.some((c) => c.id === b.ref) && <> <button type="button" className="linkish" onClick={() => refresh(n)}>Atualizar</button></>}</p>}
               <p><button type="button" onClick={() => setS({ ...s, bought: s.bought.filter((_, i) => i !== n) })}>Remover item</button></p>
             </div>
           ))}
-          <p><button type="button" onClick={() => setS({ ...s, bought: [...s.bought, { name: '', price: '', qty: '1' }] })}>Adicionar item comprado</button></p>
+          <div className="addrow">
+            <button type="button" onClick={() => setS({ ...s, bought: [...s.bought, { name: '', price: '', qty: '1' }] })}>Adicionar item comprado</button>
+            {savedParts.length > 0 && (
+              <span className="input"><select aria-label="Adicionar parte salva" value="" onChange={(e) => addSavedPart(e.target.value)}>
+                <option value="">Adicionar parte salva...</option>
+                {savedParts.map((c) => <option key={c.id} value={c.id}>{c.name} ({money(summarize(c).result.unit)})</option>)}
+              </select></span>
+            )}
+          </div>
         </section>
 
         <div className="cards">
