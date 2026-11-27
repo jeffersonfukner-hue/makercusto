@@ -44,6 +44,9 @@ export const namesFromFile = (file: string): { product: string; part: string } =
   if (i > 0) return { product: titleCase(base.slice(0, i).trim()), part: titleCase(base.slice(i + 3).trim()) }
   return { product: '', part: titleCase(base) }
 }
+// Nome do projeto: o do arquivo .3mf, sem extensão, em Título.
+export const projectFromFile = (file: string): string =>
+  titleCase(file.replace(/\.3mf$/i, '').replace(/^[0-9a-f]{8}-\d{4}-\d{4}-/i, '').replace(/[_]+/g, ' ').trim())
 export const nameFromFile = (file: string): string => namesFromFile(file).part
 
 export function parseGcode(text: string, fileName = ''): GcodeResult | null {

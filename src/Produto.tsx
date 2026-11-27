@@ -78,6 +78,10 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
   const [s, setS] = useState<State>(loadDraft)
   const [quick, setQuick] = useState<{ kind: 'fil'; n: number; k: number } | { kind: 'prn' } | { kind: 'sup'; n: number } | null>(null)
   const [suggest, setSuggest] = useState('')
+  const [name, setName] = useState('')
+  const [saveMsg, setSaveMsg] = useState('')
+  useEffect(() => { if (suggest) setName((n) => n || suggest) }, [suggest])
+  const doSave = async () => { try { await onSave(name, toInput(s)); setSaveMsg('Salvo.'); setName('') } catch (e) { setSaveMsg((e as Error).message) } }
   const sRef = useRef(s)
   sRef.current = s
   const pend = useRef<{ kind: 'fil' | 'prn' | 'sup'; name: string; n: number; k: number } | null>(null)
@@ -104,7 +108,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
     if (c) setS({ ...s, bought: s.bought.map((y, i) => (i === n ? { ...y, price: t(unitOf(c)) } : y)) })
   }
   // Cada .gcode vira uma parte: tempo e, por cor, peça, purga (estimada) e torre. Rolo cadastrado da mesma cor entra com o preço.
-  const importParts = (rs: GcodeResult[]) => {
+  const importParts = (rs: GcodeResult[], extra: { projectName?: string } = {}) => {
     const fresh = (p: PartF) => !p.name.trim() && p.lines.every((l) => !l.model && !l.price && !l.color)
     const built: PartF[] = rs.map((r) => {
       const { h, m, s: sec } = toHMS(r.hours)
@@ -116,7 +120,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
     })
     const keep = s.parts.filter((p) => !fresh(p))
     setS({ ...s, parts: [...keep, ...built] })
-    const prod = rs.find((r) => r.product)?.product
+    const prod = extra.projectName || rs.find((r) => r.product)?.product
     if (prod) setSuggest(prod)
   }
   const setShop = (patch: Partial<ShopF>) => setS({ ...s, shop: { ...s.shop, ...patch } })
@@ -142,7 +146,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
     <SaveNotice errors={[...new Set(errors)]} />
     <div className="layout compact">
       <div className="result" aria-live="polite">
-        {r ? <Result r={r} input={input} onSave={onSave} suggest={suggest} /> : (
+        {r ? <Result r={r} input={input} name={name} setName={setName} save={doSave} msg={saveMsg} /> : (
           <div className="hero errors"><strong>Corrija para ver o resultado:</strong>
             <ul>{[...new Set(errors)].slice(0, 8).map((e) => <li key={e}>{e}</li>)}</ul>
             <p className="note">O botão Salvar produto aparece aqui, no lugar deste aviso, quando não houver mais nada para corrigir.</p></div>
@@ -281,6 +285,7 @@ export function Produto({ filaments, printers, supplies = [], products, onSave, 
       {quick?.kind === 'prn' && onAddPrinter && <QuickPrinter onAdd={onAddPrinter} onClose={() => setQuick(null)} defaults={{ watts: s.shop.watts, price: s.shop.printerPrice, life: s.shop.life }} onSaved={(name) => { pend.current = { kind: 'prn', name, n: 0, k: 0 } }} />}
       {quick?.kind === 'sup' && onAddSupply && <QuickSupply onAdd={onAddSupply} onClose={() => setQuick(null)} onSaved={(name) => { pend.current = { kind: 'sup', name, n: quick.n, k: 0 } }} />}
     </div>
+    <SummaryBar r={r} input={input} errors={[...new Set(errors)]} name={name} setName={setName} save={doSave} msg={saveMsg} />
     </>
   )
 }
@@ -294,7 +299,7 @@ function SaveNotice({ errors }: { errors: string[] }) {
   }
   if (!errors.length) {
     return (
-      <section className="savenotice ok" aria-live="polite">
+      <section id="aviso-salvar" className="savenotice ok" aria-live="polite">
         <div>
           <strong>Tudo certo para salvar este produto.</strong>
           <p>O botão <b>Salvar produto</b> fica na coluna da direita, embaixo do resultado, junto com o campo de nome.</p>
@@ -304,7 +309,7 @@ function SaveNotice({ errors }: { errors: string[] }) {
     )
   }
   return (
-    <section className="savenotice warn" aria-live="polite">
+    <section id="aviso-salvar" className="savenotice warn" aria-live="polite">
       <strong>Ainda não dá para salvar: falta preencher {errors.length === 1 ? '1 item' : `${errors.length} itens`}.</strong>
       <p>O botão <b>Salvar produto</b> só aparece quando todos os campos obrigatórios estão preenchidos. Ele surge na coluna da direita, no lugar da caixa vermelha de avisos, embaixo do resultado.</p>
       <p>Quando você importa do fatiador, vêm o tempo e os gramas de cada cor. <b>O preço do filamento (R$/kg) não vem no arquivo</b>: preencha em cada cor, ou escolha um rolo em "Filamento cadastrado" e o preço vem sozinho.</p>
@@ -313,11 +318,7 @@ function SaveNotice({ errors }: { errors: string[] }) {
   )
 }
 
-function Result({ r, input, onSave, suggest = '' }: { r: ProductResult; input: ProductInput; onSave: (name: string, i: ProductInput) => Promise<void>; suggest?: string }) {
-  const [name, setName] = useState(suggest)
-  useEffect(() => { if (suggest) setName((n) => n || suggest) }, [suggest])
-  const [msg, setMsg] = useState('')
-  const save = async () => { try { await onSave(name, input); setMsg('Salvo.'); setName('') } catch (e) { setMsg((e as Error).message) } }
+function Result({ r, input, name, setName, save, msg }: { r: ProductResult; input: ProductInput; name: string; setName: (n: string) => void; save: () => Promise<void>; msg: string }) {
   const g = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
   return (
     <>
@@ -357,5 +358,31 @@ function Result({ r, input, onSave, suggest = '' }: { r: ProductResult; input: P
         </div>
       </div>
     </>
+  )
+}
+
+// Barra de resumo fixa embaixo da tela: custo, preço sugerido e a opção de salvar. A coluna da direita continua com os cálculos.
+function SummaryBar({ r, input, errors, name, setName, save, msg }: {
+  r: ProductResult | null; input: ProductInput; errors: string[]; name: string; setName: (n: string) => void; save: () => Promise<void>; msg: string
+}) {
+  const top = () => document.getElementById('aviso-salvar')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  return (
+    <div className="sumbar" role="region" aria-label="Resumo do produto">
+      {r ? (
+        <>
+          <div className="k"><small>Custo do produto</small><strong>{money(r.total)}</strong></div>
+          <div className="k sug"><small>Preço sugerido ({pct(input.marginPct / 100)})</small><strong>{money(r.suggestedPrice)}</strong></div>
+          <span className="input name"><input aria-label="Nome do produto para salvar" placeholder="Nome do produto" value={name} maxLength={60}
+            onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void save() }} /></span>
+          <button type="button" className="primary" onClick={() => void save()}>Salvar produto</button>
+          {msg && <small role="status" className="msg">{msg}</small>}
+        </>
+      ) : (
+        <>
+          <div className="k"><strong>Faltam {errors.length} {errors.length === 1 ? 'item' : 'itens'} para salvar</strong><small>Preencha o preço do filamento de cada cor.</small></div>
+          <button type="button" onClick={top}>Ver o que falta</button>
+        </>
+      )}
+    </div>
   )
 }

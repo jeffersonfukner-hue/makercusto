@@ -453,7 +453,8 @@ function Calculator({ form, setForm, onSave, work, setWork, mode, setMode, accou
               <Fld label="Nome do trabalho" info={AJUDA.nomeTrabalho} mode="text" value={work.name} onChange={(v) => setWork({ ...work, name: v })} placeholder="Ex.: Brasão do Flamengo" maxLength={60} />
               <KindPick value={work.kind} onChange={(k) => setWork({ ...work, kind: k })} />
             </div>
-            <ImportGcode label="Importar do fatiador (.gcode)" onResults={([r]) => {
+            <ImportGcode label="Importar do fatiador (.gcode)" onResults={([r], extra) => {
+              if (!r) { if (extra.projectName && !work.name.trim()) setWork({ ...work, name: extra.projectName }); return }
               const { h, m, s: sec } = toHMS(r.hours)
               setForm({ ...form, grams: String(r.totalG).replace('.', ','), timeH: String(h), timeM: String(m), timeS: String(sec) })
               setFil('')
