@@ -21,5 +21,6 @@
 - Bloco 4: catálogo de impressoras mais usadas no Brasil com perfis pesquisados; clonar e personalizar é recurso do plano pago.
 
 ## Depois (fora do escopo atual)
+- Biblioteca de arquivos 3D limpos (.3mf) para download por quem paga (ideia do dono, 27/11/2026). Exige armazenamento, controle de quem pagou e decidir quais modelos podem ser distribuídos. Só depois dos primeiros pagantes.
 - Conector ao vivo com o fatiador (exige programa instalado no computador).
 - Utilização da máquina, clientes, estoque, login e banco, importação de G-code, várias mesas, rateio.
